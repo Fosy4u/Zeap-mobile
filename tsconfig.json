@@ -1,3 +1,12 @@
 {
+  "compilerOptions": {
+    "jsx": "react",
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    // "typeRoots": ["./types"],
+  },
+  "include": ["@env.d.ts", "**/*.ts", "**/*.tsx"],
   "extends": "@react-native/typescript-config/tsconfig.json"
 }
