@@ -1,18 +1,17 @@
 import React, { useState, useCallback } from "react";
-import { Image, Text, View, Pressable, Modal, SafeAreaView, StatusBar, ScrollView, TextInput, TouchableOpacity, ImageBackground } from "react-native";
+import { Image, Text, View, Pressable, SafeAreaView, StatusBar, ScrollView, TextInput, TouchableOpacity } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { useNavigation, ParamListBase } from "@react-navigation/native";
-import HomePageFilterPopup from "../components/homeFilter_component";
+import { useNavigation } from "@react-navigation/native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { ArrowRight, Heart, Notification, SearchNormal1, Star1 } from "iconsax-react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../../redux/store/store";
 import { setSelectedCategory } from "../slices/home_slice";
-import CategoryBanner from "../../../assets/home/category_banner.png";
+import RootNavigationStackModel from "../../../routes/model/routes_model";
 
 const DashboardScreen = () => {
-  const { categories, selectedCategory } = useSelector((state: RootState) => state.homeState);
-  const navigation = useNavigation<NativeStackNavigationProp<ParamListBase>>();
+  const { categories, selectedCategory, bestDeals } = useSelector((state: RootState) => state.homeState);
+  const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
   const dispatch = useDispatch();
 
   const [buttonContainerVisible, setButtonContainerVisible] = useState(false);
@@ -54,26 +53,6 @@ const DashboardScreen = () => {
       image: require("../../../assets/home/sweat_shirt.png")
     },
   ]);
-  const [bestDeals, setBestDeals] = useState([
-    {
-      id: "001",
-      name: "Classic Leather Handbag",
-      productType: "Ready-made",
-      price: "230.99",
-      rating: 4.3,
-      isFavorite: false,
-      image: require("../../../assets/home/hand_bag.png")
-    },
-    {
-      id: "002",
-      name: "Swedish stylish women flay gown",
-      productType: "Tailor-made",
-      price: "230.99",
-      rating: 4.3,
-      isFavorite: false,
-      image: require("../../../assets/home/gown_one.png")
-    }
-  ]);
 
   const openButtonContainer = useCallback(() => {
     setButtonContainerVisible(true);
@@ -101,15 +80,15 @@ const DashboardScreen = () => {
                           source={require("../../../assets/home/profile_image.png")}
                         />
                         <View className="ml-2">
-                          <Text className="text-gray-500 text-base">Welcome back,</Text>
+                          <Text className="text-gray-400 text-base">Welcome back,</Text>
                           <Text className="mt-1 font-medium text-base text-white">Otor John Stephen</Text>
                         </View>
                       </View>
                       <Pressable
-                        className="bg-lightGreen p-3 rounded-full"
-                        onPress={() => navigation.navigate("MyProfileNotification")}
+                        className="bg-lightGreen p-2.5 rounded-full"
+                        onPress={ () => null }
                       >
-                        <Notification color="#133522" variant="Bold" />
+                        <Notification color="#133522" size={24} variant="Bold" />
                       </Pressable>
                     </View>
                     
@@ -145,7 +124,7 @@ const DashboardScreen = () => {
                     <View className="mt-6">
                       <View className="flex-row justify-between items-center">
                         <Text className="font-medium text-base text-baseGreen">Category</Text>
-                        <TouchableOpacity onPress={ () => navigation.navigate("categoryScreen") }>
+                        <TouchableOpacity onPress={ () => navigation.navigate("allCategoryScreen") }>
                           <Text className="text-sm text-baseGreen">See all</Text>
                         </TouchableOpacity>
                       </View>
@@ -157,37 +136,39 @@ const DashboardScreen = () => {
                       >
                         { categories.map((category) => (
                           <TouchableOpacity
-                            key={ category }
+                            key={ category.id }
                             onPress={ () => dispatch(setSelectedCategory(category)) }
                           >
-                            <View className={ `mr-3 px-4 py-2.5 rounded-lg ${ (selectedCategory === category) ? 'bg-baseGreen' : 'bg-gray-200' }` }>
-                              <Text className={ `text-sm ${ (selectedCategory === category) ? 'text-white' : 'text-gray-800' }` }>{ category }</Text>
+                            <View className={ `mr-3 px-4 py-2.5 rounded-lg ${ (selectedCategory.id === category.id) ? 'bg-baseGreen' : 'bg-gray-200' }` }>
+                              <Text className={ `text-sm ${ (selectedCategory.id === category.id) ? 'text-white' : 'text-gray-800' }` }>{ category.name }</Text>
                             </View>
                           </TouchableOpacity>
                           
                         )) }
                       </ScrollView>
 
-                      <ImageBackground
-                        source={ CategoryBanner }
-                        resizeMode="cover"
-                        className="h-[420px] w-full mt-4 pb-5 flex items-center justify-end"
-                      >
-                        <TouchableOpacity 
-                          onPress={ () => null }
+                      <View className="h-[400px] w-full mt-4 pb-4 relative flex items-center justify-end overflow-hidden"
+                          style={{ backgroundColor: selectedCategory.color[0] }}>
+                        <Image
+                          source={ selectedCategory.image }
+                          resizeMode="contain"
+                          className="h-[370px] w-full absolute bottom-0 -right-4"
+                        />
+                        <TouchableOpacity
+                          onPress={ () => navigation.navigate("productDetailScreen") }
                           className="h-[50px] w-[160px] mt-6 flex-row items-center justify-center rounded-xl bg-baseGreen"
                         >
                           <Text className="text-sm text-white mr-2">Shop Now</Text>
                           <ArrowRight className="text-white" />
                         </TouchableOpacity>
-                      </ImageBackground>
+                      </View>
                     </View>
                     
                     {/*==== Popular Items Section ====*/}
                     <View className="mt-6">
                       <View className="flex-row justify-between items-center">
                         <Text className="font-medium text-base text-baseGreen">Popular items</Text>
-                        <TouchableOpacity onPress={ () => null }>
+                        <TouchableOpacity onPress={ () => navigation.navigate("categoryListScreen", { screenTitle: "All Popular Items" }) }>
                           <Text className="text-sm text-baseGreen">See all</Text>
                         </TouchableOpacity>
                       </View>
@@ -234,7 +215,7 @@ const DashboardScreen = () => {
                     <View className="mt-6">
                       <View className="flex-row justify-between items-center">
                         <Text className="font-medium text-base text-baseGreen">Best deals</Text>
-                        <TouchableOpacity onPress={ () => null }>
+                        <TouchableOpacity onPress={ () => navigation.navigate("categoryListScreen", { screenTitle: "All Best Deals" }) }>
                           <Text className="text-sm text-baseGreen">See all</Text>
                         </TouchableOpacity>
                       </View>
@@ -286,9 +267,10 @@ const DashboardScreen = () => {
                           <Text className="text-sm text-gray-600">Redeem points and</Text>
                           <Text className="text-sm text-gray-600">get free coupons</Text>
                         </View>
-                        <Pressable className="px-4 py-2 rounded-lg bg-baseGreen">
+                        <TouchableOpacity onPress={ () => navigation.navigate("inviteFriendScreen") }
+                          className="px-4 py-2 rounded-lg bg-baseGreen">
                           <Text className="text-white text-sm font-medium">Invite</Text>
-                        </Pressable>
+                        </TouchableOpacity>
                       </View>
                       <Image
                         source={require("../../../assets/home/invite_tree.png")}
@@ -299,62 +281,9 @@ const DashboardScreen = () => {
                 </View>
 
             </ScrollView>
-
-            {/* Bottom Navigation */}
-            {/* <View className="absolute bottom-0 left-0 right-0 bg-gray-800 h-20 flex-row justify-around items-center">
-                <BottomNavItem icon="home" active />
-                <BottomNavItem icon="shopping-bag" />
-                <BottomNavItem icon="heart" />
-                <BottomNavItem icon="user" />
-            </View> */}
-
-            {/* Filter Modal */}
-            <Modal
-                animationType="slide"
-                transparent={true}
-                visible={buttonContainerVisible}
-                onRequestClose={closeButtonContainer}
-            >
-                <HomePageFilterPopup onClose={closeButtonContainer} />
-            </Modal>
         </SafeAreaView>
     </GestureHandlerRootView>
   );
 };
-
-
-
-  
-  // const DealCard = () => (
-  //   <View className="bg-white rounded-2xl p-4 flex-row mb-4">
-  //     <Image
-  //       className="w-32 h-32 rounded-2xl mr-4"
-  //       resizeMode="cover"
-  //       // source={require("../assets/deal-image.png")}
-  //     />
-  //     <View className="flex-1">
-  //       <Text className="text-base text-gray-800 mb-1">Classic Leather Handbag</Text>
-  //       <Text className="text-lg font-medium text-gray-900">$199.99</Text>
-  //       <View className="flex-row items-center mt-1">
-  //         <Image
-  //           className="w-4 h-4 mr-1"
-  //           resizeMode="cover"
-  //           // source={require("../assets/star-solid.png")}
-  //         />
-  //         <Text className="text-sm text-gray-600">4.8 (3.2k)</Text>
-  //       </View>
-  //     </View>
-  //   </View>
-  // );
-  
-  const BottomNavItem = ({ icon, active = false }: any) => (
-    <View className={`items-center ${active ? 'opacity-100' : 'opacity-50'}`}>
-      <Image
-        className="w-6 h-6"
-        resizeMode="cover"
-        // source={require(`../assets/${icon}${active ? '-solid' : '-outline'}.png`)}
-      />
-    </View>
-  );
 
 export default DashboardScreen;

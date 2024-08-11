@@ -2,11 +2,11 @@ import React from 'react';
 import { SafeAreaView } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
-import AppBottomBarComponent from '../components/appBottomBar_component';
 import CartScreen from '../../cart/screen/cart_screen';
 import DashboardScreen from './dashboard_screen';
 import SavedScreen from '../../saved/screen/saved_screen';
 import ProfileScreen from '../../profile/screen/profile_screen';
+import AppBottomBarComponent from '../components/appBottomBar_component';
 
 const Tab = createBottomTabNavigator();
 

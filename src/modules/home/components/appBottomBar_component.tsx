@@ -1,10 +1,7 @@
 import React from 'react';
 import { View, TouchableOpacity, Dimensions, Text } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import { ShopAdd, Home, ShoppingBag, Heart, Profile, ProfileCircle, Profile2User } from 'iconsax-react-native';
-import { styled } from 'nativewind';
-
-const StyledTouchableOpacity = styled(TouchableOpacity);
+import { ShopAdd, Home, ShoppingBag, Heart, Profile } from 'iconsax-react-native';
 
 const { width } = Dimensions.get('window');
 const tabWidth = width / 5;
@@ -50,13 +47,13 @@ const AppBottomBarComponent = ({ state, descriptors, navigation }: any) => {
           
           let bottomNavIcon;
           if (route.name === "Cart") {
-            bottomNavIcon = <ShoppingBag size={23} color={"#FFFFFF"} variant={isFocused ? "Bold" : "Linear"}  />;
+            bottomNavIcon = <ShoppingBag size={23} color={ isFocused ? "#FFFFFF" : "#AEAFB0" } variant={isFocused ? "Bold" : "Linear"}  />;
           } else if (route.name === "Dashboard") {
-            bottomNavIcon = <Home size={23} color={"#FFFFFF"} variant={isFocused ? "Bold" : "Linear"} />;
+            bottomNavIcon = <Home size={23} color={ isFocused ? "#FFFFFF" : "#AEAFB0" } variant={isFocused ? "Bold" : "Linear"} />;
           } else if (route.name === "Saved") {
-            bottomNavIcon = <Heart size={23} color={"#FFFFFF"} variant={isFocused ? "Bold" : "Linear"}  />;
+            bottomNavIcon = <Heart size={23} color={ isFocused ? "#FFFFFF" : "#AEAFB0" } variant={isFocused ? "Bold" : "Linear"}  />;
           } else if (route.name === "Profile") {
-            bottomNavIcon = <Profile size={23} color={"#FFFFFF"} variant={isFocused ? "Bold" : "Linear"}  />;
+            bottomNavIcon = <Profile size={23} color={ isFocused ? "#FFFFFF" : "#AEAFB0" } variant={isFocused ? "Bold" : "Linear"}  />;
           }
 
           return (
@@ -69,7 +66,7 @@ const AppBottomBarComponent = ({ state, descriptors, navigation }: any) => {
               { bottomNavIcon }
               { isFocused && <View className="h-[4px] w-[4px] mt-0.5 rounded-full bg-white" /> }
               </View>
-              <Text className={ `text-[11px] ${ isFocused ? "text-white" : "text-gray-400" }` }>{ label }</Text>
+              <Text className={ `text-[9px] ${ isFocused ? "text-white" : "text-gray-400" }` }>{ label }</Text>
             </TouchableOpacity>
           );
         })}
