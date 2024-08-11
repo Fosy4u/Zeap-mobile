@@ -12,7 +12,12 @@ type RootNavigationStackModel = {
 
     homeScreen: undefined;
     dashboardScreen: undefined;
-    categoryScreen: undefined;
+    allCategoryScreen: undefined;
+    categoryListScreen: { screenTitle: string } | undefined;
+    inviteFriendScreen: undefined;
+
+    productDetailScreen: undefined;
+    measurementScreen: undefined;
 
     cartScreen: undefined;
     savedScreen: undefined;

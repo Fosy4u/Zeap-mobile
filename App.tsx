@@ -6,7 +6,7 @@ import AppRoutes from './src/routes/routes';
 
 const App = (): React.JSX.Element => {
   return (
-      <AppRoutes />
+    <AppRoutes />
   );
 }
 

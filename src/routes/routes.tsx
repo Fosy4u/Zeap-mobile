@@ -19,14 +19,18 @@ import DashboardScreen from '../modules/home/screens/dashboard_screen';
 import CartScreen from '../modules/cart/screen/cart_screen';
 import SavedScreen from '../modules/saved/screen/saved_screen';
 import ProfileScreen from '../modules/profile/screen/profile_screen';
-import CategoryScreen from '../modules/home/screens/category_screen';
+import CategoryScreen from '../modules/home/screens/allCategory_screen';
+import CategoryListScreen from '../modules/home/screens/categoryList_screen ';
+import InviteFriendScreen from '../modules/home/screens/inviteFriend_screen ';
+import ProductDetailScreen from '../modules/product/screen/productDetails_screen';
+import MeasurementScreen from '../modules/product/screen/measurement_screen';
 
 const Stack = createNativeStackNavigator<RootNavigationStackModel>();
 
 const AppRoutes = () => {
   return (
     <NavigationContainer>
-        <Stack.Navigator initialRouteName="homeScreen">
+        <Stack.Navigator initialRouteName="splashScreen">
 
             {/* ==== Splash & Onboarding ==== */}
             <Stack.Screen name ="splashScreen" component={ SplashScreen } options={{ headerShown: false }} />
@@ -43,7 +47,13 @@ const AppRoutes = () => {
             {/* ==== Home ==== */}
             <Stack.Screen name="homeScreen" component={ HomeScreen} options={{ headerShown: false }} />
             <Stack.Screen name="dashboardScreen" component={ DashboardScreen } options={{ headerShown: false }} />
-            <Stack.Screen name="categoryScreen" component={ CategoryScreen } options={{ headerShown: false }} />
+            <Stack.Screen name="allCategoryScreen" component={ CategoryScreen } options={{ headerShown: false }} />
+            <Stack.Screen name="categoryListScreen" component={ CategoryListScreen } options={{ headerShown: false }} />
+            <Stack.Screen name="inviteFriendScreen" component={ InviteFriendScreen } options={{ headerShown: false }} />
+
+            {/* ==== Product ==== */}
+            <Stack.Screen name="productDetailScreen" component={ ProductDetailScreen } options={{ headerShown: false }} />
+            <Stack.Screen name="measurementScreen" component={ MeasurementScreen } options={{ headerShown: false }} />
 
             {/* ==== Cart ==== */}
             <Stack.Screen name="cartScreen" component={ CartScreen } options={{ headerShown: false }} />

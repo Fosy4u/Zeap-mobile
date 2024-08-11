@@ -2,6 +2,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "../../modules/auths/slices/auth_slice";
 import settingsReducer from "../../modules/setting/slices/settings_slice";
 import homeReducer from "../../modules/home/slices/home_slice";
+import productReducer from "../../modules/product/slices/product_slice";
 import settingsAPI from "../../modules/setting/apis/settings_api";
 
 
@@ -9,6 +10,7 @@ const store = configureStore({
     reducer: {
         authState: authReducer,
         homeState: homeReducer,
+        productState: productReducer,
         settingsState: settingsReducer,
 
         [settingsAPI.reducerPath]: settingsAPI.reducer,

@@ -80,7 +80,7 @@ const LoginScreen = () => {
             </View>
 
             <TouchableOpacity 
-              onPress={ () => null }
+              onPress={ () => navigation.navigate("homeScreen") }
               className="h-[55px] w-auto mt-10 flex flex-row items-center justify-center rounded-xl bg-baseGreen"
             >
               <Text className="text-lg text-white mr-2">Login</Text>

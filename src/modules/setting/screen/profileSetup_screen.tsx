@@ -120,8 +120,7 @@ const ProfileSetupScreen = () => {
                 arrowicon={ <ArrowDown2 size={18} color="#9ca3af" className="ml-1 mt-1" /> }
                 search={ true }
                 placeholder="234"
-              />
-              <View className="h-[35px] w-[1] mr-2 bg-slate-300" />
+              />rist
               <TextInput
                 aria-label="PhoneNumber"
                 aria-labelledby="phoneNumber"
