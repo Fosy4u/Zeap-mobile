@@ -5,12 +5,17 @@ import CheckBox from "@react-native-community/checkbox";
 import { useNavigation } from '@react-navigation/native';
 import RootNavigationStackModel from '../../../routes/model/routes_model';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import ForgotScreen from './forgotPassword_screen';
+import { Controller } from 'react-hook-form';
+import useLoginHook from '../hooks/login_hook';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../redux/store/store';
+import { setRememberMe, setShowPassword } from '../slices/authState_slice';
 
 const LoginScreen = () => {
-  const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
+  const { showPassword, rememberMe } = useSelector((state: RootState) => state.authState);
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
+
+  const { control, handleSubmit, onSubmit, errors, isLoading } = useLoginHook();
 
   return (
     <SafeAreaView className="flex-1 items-center px-5">
@@ -36,30 +41,48 @@ const LoginScreen = () => {
           {/* ==== Form ==== */}
           <View className="h-auto w-full">
 
-            <Text aria-label="Email" nativeID="emailAddress" className="mt-5">Email address</Text>
+            <Text aria-label="Email" nativeID="email" className="mt-5">Email address</Text>
             <View className="h-auto w-full mt-1.5 px-3 py-1 border border-gray-300 rounded-xl bg-gray-100">
-              <TextInput
-                aria-label="Email"
-                aria-labelledby="emailAddress"
-                keyboardType="email-address"
-                placeholder="Enter email address"
-                placeholderTextColor="#9ca3af"
-                className="text-base"
-                onChangeText={(value) => null}
+              <Controller
+                control={ control }
+                name="email"
+                render={ ({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    aria-label="Email"
+                    aria-labelledby="email"
+                    keyboardType="email-address"
+                    placeholder="Enter email address"
+                    placeholderTextColor="#9ca3af"
+                    className="text-base"
+                    onBlur={ onBlur }
+                    onChangeText={ onChange }
+                    value={ value }
+                  />
+                ) }
               />
+              { errors.email && (<Text className="text-red-500 text-xs">{errors.email.message}</Text>) }
             </View>
 
             <Text aria-label="Password" nativeID="password" className="mt-6">Password</Text>
             <View className="h-auto w-full mt-1.5 px-3 py-1 flex-row items-center justify-between border border-gray-300 rounded-xl bg-gray-100">
-              <TextInput
-                aria-label="Password"
-                aria-labelledby="password"
-                secureTextEntry={ showPassword }
-                placeholder="Enter password"
-                placeholderTextColor="#9ca3af"
-                className="text-base"
-                onChangeText={(value) => null}
+              <Controller
+                control={ control }
+                name="password"
+                render={ ({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    aria-label="Password"
+                    aria-labelledby="password"
+                    secureTextEntry={ showPassword }
+                    placeholder="Enter password"
+                    placeholderTextColor="#9ca3af"
+                    className="text-base"
+                    onBlur={ onBlur }
+                    onChangeText={ onChange }
+                    value={ value }
+                  />
+                ) }
               />
+              { errors.password && (<Text className="text-red-500 text-xs">{errors.password.message}</Text>) }
               <TouchableOpacity onPress={ () => setShowPassword(!showPassword) }>
                 { showPassword ? <Eye className="text-gray-400" /> : <EyeSlash className="text-gray-400" /> }
               </TouchableOpacity>
@@ -80,11 +103,12 @@ const LoginScreen = () => {
             </View>
 
             <TouchableOpacity 
-              onPress={ () => navigation.navigate("homeScreen") }
+              onPress={handleSubmit(onSubmit)}
+              disabled={isLoading}
               className="h-[55px] w-auto mt-10 flex flex-row items-center justify-center rounded-xl bg-baseGreen"
             >
-              <Text className="text-lg text-white mr-2">Login</Text>
-              <ArrowRight className="text-white" />
+              <Text className="text-lg text-white mr-2">{ isLoading ? "Please wait..." : "Login" }</Text>
+              { isLoading ? null : <ArrowRight className="text-white" /> }
             </TouchableOpacity>
 
             <View className="mt-6 px-1.5 flex-row items-center">

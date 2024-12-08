@@ -6,8 +6,7 @@ import { Image, SafeAreaView, StatusBar, Text, TouchableOpacity, View } from 're
 import FastImage from 'react-native-fast-image';
 import { NativeStackNavigationProp } from 'react-native-screens/lib/typescript/native-stack/types';
 import RootNavigationStackModel from '../../../routes/model/routes_model';
-
-import { setShowSuccessModal } from '../../setting/slices/settings_slice';
+import { setShowSuccessModal } from '../slices/authState_slice';
 
 interface Props {
     bodyText: string;

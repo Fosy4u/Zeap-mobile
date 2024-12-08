@@ -4,12 +4,12 @@ import { ArrowRight, Eye, EyeSlash } from 'iconsax-react-native';
 import { SafeAreaView, ScrollView, StatusBar, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import SuccessPopupModal from '../modals/successPopup_modal';
 import { RootState } from '../../../redux/store/store';
+import { setShowSuccessModal } from '../slices/authState_slice';
 
-import { setShowSuccessModal } from '../../setting/slices/settings_slice';
 
 
 const ResetPasswordScreen = () => {
-  const { isSellerOptions, showSuccessModal } = useSelector((state: RootState) => state.settingsState);
+  const { showSuccessModal } = useSelector((state: RootState) => state.authState);
   const dispatch = useDispatch();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);

@@ -4,12 +4,8 @@ import { View, Text, Animated, Dimensions, SafeAreaView } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import RootNavigationStackModel from '../../../routes/model/routes_model';
-
-// type SplashScreenNavigationProp = NativeStackNavigationProp<RootNavigationStackModel>;
-
-// interface Props {
-//   navigation: SplashScreenNavigationProp;
-// }
+import useLoginHook from '../../auths/hooks/login_hook';
+import EncryptedStorage from 'react-native-encrypted-storage';
 
 
 const SplashScreen = () => {
@@ -27,9 +23,10 @@ const SplashScreen = () => {
   const [slideAnim] = useState(new Animated.Value(30));
   const [animationStarted, setAnimationStarted] = useState(false);
 
+  const { getUserData } = useLoginHook();
 
-  useEffect(() => {
 
+  const startSplashAnimation = () => {
     // Define animations
     const animations = [
       Animated.timing(zoomInValue, {
@@ -71,22 +68,68 @@ const SplashScreen = () => {
     Animated.parallel(animations).start(() => {
       setAnimationStarted(true);
     });
-  }, []);
+  };
+
+  const checkTokenAndNavigate = async () => {
+    const userData = await getUserData();
+    if (userData) {
+      const isVendor = userData.isVendor
+      if (isVendor) {
+        navigation.navigate("vendorHomeScreen");
+      } else {
+        navigation.navigate("homeScreen");
+      }
+    } else {
+      // userData not found, proceed with splash screens animations
+      startSplashAnimation();
+    }
+  };
 
   useEffect(() => {
-    if (animationStarted && currentIndex >= 0 && currentIndex < counters.length) {
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-      }).start(() => {
-        slideAnim.setValue(20);
-        setCurrentIndex(prevIndex => prevIndex + 1);
-      });
-    } else if (currentIndex >= counters.length) {
-      navigation.navigate("onboardingOneScreen");
-    }
+    const checkForFirstTimer = async () => {
+      try {
+        const encodedString = await EncryptedStorage.getItem("isFirstTimer");
+
+        if (encodedString !== null) {
+          const isFirstTimer = JSON.parse(encodedString);
+          if (isFirstTimer) {
+            // If user is a first timer, proceed with splash screens animations
+            startSplashAnimation();
+          } else {
+            checkTokenAndNavigate();
+          }
+        } else {
+          // If isFirstTimer is not set, assume it's a first-time user
+          await EncryptedStorage.setItem("isFirstTimer", JSON.stringify(true));
+          startSplashAnimation();
+        }
+      } catch (error) {
+        console.error("Error checking first timer status:", error);
+        startSplashAnimation();
+      }
+    };
+
+    checkForFirstTimer();
+  }, [checkTokenAndNavigate]);
+
+  useEffect(() => {
+    (async () => {
+      if (animationStarted && currentIndex >= 0 && currentIndex < counters.length) {
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true,
+        }).start(() => {
+          slideAnim.setValue(20);
+          setCurrentIndex(prevIndex => prevIndex + 1);
+        });
+      } else if (currentIndex >= counters.length) {
+        await EncryptedStorage.setItem("isFirstTimer", JSON.stringify(false));
+        navigation.navigate("onboardingOneScreen");
+      }
+    })();
   }, [currentIndex, animationStarted, navigation]);
+
 
 
   return (
