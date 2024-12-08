@@ -12,6 +12,9 @@ module.exports = {
         black: "#151518",
         lightGray: "#F3F4F6",
       },
+      fontFamily: {
+        "montserrat": ["Montserrat-Light", "Montserrat-Regular", "Montserrat-Medium", "Montserrat-SemiBold", "Montserrat-Bold"],
+      },
     },
   },
   plugins: [],
