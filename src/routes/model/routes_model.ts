@@ -1,4 +1,4 @@
-import IReview from "../../modules/user/product/models/review_model";
+import IReview from "../../modules/user/products/models/review_model";
 
 type RootNavigationStackModel = {
     splashScreen: undefined;
@@ -37,10 +37,17 @@ type RootNavigationStackModel = {
     // VENDORS
     vendorHomeScreen: undefined;
     vendorDashboardScreen: undefined;
-    itemsScreen: undefined;
     marketScreen: undefined;
     shopSetupScreen: undefined;
     notificationsScreen: undefined;
+    paymentScreen: undefined;
+    overviewScreen: undefined;
+    promoScreen: undefined;
+
+    vendorProductsScreen: undefined;
+    vendorProductDetailsScreen: { productID: string } | undefined;
+    addProductScreen: undefined;
+    addReadyMadeClothesScreen: undefined;
 };
 
 export default RootNavigationStackModel;

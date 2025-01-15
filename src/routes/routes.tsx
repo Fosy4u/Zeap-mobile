@@ -19,22 +19,28 @@ import DashboardScreen from '../modules/user/home/screens/dashboard_screen';
 import CartScreen from '../modules/user/cart/screen/cart_screen';
 import SavedScreen from '../modules/user/saved/screen/saved_screen';
 import ProfileScreen from '../modules/profile/screen/profile_screen';
-import CategoryScreen from '../modules/user/product/screen/allCategory_screen';
-import ProductListScreen from '../modules/user/product/screen/productList_screen ';
+import CategoryScreen from '../modules/user/products/screen/allCategory_screen';
+import ProductListScreen from '../modules/user/products/screen/productList_screen ';
 import InviteFriendScreen from '../modules/user/home/screens/inviteFriend_screen ';
-import ProductDetailScreen from '../modules/user/product/screen/productDetails_screen';
-import MeasurementScreen from '../modules/user/product/screen/measurement_screen';
-import DeliveryAddressScreen from '../modules/user/product/screen/deliveryAddress_screen';
+import ProductDetailScreen from '../modules/user/products/screen/productDetails_screen';
+import MeasurementScreen from '../modules/user/products/screen/measurement_screen';
+import DeliveryAddressScreen from '../modules/user/products/screen/deliveryAddress_screen';
 import VendorHomeScreen from '../modules/vendor/home/screens/vendorHome_screen';
-import ItemsScreen from '../modules/vendor/items/screens/items_screen';
 import MarketScreen from '../modules/vendor/market/screens/market_screen';
 import VendorDashboardScreen from '../modules/vendor/home/screens/vendorDashboard_screen';
 import NotificationsScreen from '../modules/vendor/notifications/screens/notifications_screen';
-import PaymentMethodScreen from '../modules/user/product/screen/paymentMethod_screen';
-import ReviewListScreen from '../modules/user/product/screen/reviewList_screen';
+import PaymentMethodScreen from '../modules/user/products/screen/paymentMethod_screen';
+import ReviewListScreen from '../modules/user/products/screen/reviewList_screen';
 import PersonalInformationScreen from '../modules/profile/screen/personalInformation_screen';
 import EditAccountDetailsScreen from '../modules/profile/screen/editAccountDetails_screen';
 import EditDeliveryAddressScreen from '../modules/profile/screen/editDeliveryAddress_screen';
+import PaymentScreen from '../modules/vendor/payments/screens/payment_screen';
+import OverviewScreen from '../modules/vendor/home/screens/overview_screen';
+import PromoScreen from '../modules/vendor/home/screens/promo_screen';
+import VendorProductsScreen from "../modules/vendor/products/screens/vendorProducts_screen.tsx";
+import VendorProductDetailsScreen from "../modules/vendor/products/screens/vendorProductDetails_screen.tsx";
+import AddProductScreen from "../modules/vendor/products/screens/addProduct_screen.tsx";
+import AddReadyMadeClothesScreen from "../modules/vendor/products/screens/addReadyMadeClothes_screen.tsx";
 
 const Stack = createNativeStackNavigator<RootNavigationStackModel>();
 
@@ -95,10 +101,14 @@ const AppRoutes = () => {
              */}
             {/* ==== Home ==== */}
             <Stack.Screen name="vendorHomeScreen" component={ VendorHomeScreen} options={{ headerShown: false }} />
-            <Stack.Screen name="vendorDashboardScreen" component={ VendorDashboardScreen } />
+            <Stack.Screen name="vendorDashboardScreen" component={ VendorDashboardScreen } options={{ headerShown: false }} />
 
-            {/* ==== Items ==== */}
-            <Stack.Screen name="itemsScreen" component={ ItemsScreen} options={{ headerShown: false }} />
+            {/* ==== Products ==== */}
+            <Stack.Screen name="vendorProductsScreen" component={ VendorProductsScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="vendorProductDetailsScreen" component={ VendorProductDetailsScreen } options={{ headerShown: false }} />
+            <Stack.Screen name="addProductScreen" component={ AddProductScreen } options={{ headerShown: false }} />
+            <Stack.Screen name="addReadyMadeClothesScreen" component={ AddReadyMadeClothesScreen } options={{ headerShown: false }} />
+
 
             {/* ==== Market ==== */}
             <Stack.Screen name="marketScreen" component={ MarketScreen } options={{ headerShown: false }} />
@@ -106,8 +116,11 @@ const AppRoutes = () => {
             {/* ==== Settings ==== */}
             <Stack.Screen name="shopSetupScreen" component={ ShopSetupScreen } options={{ headerShown: false }} />
 
-            {/* ==== Notifications ==== */}
+            {/* ==== Others ==== */}
             <Stack.Screen name="notificationsScreen" component={ NotificationsScreen } options={{ headerShown: false }} />
+            <Stack.Screen name="paymentScreen" component={ PaymentScreen } options={{ headerShown: false }} />
+            <Stack.Screen name="overviewScreen" component={ OverviewScreen } options={{ headerShown: false }} />
+            <Stack.Screen name="promoScreen" component={ PromoScreen } options={{ headerShown: false }} />
         </Stack.Navigator>
     </NavigationContainer>
   )

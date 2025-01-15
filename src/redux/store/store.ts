@@ -2,10 +2,14 @@ import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "../../modules/auths/slices/authState_slice";
 import createReducer from "../../modules/user/cart/slices/cart_slice";
 import homeReducer from "../../modules/user/home/slices/home_slice";
-import productReducer from "../../modules/user/product/slices/product_slice";
+import productReducer from "../../modules/user/products/slices/product_slice";
 import profileReducer from "../../modules/profile/slices/profileState_slice";
-import settingsAPI from "../../modules/profile/apis/settings_api";
+import generalReducer from "../../modules/general/slices/general_slice";
 import vendorHomeReducer from "../../modules/vendor/home/slices/vendorHome_slice";
+import vendorGeneralReducer from "../../modules/vendor/general/slices/general_slice";
+import notificationsReducer from "../../modules/vendor/notifications/slices/notifications_slice";
+import paymentReducer from "../../modules/vendor/payments/slices/payment_slice";
+import vendorProductReducer from "../../modules/vendor/products/slices/vendorProduct_slice";
 import api from "../api/api";
 
 
@@ -14,6 +18,7 @@ const appStore = configureStore({
         //  General
         authState: authReducer,
         profileState: profileReducer,
+        generalState: generalReducer,
 
         //  Users
         cartState: createReducer,
@@ -22,6 +27,10 @@ const appStore = configureStore({
 
         //  Vendors
         vendorHomeState: vendorHomeReducer,
+        vendorGeneralState: vendorGeneralReducer,
+        notificationsState: notificationsReducer,
+        paymentState: paymentReducer,
+        vendorProductState: vendorProductReducer,
 
         [api.reducerPath]: api.reducer,
     },
@@ -29,8 +38,7 @@ const appStore = configureStore({
     middleware: (getDefaultMiddleware) => getDefaultMiddleware({
         serializableCheck: false
     }).concat([
-        api.middleware,
-        settingsAPI.middleware
+        api.middleware
     ]),
 });
 

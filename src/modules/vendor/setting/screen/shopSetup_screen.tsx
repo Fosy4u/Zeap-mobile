@@ -8,7 +8,7 @@ import SuccessPopupModal from "../../../auths/modals/successPopup_modal";
 
 
 const ShopSetupScreen = () => {
-  const { phoneCodeOptions } = useSelector((state: RootState) => state.settingsState);
+  const { phoneCodeOptions } = useSelector((state: RootState) => state.profileState);
   const [selected, setSelected] = useState("");
   const [step, setStep] = useState("StepOne");
   const [showSuccessModal, setShowSuccessModal] = useState(false);

@@ -1,7 +1,11 @@
 interface IProfileState {
     userData: IUser;
     token: string;
-    phoneCodeOptions: IDropdownOptions[];
+    selectedPhoneCode: IPhoneCodeDropdownOptions;
+    phoneCodeOptions: IPhoneCodeDropdownOptions[];
+    showPhoneCodeModal: boolean;
+    selectedCountry: string;
+    showCountryModal: boolean;
     heightUnitOptions: IDropdownOptions[];
     weightUnitOptions: IDropdownOptions[];
     complexionOptions: IDropdownOptions[];
@@ -45,5 +49,12 @@ interface IDropdownOptions {
     value: string;
 }
 
-export type { IUser };
+interface IPhoneCodeDropdownOptions {
+    name: string;
+    dial_code: string;
+    code: string;
+    emoji: string;
+}
+
+export type { IUser, IPhoneCodeDropdownOptions };
 export default IProfileState;
