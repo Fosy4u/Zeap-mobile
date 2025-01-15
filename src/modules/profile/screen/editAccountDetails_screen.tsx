@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { SafeAreaView, ScrollView, StatusBar, Text, TextInput, TouchableOpacity, View } from "react-native";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { ArrowDown2, ArrowLeft, ArrowRight } from "iconsax-react-native";
 import { RootState } from "../../../redux/store/store";
 import { SelectList } from "react-native-dropdown-select-list";
@@ -10,11 +10,21 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import RootNavigationStackModel from "../../../routes/model/routes_model";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import useEditAccountDetailsHook from "../hooks/editAccountDetails_hook";
+import { Controller } from "react-hook-form";
+import CountriesPhoneCodeModal from "../modals/countriesPhoneCode_modal";
+import { setShowCountryModal, setShowPhoneCodeModal } from "../slices/profileState_slice";
 
 
 const EditAccountDetailsScreen = () => {
-    const { heightUnitOptions, weightUnitOptions, complexionOptions, shoeSizeOptions, bestOutfitOptions, bestColorOptions } = useSelector((state: RootState) => state.profileState);
+    const {
+        selectedPhoneCode, selectedCountry, showPhoneCodeModal, showCountryModal,
+        heightUnitOptions, weightUnitOptions, complexionOptions, 
+        shoeSizeOptions, bestOutfitOptions, bestColorOptions,
+     } = useSelector((state: RootState) => state.profileState);
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
+    const dispatch = useDispatch();
+    const { control, handleSubmit, errors } = useEditAccountDetailsHook();
 
     
     const [selected, setSelected] = useState("");
@@ -85,55 +95,74 @@ const EditAccountDetailsScreen = () => {
 
                         <Text aria-label="FirstName" nativeID="firstName" className="mt-5">First name</Text>
                         <View className="h-auto w-full mt-1.5 px-3 py-1 border border-gray-300 rounded-xl bg-gray-100">
-                            <TextInput
-                                aria-label="FirstName"
-                                aria-labelledby="firstName"
-                                keyboardType="name-phone-pad"
-                                placeholder="Enter first name"
-                                placeholderTextColor="#9ca3af"
-                                className="text-base"
-                                onChangeText={(value) => null}
+                            <Controller
+                                control={control}
+                                name="firstName"
+                                render={ ({ field: { onChange, onBlur, value } }) => (
+                                    <TextInput
+                                        aria-label="FirstName"
+                                        aria-labelledby="firstName"
+                                        keyboardType="name-phone-pad"
+                                        placeholder="Enter first name"
+                                        placeholderTextColor="#9ca3af"
+                                        className="text-base"
+                                        onBlur={ onBlur }
+                                        onChangeText={ onChange }
+                                        value={ value }
+                                    />
+                                ) }
+                            />
+                            { errors.firstName! && (<Text className="text-red-500 text-xs">{errors.firstName!.message}</Text>) }
+                        </View>
+
+                        <Text aria-label="LastName" nativeID="" className="mt-5">Last name</Text>
+                        <View className="h-auto w-full mt-1.5 px-3 py-1 border border-gray-300 rounded-xl bg-gray-100">
+                            <Controller
+                                control={control}
+                                name="lastName"
+                                render={ ({ field: { onChange, onBlur, value } }) => (
+                                    <TextInput
+                                        aria-label="LastName"
+                                        aria-labelledby="lastName"
+                                        keyboardType="name-phone-pad"
+                                        placeholder="Enter last name"
+                                        placeholderTextColor="#9ca3af"
+                                        className="text-base"
+                                        onBlur={ onBlur }
+                                        onChangeText={ onChange }
+                                        value={ value }
+                                    />
+                                ) }
                             />
                         </View>
 
-                        <Text aria-label="LastName" nativeID="lastName" className="mt-5">Last name</Text>
-                        <View className="h-auto w-full mt-1.5 px-3 py-1 border border-gray-300 rounded-xl bg-gray-100">
-                        <TextInput
-                            aria-label="LastName"
-                            aria-labelledby="lastName"
-                            keyboardType="name-phone-pad"
-                            placeholder="Enter last name"
-                            placeholderTextColor="#9ca3af"
-                            className="text-base"
-                            onChangeText={(value) => null}
-                        />
+                        <Text aria-label="PhoneNumber" nativeID="phoneNumber" className="mt-5">Phone number</Text>
+                        <View className="h-auto w-full mt-1.5 px-3 py-1 flex-row items-center border border-gray-300 rounded-xl bg-gray-100">
+                            <TouchableOpacity
+                                onPress={ () => dispatch(setShowPhoneCodeModal(true)) }
+                                className="flex-row items-center"
+                            >
+                                <Text className="mb-1 text-lg">{ selectedPhoneCode.dial_code }</Text>
+                                <View className="h-[30px] w-[2px] mx-2 bg-gray-300" />
+                            </TouchableOpacity>
+                            <Controller
+                                control={control}
+                                name="phoneNumber"
+                                render={ ({ field: { onChange, onBlur, value } }) => (
+                                    <TextInput
+                                        aria-label="PhoneNumber"
+                                        aria-labelledby="phoneNumber"
+                                        keyboardType="phone-pad"
+                                        placeholder="Enter phone number"
+                                        placeholderTextColor="#9ca3af"
+                                        className="text-base"
+                                        onBlur={ onBlur }
+                                        onChangeText={ onChange }
+                                        value={ value }
+                                    />
+                                ) }      
+                            />
                         </View>
-
-                        {/* <Text aria-label="PhoneNumber" nativeID="phoneNumber" className="mt-5">Phone number</Text>
-                        <View className="h-auto w-full mt-1.5 px-3 py-1 flex flex-row items-center border border-gray-300 rounded-xl bg-gray-100">
-                        <Text className="mb-1 text-lg">+</Text>
-                        <SelectList
-                            setSelected={ setSelected }
-                            data={ phoneCodeOptions }
-                            maxHeight={100}
-                            boxStyles={{ height: 30, width: "auto", paddingHorizontal: 5, paddingVertical: 0, borderColor: "transparent" }}
-                            inputStyles={{ marginTop: 1, fontSize: 16, color: "#9ca3af" }}
-                            dropdownStyles={{ height: "auto", width: "auto", borderColor: "transparent" }}
-                            dropdownItemStyles={{ paddingHorizontal: 40 }}
-                            arrowicon={ <ArrowDown2 size={18} color="#9ca3af" className="ml-1 mt-1" /> }
-                            search={ true }
-                            placeholder="234"
-                        />rist
-                        <TextInput
-                            aria-label="PhoneNumber"
-                            aria-labelledby="phoneNumber"
-                            keyboardType="phone-pad"
-                            placeholder="Enter phone number"
-                            placeholderTextColor="#9ca3af"
-                            className="text-base"
-                            onChangeText={(value) => null}
-                        />
-                        </View> */}
 
                         {/* <Text aria-label="DateOfBirth" nativeID="dateOfBirth" className="mt-5">Date of birth</Text>
                         <View className="h-auto w-full mt-1.5 px-3 py-1 flex-row items-center justify-between border border-gray-300 rounded-xl bg-gray-100">
@@ -166,17 +195,21 @@ const EditAccountDetailsScreen = () => {
                         />
                         </View> */}
 
-                        <Text className="mt-5">Countries</Text>
-                        <View className="h-auto w-full mt-1.5 py-0 flex-row items-center justify-between border border-gray-300 rounded-xl bg-gray-100">
-                        <SelectList
-                            setSelected={ setSelected }
-                            data={ data }
-                            boxStyles={{ height: "auto", width: "100%", paddingHorizontal: 15, paddingVertical: 17, borderColor: "transparent" }}
-                            inputStyles={{ fontSize: 16, color: "#9ca3af" }}
-                            dropdownStyles={{ height: "auto", width: "100%", borderColor: "transparent" }}
-                            dropdownItemStyles={{ paddingHorizontal: 15 }}
-                            search={ false }
-                        />
+                        <Text aria-label="Country" nativeID="country" className="mt-5">Country</Text>
+                        <View className="h-auto w-full mt-1.5 px-3 py-4 flex-row items-center justify-between border border-gray-300 rounded-xl bg-gray-100">
+                            <Controller
+                                control={control}
+                                name="country"
+                                render={ ({ field: { onChange, onBlur, value } }) => (
+                                    <TouchableOpacity
+                                        onPress={ () => dispatch(setShowCountryModal(true)) }
+                                        className="w-full flex-row"
+                                    >
+                                        <Text className="flex-1">{ selectedCountry }</Text>
+                                        <ArrowDown2 color="#909090" />
+                                    </TouchableOpacity>
+                                ) }      
+                            />
                         </View>
 
                         <Text className="mt-5">Cities</Text>
@@ -340,7 +373,13 @@ const EditAccountDetailsScreen = () => {
                     </View>
                 </ScrollView>
 
-                { showSuccessModal &&
+            </SafeAreaView>
+
+            { showPhoneCodeModal && <CountriesPhoneCodeModal option="PhoneCodes" /> }  
+              
+            { showCountryModal && <CountriesPhoneCodeModal option="Countries" /> }    
+
+            { showSuccessModal &&
                 <SuccessPopupModal
                     bodyText={ (isSeller) 
                     ? "You have successfully setup your profile. Kindly proceed to setup your shop." 
@@ -348,9 +387,7 @@ const EditAccountDetailsScreen = () => {
                     }
                     screenURL={ (isSeller) ? "shopSetupScreen" : "loginScreen"}
                 />
-                }
-
-            </SafeAreaView>
+            }
         </GestureHandlerRootView>
     );
 };

@@ -10,7 +10,7 @@ const initialState: IHomeState = {
           price: "230.99",
           rating: 4.3,
           isFavorite: false,
-          image: require("../../../../assets/home/hand_bag.png")
+          image: require("../../../../../assets/images/home/hand_bag.png")
         },
         {
           id: "002",
@@ -19,7 +19,7 @@ const initialState: IHomeState = {
           price: "230.99",
           rating: 4.3,
           isFavorite: false,
-          image: require("../../../../assets/home/gown_one.png")
+          image: require("../../../../../assets/images/home/gown_one.png")
         }
     ]
 };

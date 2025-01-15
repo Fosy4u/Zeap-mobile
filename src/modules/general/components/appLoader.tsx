@@ -19,15 +19,15 @@ const AppLoader = () => {
 
     // Interpolating the spin value to create a rotation effect
     const spin = spinValue.interpolate({
-        inputRange: [0, 1], // Start and end values of animation
-        outputRange: ["0deg", "360deg"], // Degrees for rotation
+        inputRange: [0, 1],
+        outputRange: ["0deg", "360deg"],
     });
 
 
     return (
         <View className="flex-1 items-center justify-center">
           <Animated.Image
-            source={require("../../../assets/app_logo.png")} // Replace with your logo path
+            source={require("../../../../assets/images/app_logo.png")}
             style={[{ transform: [{ rotate: spin }] }]}
             className="h-[50px] w-[50px]"
             resizeMode="cover"
