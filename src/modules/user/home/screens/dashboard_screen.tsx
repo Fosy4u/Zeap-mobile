@@ -11,8 +11,10 @@ import LinearGradient from 'react-native-linear-gradient';
 import { RootState } from "../../../../redux/store/store";
 import RootNavigationStackModel from "../../../../routes/model/routes_model";
 import Carousel from "react-native-reanimated-carousel";
-import useProductsHook from "../../product/hooks/products_hook"
-import { setSelectedCategory } from "../../product/slices/product_slice";
+import useProductsHook from "../../products/hooks/products_hook"
+import { setSelectedCategory } from "../../products/slices/product_slice";
+import useGeneralHook from "../../../general/hooks/general_hook";
+import useHomeHook from "../hooks/home_hook";
 
 const DashboardScreen = () => {
   const { categories, selectedCategory, popularProducts } = useSelector((state: RootState) => state.productState);
@@ -24,14 +26,15 @@ const DashboardScreen = () => {
   
   const {
     handleGetNewestProducts,
-    handleGetFemaleClothings,
-    handleGetMaleClothings,
+    handleGetFemaleClothing,
+    handleGetMaleClothing,
     handleGetShoes,
     handleGetAccessories,
     handleGetBags,
     handleGetPopularProducts,
     popularProductIsLoading,
-  } = useProductsHook();
+  } = useHomeHook();
+  const { handleGetProductOptions } = useGeneralHook();
   
 
   const [buttonContainerVisible, setButtonContainerVisible] = useState(false);
@@ -49,12 +52,13 @@ const DashboardScreen = () => {
   useEffect(() => {
     (async () => {
       await handleGetNewestProducts();
-      await handleGetFemaleClothings();
-      await handleGetMaleClothings();
+      await handleGetFemaleClothing();
+      await handleGetMaleClothing();
       await handleGetShoes();
       await handleGetAccessories();
       await handleGetBags();
       await handleGetPopularProducts();
+      await handleGetProductOptions();
     })();
   }, []);
 
@@ -73,7 +77,7 @@ const DashboardScreen = () => {
                         <Image
                           className="h-[60px] w-[60px] rounded-full"
                           resizeMode="cover"
-                          source={require("../../../../assets/home/profile_image.png")}
+                          source={require("../../../../../assets/images/home/profile_image.png")}
                         />
                         <View className="ml-2">
                           <Text className="text-gray-400 text-base">Welcome back,</Text>
@@ -126,7 +130,7 @@ const DashboardScreen = () => {
                                 source={
                                   newestProducts[index]?.imageLink
                                     ? { uri: newestProducts[index].imageLink }
-                                    : require("../../../../assets/app_logo.png")
+                                    : require("../../../../../assets/images/app_logo.png")
                                 }
                               />
                             </View>
@@ -223,7 +227,7 @@ const DashboardScreen = () => {
                                 source={ 
                                   popularProduct.colors[0]?.images[1]?.link
                                   ? { uri: popularProduct.colors[0]?.images[1]?.link }
-                                  : require("../../../../assets/app_logo.png")
+                                  : require("../../../../../assets/images/app_logo.png")
                                 }
                               />
                               <View className="h-[35px] w-[35px] absolute top-1 right-2 flex items-center justify-center rounded-xl bg-gray-200">
@@ -292,7 +296,7 @@ const DashboardScreen = () => {
                                 source={ 
                                   bestDeal.colors[0]?.images[1]?.link
                                   ? { uri: bestDeal.colors[0]?.images[1]?.link }
-                                  : require("../../../../assets/app_logo.png")
+                                  : require("../../../../../assets/images/app_logo.png")
                                 }
                               />
                               <View className="h-[35px] w-[35px] absolute top-2 right-2 flex items-center justify-center rounded-xl bg-gray-200">
@@ -331,7 +335,7 @@ const DashboardScreen = () => {
                         </TouchableOpacity>
                       </View>
                       <Image
-                        source={require("../../../../assets/home/invite_tree.png")}
+                        source={require("../../../../../assets/images/home/invite_tree.png")}
                         className="absolute bottom-0 right-0"
                         resizeMode="contain"
                       />

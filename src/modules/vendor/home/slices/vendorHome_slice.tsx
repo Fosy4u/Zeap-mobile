@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import IVendorHomeState from "../models/vendorHome_model";
+import IVendorHomeState from "../models/vendorHomeState_model";
 
 
 const initialState: IVendorHomeState = {
@@ -11,7 +11,15 @@ const initialState: IVendorHomeState = {
         {
             name: "Orders received",
             count: 529
-        }
+        },
+        {
+            name: "Orders delivered",
+            count: 490
+        },
+        {
+            name: "Orders pending",
+            count: 26
+        },
     ],
     weeklySalesChartData: [
         { label: "Sun", value: 45 },
@@ -22,45 +30,20 @@ const initialState: IVendorHomeState = {
         { label: "Fri", value: 70 },
         { label: "Sat", value: 30 },
     ],
-
-    recentPayments: [
-        {
-            id: "01",
-            amount: 1500.50,
-            productName: "Men’s Vintage Shirt",
-            status: "Success",
-            date: "31/10/2024"
-        },
-        {
-            id: "02",
-            amount: 1500.50,
-            productName: "Men’s Vintage Shirt",
-            status: "Pending",
-            date: "31/10/2024"
-        },
-        {
-            id: "03",
-            amount: 1500.50,
-            productName: "Men’s Vintage Shirt",
-            status: "Success",
-            date: "31/10/2024"
-        },
-        {
-            id: "04",
-            amount: 1500.50,
-            productName: "Men’s Vintage Shirt",
-            status: "Success",
-            date: "31/10/2024"
-        },
-    ]
+    salesCountPieData: [
+        {value: 121, color: "#133522", title: "Ready made"},
+        {value: 82, color: "#D5B07B", title: "Bespoke"},
+    ],
+    salesRevenuePieData: [
+        {value: 12500, color: "#225F3D", title: "Ready made"},
+        {value: 10000, color: "#819656", title: "Bespoke"},
+    ],
 };
 
 export const vendorHomeSlice = createSlice({
     name: "vendorHomeSlice",
     initialState,
-    reducers: {
-
-    }
+    reducers: {}
 });
 
 const { actions, reducer } = vendorHomeSlice;
