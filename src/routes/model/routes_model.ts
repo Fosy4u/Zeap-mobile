@@ -33,6 +33,8 @@ type RootNavigationStackModel = {
     personalInformationScreen: undefined;
     editAccountDetailsScreen: undefined;
     editDeliveryAddressScreen: undefined;
+    searchItemScreen: undefined;
+    searchResultsScreen: undefined;
 
     // VENDORS
     vendorHomeScreen: undefined;

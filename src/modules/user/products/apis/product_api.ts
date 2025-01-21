@@ -1,5 +1,5 @@
 import api from "../../../../redux/api/api";
-import { addReadyMadeProduct } from "../models/addProduct_model";
+import ICart from "../../cart/models/cart_model";
 import IProductDetails from "../models/productDetails_model";
 import IProductQueryParams from "../models/productFilter_model";
 import IProduct from "../models/product_model";
@@ -17,6 +17,20 @@ const productAPI = api.injectEndpoints({
             }),
             providesTags: ["Products"],
             transformResponse: (response: { data: { products: IProduct[] } }) => {
+                return response.data.products;
+            }
+        }),
+
+        // Search Products
+        searchProduct: builder.query<IProduct[], { title: string, limit: number, pageNumber: number }>({
+            query: ({  title, limit, pageNumber }) => ({
+                url: "/products/live",
+                method: "GET",
+                params: { title, limit, pageNumber },
+            }),
+            providesTags: ["Products"],
+            transformResponse: (response: { data: { products: IProduct[] } }, meta) => {
+                // console.log("META: ", meta?.response?.status);
                 return response.data.products;
             }
         }),
@@ -64,15 +78,15 @@ const productAPI = api.injectEndpoints({
             },
         }),
 
-        // Add ready made product to cart.
-        addReadyMadeProductToCart: builder.mutation<any, addReadyMadeProduct>({
+        // Add product to cart.
+        addProductToCart: builder.mutation<ICart, any>({
             query: (requestData) => ({
                 url: "/basket/product/add",
                 method: "POST",
                 body: requestData,
             }),
-            invalidatesTags: ["ProductQuantity"],
-            transformResponse: (response: { data: any }) => {
+            invalidatesTags: ["ProductQuantity", "Basket"],
+            transformResponse: (response: { data: ICart }) => {
                 return response.data;
             },
         }),
@@ -108,11 +122,12 @@ const productAPI = api.injectEndpoints({
 
 export const { 
     useLazyGetNewestProductsQuery,
+    useLazySearchProductQuery,
     useLazyGetProductsByCategoriesQuery,
     useLazyGetPopularProductsQuery,
     useGetProductByProductIDQuery,
-    useAddReadyMadeProductToCartMutation,
+    useAddProductToCartMutation,
     useIncreamentProductQuantityMutation,
-    useDecreamentProductQuantityMutation
+    useDecreamentProductQuantityMutation,
 } = productAPI;
 export default productAPI;

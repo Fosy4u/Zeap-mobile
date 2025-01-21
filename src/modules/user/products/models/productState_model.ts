@@ -1,12 +1,13 @@
 import { ImageSourcePropType } from "react-native";
 import IProduct from "./product_model";
 import { IColorEnum } from "../../../general/models/productOptions_model";
+import IProductDetails from "./productDetails_model";
 
 interface IProductState {
+    productID: string;
     tabs: string[];
     selectedTab: string;
     timelines: string[];
-    savedMeasurements: ISavedMeasurement[];
     savedAddresses: ISavedAddress[];
     newestProducts: INewestProduct[];
     femaleClothing: IProduct[];
@@ -16,12 +17,18 @@ interface IProductState {
     bags: IProduct[];
     popularProducts: IProduct[];
     selectedCategory: ICategory;
+    product: IProductDetails;
+    products: IProduct[];
     categories: ICategory[];
 
     featuredPrice: number;
     selectedColor: IColorEnum;
     selectedSize: string;
     selectedQuantity: number;
+    searchPhrases: string[];
+    filteredSearchPhrases: string[];
+    searchWord: string;
+    showSizedGuideBottomSheet: boolean;
 };
 
 interface INewestProduct {
@@ -30,12 +37,6 @@ interface INewestProduct {
     message: string;
     imageLink: string
 };
-
-interface ISavedMeasurement {
-    id: string;
-    title: string;
-    items: string[];
-}
 
 interface ISavedAddress {
     id: string;
@@ -53,5 +54,5 @@ interface ICategory {
     image: ImageSourcePropType;
 };
 
-export type { INewestProduct, ISavedMeasurement, ISavedAddress, ICategory };
+export type { INewestProduct, ISavedAddress, ICategory };
 export default IProductState;

@@ -2,7 +2,7 @@ import React, {useState} from 'react';
 import {View, Text, TextInput, TouchableOpacity, ScrollView, StatusBar, SafeAreaView, Image} from 'react-native';
 import AppHeaderComp from "../../general/components/appHeader_comp.tsx";
 import {ArrowRight} from "iconsax-react-native";
-import SavedMeasurementsBottomSheet from "../../../user/products/components/savedMeasurementsBottomSheet_component.tsx";
+import SavedMeasurementsBottomSheet from "../../../user/measurements/components/savedMeasurementsBottomSheet_component.tsx";
 import ClotheTypeBottomSheetComponent from "../components/clotheTypeBottomSheet_component.tsx";
 
 const AddProductScreen = () => {

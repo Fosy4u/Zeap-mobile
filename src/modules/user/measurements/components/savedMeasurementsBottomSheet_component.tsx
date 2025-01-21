@@ -1,5 +1,5 @@
 import { useNavigation } from '@react-navigation/native';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ArrowRight } from 'iconsax-react-native';
 import React, { useRef, useEffect } from 'react';
@@ -7,17 +7,17 @@ import { View, Text, Dimensions, Image, TouchableOpacity, SafeAreaView } from 'r
 import * as Animatable from 'react-native-animatable';
 import RootNavigationStackModel from '../../../../routes/model/routes_model.ts';
 import { RootState } from '../../../../redux/store/store.ts';
+import AppLoader from '../../../general/components/appLoader.tsx';
+import { setShowSavedMeasurementBottomSheet } from '../slices/measurement_slice.ts';
 
-interface IProps {
-    handleShowSavedMeasurementBottomSheet: (value: boolean) => void;
-}
 
-const SavedMeasurementsBottomSheet: React.FC<IProps> = ({ handleShowSavedMeasurementBottomSheet }) => {
-    const { savedMeasurements } = useSelector((state: RootState) => state.productState);
+const SavedMeasurementsBottomSheet = () => {
+    const { allBodyMeasurementTemplates } = useSelector((state: RootState) => state.measurementState);
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const screenHeight = Dimensions.get("window").height;
     const modalHeight = screenHeight / 1.15;
     const slideAnimation = useRef<Animatable.View>(null);
+    const dispatch = useDispatch();
     
 
     useEffect(() => {
@@ -35,10 +35,10 @@ const SavedMeasurementsBottomSheet: React.FC<IProps> = ({ handleShowSavedMeasure
                 0: { translateY: 0, opacity: 1 },
                 1: { translateY: modalHeight, opacity: 0 }
             }, 500).then(() => {
-                handleShowSavedMeasurementBottomSheet(false);
+                dispatch(setShowSavedMeasurementBottomSheet(false));
             });
         } else {
-            handleShowSavedMeasurementBottomSheet(false);
+            dispatch(setShowSavedMeasurementBottomSheet(false));
         }
     };
 
@@ -49,11 +49,11 @@ const SavedMeasurementsBottomSheet: React.FC<IProps> = ({ handleShowSavedMeasure
                 1: { translateY: modalHeight, opacity: 0 }
             }, 500).then(() => {
                 navigation.navigate("deliveryAddressScreen");
-                handleShowSavedMeasurementBottomSheet(false);
+                dispatch(setShowSavedMeasurementBottomSheet(false));
             });
         } else {
             navigation.navigate("deliveryAddressScreen");
-            handleShowSavedMeasurementBottomSheet(false);
+            dispatch(setShowSavedMeasurementBottomSheet(false));
         }
     };
     
@@ -85,17 +85,32 @@ const SavedMeasurementsBottomSheet: React.FC<IProps> = ({ handleShowSavedMeasure
 
                 <View className="flex-1 flex-col justify-between">
                     <View>
-                        { savedMeasurements.map((savedMeasurement) => (
-                            <View key={ savedMeasurement.id } className="h-auto w-full mt-6 px-5 py-5 border border-gray-200 rounded-xl bg-[#F8F9FE]">
+                        { allBodyMeasurementTemplates?.map((measurementTemplate, index) => (
+                            <View key={ measurementTemplate._id! } className="h-auto w-full mt-6 px-5 py-5 border border-gray-200 rounded-xl bg-[#F8F9FE]">
                                 <View className="flex-row items-center justify-between">
-                                    <Text className="font-Montserrat font-medium text-base text-gray-700">{ savedMeasurement.title }</Text>
+                                    <Text className="font-montserratSemiBold text-lg text-gray-700">{ allBodyMeasurementTemplates?.[index].templateName! }</Text>
                                     <TouchableOpacity>
                                         <Text>Edit</Text>
                                     </TouchableOpacity>
                                 </View>
-                                <View  className="mt-2 flex-row items-center flex-wrap gap-x-6">
-                                    { savedMeasurement.items.map((item, index) => (
-                                        <Text key={ index } className="mt-2 font-Montserrat font-normal text-base text-gray-700">{ item }</Text>
+                                <View  className="mt-2">
+                                    { allBodyMeasurementTemplates?.[0].measurements!.map((measurement) => (
+                                        <View key={ measurement._id! } className="h-auto w-full mt-2">
+                                            <Text className="mt-2 font-montserratSemiBold text-base text-gray-700">
+                                                { measurement.name!.charAt(0).toUpperCase() + measurement.name!.slice(1) }
+                                            </Text>
+
+
+                                            <View className="h-auto w-full flex-row flex-wrap items-center gap-x-8">
+                                                { measurement.measurements!.map((measurementItem) => (
+                                                    <Text key={ measurementItem._id! }
+                                                        className="my-1 font-Montserrat font-normal text-base text-gray-700"
+                                                    >
+                                                        { `${measurementItem?.field!.charAt(0).toUpperCase() + measurementItem.field!.slice(1)}: ${measurementItem?.value}` }
+                                                    </Text>
+                                                )) }
+                                            </View>
+                                        </View>
                                     )) }
                                 </View>
                             </View>
@@ -104,7 +119,7 @@ const SavedMeasurementsBottomSheet: React.FC<IProps> = ({ handleShowSavedMeasure
 
                     <TouchableOpacity 
                         onPress={ () => {
-                            handleShowSavedMeasurementBottomSheet(false);
+                            dispatch(setShowSavedMeasurementBottomSheet(false));
                             navigation.navigate("deliveryAddressScreen");
                         } }
                         className="h-[55px] w-auto mt-7 flex flex-row items-center justify-center rounded-xl bg-baseGreen"
