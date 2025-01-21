@@ -20,6 +20,12 @@ const api = createApi({
         "Reviews",
         "Shop",
         "ProductQuantity",
+        "BodyMeasurement",
+        "BodyMeasurements",
+        "ProductMeasurementFields",
+        "RequiredMeasurementFormFields",
+        "BodyMeasurementEnumerations",
+        "Basket",
     ],
     endpoints: () => ({}),
 });

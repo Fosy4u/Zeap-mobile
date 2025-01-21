@@ -23,7 +23,7 @@ import CategoryScreen from '../modules/user/products/screen/allCategory_screen';
 import ProductListScreen from '../modules/user/products/screen/productList_screen ';
 import InviteFriendScreen from '../modules/user/home/screens/inviteFriend_screen ';
 import ProductDetailScreen from '../modules/user/products/screen/productDetails_screen';
-import MeasurementScreen from '../modules/user/products/screen/measurement_screen';
+import MeasurementScreen from '../modules/user/measurements/screens/measurement_screen.tsx';
 import DeliveryAddressScreen from '../modules/user/products/screen/deliveryAddress_screen';
 import VendorHomeScreen from '../modules/vendor/home/screens/vendorHome_screen';
 import MarketScreen from '../modules/vendor/market/screens/market_screen';
@@ -41,6 +41,8 @@ import VendorProductsScreen from "../modules/vendor/products/screens/vendorProdu
 import VendorProductDetailsScreen from "../modules/vendor/products/screens/vendorProductDetails_screen.tsx";
 import AddProductScreen from "../modules/vendor/products/screens/addProduct_screen.tsx";
 import AddReadyMadeClothesScreen from "../modules/vendor/products/screens/addReadyMadeClothes_screen.tsx";
+import SearchItemScreen from '../modules/user/products/screen/searchItem_screen.tsx';
+import SearchResultsScreen from '../modules/user/products/screen/searchResults_screen.tsx';
 
 const Stack = createNativeStackNavigator<RootNavigationStackModel>();
 
@@ -74,10 +76,14 @@ const AppRoutes = () => {
             <Stack.Screen name="allCategoryScreen" component={ CategoryScreen } options={{ headerShown: false }} />
             <Stack.Screen name="productListScreen" component={ ProductListScreen } options={{ headerShown: false }} />
             <Stack.Screen name="productDetailScreen" component={ ProductDetailScreen } options={{ headerShown: false }} />
-            <Stack.Screen name="measurementScreen" component={ MeasurementScreen } options={{ headerShown: false }} />
             <Stack.Screen name="deliveryAddressScreen" component={ DeliveryAddressScreen } options={{ headerShown: false }} />
             <Stack.Screen name="reviewListScreen" component={ ReviewListScreen } options={{ headerShown: false }} />
             <Stack.Screen name="paymentMethodScreen" component={ PaymentMethodScreen } options={{ headerShown: false }} />
+            <Stack.Screen name="searchItemScreen" component={ SearchItemScreen } options={{ headerShown: false }} />
+            <Stack.Screen name="searchResultsScreen" component={ SearchResultsScreen } options={{ headerShown: false }} />
+
+            {/*==== Measurement ====*/}
+            <Stack.Screen name="measurementScreen" component={ MeasurementScreen } options={{ headerShown: false }} />
 
             {/* ==== Cart ==== */}
             <Stack.Screen name="cartScreen" component={ CartScreen } options={{ headerShown: false }} />

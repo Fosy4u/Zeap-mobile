@@ -1,21 +1,20 @@
 import { useNavigation } from '@react-navigation/native';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useRef, useEffect } from 'react';
 import { View, Text, Dimensions, Image, TouchableOpacity, SafeAreaView } from 'react-native';
 import * as Animatable from 'react-native-animatable';
 import RootNavigationStackModel from '../../../../routes/model/routes_model.ts';
-import { RootState } from '../../../../redux/store/store.ts';
+import { AppDispatch, RootState } from '../../../../redux/store/store.ts';
+import { setShowSizedGuideBottomSheet } from '../slices/product_slice.ts';
 
-interface IProps {
-    handleShowSizeGuideBottomSheet: (value: boolean) => void;
-}
 
-const SizeGuideBottomSheet: React.FC<IProps> = ({ handleShowSizeGuideBottomSheet }) => {
-    const { savedMeasurements } = useSelector((state: RootState) => state.productState);
+const SizeGuideBottomSheet = () => {
+    const {  } = useSelector((state: RootState) => state.productState);
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
+    const dispatch = useDispatch<AppDispatch>();
     const screenHeight = Dimensions.get("window").height;
-    const modalHeight = screenHeight / 1.35;
+    const modalHeight = screenHeight / 1.50;
     const slideAnimation = useRef<Animatable.View>(null);
     
 
@@ -23,7 +22,7 @@ const SizeGuideBottomSheet: React.FC<IProps> = ({ handleShowSizeGuideBottomSheet
         if (slideAnimation.current) {
             slideAnimation.current.animate({
                 0: { translateY: modalHeight },
-                1: { translateY: 0 }
+                1: { translateY: 20 }
             }, 1000);
         }
     }, [modalHeight]);
@@ -34,10 +33,10 @@ const SizeGuideBottomSheet: React.FC<IProps> = ({ handleShowSizeGuideBottomSheet
                 0: { translateY: 0, opacity: 1 },
                 1: { translateY: modalHeight, opacity: 0 }
             }, 500).then(() => {
-                handleShowSizeGuideBottomSheet(false);
+                dispatch(setShowSizedGuideBottomSheet(false));
             });
         } else {
-            handleShowSizeGuideBottomSheet(false);
+            dispatch(setShowSizedGuideBottomSheet(false));
         }
     };
 

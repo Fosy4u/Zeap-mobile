@@ -1,7 +1,11 @@
 import React, { useEffect } from 'react'
-import { Animated, View } from 'react-native';
+import { Animated, Text, View } from 'react-native';
 
-const AppLoader = () => {
+interface IProps {
+    loadingAdditionalMessage?: string;
+};
+
+const AppLoader: React.FC<IProps> = ({ loadingAdditionalMessage }) => {
 
     const spinValue = new Animated.Value(0);
 
@@ -25,13 +29,15 @@ const AppLoader = () => {
 
 
     return (
-        <View className="flex-1 items-center justify-center">
+        <View className="h-full w-full inset-0 flex-1 items-center justify-center">
           <Animated.Image
-            source={require("../../../../assets/images/app_logo.png")}
+            source={require("../../../../assets/images/app_icon.png")}
             style={[{ transform: [{ rotate: spin }] }]}
             className="h-[50px] w-[50px]"
             resizeMode="cover"
           />
+          <Text className="mt-2 font-montserratMedium text-base text-gray-700">Please wait...</Text>
+          <Text className="mt-2 font-montserratNormal text-xs text-gray-700">{ loadingAdditionalMessage }</Text>
         </View>
     );
 };
