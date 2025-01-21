@@ -17,12 +17,12 @@ const WelcomeScreen = () => {
 
       <View className="flex-[0.5] items-center justify-center bg-white">
         <Image
-          source={require("../../../assets/app_logo.png")}
+          source={require("../../../../assets/images/app_logo.png")}
           className="h-[80px] w-[80px] mt-14 rounded-2xl"
         />
 
         <Image
-          source={ require("../../../assets/welcome_image.png") }
+          source={ require("../../../../assets/images/welcome_image.png") }
           resizeMode={"contain"}
           className="h-[250px] w-auto mt-10"
         />

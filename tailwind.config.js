@@ -8,15 +8,29 @@ module.exports = {
         lightGreen: "#D5F4E3",
         lightGold: "#FFFAF2",
         gold: "#D5B07B",
+        lightOrange: "#fefce8",
         orange: "#ddb31d",
         black: "#151518",
         lightGray: "#F3F4F6",
       },
       fontFamily: {
-        "montserrat": ["Montserrat-Light", "Montserrat-Regular", "Montserrat-Medium", "Montserrat-SemiBold", "Montserrat-Bold"],
+        // montserrat: {
+        //   light: "Montserrat-Light",
+        //   regular: "Montserrat-Regular",
+        //   medium: "Montserrat-Medium",
+        //   semibold: "Montserrat-SemiBold",
+        //   bold: "Montserrat-Bold",
+        // },
+        montserratLight: ["Montserrat-Light", "serif"],
+        montserratRegular: ["Montserrat-Regular", "serif"],
+        montserratNormal: ["Montserrat-Normal", "serif"],
+        montserratMedium: ["Montserrat-Medium", "serif"],
+        montserratSemiBold: ["Montserrat-SemiBold", "serif"],
+        montserratBold: ["Montserrat-Bold", "serif"],
       },
     },
   },
   plugins: [],
 }
 
+// "Montserrat-Light", "Montserrat-Regular", "Montserrat-Medium", "Montserrat-SemiBold", "Montserrat-Bold"
