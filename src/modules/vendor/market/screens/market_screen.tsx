@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native';
 const MarketScreen = () => {
    
     return (
-        <SafeAreaView className="h-screen w-full flex-1">
+        <SafeAreaView className="h-screen w-full flex-1 bg-lightGray">
             <Text>Market Screen</Text>
         </SafeAreaView>
     )

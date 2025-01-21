@@ -3,9 +3,14 @@ import { IUser } from "../../profile/models/profileState_model";
 import { IRegisterUser } from "../validations/auths_validation";
 import { getSavedAnonymousToken } from "../../../redux/services/authorizationHeader";
 
+/**
+ * The authAPI
+ * @returns 
+ */
 const authAPI = api.injectEndpoints({
     overrideExisting: true,
     endpoints: (builder) => ({
+        // Register User
         registerUser: builder.mutation<any, IRegisterUser>({
             query: (requestData) => ({
                 url: "/user/create",
@@ -25,6 +30,7 @@ const authAPI = api.injectEndpoints({
             },
         }),
 
+        // Get User By ID
         getUserById: builder.query<IUser, string>({
             query: (uid) => ({
                 url: `/userByUid?uid=${ uid }`,
@@ -38,6 +44,7 @@ const authAPI = api.injectEndpoints({
             },
         }),
 
+        // Forgot Password
         forgotPassword: builder.mutation<any, any>({
             query: (requestData) => ({
                 url: "",
@@ -57,4 +64,3 @@ export const {
     useForgotPasswordMutation
 } = authAPI;
 export default authAPI;
-// SSG9gZI9EnPr37YADpAZfNkPIcn2

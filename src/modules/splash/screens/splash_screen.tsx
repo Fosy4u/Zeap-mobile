@@ -144,7 +144,7 @@ const SplashScreen = () => {
           }}
         />
         <Animated.Image
-          source={require("../../../assets/app_logo.png")}
+          source={require("../../../../assets/images/app_logo.png")}
           className="h-[80px] w-[80px] rounded-2xl absolute top-16"
           style={{
             width: zoomInTwoValue,
@@ -158,7 +158,7 @@ const SplashScreen = () => {
         style={{ transform: [{translateY: slideUpTwoValue}] }} >
         <FastImage
           style={{ height: 100, width: 100 }}
-          source={require("../../../assets/loading.gif")}
+          source={require("../../../../assets/images/loading.gif")}
         />
       </Animated.View>
 

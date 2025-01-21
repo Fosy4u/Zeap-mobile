@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import IProfileState, { IUser } from "../models/profileState_model";
+import IProfileState, { IPhoneCodeDropdownOptions, IUser } from "../models/profileState_model";
 import phoneCodes from "../../../utils/countriesPhoneCodes.json";
 
 const initialState: IProfileState = {
@@ -31,6 +31,15 @@ const initialState: IProfileState = {
     token: "",
 
     phoneCodeOptions: phoneCodes,
+    selectedPhoneCode: {
+        name: "Nigeria",
+        dial_code: "+234",
+        code: "NG",
+        emoji: "🇳🇬"
+    },
+    showPhoneCodeModal: false,
+    selectedCountry: "",
+    showCountryModal: false,
     heightUnitOptions: [
         { "key": "Inches", "value": "Inches" },
         { "key": "Centimeter", "value": "Centimeter" },
@@ -75,10 +84,30 @@ const profileSlice = createSlice({
         },
         setToken: (state: IProfileState, action: PayloadAction<string>) => {
             state.token = action.payload;
-        }
+        },
+        setSelectedPhoneCode: (state: IProfileState, action: PayloadAction<IPhoneCodeDropdownOptions>) => {
+            state.selectedPhoneCode = action.payload;
+        },
+        setShowPhoneCodeModal: (state: IProfileState, action: PayloadAction<boolean>) => {
+            state.showPhoneCodeModal = action.payload;
+        },
+        setShowCountryModal: (state: IProfileState, action: PayloadAction<boolean>) => {
+            state.showCountryModal = action.payload;
+        },
+        setSelectedCountry: (state: IProfileState, action: PayloadAction<string>) => {
+            state.selectedCountry = action.payload;
+            
+        },
     }
 });
 
 const { actions, reducer } = profileSlice;
-export const { setUserData, setToken } = actions;
+export const {
+    setUserData,
+    setToken,
+    setSelectedPhoneCode,
+    setShowPhoneCodeModal,
+    setShowCountryModal,
+    setSelectedCountry,
+} = actions;
 export default reducer;

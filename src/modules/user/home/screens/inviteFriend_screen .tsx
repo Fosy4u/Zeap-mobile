@@ -39,7 +39,7 @@ const InviteFriendScreen = () => {
               <Image
                 className="h-[174px] w-[180px]"
                 resizeMode="cover"
-                source={require("../../../../assets/home/invite_friend.png")}
+                source={require("../../../../../assets/images/home/invite_friend.png")}
               />
               <Text className="mt-6 text-center text-lg">
                 <Text className="text-gray-700">Get </Text>
