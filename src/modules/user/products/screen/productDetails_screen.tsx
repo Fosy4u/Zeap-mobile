@@ -1,21 +1,18 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect } from 'react';
 import { RouteProp, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ArrowLeft, ArrowRight, Heart, Ruler, ShoppingBag, Star1 } from 'iconsax-react-native';
-import { Animated, Image, SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View } from 'react-native'
+import { ArrowLeft, ArrowRight, Heart, Star1 } from 'iconsax-react-native';
+import { Image, SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View } from 'react-native'
 import RootNavigationStackModel from '../../../../routes/model/routes_model';
 import DescriptionComponent from '../components/description_component';
 import ReviewComponent from '../components/review_component';
 import TimelineComponent from '../components/timeline_component';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../../../../redux/store/store';
-import { setSelectedColor, setSelectedTab } from '../slices/product_slice';
+import { AppDispatch, RootState } from '../../../../redux/store/store';
+import { setProduct, setProductID, setSelectedTab } from '../slices/product_slice';
 import { useGetProductByProductIDQuery } from '../apis/product_api';
 import { useGetProductReviewsQuery } from '../apis/review_api';
 import AppLoader from '../../../general/components/appLoader';
-import useGeneralHook from '../../../general/hooks/general_hook';
-import { IImage, IVariation } from '../models/productDetails_model';
-import useProductsHook from '../hooks/products_hook';
 import ProductImagesAndColorsComponent from '../components/productImagesAndColors_component';
 import SizeGuideBottomSheet from '../components/sizeGuideBottomSheet_component';
 
@@ -24,21 +21,22 @@ interface IProps {
 }
 
 const ProductDetailScreen: React.FC<IProps> = ({ route }) => {
-  const { selectedTab, tabs, popularProducts, featuredPrice, selectedSize } = useSelector((state: RootState) => state.productState);
+  const { selectedTab, tabs, popularProducts, featuredPrice, showSizedGuideBottomSheet } = useSelector((state: RootState) => state.productState);
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const { productID } = route.params || {};
 
-  const [showSizedGuideBottomSheet, setShowSizedGuideBottomSheet] = useState(false);
 
   // Get product details
   const { data: product, isLoading: productsLoading } = useGetProductByProductIDQuery(productID!);
   const { data: reviews, isLoading: reviewsLoading } = useGetProductReviewsQuery(productID!);
-  // console.log("PRODUCT", productID);
 
-  const handleShowSizeGuideBottomSheet = (value: boolean) => {
-    setShowSizedGuideBottomSheet(value);
-  };
+  useEffect(() => {
+    dispatch(setProductID(productID!));
+    if (product) {
+      dispatch(setProduct(product!));
+    }
+  }, [product])
 
 
   
@@ -82,7 +80,7 @@ const ProductDetailScreen: React.FC<IProps> = ({ route }) => {
                 <Text className="px-[8px] py-[3px] font-montserratMedium text-xs rounded-md self-start bg-white">
                   {product?.categories?.productGroup?.split("-").join(" ") || 'N/A'}
                 </Text>
-                <Text className="mt-2 font-montserratSemiBold text-[20px] text-baseGreen">
+                <Text className="mt-2 font-montserratMedium text-[20px] text-baseGreen">
                   {product?.title || 'No Title'}
                 </Text>
                 <View className="mt-2.5 flex-row items-center">
@@ -100,14 +98,14 @@ const ProductDetailScreen: React.FC<IProps> = ({ route }) => {
                 <View className="h-[40px] w-[40px] flex items-center justify-center border border-baseGreen rounded-full">
                   <Heart size={ 18 } className="text-baseGreen" />
                 </View>
-                <View className="h-[40px] w-[40px] mt-6 flex items-center justify-center border border-baseGreen rounded-full">
+                {/* <View className="h-[40px] w-[40px] mt-6 flex items-center justify-center border border-baseGreen rounded-full">
                   <ShoppingBag size={ 18 } className="text-baseGreen" />
-                </View>
+                </View> */}
               </View>
             </View>
 
             {/*==== Product Image And Color Palete ====*/}
-            <ProductImagesAndColorsComponent product={ product! } handleShowSizeGuideBottomSheet={ handleShowSizeGuideBottomSheet } />
+            <ProductImagesAndColorsComponent product={ product! } />
 
 
             {/*==== Tab View ====*/}
@@ -200,7 +198,7 @@ const ProductDetailScreen: React.FC<IProps> = ({ route }) => {
           </ScrollView>
 
           { showSizedGuideBottomSheet && (
-            <SizeGuideBottomSheet handleShowSizeGuideBottomSheet={ handleShowSizeGuideBottomSheet } />
+            <SizeGuideBottomSheet />
           ) }
         </>
       ) : (

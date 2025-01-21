@@ -11,8 +11,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import { RootState } from "../../../../redux/store/store";
 import RootNavigationStackModel from "../../../../routes/model/routes_model";
 import Carousel from "react-native-reanimated-carousel";
-import useProductsHook from "../../products/hooks/products_hook"
-import { setSelectedCategory } from "../../products/slices/product_slice";
+import { setProduct, setSelectedCategory } from "../../products/slices/product_slice";
 import useGeneralHook from "../../../general/hooks/general_hook";
 import useHomeHook from "../hooks/home_hook";
 
@@ -92,14 +91,16 @@ const DashboardScreen = () => {
                       </Pressable>
                     </View>
                     
+                    {/*==== Search Box ====*/}
                     <View className="h-auto w-full mt-8 px-3 py-1 flex-row items-center justify-between border border-gray-300 rounded-xl bg-gray-100">
                         <TextInput
                             placeholder="Search item"
                             placeholderTextColor="#9ca3af"
-                            className="text-base"
-                            onChangeText={(value) => null}
+                            className="text-base flex-1"
+                            onChangeText={() => null}
+                            onFocus={ () => navigation.navigate("searchItemScreen") }
                         />
-                        <TouchableOpacity onPress={ () => null }>
+                        <TouchableOpacity onPress={ () => null }> 
                             <SearchNormal1 color="#9ca3af" className="mr-1" />
                         </TouchableOpacity>
                     </View>

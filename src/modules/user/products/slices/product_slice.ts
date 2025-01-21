@@ -2,23 +2,14 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import IProductState, { ICategory, INewestProduct } from "../models/productState_model";
 import IProduct from "../models/product_model";
 import { IColorEnum } from "../../../general/models/productOptions_model";
+import IProductDetails from "../models/productDetails_model";
+import { set } from "react-hook-form";
 
 const initialState: IProductState = {
+    productID: "",
     tabs: ["Description", "Reviews", "Timeline"],
     selectedTab: "Description",
     timelines: ["Once measurement received", "Cutting - 2days", "Sewing - 2 weeks", "Finishing 3 days", "Dispatch 2 days", "Delivery"],
-    savedMeasurements: [
-        {
-            id: "01",
-            title: "Trouser",
-            items: ["Waist: 32cm", "Length: 37cm", "Thigh: 16cm", "Hip: 34cm"]
-        },
-        {
-            id: "02",
-            title: "Long sleeve shirt",
-            items: ["Shoulder: 28cm", "Sleeve: 37cm", "Neck: 16cm", "Chest: 34cm", "Wrist: 10cm"]
-        },
-    ],
     savedAddresses: [
         {
             id: "01",
@@ -37,6 +28,8 @@ const initialState: IProductState = {
     ],
 
     
+    product: {},
+    products: [],
     selectedCategory:{
         id: 1,
         name: "Female Clothings",
@@ -97,12 +90,34 @@ const initialState: IProductState = {
     },
     selectedSize: "",
     selectedQuantity: 1,
+
+    searchPhrases: ["Women jacket", "Men jacket", "Men’s summer sweater", "Joggers", "Kids hoodie"],
+    filteredSearchPhrases: ["Women jacket", "Men jacket", "Men’s summer sweater", "Joggers", "Kids hoodie"],
+    searchWord: "",
+    showSizedGuideBottomSheet: false,
 };
 
 export const productSlice = createSlice({
     name: "productSlice",
     initialState,
     reducers: {
+        setSearchWord: (state: IProductState, action: PayloadAction<string>) => {
+            state.searchWord = action.payload;
+            if (action.payload === "") {
+                state.filteredSearchPhrases = state.searchPhrases;
+                return;
+            }
+            state.filteredSearchPhrases = state.searchPhrases.filter(phrase => phrase.toLowerCase().includes(action.payload.toLowerCase()));
+        },
+        setProductID: (state: IProductState, action: PayloadAction<string>) => {
+            state.productID = action.payload;
+        },
+        setProduct: (state: IProductState, action: PayloadAction<IProductDetails>) => {
+            state.product = action.payload;
+        },
+        setProducts: (state: IProductState, action: PayloadAction<IProduct[]>) => {
+            state.products = action.payload;
+        },
         setSelectedTab: (state: IProductState, action: PayloadAction<string>) => {
             state.selectedTab = action.payload;
         },
@@ -152,12 +167,19 @@ export const productSlice = createSlice({
         setSelectedQuantity: (state: IProductState, action: PayloadAction<number>) => {
             state.selectedQuantity = action.payload;
         },
+        setShowSizedGuideBottomSheet: (state: IProductState, action: PayloadAction<boolean>) => {
+            state.showSizedGuideBottomSheet = action.payload;
+        }
     }
 });
 
 const { actions, reducer } = productSlice;
 
 export const {
+    setSearchWord,
+    setProduct,
+    setProducts,
+    setProductID,
     setSelectedTab,
     setNewestProducts,
     setFemaleClothing,
@@ -172,5 +194,6 @@ export const {
     setSelectedColor,
     setSelectedSize,
     setSelectedQuantity,
+    setShowSizedGuideBottomSheet,
 } = actions;
 export default reducer;

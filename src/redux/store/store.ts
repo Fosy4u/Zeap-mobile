@@ -3,6 +3,7 @@ import authReducer from "../../modules/auths/slices/authState_slice";
 import createReducer from "../../modules/user/cart/slices/cart_slice";
 import homeReducer from "../../modules/user/home/slices/home_slice";
 import productReducer from "../../modules/user/products/slices/product_slice";
+import measurementReducer from "../../modules/user/measurements/slices/measurement_slice";
 import profileReducer from "../../modules/profile/slices/profileState_slice";
 import generalReducer from "../../modules/general/slices/general_slice";
 import vendorHomeReducer from "../../modules/vendor/home/slices/vendorHome_slice";
@@ -24,6 +25,7 @@ const appStore = configureStore({
         cartState: createReducer,
         homeState: homeReducer,
         productState: productReducer,
+        measurementState: measurementReducer,
 
         //  Vendors
         vendorHomeState: vendorHomeReducer,
