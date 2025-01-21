@@ -5,7 +5,7 @@ import { View, Text, SafeAreaView, StatusBar, TouchableOpacity, ScrollView, Anim
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { setShowBottomSheetModal } from '../../../auths/slices/authState_slice';
 import { RootState } from '../../../../redux/store/store';
-import IProduct from '../../product/models/product_model';
+import IProduct from '../../products/models/product_model';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import RootNavigationStackModel from '../../../../routes/model/routes_model';
@@ -66,7 +66,7 @@ const SavedScreen = () => {
           source={ 
             item.colors[0]?.images[1]?.link
             ? { uri: item.colors[0]?.images[1]?.link }
-            : require("../../../../assets/app_logo.png")
+            : require("../../../../../assets/images/app_logo.png")
           }
         />
         <View className="h-[35px] w-[35px] absolute top-1 right-2 flex items-center justify-center rounded-xl bg-gray-200">
@@ -144,7 +144,7 @@ const SavedScreen = () => {
           <TouchableOpacity onPress={ () => setShowBottomSheetModal(true) }>
             <View className="h-[55px] w-[55px] ml-3  flex items-center justify-center rounded-xl bg-gold">
               <Image
-                source={ require("../../../../assets/filter.png") }
+                source={ require("../../../../../assets/images/filter.png") }
                 className="h-[25px] w-[25px]"
               />
             </View>

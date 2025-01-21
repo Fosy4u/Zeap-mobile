@@ -53,10 +53,10 @@ const OnboardingScreen = () => {
       <View className="flex-[0.45] items-center justify-center bg-white">
         <Image
           source={ (progress === 1) 
-            ? require("../../../assets/onboarding_one_image.png")
-            : (progress === 2) ? require("../../../assets/onboarding_two_image.png")
-            : (progress === 3) ? require("../../../assets/onboarding_three_image.png")
-            : require("../../../assets/onboarding_four_image.png")
+            ? require("../../../../assets/images/onboarding_one_image.png")
+            : (progress === 2) ? require("../../../../assets/images/onboarding_two_image.png")
+            : (progress === 3) ? require("../../../../assets/images/onboarding_three_image.png")
+            : require("../../../../assets/images/onboarding_four_image.png")
           }
           resizeMode={"contain"}
           className="h-[250px] w-auto mt-14"

@@ -17,9 +17,12 @@ const SuccessPopupModal: React.FC<Props> = ({ bodyText, screenURL }) => {
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const dispatch = useDispatch();
 
-    const destinationScreen = (screenURL === "profileSetupScreen") 
+    const screenName = (screenURL === "profileSetupScreen") 
         ? ("Setup") : (screenURL === "loginScreen") 
         ? ("Login") : ("Shop");
+    const url = (screenURL === "profileSetupScreen") 
+    ? ("profileSetupScreen") : (screenURL === "loginScreen") 
+    ? ("loginScreen") : ("shopSetupScreen");
     
 
     return (
@@ -35,11 +38,11 @@ const SuccessPopupModal: React.FC<Props> = ({ bodyText, screenURL }) => {
                     <Image
                         className="h-auto w-auto"
                         resizeMode="cover"
-                        source={require("../../../assets/success_modal_image.png")}
+                        source={require("../../../../assets/images/success_modal_image.png")}
                     />
                     <FastImage
-                       className="h-full w-full absolute"
-                        source={require("../../../assets/success_animation.gif")}
+                        className="h-full w-full absolute"
+                        source={require("../../../../assets/images/success_animation.gif")}
                     />
                 </View>
                 <View className="flex-1 items-center justify-center">
@@ -51,11 +54,11 @@ const SuccessPopupModal: React.FC<Props> = ({ bodyText, screenURL }) => {
                     <TouchableOpacity 
                         onPress={ () => {
                             dispatch(setShowSuccessModal(false));
-                            navigation.navigate(screenURL);
+                            navigation.navigate(url);
                         } }
                         className="h-[50px] w-auto mt-5 px-8 flex flex-row items-center justify-center rounded-xl bg-baseGreen"
                     >
-                        <Text className="text-base text-white mr-2">Proceed To { destinationScreen }</Text>
+                        <Text className="text-base text-white mr-2">Proceed To { screenName }</Text>
                         <ArrowRight className="text-white" />
                     </TouchableOpacity>
                 </View>

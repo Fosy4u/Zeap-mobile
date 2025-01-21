@@ -132,7 +132,7 @@ const CartScreen = () => {
                       source={ 
                         popularProduct.colors[0]?.images[1]?.link
                         ? { uri: popularProduct.colors[0]?.images[1]?.link }
-                        : require("../../../../assets/app_logo.png")
+                        : require("../../../../../assets/images/app_logo.png")
                       }
                     />
                     <View className="h-[35px] w-[35px] absolute top-1 right-2 flex items-center justify-center rounded-xl bg-gray-200">

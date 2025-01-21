@@ -1,36 +1,16 @@
 import React from 'react';
 import { View, TouchableOpacity, Dimensions, Text } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
-import { ShopAdd, Home, ShoppingBag, Heart, Profile, Shop } from 'iconsax-react-native';
+import { Home, ShoppingBag, Heart, Profile, Shop } from 'iconsax-react-native';
 
 const { width } = Dimensions.get('window');
 const tabWidth = width / 5;
 const height = 72;
 
-const AppBottomBarComponent = ({ state, descriptors, navigation }: any) => {
-  /**
-    const getPath = () => {
-      const left = tabWidth * 2.01;
-      const right = tabWidth * 3.0;
-      const mid = (left + right) / 2;
-    
-      return `M0,0
-        H${left}
-        C${left + tabWidth / 3.5},0 ${left + tabWidth / 6.8},${height / 2.2} ${mid},${height / 2.15}
-        C${right - tabWidth / 6.8},${height / 2.2} ${right - tabWidth / 3.5},0 ${right},0
-        H${width}
-        V${height}
-        H0
-        V0
-        Z`;
-    };
-  */
+const AppBottomBarComponent = ({ state, descriptors, navigation }: { state: any, descriptors: any, navigation: any }) => {
 
   return (
     <View className="h-auto w-full absolute bottom-0">
-      {/* <Svg width={width} height={height}>
-        <Path d={getPath()} fill="#133522" />
-      </Svg> */}
+
       <View className="h-auto w-full py-4 flex-row items-center justify-around rounded-t-3xl bg-[#133522]">
         {state.routes.map((route: { key: string | number; name: string; }, index: React.Key | null | undefined) => {
           const { options } = descriptors[route.key];
@@ -48,7 +28,7 @@ const AppBottomBarComponent = ({ state, descriptors, navigation }: any) => {
           };
           
           let bottomNavIcon;
-          if (route.name === "Items") {
+          if (route.name === "Products") {
             bottomNavIcon = <ShoppingBag size={23} color={ isFocused ? "#FFFFFF" : "#AEAFB0" } variant={isFocused ? "Bold" : "Linear"}  />;
           } else if (route.name === "Dashboard") {
             bottomNavIcon = <Home size={23} color={ isFocused ? "#FFFFFF" : "#AEAFB0" } variant={isFocused ? "Bold" : "Linear"} />;

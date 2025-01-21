@@ -122,7 +122,7 @@ const LoginScreen = () => {
                   onPress={ () => null }
                   className="h-[55px] w-full flex-1 flex-row items-center justify-center border border-gray-300 rounded-xl bg-transparent"
                 >
-                  <Image source={ require("../../../assets/google_logo.png") } className="h-[20px] w-[20px] mr-1" />
+                  <Image source={ require("../../../../assets/images/google_logo.png") } className="h-[20px] w-[20px] mr-1" />
                   <View className="w-[5px]" /> 
                   <Text className="font-medium text-lg text-baseGreen">Google</Text>
               </TouchableOpacity>
@@ -133,7 +133,7 @@ const LoginScreen = () => {
                 onPress={ () => null }
                 className="h-[55px] w-full flex-1 flex-row items-center justify-center border border-gray-300 rounded-xl bg-transparent"
               >
-                <Image source={ require("../../../assets/apple_logo.png") } className="h-[20px] w-[20px] mr-1" />
+                <Image source={ require("../../../../assets/images/apple_logo.png") } className="h-[20px] w-[20px] mr-1" />
                 <Text className="font-medium text-lg text-baseGreen">Apple</Text>
               </TouchableOpacity>
             </View>

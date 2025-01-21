@@ -22,7 +22,7 @@ const ProfileScreen = () => {
 
   return (
     <GestureHandlerRootView>
-      <SafeAreaView className="h-full w-full flex-1 px-5 pt-2 pb-3">
+      <SafeAreaView className="h-full w-full flex-1 px-5 pt-2 pb-20">
 
         <StatusBar
             backgroundColor="transparent"
@@ -52,7 +52,7 @@ const ProfileScreen = () => {
               <Image
                 className="h-[80px] w-[80px] rounded-full"
                 resizeMode="cover"
-                source={require("../../../assets/home/profile_image.png")}
+                source={require("../../../../assets/images/home/profile_image.png")}
               />
               <Text className="mt-3 text-xl text-baseGreen">{ userData.firstName }</Text>
               <Text className="text-sm text-baseGreen">{ userData.email }</Text>

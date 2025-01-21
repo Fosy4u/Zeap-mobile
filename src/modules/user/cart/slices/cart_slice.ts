@@ -11,7 +11,7 @@ const initialState: ICartState = {
             color: "Brown",
             price: 2500,
             count: 1,
-            image: require("../../../../assets/home/hand_bag.png")
+            image: require("../../../../../assets/images/home/hand_bag.png")
         },
         {
             id: "02",
@@ -20,7 +20,7 @@ const initialState: ICartState = {
             color: "Dark Ash",
             price: 2500,
             count: 1,
-            image: require("../../../../assets/home/gown_one.png")
+            image: require("../../../../../assets/images/home/gown_one.png")
         },
     ]
 };

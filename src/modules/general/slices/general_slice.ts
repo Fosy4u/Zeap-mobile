@@ -1,0 +1,119 @@
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import IGeneralStateModel from "../models/generalState_model";
+import {IAccessories, IClothes, IShoes} from "../models/productOptions_model";
+
+const initialState: IGeneralStateModel = {
+    readyMadeClothesOptions: {
+        mainEnums:          [],
+        genderEnums:        [],
+        ageGroupEnums:      [],
+        ageRangeEnums:      [],
+        statusEnums:        [],
+        clothStyleEnums:    [],
+        sleeveLengthEnums:  [],
+        designEnums:        [],
+        fasteningEnums:     [],
+        occasionEnums:      [],
+        fitEnums:           [],
+        brandEnums:         [],
+        clothSizeEnums:     [],
+        colorEnums:         [],
+    },
+    readyMadeShoesOptions: {
+        genderEnums:          [],
+        ageGroupEnums:        [],
+        ageRangeEnums:        [],
+        statusEnums:          [],
+        shoeStyleEnums:       [],
+        shoeTypeEnums:        [],
+        designEnums:          [],
+        fasteningEnums:       [],
+        occasionEnums:        [],
+        brandEnums:           [],
+        colorEnums:           [],
+        heelHeightEnums:      [],
+        heelTypeEnums:        [],
+        bodyMeasurementEnums: [],
+        shoeSizeEnums:        [],
+    },
+    bespokeClothesOptions: {
+        mainEnums:          [],
+        genderEnums:        [],
+        ageGroupEnums:      [],
+        ageRangeEnums:      [],
+        statusEnums:        [],
+        clothStyleEnums:    [],
+        sleeveLengthEnums:  [],
+        designEnums:        [],
+        fasteningEnums:     [],
+        occasionEnums:      [],
+        fitEnums:           [],
+        brandEnums:         [],
+        clothSizeEnums:     [],
+        colorEnums:         [],
+    },
+    bespokeShoesOptions: {
+        genderEnums:          [],
+        ageGroupEnums:        [],
+        ageRangeEnums:        [],
+        statusEnums:          [],
+        shoeStyleEnums:       [],
+        shoeTypeEnums:        [],
+        designEnums:          [],
+        fasteningEnums:       [],
+        occasionEnums:        [],
+        brandEnums:           [],
+        colorEnums:           [],
+        heelHeightEnums:      [],
+        heelTypeEnums:        [],
+        bodyMeasurementEnums: [],
+        shoeSizeEnums:        [],
+    },
+    accessoriesOptions: {
+        genderEnums:          [],
+        ageGroupEnums:        [],
+        ageRangeEnums:        [],
+        statusEnums:          [],
+        accessoryTypeEnums:   [],
+        accessoryStyleEnums:  [],
+        accessorySizeEnums:   [],
+        designEnums:          [],
+        fasteningEnums:       [],
+        occasionEnums:        [],
+        brandEnums:           [],
+        colorEnums:           [],
+    }
+};
+
+export const generalSlice = createSlice({
+    name: "generalSlice",
+    initialState,
+    reducers: {
+        setReadyMadeClothesOptions: (state: IGeneralStateModel, action: PayloadAction<IClothes>) => {
+            state.readyMadeClothesOptions = action.payload;
+        },
+        setReadyMadeShoesOptions: (state: IGeneralStateModel, action: PayloadAction<IShoes>) => {
+            state.readyMadeShoesOptions = action.payload;
+        },
+        setBespokeClothesOptions: (state: IGeneralStateModel, action: PayloadAction<IClothes>) => {
+            state.bespokeClothesOptions = action.payload;
+        },
+        setBespokeShoesOptions: (state: IGeneralStateModel, action: PayloadAction<IShoes>) => {
+            state.bespokeShoesOptions = action.payload;
+        },
+        setAccessoriesOptions: (state: IGeneralStateModel, action: PayloadAction<IAccessories>) => {
+            state.accessoriesOptions = action.payload;
+        }
+    }
+});
+
+const { actions, reducer } = generalSlice;
+
+export const {
+    setReadyMadeClothesOptions,
+    setReadyMadeShoesOptions,
+    setBespokeClothesOptions,
+    setBespokeShoesOptions,
+    setAccessoriesOptions
+} = actions;
+export default reducer;
