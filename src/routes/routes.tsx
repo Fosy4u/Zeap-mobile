@@ -43,93 +43,258 @@ import AddProductScreen from "../modules/vendor/products/screens/addProduct_scre
 import AddReadyMadeClothesScreen from "../modules/vendor/products/screens/addReadyMadeClothes_screen.tsx";
 import SearchItemScreen from '../modules/user/products/screen/searchItem_screen.tsx';
 import SearchResultsScreen from '../modules/user/products/screen/searchResults_screen.tsx';
+import OrderRequestDetailsScreen from '../modules/vendor/orders/screens/orderRequest_screen.tsx';
+import OrdersScreen from '../modules/vendor/orders/screens/orders_screen.tsx';
 
 const Stack = createNativeStackNavigator<RootNavigationStackModel>();
 
 const AppRoutes = () => {
   return (
     <NavigationContainer>
-        <Stack.Navigator initialRouteName="splashScreen">
+      <Stack.Navigator initialRouteName="splashScreen">
+        {/* ==== Splash & Onboarding ==== */}
+        <Stack.Screen
+          name="splashScreen"
+          component={SplashScreen}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="onboardingOneScreen"
+          component={OnboardingOneScreen}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="welcomeScreen"
+          component={WelcomeScreen}
+          options={{headerShown: false}}
+        />
 
-            {/* ==== Splash & Onboarding ==== */}
-            <Stack.Screen name ="splashScreen" component={ SplashScreen } options={{ headerShown: false }} />
-            <Stack.Screen name="onboardingOneScreen" component={ OnboardingOneScreen } options={{ headerShown: false }} />
-            <Stack.Screen name="welcomeScreen" component={ WelcomeScreen } options={{ headerShown: false }} />
+        {/* ==== Auths ==== */}
+        <Stack.Screen
+          name="loginScreen"
+          component={LoginScreen}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="forgotPasswordScreen"
+          component={ForgotPasswordScreen}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="otpScreen"
+          component={OTPScreen}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="resetPasswordScreen"
+          component={ResetPasswordScreen}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="signUpScreen"
+          component={RegisterScreen}
+          options={{headerShown: false}}
+        />
 
-            {/* ==== Auths ==== */}
-            <Stack.Screen name="loginScreen" component={ LoginScreen } options={{ headerShown: false }} />
-            <Stack.Screen name="forgotPasswordScreen" component={ ForgotPasswordScreen } options={{ headerShown: false }} />
-            <Stack.Screen name="otpScreen" component={ OTPScreen } options={{ headerShown: false }} />
-            <Stack.Screen name="resetPasswordScreen" component={ ResetPasswordScreen } options={{ headerShown: false }} />
-            <Stack.Screen name="signUpScreen" component={ RegisterScreen } options={{ headerShown: false }} />
+        {/**
+         * USERS ROUTES
+         */}
+        {/* ==== Home ==== */}
+        <Stack.Screen
+          name="homeScreen"
+          component={HomeScreen}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="dashboardScreen"
+          component={DashboardScreen}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="inviteFriendScreen"
+          component={InviteFriendScreen}
+          options={{headerShown: false}}
+        />
 
+        {/* ==== Product ==== */}
+        <Stack.Screen
+          name="allCategoryScreen"
+          component={CategoryScreen}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="productListScreen"
+          component={ProductListScreen}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="productDetailScreen"
+          component={ProductDetailScreen}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="deliveryAddressScreen"
+          component={DeliveryAddressScreen}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="reviewListScreen"
+          component={ReviewListScreen}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="paymentMethodScreen"
+          component={PaymentMethodScreen}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="searchItemScreen"
+          component={SearchItemScreen}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="searchResultsScreen"
+          component={SearchResultsScreen}
+          options={{headerShown: false}}
+        />
 
-            {/**
-             * USERS ROUTES
-             */}
-            {/* ==== Home ==== */}
-            <Stack.Screen name="homeScreen" component={ HomeScreen} options={{ headerShown: false }} />
-            <Stack.Screen name="dashboardScreen" component={ DashboardScreen } options={{ headerShown: false }} />
-            <Stack.Screen name="inviteFriendScreen" component={ InviteFriendScreen } options={{ headerShown: false }} />
+        {/*==== Measurement ====*/}
+        <Stack.Screen
+          name="measurementScreen"
+          component={MeasurementScreen}
+          options={{headerShown: false}}
+        />
 
-            {/* ==== Product ==== */}
-            <Stack.Screen name="allCategoryScreen" component={ CategoryScreen } options={{ headerShown: false }} />
-            <Stack.Screen name="productListScreen" component={ ProductListScreen } options={{ headerShown: false }} />
-            <Stack.Screen name="productDetailScreen" component={ ProductDetailScreen } options={{ headerShown: false }} />
-            <Stack.Screen name="deliveryAddressScreen" component={ DeliveryAddressScreen } options={{ headerShown: false }} />
-            <Stack.Screen name="reviewListScreen" component={ ReviewListScreen } options={{ headerShown: false }} />
-            <Stack.Screen name="paymentMethodScreen" component={ PaymentMethodScreen } options={{ headerShown: false }} />
-            <Stack.Screen name="searchItemScreen" component={ SearchItemScreen } options={{ headerShown: false }} />
-            <Stack.Screen name="searchResultsScreen" component={ SearchResultsScreen } options={{ headerShown: false }} />
+        {/* ==== Cart ==== */}
+        <Stack.Screen
+          name="cartScreen"
+          component={CartScreen}
+          options={{headerShown: false}}
+        />
 
-            {/*==== Measurement ====*/}
-            <Stack.Screen name="measurementScreen" component={ MeasurementScreen } options={{ headerShown: false }} />
+        {/* ==== Save ==== */}
+        <Stack.Screen
+          name="savedScreen"
+          component={SavedScreen}
+          options={{headerShown: false}}
+        />
 
-            {/* ==== Cart ==== */}
-            <Stack.Screen name="cartScreen" component={ CartScreen } options={{ headerShown: false }} />
+        {/* ==== Profile ==== */}
+        <Stack.Screen
+          name="profileScreen"
+          component={ProfileScreen}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="personalInformationScreen"
+          component={PersonalInformationScreen}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="editAccountDetailsScreen"
+          component={EditAccountDetailsScreen}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="editDeliveryAddressScreen"
+          component={EditDeliveryAddressScreen}
+          options={{headerShown: false}}
+        />
 
-            {/* ==== Save ==== */}
-            <Stack.Screen name="savedScreen" component={ SavedScreen } options={{ headerShown: false }} />
+        {/* ==== Settings ==== */}
+        <Stack.Screen
+          name="profileSetupScreen"
+          component={ProfileSetupScreen}
+          options={{headerShown: false}}
+        />
 
-            {/* ==== Profile ==== */}
-            <Stack.Screen name="profileScreen" component={ ProfileScreen } options={{ headerShown: false }} />
-            <Stack.Screen name="personalInformationScreen" component={ PersonalInformationScreen } options={{ headerShown: false }} />
-            <Stack.Screen name="editAccountDetailsScreen" component={ EditAccountDetailsScreen } options={{ headerShown: false }} />
-            <Stack.Screen name="editDeliveryAddressScreen" component={ EditDeliveryAddressScreen } options={{ headerShown: false }} />
+        {/**
+         * VENDORS ROUTES
+         */}
+        {/* ==== Home ==== */}
+        <Stack.Screen
+          name="vendorHomeScreen"
+          component={VendorHomeScreen}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="vendorDashboardScreen"
+          component={VendorDashboardScreen}
+          options={{headerShown: false}}
+        />
 
-            {/* ==== Settings ==== */}
-            <Stack.Screen name="profileSetupScreen" component={ ProfileSetupScreen } options={{ headerShown: false }} />
+        {/* ==== Products ==== */}
+        <Stack.Screen
+          name="vendorProductsScreen"
+          component={VendorProductsScreen}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="vendorProductDetailsScreen"
+          component={VendorProductDetailsScreen}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="addProductScreen"
+          component={AddProductScreen}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="addReadyMadeClothesScreen"
+          component={AddReadyMadeClothesScreen}
+          options={{headerShown: false}}
+        />
 
+        {/* ==== Orders ==== */}
+        <Stack.Screen
+          name="orderRequestsScreen"
+          component={OrdersScreen}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="orderRequestDetailsScreen"
+          component={OrderRequestDetailsScreen}
+          options={{headerShown: false}}
+        />
 
+        {/* ==== Market ==== */}
+        <Stack.Screen
+          name="marketScreen"
+          component={MarketScreen}
+          options={{headerShown: false}}
+        />
 
-            {/**
-             * VENDORS ROUTES
-             */}
-            {/* ==== Home ==== */}
-            <Stack.Screen name="vendorHomeScreen" component={ VendorHomeScreen} options={{ headerShown: false }} />
-            <Stack.Screen name="vendorDashboardScreen" component={ VendorDashboardScreen } options={{ headerShown: false }} />
+        {/* ==== Settings ==== */}
+        <Stack.Screen
+          name="shopSetupScreen"
+          component={ShopSetupScreen}
+          options={{headerShown: false}}
+        />
 
-            {/* ==== Products ==== */}
-            <Stack.Screen name="vendorProductsScreen" component={ VendorProductsScreen} options={{ headerShown: false }} />
-            <Stack.Screen name="vendorProductDetailsScreen" component={ VendorProductDetailsScreen } options={{ headerShown: false }} />
-            <Stack.Screen name="addProductScreen" component={ AddProductScreen } options={{ headerShown: false }} />
-            <Stack.Screen name="addReadyMadeClothesScreen" component={ AddReadyMadeClothesScreen } options={{ headerShown: false }} />
-
-
-            {/* ==== Market ==== */}
-            <Stack.Screen name="marketScreen" component={ MarketScreen } options={{ headerShown: false }} />
-
-            {/* ==== Settings ==== */}
-            <Stack.Screen name="shopSetupScreen" component={ ShopSetupScreen } options={{ headerShown: false }} />
-
-            {/* ==== Others ==== */}
-            <Stack.Screen name="notificationsScreen" component={ NotificationsScreen } options={{ headerShown: false }} />
-            <Stack.Screen name="paymentScreen" component={ PaymentScreen } options={{ headerShown: false }} />
-            <Stack.Screen name="overviewScreen" component={ OverviewScreen } options={{ headerShown: false }} />
-            <Stack.Screen name="promoScreen" component={ PromoScreen } options={{ headerShown: false }} />
-        </Stack.Navigator>
+        {/* ==== Others ==== */}
+        <Stack.Screen
+          name="notificationsScreen"
+          component={NotificationsScreen}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="paymentScreen"
+          component={PaymentScreen}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="overviewScreen"
+          component={OverviewScreen}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="promoScreen"
+          component={PromoScreen}
+          options={{headerShown: false}}
+        />
+      </Stack.Navigator>
     </NavigationContainer>
-  )
+  );
 }
 
 export default AppRoutes;
