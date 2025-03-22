@@ -7,7 +7,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import RootNavigationStackModel from "../../../../routes/model/routes_model";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../../../redux/store/store";
-import {setProducts, setSearchWord} from "../slices/product_slice";
+import {setAllProducts, setSearchWord} from "../slices/product_slice";
 import {useState} from "react";
 
 
@@ -30,7 +30,7 @@ const useSearchHook = () => {
         try {
             const products = await searchProduct(requestData).unwrap();
             if (products) {
-                dispatch(setProducts(products));
+                dispatch(setAllProducts(products));
                 setIsLoading(false);
             }
         } catch (error) {

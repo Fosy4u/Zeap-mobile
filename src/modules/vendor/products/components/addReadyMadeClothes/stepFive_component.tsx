@@ -1,19 +1,35 @@
 import React, {useState} from 'react';
-import {Text, TextInput, TouchableOpacity, View} from "react-native";
-import {SelectList} from "react-native-dropdown-select-list";
-import {Add, ArrowDown2, ArrowRight, Edit2, Trash} from "iconsax-react-native";
+import {ScrollView, Text, TextInput, TouchableOpacity, View} from "react-native";
 import CheckBox from "@react-native-community/checkbox";
 
-const StepFiveComponent = () => {
+interface IProps {
+    propsData: {
+        colourType: string;
+        handleSelectColourType: (colourType: string) => void;
+        colorOptions: IColorOption[];
+        handleSelectColour: (colour: IColorOption) => void;
+        selectedColor: IColorOption[];
+        getTextColor: (hex: string) => string;
+        price: string;
+        handleChangePrice: (value: string) => void;
+    };
+};
+interface IColorOption {
+    colorName: string;
+    colorCode: string;
+};
+
+const StepFiveComponent: React.FC<IProps> = (props) => {
+    const {
+        colourType, handleSelectColourType,
+        colorOptions, handleSelectColour, selectedColor, getTextColor,
+        price, handleChangePrice
+    } = props.propsData;
 
     const [rememberMe, setRememberMe] = useState(false);
-    const colours = [
-        { colorName: "Gray", colorCode: "#AEAEAE" },
-        { colorName: "Peach", colorCode: "#FF85A7" },
-        { colorName: "Brown", colorCode: "#F2AD81" },
-        { colorName: "Black", colorCode: "#000000" },
-    ];
+    
     const sizes = ["Small", "Medium", "Large", "X-Large", "XX-Large"];
+    // console.log("SELECTED COLOUR: ", selectedColor);
 
     return (
         <View>
@@ -22,23 +38,78 @@ const StepFiveComponent = () => {
 
             <View className="h-auto w-full mt-5 px-5 py-4 rounded-xl border border-blue-800 bg-blue-50">
                 <Text className="font-montserratSemiBold text-xs text-gray-700">Note:</Text>
-                <Text className="font-montserratMedium text-justify text-xs text-gray-700 leading-5">You can add multiple variations to your product.
-                    For example, if you are selling a T-Shirt, you can add different sizes and colors as variations.
-                    Start by selecting one of the selected colors and then add the size, price and quantity
+                <Text className="font-montserratMedium text-justify text-xs text-gray-700 leading-5">Please select all colours you can source their materials on user request. This option will be available to buyers when they are making a purchase.
+                    Note that this is available only for single plain color products
                 </Text>
             </View>
 
-            <Text className="mt-6 font-montserratSemiBold text-xs text-gray-700">Colour</Text>
-            <Text className="font-montserratMedium text-xs text-gray-700">Select a colour</Text>
-            <View className="h-auto w-full mt-3 flex-row items-center flex-wrap gap-x-1">
-                { colours.map((eachColor, index) => (
-                    <View key={index} className="h-auto w-16 py-2.5 rounded-lg" style={{ backgroundColor: eachColor.colorCode }}>
-                        <Text className="text-xs text-center text-white">{ eachColor.colorName }</Text>
-                    </View>
-                )) }
+            <Text className="mt-6 font-montserratSemiBold text-xs text-gray-700">Colour Type</Text>
+            <Text className="font-montserratMedium text-xs text-gray-700">Select a type of colour</Text>
+            <View className="h-auto w-full mt-2 flex-row items-center justify-start gap-x-3">
+                <View className="h-auto flex-row items-center justify-start">
+                    <CheckBox
+                        onValueChange={ () => handleSelectColourType("Single") }
+                        value={ colourType === "Single" }
+                    />
+                    <Text className="font-montserratMedium text-baseGreen">Single Color</Text>
+                </View>
+                <View className="h-auto flex-row items-center justify-start">
+                    <CheckBox
+                        onValueChange={ () => handleSelectColourType("Multiple") }
+                        value={ colourType === "Multiple" }
+                    />
+                    <Text className="font-montserratMedium text-baseGreen">Multiple Colors</Text>
+                </View>
             </View>
 
-            <Text className="mt-6 font-montserratSemiBold text-xs text-gray-700">Size</Text>
+            { colourType === "Single" && (
+                <View>
+                    <Text className="mt-6 font-montserratSemiBold text-xs text-gray-700">Colour</Text>
+                    <Text className="font-montserratMedium text-xs text-gray-700">Select a colour</Text>
+                    <ScrollView
+                        horizontal={ true }
+                        showsHorizontalScrollIndicator={ false }
+                    >
+                        <View className="h-auto w-full mt-3 flex-row items-center gap-x-1">
+                            { colorOptions.map((color, index) => (
+                                <TouchableOpacity onPress={ () => handleSelectColour(color) } key={index}>
+                                    <View className="h-auto w-16 py-2.5 rounded-lg" style={{ backgroundColor: color.colorCode }}>
+                                        <Text className={`text-xs text-center ${getTextColor(color.colorCode)}`}>{ color.colorName }</Text>
+                                    </View>
+                                </TouchableOpacity>
+                            )) }
+                        </View>
+                    </ScrollView>
+
+                    { selectedColor.length !== 0 && (
+                        <View>
+                            <Text className="mt-6 font-montserratSemiBold text-xs text-gray-700">Selected Colors</Text>
+                            <View className="h-auto w-full mt-2 flex-row items-center justify-start gap-x-2">
+                                { selectedColor.map((color, index) => (
+                                    <View key={ color.colorCode } className="h-[25px] w-[25px] rounded-full" style={{ backgroundColor: color.colorCode }} />
+                                )) }
+                            </View>
+                        </View>
+                    ) }
+                </View>
+            ) }
+
+            <Text aria-label="Price" nativeID="price" className="mt-6 font-montserratMedium">Price<Text className="text-red-600">*</Text></Text>
+            <View className="h-auto w-full mt-1.5 px-3 py-0.5 border rounded-xl border-gray-200 bg-gray-50">
+                <TextInput
+                    aria-label="Price"
+                    aria-labelledby="price"
+                    value={ price.toString() }
+                    keyboardType="number-pad"
+                    textContentType="givenName"
+                    placeholder="Enter amount"
+                    placeholderTextColor="#9ca3af"
+                    className="font-montserratMedium text-base"
+                    onChangeText={(value) => handleChangePrice(value)}
+                />
+            </View>
+
+            {/* <Text className="mt-6 font-montserratSemiBold text-xs text-gray-700">Size</Text>
             <Text className="font-montserratMedium text-xs text-gray-700">Select a size</Text>
             <View className="h-auto w-full mt-3 flex-row items-center flex-wrap gap-x-1">
                 { sizes.map((eachSize, index) => (
@@ -56,20 +127,6 @@ const StepFiveComponent = () => {
                     keyboardType="default"
                     textContentType="givenName"
                     placeholder="Enter quantity"
-                    placeholderTextColor="#9ca3af"
-                    className="font-montserratMedium text-base"
-                    onChangeText={(value) => null}
-                />
-            </View>
-
-            <Text aria-label="Price" nativeID="price" className="mt-5 font-montserratMedium">Price<Text className="text-red-600">*</Text></Text>
-            <View className="h-auto w-full mt-1.5 px-3 py-0.5 border rounded-xl border-gray-200 bg-gray-50">
-                <TextInput
-                    aria-label="Price"
-                    aria-labelledby="price"
-                    keyboardType="default"
-                    textContentType="givenName"
-                    placeholder="Enter amount"
                     placeholderTextColor="#9ca3af"
                     className="font-montserratMedium text-base"
                     onChangeText={(value) => null}
@@ -120,7 +177,8 @@ const StepFiveComponent = () => {
                         <Text className="font-montserratMedium text-xs text-blue-700">Edit</Text>
                     </TouchableOpacity>
                 </View>
-            </View>
+            </View> */}
+
         </View>
     )
 }

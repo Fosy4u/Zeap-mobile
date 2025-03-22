@@ -1,7 +1,8 @@
 interface IVendorProductDetails {
+    __v?:              number;
+    _id?:              string;
     promo?:            IPromo;
     categories?:       ICategories;
-    _id?:              string;
     productId?:        string;
     productType?:      string;
     disabled?:         boolean;
@@ -17,7 +18,6 @@ interface IVendorProductDetails {
     variations?:       IVariation[];
     updatedAt?:        Date;
     createdAt?:        Date;
-    __v?:              number;
     timeLine?:         ITimeLine[];
     rejectionReasons?: any[];
     currency?:         Currency;

@@ -10,7 +10,6 @@ import RootNavigationStackModel from "../../../routes/model/routes_model";
 import { setUserData } from "../../profile/slices/profileState_slice";
 import EncryptedStorage from "react-native-encrypted-storage";
 import { useLazyGetUserByIdQuery } from "../apis/auths_api";
-import { getSavedAnonymousToken } from "../../../redux/services/authorizationHeader";
 
 /**
  * The useLoginHook 
@@ -58,9 +57,9 @@ const useLoginHook = () => {
 
                 const isVendor = userData.isVendor
                 if (isVendor) {
-                    navigation.navigate("vendorHomeScreen");
+                    navigation.navigate("vendorHomeScreen", { screen: "Dashboard" });
                 } else {
-                    navigation.navigate("homeScreen");
+                    navigation.navigate("homeScreen", { screen: "Dashboard" })
                 }
                 // console.log("AUTH USER DATA::: ", userData);
                 // console.log("TOKEN DATA::: ", token);

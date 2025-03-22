@@ -1,37 +1,42 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import ICartState from "../models/cartState_model";
-
+import ICart from "../models/cart_model";
 
 const initialState: ICartState = {
-    carts: [
-        {
-            id: "01",
-            productId: "0123456",
-            title: "Classic Leather Handbag",
-            color: "Brown",
-            price: 2500,
-            count: 1,
-            image: require("../../../../../assets/images/home/hand_bag.png")
-        },
-        {
-            id: "02",
-            productId: "0987654",
-            title: "Swedish stylish women flay gown",
-            color: "Dark Ash",
-            price: 2500,
-            count: 1,
-            image: require("../../../../../assets/images/home/gown_one.png")
-        },
-    ]
+    cart: {
+        _id: "",
+        user: "",
+        basketId: "",
+        basketItems: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+    },
+    cartTotal: 0,
+    cartLoading: false,
+    cartError: false,
 };
 
-const cartSlice = createSlice({
+export const cartSlice = createSlice({
     name: "cartSlice",
     initialState,
-    reducers: {}
+    reducers: {
+        setCart: (state: ICartState, action: PayloadAction<ICart>) => {
+            state.cart = action.payload;
+        },
+        setCartTotal: (state: ICartState, action: PayloadAction<number>) => {
+            state.cartTotal = action.payload;
+        },
+        setCartLoading: (state: ICartState, action: PayloadAction<boolean>) => {
+            state.cartLoading = action.payload;
+        },
+        setCartError: (state: ICartState, action: PayloadAction<boolean>) => {
+            state.cartError = action.payload;
+        },
+    },
 });
 
 const { actions, reducer } = cartSlice;
 
-export const {  } = actions;
+export const { setCart, setCartTotal, setCartLoading, setCartError } = actions;
+
 export default reducer;

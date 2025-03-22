@@ -17,7 +17,6 @@ interface IMeasurement {
 interface IMeasurementMeasurement {
     field?: string;
     value?: number;
-    unit?:  string;
     _id?:   string;
 }
 

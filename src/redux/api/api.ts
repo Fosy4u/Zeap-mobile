@@ -7,6 +7,8 @@ const api = createApi({
         fetchBaseQuery({
             baseUrl: "https://zeap-api.onrender.com",
             prepareHeaders: async (headers) => AuthorizationHeader(headers),
+            credentials: "include",
+            timeout: 30000, // 30 seconds
         }),
         {
             maxRetries: 3,
@@ -19,13 +21,21 @@ const api = createApi({
         "ProductOptions",
         "Reviews",
         "Shop",
-        "ProductQuantity",
         "BodyMeasurement",
         "BodyMeasurements",
         "ProductMeasurementFields",
         "RequiredMeasurementFormFields",
         "BodyMeasurementEnumerations",
-        "Basket",
+        "Cart",
+        "CartTotal",
+        "DeliveryAddress",
+        "DeliveryAddresses",
+        "PaymentReference",
+        "PromoProduct",
+
+        // Vebdor
+        "VendorAnalytics",
+        "DraftProduct"
     ],
     endpoints: () => ({}),
 });

@@ -1,6 +1,8 @@
 import { BottomSheetModalMethods } from "@gorhom/bottom-sheet/lib/typescript/types";
+import IAnalytic from "./analytic_model";
 
 interface IVendorHomeState {
+    analytics: IAnalytic;
     overviews: IOverview[];
     weeklySalesChartData: IChartData[];
     salesCountPieData: IPieData[];
@@ -30,5 +32,5 @@ interface IPieData {
     title: string;
 };
 
-export type { IPieData };
+export type { IPieData, IOverview };
 export default IVendorHomeState;

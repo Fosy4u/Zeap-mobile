@@ -1,24 +1,38 @@
-import { createSlice } from "@reduxjs/toolkit";
-import IVendorHomeState from "../models/vendorHomeState_model";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import IVendorHomeState, { IOverview } from "../models/vendorHomeState_model";
+import IAnalytic from "../models/analytic_model";
 
 
 const initialState: IVendorHomeState = {
+    analytics: {},
     overviews: [
         {
             name: "Product sold",
-            count: 203
+            count: 0,
         },
         {
-            name: "Orders received",
-            count: 529
+            name: "Orders placed",
+            count: 0,
+        },
+        {
+            name: "Orders confirmed",
+            count: 0,
+        },
+        {
+            name: "Orders processing",
+            count: 0,
+        },
+        {
+            name: "Orders dispatched",
+            count: 0,
         },
         {
             name: "Orders delivered",
-            count: 490
+            count: 0,
         },
         {
-            name: "Orders pending",
-            count: 26
+            name: "Orders cancelled",
+            count: 0,
         },
     ],
     weeklySalesChartData: [
@@ -43,10 +57,20 @@ const initialState: IVendorHomeState = {
 export const vendorHomeSlice = createSlice({
     name: "vendorHomeSlice",
     initialState,
-    reducers: {}
+    reducers: {
+        setAnalytics: (state: IVendorHomeState, action: PayloadAction<IAnalytic>) => {
+            state.analytics = action.payload;
+        },
+        setOverviews: (state: IVendorHomeState, action: PayloadAction<IOverview[]>) => {
+            state.overviews = action.payload;
+        }
+    }
 });
 
 const { actions, reducer } = vendorHomeSlice;
 
-export const {} = actions;
+export const {
+    setAnalytics,
+    setOverviews,
+} = actions;
 export default reducer;

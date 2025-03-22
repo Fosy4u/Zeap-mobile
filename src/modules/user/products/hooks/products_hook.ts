@@ -3,10 +3,8 @@ import { IColor, IImage, IVariation } from "../models/productDetails_model";
 import { RootState } from "../../../../redux/store/store";
 import { IColorEnum } from "../../../general/models/productOptions_model";
 import { useEffect, useState } from "react";
-import { useIncreamentProductQuantityMutation, useDecreamentProductQuantityMutation } from "../apis/product_api";
+import { useIncreamentProductQuantityMutation, useDecreamentProductQuantityMutation, useRemoveProductFromCartMutation } from "../apis/product_api";
 import { setFeaturedPrice, setSelectedColor, setSelectedSize } from "../slices/product_slice";
-import { useLazyGetAllBodyMeasurementTemplatesQuery, useLazyGetRequiredMeasurementFormFieldsQuery } from "../../measurements/apis/measurement_api";
-import { setAllBodyMeasurementTemplates, setRequiredMeasurementFormFields } from "../../measurements/slices/measurement_slice";
 
 
 /**
@@ -40,16 +38,7 @@ const useProductsHook = () => {
     
     const [increamentProductQuantity, { isLoading: increamentProductQuantityLoading }] = useIncreamentProductQuantityMutation();
     const [decreamentProductQuantity, { isLoading: decreamentProductQuantityLoading }] = useDecreamentProductQuantityMutation();
-
-    // Get all Measurement related data
-    const [getAllBodyMeasurementTemplates, { isLoading: allBodyMeasurementTemplatesLoading }] = useLazyGetAllBodyMeasurementTemplatesQuery();
-    const [getRequiredMeasurementFormFields, { isLoading: requiredMeasurementFormFieldsLoading }] = useLazyGetRequiredMeasurementFormFieldsQuery();
-
-    useEffect(() => {
-        if (product) {
-            handleGetAllMeasurementsRelatedData();
-        }
-    }, [product]);
+    const [removeProductFromCart, { isLoading: removeProductFromCartLoading }] = useRemoveProductFromCartMutation();
 
     useEffect(() => {
         if (product) {
@@ -187,49 +176,31 @@ const useProductsHook = () => {
     //     }
     // };
 
-    const handleIncreamentProductQuantity = async () => {
+    const handleIncreamentProductQuantity = async (sku: string) => {
         try {
-            const sku = product?.variations?.find(variation => variation.colorValue === selectedColor.name && variation.size === selectedSize)?.sku || "";
-            console.log("SKU::: ", sku);
             const itemQuantityResponse =  await increamentProductQuantity(sku).unwrap();
-    
-            // Dispatch to Redux Store
-            // dispatch(setSelectedQuantity(itemQuantityResponse.data.quantity));
-            console.log("ITEM QUANTITY RESPONSE::: ", itemQuantityResponse);
+            // console.log("ITEM QUANTITY RESPONSE::: ", itemQuantityResponse);
         } catch (error) {
             console.log("ERROR::: ", error);
         }
     };
     
-    const handleDecreamentProductQuantity = async () => {
+    const handleDecreamentProductQuantity = async (sku: string) => {
         try {
-            const sku = product?.variations?.find(variation => variation.colorValue === selectedColor.name && variation.size === selectedSize)?.sku || "";
-            console.log("SKU::: ", sku);
             const itemQuantityResponse =  await decreamentProductQuantity(sku).unwrap();
-    
-            // Dispatch to Redux Store
-            // dispatch(setSelectedQuantity(itemQuantityResponse.data.quantity));
-            console.log("ITEM QUANTITY RESPONSE::: ", itemQuantityResponse);
+            // console.log("ITEM QUANTITY RESPONSE::: ", itemQuantityResponse);
         } catch (error) {
             console.log("ERROR::: ", error);
         }
     };
 
-    const handleGetAllMeasurementsRelatedData = async() => {
-        // Get All Existing Body Measurement Templates
-        const allBodyMeasurementTemplatesResponse = await getAllBodyMeasurementTemplates().unwrap();
-        dispatch(dispatch(setAllBodyMeasurementTemplates(allBodyMeasurementTemplatesResponse)));
-
-        // Get Required Measurement Form Fields
-        const requiredMeasurementFormFieldsResponse = await getRequiredMeasurementFormFields(product?.productId!).unwrap();
-        dispatch(dispatch(setRequiredMeasurementFormFields(requiredMeasurementFormFieldsResponse)));
-    };
-
-    const handleAddToCart = () => {
-        console.log("ADD TO CART::: ", {
-            selectedColor,
-            selectedSize,
-        });
+    const handleRemoveProductFromCart = async (sku: string) => {
+        try {
+            const itemQuantityResponse =  await removeProductFromCart(sku).unwrap();
+            // console.log("ITEM QUANTITY RESPONSE::: ", itemQuantityResponse);
+        } catch (error) {
+            console.log("ERROR::: ", error);
+        }
     };
 
     return {
@@ -242,10 +213,10 @@ const useProductsHook = () => {
         // handleAddProductToCart,
         handleIncreamentProductQuantity,
         handleDecreamentProductQuantity,
-        allBodyMeasurementTemplatesLoading,
-        requiredMeasurementFormFieldsLoading,
+        handleRemoveProductFromCart,
         increamentProductQuantityLoading,
         decreamentProductQuantityLoading,
+        removeProductFromCartLoading,
     };
 };
 

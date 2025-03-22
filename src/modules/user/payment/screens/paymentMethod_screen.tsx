@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { View, Text, SafeAreaView, StatusBar, TouchableOpacity, ScrollView, TextInput, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import RootNavigationStackModel from '../../../../routes/model/routes_model';
+import RootNavigationStackModel from '../../../../routes/model/routes_model.ts';
 import { ArrowLeft, ArrowRight } from 'iconsax-react-native';
 import CheckBox from '@react-native-community/checkbox';
-import SavedAddressesModal from '../components/savedAddressesBottomSheet_component.tsx';
+import SavedAddressesBottomSheet from '../../address/components/savedAddressesBottomSheet_component.tsx';
 
 const PaymentMethodScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
@@ -148,7 +148,7 @@ const PaymentMethodScreen = () => {
           </View>
 
           <TouchableOpacity 
-            onPress={ () => navigation.navigate("homeScreen") }
+            onPress={ () => null }
             className="h-[55px] w-auto mt-5 flex flex-row items-center justify-center rounded-xl bg-baseGreen"
           >
             <Text className="text-lg text-white mr-2">Proceed</Text>
@@ -158,7 +158,7 @@ const PaymentMethodScreen = () => {
       </ScrollView>
 
       { (showSavedAddressesModal === true) && (
-        <SavedAddressesModal handleShowSavedAddressesModal={ handleShowSavedAddressesModal } />
+        <SavedAddressesBottomSheet />
       ) }
       
     </SafeAreaView>

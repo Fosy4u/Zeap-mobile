@@ -29,15 +29,14 @@ const AppLoader: React.FC<IProps> = ({ loadingAdditionalMessage }) => {
 
 
     return (
-        <View className="h-full w-full inset-0 flex-1 items-center justify-center">
+        <View className="h-full w-full absolute inset-0 flex-1 items-center justify-center bg-black/80">
           <Animated.Image
             source={require("../../../../assets/images/app_icon.png")}
             style={[{ transform: [{ rotate: spin }] }]}
             className="h-[50px] w-[50px]"
             resizeMode="cover"
           />
-          <Text className="mt-2 font-montserratMedium text-base text-gray-700">Please wait...</Text>
-          <Text className="mt-2 font-montserratNormal text-xs text-gray-700">{ loadingAdditionalMessage }</Text>
+          <Text className="mt-4 font-montserratNormal text-sm text-white">{ loadingAdditionalMessage ? loadingAdditionalMessage : "Please wait..." }</Text>
         </View>
     );
 };

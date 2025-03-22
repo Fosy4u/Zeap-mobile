@@ -1,9 +1,7 @@
-import React, {Dispatch, SetStateAction} from 'react'
+import React, {Dispatch} from 'react'
 import {useNavigation} from '@react-navigation/native';
-import {ArrowRight} from 'iconsax-react-native';
 import {useDispatch} from 'react-redux';
 import {Image, SafeAreaView, StatusBar, Text, TouchableOpacity, View} from 'react-native'
-import FastImage from 'react-native-fast-image';
 import {NativeStackNavigationProp} from 'react-native-screens/lib/typescript/native-stack/types';
 import RootNavigationStackModel from "../../../../routes/model/routes_model.ts";
 
@@ -11,9 +9,10 @@ interface Props {
     bodyText: string;
     screenURL: keyof RootNavigationStackModel;
     setShowWarningModal:  React.Dispatch<React.SetStateAction<boolean>>;
+    handleSubmitProduct: () => void;
 };
 
-const WarningPopupModal: React.FC<Props> = ({bodyText, screenURL, setShowWarningModal}) => {
+const WarningPopupModal: React.FC<Props> = ({ bodyText, screenURL, setShowWarningModal, handleSubmitProduct }) => {
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const dispatch = useDispatch();
 
@@ -41,10 +40,6 @@ const WarningPopupModal: React.FC<Props> = ({bodyText, screenURL, setShowWarning
                         resizeMode="cover"
                         source={require("../../../../../assets/images/warning_modal_image.png")}
                     />
-                    <FastImage
-                        className="h-full w-full absolute"
-                        source={require("../../../../../assets/images/success_animation.gif")}
-                    />
                 </View>
                 <View className="px-4 pb-2 flex-1 items-center justify-center">
                     <Text className="font-montserratSemiBold text-xl text-gold">Hold Up</Text>
@@ -52,7 +47,7 @@ const WarningPopupModal: React.FC<Props> = ({bodyText, screenURL, setShowWarning
                         {bodyText}
                     </Text>
 
-                    <View className="h-auto w-full mt-8 flex-row">
+                    <View className="h-auto w-full mt-5 flex-row">
                         <TouchableOpacity
                             onPress={ () => setShowWarningModal(false) }
                             className="h-[50px] flex-1 flex-row items-center justify-center rounded-xl bg-red-50"
@@ -62,7 +57,7 @@ const WarningPopupModal: React.FC<Props> = ({bodyText, screenURL, setShowWarning
                         <View className="w-[10px]"/>
 
                         <TouchableOpacity
-                            onPress={() => null}
+                            onPress={ () => handleSubmitProduct() }
                             className="h-[50px] flex-1 flex-row items-center justify-center rounded-xl bg-baseGreen"
                         >
                             <Text className="font-montserratRegular text-white">Yes, Submit</Text>

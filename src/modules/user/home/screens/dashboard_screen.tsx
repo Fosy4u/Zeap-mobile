@@ -16,28 +16,29 @@ import useGeneralHook from "../../../general/hooks/general_hook";
 import useHomeHook from "../hooks/home_hook";
 
 const DashboardScreen = () => {
-  const { categories, selectedCategory, popularProducts } = useSelector((state: RootState) => state.productState);
-  const { newestProducts } = useSelector((state: RootState) => state.productState);
+  const { promoProducts, categories, selectedCategory, popularProducts, newestArrivals } = useSelector((state: RootState) => state.productState);
   const { userData } = useSelector((state: RootState) => state.profileState);
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
   const dispatch = useDispatch();
   const width = Dimensions.get('window').width - 44;
   
   const {
-    handleGetNewestProducts,
+    handleGetAllLiveProducts,
+    handleGetPopularProducts,
+    handleGetNewestArrivals,
     handleGetFemaleClothing,
     handleGetMaleClothing,
     handleGetShoes,
     handleGetAccessories,
     handleGetBags,
-    handleGetPopularProducts,
+    handleGetPromoProducts,
     popularProductIsLoading,
+    newestArrivalsIsLoading,
   } = useHomeHook();
   const { handleGetProductOptions } = useGeneralHook();
   
 
   const [buttonContainerVisible, setButtonContainerVisible] = useState(false);
-  const bestDeals = popularProducts;
 
   const openButtonContainer = useCallback(() => {
     setButtonContainerVisible(true);
@@ -50,14 +51,31 @@ const DashboardScreen = () => {
   
   useEffect(() => {
     (async () => {
-      await handleGetNewestProducts();
+      await handleGetProductOptions();
+      await handleGetPromoProducts();
+    })();
+  }, []);
+  
+  useEffect(() => {
+    (async () => {
+      await handleGetPopularProducts();
+    })();
+  }, []);
+  
+  useEffect(() => {
+    (async () => {
+      await handleGetNewestArrivals();
+    })();
+  }, []);
+  
+  useEffect(() => {
+    (async () => {
+      await handleGetAllLiveProducts();
       await handleGetFemaleClothing();
       await handleGetMaleClothing();
       await handleGetShoes();
       await handleGetAccessories();
       await handleGetBags();
-      await handleGetPopularProducts();
-      await handleGetProductOptions();
     })();
   }, []);
 
@@ -85,7 +103,7 @@ const DashboardScreen = () => {
                       </View>
                       <Pressable
                         className="bg-lightGreen p-2.5 rounded-full"
-                        onPress={ () => null }
+                        onPress={ () => navigation.navigate("userNotificationsScreen") }
                       >
                         <Notification color="#133522" size={24} variant="Bold" />
                       </Pressable>
@@ -109,35 +127,46 @@ const DashboardScreen = () => {
                 <View className="px-5 py-6">
                   
                     {/*==== New Arrivals Section ====*/}
-                    <View className="flex flex-row items-center justify-between rounded-2xl bg-lightGold">
-                      <Carousel
-                        loop
+                    { (promoProducts.length !== 0) ? (
+                      <View className="flex flex-row items-center justify-between rounded-2xl bg-lightGold">
+                        <Carousel
+                          loop
+                          width={width}
+                          height={width / 2}
+                          autoPlay={true}
+                          data={promoProducts}
+                          scrollAnimationDuration={1000}
+                          autoPlayInterval={5000}
+                          renderItem={({ index }) => (
+                              <View key={index} className="px-5 py-7 flex flex-row items-center justify-between">
+                                <View className="w-[60%]">
+                                  <Text className="text-sm text-gray-600">New Promo</Text>
+                                  <Text className="mt-1 font-semibold text-lg text-gray-600">{ promoProducts[index].subTitle! }</Text>
+                                  <Text className="mt-1.5 text-sm text-gray-800">{ promoProducts[index].description! }</Text>
+                                </View>
+                                <Image
+                                  className="h-[120px] w-[100px] mr-2 rounded-lg"
+                                  resizeMode="cover"
+                                  source={
+                                    promoProducts[index]?.largeScreenImageUrl?.link
+                                      ? { uri: promoProducts[index].largeScreenImageUrl?.link! }
+                                      : require("../../../../../assets/images/app_logo.png")
+                                  }
+                                />
+                              </View>
+                          )}
+                        />
+                      </View>
+                    ) : (
+                      <ShimmerPlaceHolder
+                        LinearGradient={LinearGradient}
+                        shimmerColors={['#ebebeb', '#fefefe', '#ebebeb']}
                         width={width}
                         height={width / 2}
-                        autoPlay={true}
-                        data={newestProducts}
-                        scrollAnimationDuration={1000}
-                        autoPlayInterval={5000}
-                        renderItem={({ index }) => (
-                            <View key={index} className="px-5 py-7 flex flex-row items-center justify-between">
-                              <View className="w-[60%]">
-                                <Text className="text-sm text-gray-600">New Arrivals</Text>
-                                <Text className="mt-1 font-semibold text-2xl text-gray-600">{ newestProducts[index].discount }% OFF</Text>
-                                <Text className="mt-1.5 text-sm text-gray-800">{ newestProducts[index].message }</Text>
-                              </View>
-                              <Image
-                                className="h-[120px] w-[100px] mr-2 rounded-lg"
-                                resizeMode="cover"
-                                source={
-                                  newestProducts[index]?.imageLink
-                                    ? { uri: newestProducts[index].imageLink }
-                                    : require("../../../../../assets/images/app_logo.png")
-                                }
-                              />
-                            </View>
-                        )}
+                        shimmerStyle={{ borderRadius: 16, marginTop: 5, marginRight: 15 }}
                       />
-                    </View>
+                    ) }
+                    
 
                     {/*==== Categories Section ====*/}
                     <View className="mt-6">
@@ -252,11 +281,11 @@ const DashboardScreen = () => {
                       </ScrollView>
                     </View>
                     
-                    {/*==== Best Deals Section ====*/}
+                    {/*==== Newest Arrivals Section ====*/}
                     <View className="mt-6">
                       <View className="flex-row justify-between items-center">
-                        <Text className="font-medium text-base text-baseGreen">Best deals</Text>
-                        <TouchableOpacity onPress={ () => navigation.navigate("productListScreen", { screenTitle: "Best Deals" }) }>
+                        <Text className="font-medium text-base text-baseGreen">Newest arrivals</Text>
+                        <TouchableOpacity onPress={ () => navigation.navigate("productListScreen", { screenTitle: "Newest Arrivals" }) }>
                           <Text className="text-sm text-baseGreen">See all</Text>
                         </TouchableOpacity>
                       </View>
@@ -269,7 +298,7 @@ const DashboardScreen = () => {
                         { Array.from({ length: 5 }, (_, index) => (
                           <ShimmerPlaceHolder
                             key={`item-${index}`}
-                            visible={!popularProductIsLoading}
+                            visible={!newestArrivalsIsLoading}
                             LinearGradient={LinearGradient}
                             shimmerColors={['#ebebeb', '#fefefe', '#ebebeb']}
                             height={150}
@@ -283,10 +312,10 @@ const DashboardScreen = () => {
                         showsHorizontalScrollIndicator={ false }
                         className="h-auto w-full mt-2"
                       >
-                        { bestDeals.length > 0 && bestDeals.slice(0, 10).map((bestDeal) => (
-                          <TouchableOpacity key={ bestDeal.productId }
+                        { newestArrivals.length > 0 && newestArrivals.slice(0, 10).map((newestArrival) => (
+                          <TouchableOpacity key={ newestArrival.productId }
                             onPress={ () => {
-                              navigation.navigate("productDetailScreen", { productID: bestDeal.productId });
+                              navigation.navigate("productDetailScreen", { productID: newestArrival.productId });
                             } }
                             className="h-auto w-[340px] mr-4 px-3 py-3 flex-row justify-start rounded-2xl overflow-hidden bg-[#F8F9FE]"
                           >
@@ -295,8 +324,8 @@ const DashboardScreen = () => {
                                 className="h-[120px] w-[100px] rounded-lg"
                                 resizeMode="cover"
                                 source={ 
-                                  bestDeal.colors[0]?.images[1]?.link
-                                  ? { uri: bestDeal.colors[0]?.images[1]?.link }
+                                  newestArrival.colors[0]?.images[1]?.link
+                                  ? { uri: newestArrival.colors[0]?.images[1]?.link }
                                   : require("../../../../../assets/images/app_logo.png")
                                 }
                               />
@@ -306,16 +335,16 @@ const DashboardScreen = () => {
                             </View>
 
                             <View className="w-[160px] mt-3">
-                              <Text className="text-base text-gray-800">{ (bestDeal.title.length >= 40) ? bestDeal.title.slice(0, 40) + "..." : bestDeal.title }</Text>
+                              <Text className="text-base text-gray-800">{ (newestArrival.title.length >= 40) ? newestArrival.title.slice(0, 40) + "..." : newestArrival.title }</Text>
                               <View className="mt-3 flex-row items-center justify-between">
-                                <Text className="px-2.5 py-1 text-xs rounded-lg bg-lightGreen">{ bestDeal.categories.productGroup.split("-").join(" ") }</Text>
+                                <Text className="px-2.5 py-1 text-xs rounded-lg bg-lightGreen">{ newestArrival.categories.productGroup.split("-").join(" ") }</Text>
 
                                 <View className="flex-row">
                                   <Star1 color="#E4A01C" size={18} variant="Bold" className="mr-0.5" />
                                   <Text>4.3</Text>
                                 </View>
                               </View>
-                              <Text className="mt-2.5 text-base font-medium text-gray-900">₦{ bestDeal.variations[0].price.toLocaleString() }</Text>
+                              <Text className="mt-2.5 text-base font-medium text-gray-900">₦{ newestArrival.variations[0].price.toLocaleString() }</Text>
                             </View>
                           </TouchableOpacity>
                         )) }

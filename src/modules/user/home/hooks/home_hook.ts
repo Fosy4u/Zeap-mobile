@@ -1,8 +1,7 @@
 import { useDispatch } from "react-redux";
-import { setAccessories, setBags, setCategories, setFemaleClothing, setMaleClothing, setNewestProducts, setPopularProducts, setShoes } from "../../products/slices/product_slice";
+import { setAccessories, setAllProducts, setBags, setCategories, setFemaleClothing, setMaleClothing, setNewestArrivals, setPopularProducts, setPromoProducts, setShoes } from "../../products/slices/product_slice";
 
-import { useLazyGetNewestProductsQuery, useLazyGetPopularProductsQuery, useLazyGetProductsByCategoriesQuery } from "../../products/apis/product_api";
-import { INewestProduct } from "../../products/models/productState_model";
+import { useLazyGetAllLiveProductsQuery, useLazyGetNewestArrivalsQuery, useLazyGetPopularProductsQuery, useLazyGetProductsByCategoriesQuery, useLazyGetPromoProductsQuery } from "../../products/apis/product_api";
 
 
 
@@ -21,29 +20,59 @@ import { INewestProduct } from "../../products/models/productState_model";
  * }
  */
 const useHomeHook = () => {
-    const [getNewestProducts] = useLazyGetNewestProductsQuery();
+    const [getPromoProducts] = useLazyGetPromoProductsQuery();
+    const [getAllLiveProducts] = useLazyGetAllLiveProductsQuery();
+    const [getNewestArrivals, { isLoading: newestArrivalsIsLoading }] = useLazyGetNewestArrivalsQuery();
     const [getProductsByCategories] = useLazyGetProductsByCategoriesQuery();
     const [getPopularProducts, { isLoading: popularProductIsLoading }] = useLazyGetPopularProductsQuery();
     const dispatch = useDispatch();
 
-
-
-    const handleGetNewestProducts = async () => {
+    const handleGetPromoProducts = async () => {
         try {
-            const newestProducts = await getNewestProducts({
-                limit: 10,
+            const promoProducts = await getPromoProducts().unwrap();
+            dispatch(setPromoProducts(promoProducts));
+            // console.log("PROMO PRODUCTS::: ", promoProducts);
+        } catch (error) {
+            console.log("ERROR::: ", error);
+        }
+    };
+
+    const handleGetAllLiveProducts = async () => {
+        try {
+            const allLiveProducts = await getAllLiveProducts({
+                limit: 20,
+                pageNumber: 1
+            }).unwrap();
+
+            dispatch(setAllProducts(allLiveProducts));
+        } catch (error) {
+            console.log("ERROR::: ", error);
+        }
+    };
+
+    const handleGetPopularProducts = async () => {
+        try {
+            const popularProducts = await getPopularProducts({
+                limit: 20,
+                pageNumber: 1
+            }).unwrap();
+
+            // Dispatch to Redux Store
+            dispatch(setPopularProducts(popularProducts));
+        } catch (error) {
+            console.log("ERROR::: ", error);
+        }
+    };
+
+    const handleGetNewestArrivals = async () => {
+        try {
+            const newestArrivals = await getNewestArrivals({
+                limit: 20,
                 pageNumber: 1
             }).unwrap();
     
-            const formattedNewestProducts: INewestProduct[] = newestProducts.map((eachProduct, index) => ({
-                id: eachProduct._id,
-                discount: 20,
-                message: `On ${newestProducts[index].title}`,
-                imageLink: newestProducts[index].colors[0]?.images[1]?.link,
-            }));
-    
             // Dispatch to Redux Store
-            dispatch(setNewestProducts(formattedNewestProducts));
+            dispatch(setNewestArrivals(newestArrivals));
             // console.log("NEWEST PRODUCT::: ", formattedNewestProducts);
         } catch (error) {
             console.log("ERROR::: ", error);
@@ -139,30 +168,19 @@ const useHomeHook = () => {
         }
     };
 
-    const handleGetPopularProducts = async () => {
-        try {
-            const popularProducts = await getPopularProducts({
-                limit: 20,
-                pageNumber: 1
-            }).unwrap();
-
-            // Dispatch to Redux Store
-            dispatch(setPopularProducts(popularProducts));
-        } catch (error) {
-            console.log("ERROR::: ", error);
-        }
-    };
-
     
     return {
-        handleGetNewestProducts,
+        handleGetPromoProducts,
+        handleGetAllLiveProducts,
+        handleGetPopularProducts,
+        handleGetNewestArrivals,
         handleGetFemaleClothing,
         handleGetMaleClothing,
         handleGetShoes,
         handleGetAccessories,
         handleGetBags,
-        handleGetPopularProducts,
         popularProductIsLoading,
+        newestArrivalsIsLoading,
     };
 };
 

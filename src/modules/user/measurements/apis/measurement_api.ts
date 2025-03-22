@@ -12,7 +12,7 @@ const measurementAPI = api.injectEndpoints({
                 method: "POST",
                 body: requestData,
             }),
-            invalidatesTags: ["BodyMeasurements"],
+            invalidatesTags: ["BodyMeasurements", "Cart", "CartTotal"],
             transformResponse: (response: { data: any }) => {
                 return response.data;
             },

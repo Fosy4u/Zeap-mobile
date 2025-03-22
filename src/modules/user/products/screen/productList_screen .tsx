@@ -26,19 +26,10 @@ interface IProps {
   route: RouteProp<RootNavigationStackModel, 'productListScreen'>;
 }
 
-const ProductListScreen: React.FC<IProps> = ({route}) => {
-  const {
-    femaleClothing,
-    maleClothing,
-    shoes,
-    accessories,
-    bags,
-    popularProducts,
-  } = useSelector((state: RootState) => state.productState);
-  const navigation =
-    useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
-  const {screenTitle} = route.params || {};
-
+const ProductListScreen: React.FC<IProps> = ({ route }) => {
+  const { allProducts, femaleClothing, maleClothing, shoes, accessories, bags, popularProducts , newestArrivals } = useSelector((state: RootState) => state.productState);
+  const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();  const { screenTitle } = route.params || {};
+  
   const [isFocused, setIsFocused] = useState(false);
   const iconTranslateX = useRef(new Animated.Value(0)).current;
   const inputTranslateX = useRef(new Animated.Value(0)).current;
@@ -89,22 +80,23 @@ const ProductListScreen: React.FC<IProps> = ({route}) => {
     }
   }, []);
 
-  const products =
-    screenTitle === 'Female Clothings'
-      ? femaleClothing
-      : screenTitle === 'Male Clothings'
-      ? maleClothing
-      : screenTitle === 'Shoes'
-      ? shoes
-      : screenTitle === 'Accessories'
-      ? accessories
-      : screenTitle === 'Bags'
-      ? bags
-      : screenTitle === 'Popular Products'
-      ? popularProducts
-      : screenTitle === 'Best Deals'
-      ? popularProducts
-      : [];
+  const products = screenTitle === "All Products" ?
+  allProducts
+  : screenTitle === "Female Clothings"
+  ? femaleClothing
+  : screenTitle === "Male Clothings"
+  ? maleClothing
+  : screenTitle === "Shoes"
+  ? shoes
+  : screenTitle === "Accessories"
+  ? accessories
+  : screenTitle === "Bags"
+  ? bags
+  : screenTitle === "Popular Products"
+  ? popularProducts
+  : screenTitle === "Newest Arrivals"
+  ? newestArrivals
+  :[];
   // console.log("SCREEN TITLE::: ", screenTitle);
 
   return (
@@ -121,7 +113,7 @@ const ProductListScreen: React.FC<IProps> = ({route}) => {
               </View>
             </TouchableOpacity>
             <Text className="font-semibold text-lg text-baseGreen">
-              Products
+              { !screenTitle ? "Products" : screenTitle }
             </Text>
             <View className="h-[40px] w-[40px]" />
           </View>

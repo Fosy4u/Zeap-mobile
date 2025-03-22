@@ -1,18 +1,22 @@
 import React, {useEffect, useRef} from 'react';
 import {Dimensions, Image, SafeAreaView, Text, TouchableOpacity, View} from "react-native";
 import * as Animatable from "react-native-animatable";
-import AppHeaderComp from "../../general/components/appHeader_comp.tsx";
-import {Add, ArrowLeft, ArrowRight} from "iconsax-react-native";
+import {Add, ArrowRight} from "iconsax-react-native";
 import {useNavigation} from "@react-navigation/native";
 import {NativeStackNavigationProp} from "@react-navigation/native-stack";
 import RootNavigationStackModel from "../../../../routes/model/routes_model.ts";
+import { RootState } from '../../../../redux/store/store.ts';
+import { useDispatch, useSelector } from 'react-redux';
+import { setClotheType, setProductMode, setSelectedStep } from '../slices/vendorProductState_slice.ts';
 
 interface IProps {
     handleShowClotheTypeBottomSheet: (value: boolean) => void;
 }
 
 const ClotheTypeBottomSheetComponent: React.FC<IProps> = ({ handleShowClotheTypeBottomSheet }) => {
+    const { clotheType } = useSelector((state: RootState) => state.vendorProductState);
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
+    const dispatch = useDispatch();
     const screenHeight = Dimensions.get("window").height;
     const modalHeight = screenHeight / 1.6;
     const slideAnimation = useRef<Animatable.View>(null);
@@ -73,25 +77,8 @@ const ClotheTypeBottomSheetComponent: React.FC<IProps> = ({ handleShowClotheType
 
                         <View className="h-auto w-full mt-5 flex-row">
                             <TouchableOpacity
-                                onPress={ () => null }
-                                className="h-auto w-full px-5 py-5 flex-1 rounded-xl border border-gray-100 bg-gray-50"
-                            >
-                                <View className="w-[50px] h-[50px] flex-row items-center justify-center rounded-xl bg-gray-100">
-                                    <Image
-                                        source={
-                                            require("../../../../../assets/images/clothe.png")
-                                        }
-                                        resizeMode="contain"
-                                        className="h-[25px] w-auto rounded-2xl"
-                                    />
-                                </View>
-                                <Text className="mt-2 font-montserratMedium text-sm text-gray-700">Readymade</Text>
-                            </TouchableOpacity>
-                            <View className="w-[20px]" />
-
-                            <TouchableOpacity
-                                onPress={ () => null }
-                                className="h-auto w-full px-5 py-5 flex-1 rounded-xl border border-gray-100 bg-gray-50"
+                                onPress={ () => setClotheType("Bespoke") }
+                                className={`h-auto w-full px-5 py-5 flex-1 rounded-xl border ${ clotheType === "Bespoke" ? "border-baseGreen" : "border-gray-100" } bg-gray-50`}
                             >
                                 <View className="w-[50px] h-[50px] flex-row items-center justify-center rounded-xl bg-gray-100">
                                     <Image
@@ -104,13 +91,32 @@ const ClotheTypeBottomSheetComponent: React.FC<IProps> = ({ handleShowClotheType
                                 </View>
                                 <Text className="mt-2 font-montserratMedium text-sm text-gray-700">Bespoke</Text>
                             </TouchableOpacity>
+                            <View className="w-[20px]" />
+
+                            <TouchableOpacity
+                                onPress={ () => setClotheType("Readymade") }
+                                className={`h-auto w-full px-5 py-5 flex-1 rounded-xl border ${ clotheType === "Readymade" ? "border-baseGreen" : "border-gray-100" } bg-gray-50`}
+                            >
+                                <View className="w-[50px] h-[50px] flex-row items-center justify-center rounded-xl bg-gray-100">
+                                    <Image
+                                        source={
+                                            require("../../../../../assets/images/clothe.png")
+                                        }
+                                        resizeMode="contain"
+                                        className="h-[25px] w-auto rounded-2xl"
+                                    />
+                                </View>
+                                <Text className="mt-2 font-montserratMedium text-sm text-gray-700">Readymade</Text>
+                            </TouchableOpacity>
                         </View>
                     </View>
 
                     <TouchableOpacity
                         onPress={ () => {
                             handleShowClotheTypeBottomSheet(false);
-                            navigation.navigate("addReadyMadeClothesScreen");
+                            dispatch(setProductMode("New"));
+                            dispatch(setSelectedStep(1));
+                            clotheType === "Bespoke" ? navigation.navigate("addBespokeClothesScreen") : navigation.navigate("addReadyMadeClothesScreen");
                         } }
                         className="h-[55px] w-auto mt-7 flex flex-row items-center justify-center rounded-xl bg-baseGreen"
                     >
