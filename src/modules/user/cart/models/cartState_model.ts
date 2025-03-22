@@ -1,17 +1,10 @@
-import { ImageSourcePropType } from "react-native";
+import ICart from "./cart_model";
 
 interface ICartState {
-    carts: ICartItem[];
-};
-
-interface ICartItem {
-    id: string;
-    productId: string;
-    title: string;
-    color: string;
-    price: number;
-    count: number;
-    image: ImageSourcePropType;
+    cart:           ICart;
+    cartTotal:      number;
+    cartLoading:    boolean;
+    cartError:      boolean;
 };
 
 export default ICartState;

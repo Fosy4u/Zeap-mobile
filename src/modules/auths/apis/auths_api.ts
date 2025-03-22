@@ -22,9 +22,7 @@ const authAPI = api.injectEndpoints({
                 },
                 body: requestData,
             }),
-            invalidatesTags: [
-                "user"
-            ],
+            invalidatesTags: ["user"],
             transformResponse: (response: any) => {
                 return response;
             },

@@ -2,27 +2,39 @@ import React, { useEffect } from "react";
 import { Image, Pressable, SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View } from "react-native"
 import { useSelector } from "react-redux";
 import { RootState } from "../../../../redux/store/store";
-import { Add, ArrowDown, ArrowRight, ArrowUp, Calendar, Edit2, Notification, Star1, Trash } from "iconsax-react-native";
-import { NavigationProp, NavigationState, useNavigation } from "@react-navigation/native";
+import { Add, ArrowDown, ArrowRight, ArrowUp, Calendar, Edit2, Notification, Star1 } from "iconsax-react-native";
+import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import RootNavigationStackModel from "../../../../routes/model/routes_model";
 import { BarChart } from "react-native-gifted-charts";
-import useVendorGeneralHook from "../../general/hooks/general_hook";
+import useVendorHomeHook from "../hooks/vendorHome_hook";
+import useGeneralHook from "../../../general/hooks/general_hook";
 
 
 const VendorDashboardScreen = () => {
-  const { overviews, weeklySalesChartData } = useSelector((state: RootState) => state.vendorHomeState);
+  const { analytics, overviews, weeklySalesChartData } = useSelector((state: RootState) => state.vendorHomeState);
   const { payments } = useSelector((state: RootState) => state.paymentState);
   const { shop } = useSelector((state: RootState) => state.vendorGeneralState);
   const { userData } = useSelector((state: RootState) => state.profileState);
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
-  const { handleGetShop } = useVendorGeneralHook();
   // console.log("USER DATA::: ", userData);
 
+  const {
+    handleGetShop,
+    handleGeVendortAnalytics,
+  } = useVendorHomeHook();
+  const { handleGetProductOptions } = useGeneralHook();
 
   useEffect(() => {
     (async () => {
       await handleGetShop(userData.shopId!);
+      await handleGetProductOptions();
+    })();
+  }, [userData]);
+
+  useEffect(() => {
+    (async () => {
+      await handleGeVendortAnalytics(userData.shopId!)
     })();
   }, [userData]);
   
@@ -44,7 +56,7 @@ const VendorDashboardScreen = () => {
           />
           <Pressable
             className="bg-[#20704329] p-2.5 rounded-xl"
-            onPress={ () => navigation.navigate("notificationsScreen") }
+            onPress={ () => navigation.navigate("vendorNotificationsScreen") }
           >
             <Notification color="#D5B07B" size={24} variant="Bold" />
           </Pressable>
@@ -60,13 +72,13 @@ const VendorDashboardScreen = () => {
         <View className="mt-5 p-5 py-6 rounded-3xl flex-row justify-between items-center bg-[#20704329]">
           <View>
             <Text className="text-white text-sm">Total revenue</Text>
-            <Text className="text-white text-xl">{ `₦540,600`}</Text>
-            <Text className="mt-2 text-white text-[10px]">{ `Last month’s revenue = ₦412,058`}</Text>
+            <Text className="text-white text-xl">{ `₦${ !analytics.shopRevenuesByPaymentStatus?.paid?.value ? 0.0 : analytics.shopRevenuesByPaymentStatus?.paid?.value }`}</Text>
+            <Text className="mt-2 text-white text-[10px]">{ `Last month’s revenue = N/A`}</Text>
           </View>
 
           <View className="flex-row items-center">
             <ArrowUp color="#FFFFFF" size={13} className="mr-1" />
-            <Text className="text-white text-xs">{ `10%`}</Text>
+            <Text className="text-white text-xs">{ `0%`}</Text>
           </View>
         </View>
         
@@ -105,17 +117,21 @@ const VendorDashboardScreen = () => {
               </TouchableOpacity>
             </View>
 
-            <View className="w-full mt-2 flex-row items-center justify-between">
-              { overviews.slice(0, 2).map((overview) => (
-                <View
-                  key={ overview.name } 
-                  className="w-[48%] px-4 py-2.5 border border-gray-200 rounded-xl bg-lightGray"
-                >
-                  <Text className="font-medium text-lg">{ overview.count }</Text>
-                  <Text className="text-sm">{ overview.name }</Text>
-                </View>
-              )) }
-            </View>
+           <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={ false }
+            className="h-auto w-full mt-2"
+           >
+            { overviews.map((overview) => (
+              <View
+                key={ overview.name } 
+                className="w-[170px] mr-3 px-4 py-2.5 border border-gray-200 rounded-xl bg-lightGray"
+              >
+                <Text className="font-medium text-lg">{ overview.count }</Text>
+                <Text className="text-sm">{ overview.name }</Text>
+              </View>
+            )) }
+           </ScrollView>
           </View>
           
           {/* ==== Weekly Sales Chart ==== */}

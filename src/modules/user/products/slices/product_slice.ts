@@ -1,35 +1,21 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import IProductState, { ICategory, INewestProduct } from "../models/productState_model";
+import IProductState, { ICategory } from "../models/productState_model";
 import IProduct from "../models/product_model";
 import { IColorEnum } from "../../../general/models/productOptions_model";
 import IProductDetails from "../models/productDetails_model";
 import { set } from "react-hook-form";
+import IPromoProduct from "../models/promoProduct_model";
 
 const initialState: IProductState = {
     productID: "",
     tabs: ["Description", "Reviews", "Timeline"],
     selectedTab: "Description",
     timelines: ["Once measurement received", "Cutting - 2days", "Sewing - 2 weeks", "Finishing 3 days", "Dispatch 2 days", "Delivery"],
-    savedAddresses: [
-        {
-            id: "01",
-            title: "Otor John Stephen",
-            phone: "08130000000",
-            email: "otorjohn@gmail.com",
-            streetAddress: "No.38 Ashiek Jarma street, Jabi Abuja"
-        },
-        {
-            id: "02",
-            title: "Otor John Stephen",
-            phone: "08130000000",
-            email: "otorjohn@gmail.com",
-            streetAddress: "No.38 Ashiek Jarma street, Jabi Abuja"
-        },
-    ],
 
     
+    promoProducts: [],
     product: {},
-    products: [],
+    allProducts: [],
     selectedCategory:{
         id: 1,
         name: "Female Clothings",
@@ -74,13 +60,13 @@ const initialState: IProductState = {
             image: require("../../../../../assets/images/home/category_five.png"),
         },
     ],
-    newestProducts: [],
     femaleClothing: [],
     maleClothing: [],
     shoes: [],
     accessories: [],
     bags: [],
     popularProducts: [],
+    newestArrivals: [],
 
     featuredPrice: 0,
     selectedColor: {
@@ -112,17 +98,20 @@ export const productSlice = createSlice({
         setProductID: (state: IProductState, action: PayloadAction<string>) => {
             state.productID = action.payload;
         },
+        setPromoProducts: (state: IProductState, action: PayloadAction<IPromoProduct[]>) => {
+            state.promoProducts = action.payload;
+        },
         setProduct: (state: IProductState, action: PayloadAction<IProductDetails>) => {
             state.product = action.payload;
         },
-        setProducts: (state: IProductState, action: PayloadAction<IProduct[]>) => {
-            state.products = action.payload;
+        setAllProducts: (state: IProductState, action: PayloadAction<IProduct[]>) => {
+            state.allProducts = action.payload;
         },
         setSelectedTab: (state: IProductState, action: PayloadAction<string>) => {
             state.selectedTab = action.payload;
         },
-        setNewestProducts: (state: IProductState, action: PayloadAction<INewestProduct[]>) => {
-            state.newestProducts = action.payload;
+        setNewestArrivals: (state: IProductState, action: PayloadAction<IProduct[]>) => {
+            state.newestArrivals = action.payload;
         },
         setFemaleClothing: (state: IProductState, action: PayloadAction<IProduct[]>) => {
             state.femaleClothing = action.payload;
@@ -177,11 +166,12 @@ const { actions, reducer } = productSlice;
 
 export const {
     setSearchWord,
+    setPromoProducts,
     setProduct,
-    setProducts,
+    setAllProducts,
     setProductID,
     setSelectedTab,
-    setNewestProducts,
+    setNewestArrivals,
     setFemaleClothing,
     setMaleClothing,
     setShoes,

@@ -4,7 +4,7 @@ import { useLazyGetShopQuery } from "../apis/general_api";
 
 /**
  * The useGeneralHook
- * @returns { handleGetShop }
+ * @returns {  }
  */
 const useVendorGeneralHook = () => {
     const dispatch = useDispatch();
@@ -21,12 +21,7 @@ const useVendorGeneralHook = () => {
         };
     };
 
-    return {
-        // handleGetItems,
-        // handleGetMarket,
-        handleGetShop,
-        // handleGetNotifications,
-    };
+    return {};
 };
 
 export default useVendorGeneralHook;

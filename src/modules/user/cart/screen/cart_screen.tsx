@@ -1,14 +1,34 @@
 import { useSelector } from 'react-redux';
 import { View, Text, SafeAreaView, StatusBar, TouchableOpacity, Image, ScrollView } from 'react-native'
-import React from 'react'
+import React, { useEffect } from 'react'
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ArrowRight, Heart, Notification, Star1, Trash } from 'iconsax-react-native';
 import { RootState } from '../../../../redux/store/store';
+import AppLoader from '../../../general/components/appLoader';
+import useCartHook from '../hooks/cart_hook';
+import useProductsHook from '../../products/hooks/products_hook';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import RootNavigationStackModel from '../../../../routes/model/routes_model';
 
 
 const CartScreen = () => {
-  const { carts } = useSelector((state: RootState) => state.cartState);
   const { popularProducts } = useSelector((state: RootState) => state.productState);
+  const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
+
+  const {
+    carts, cartItemsLoading, handleGetCartItems,
+    cartTotal, cartTotalLoading, handleGetCartTotal
+  } = useCartHook();
+  const { handleIncreamentProductQuantity, handleDecreamentProductQuantity, handleRemoveProductFromCart } = useProductsHook();
+  
+
+  useEffect(() => {
+    (async() => {
+      await handleGetCartItems();
+      await handleGetCartTotal();
+    })()
+  }, [carts]);
 
   return (
     <GestureHandlerRootView>
@@ -25,7 +45,7 @@ const CartScreen = () => {
           <Text className="font-semibold text-lg text-baseGreen">My Cart</Text>
           <TouchableOpacity
             className="bg-lightGreen p-2.5 rounded-full"
-            onPress={ () => null }
+            onPress={ () => navigation.navigate("userNotificationsScreen") }
           >
             <Notification color="#133522" size={24} variant="Bold" />
           </TouchableOpacity>
@@ -34,69 +54,75 @@ const CartScreen = () => {
         {/*==== Cart List ====*/}
         <ScrollView showsVerticalScrollIndicator={ false }
           className="h-auto w-full">
-          { (carts.length !== 0)
-          ? (carts.map((cart) => (
-            <View key={ cart.productId } className="h-auto w-full">
-              <View key={ cart.productId }
-                className="h-auto w-full py-[20px] flex-row items-center justify-start">
-                <Image
-                  className="h-[80px] w-[60px]"
-                  resizeMode="center"
-                  // source={ 
-                  //   cart.colors[0]?.images[1]?.link
-                  //   ? { uri: cart.colors[0]?.images[1]?.link }
-                  //   : require("../../../../assets/app_logo.png")
-                  // }
-                  source={ cart.image }
-                />
-                <View className="h-auto flex-1 ml-4">
-                  <Text className="text-base text-gray-800">{ cart.title }</Text>
-                  <Text className="text-xs text-gray-500">Color: { cart.color }</Text>
+          { (carts && carts?.basketItems?.length !== 0)
+          ? (
+            <View>
+              { carts?.basketItems?.map((basketItem, index) => {
+                return (
+                    <View key={ basketItem._id! } className="h-auto w-full">
+                      <View
+                        className="h-auto w-full py-[20px] flex-row items-center justify-start">
+                        <Image
+                          className="h-[80px] w-[60px]"
+                          resizeMode="center"
+                          source={
+                            basketItem?.image!
+                            ? { uri: basketItem?.image! }
+                            : require("../../../../../assets/images/app_logo.png")
+                          }
+                        />
+                        <View className="h-auto flex-1 ml-4">
+                          <Text className="text-base text-gray-800">{ basketItem.title! }</Text>
+                          <Text className="text-xs text-gray-500">Color: { basketItem.bespokeColor! }</Text>
 
-                  <View className="h-auto flex-1 mt-2 flex-row items-center justify-between">
-                    <View className="flex-row items-center gap-x-4">
-                      <TouchableOpacity onPress={ () => null } >
-                        <Text className="text-2xl">&minus;</Text>
-                      </TouchableOpacity>
+                          <View className="h-auto flex-1 mt-2 flex-row items-center justify-between">
+                            <View className="flex-row items-center gap-x-4">
+                              <TouchableOpacity onPress={ () => handleDecreamentProductQuantity(basketItem.sku!) } >
+                                <Text className="text-2xl">&minus;</Text>
+                              </TouchableOpacity>
 
-                      <View className="h-[25px] w-[25px] flex-row justify-center items-center border border-gray-400 rounded-lg">
-                        <Text className="">{ cart.count }</Text>
+                              <View className="h-[25px] w-[25px] flex-row justify-center items-center border border-gray-400 rounded-lg">
+                                <Text className="">{ basketItem.quantity! }</Text>
+                              </View>
+                              
+
+                              <TouchableOpacity onPress={ () => handleIncreamentProductQuantity(basketItem.sku!) } >
+                                <Text className="text-2xl">&#43;</Text>
+                              </TouchableOpacity>
+                            </View>
+
+                            <Text className="font-semibold text-lg text-baseGreen">₦ { cartTotal?.itemsTotal!.toLocaleString() }</Text>
+
+                            <TouchableOpacity onPress={ () => handleRemoveProductFromCart(basketItem.sku!) } >
+                              <Trash color="#AA1F1F" size={18} variant="Bold" />
+                            </TouchableOpacity>
+                          </View>
+                        </View>
                       </View>
                       
-
-                      <TouchableOpacity onPress={ () => null } >
-                        <Text className="text-2xl">&#43;</Text>
-                      </TouchableOpacity>
+                      <View className="h-[1px] w-full bg-gray-200" />
                     </View>
+                )
+              }) }
 
-                    <Text className="font-semibold text-lg text-baseGreen">₦ { cart.price.toLocaleString() }</Text>
-
-                    <TouchableOpacity onPress={ () => null } >
-                      <Trash color="#AA1F1F" size={18} variant="Bold" />
-                    </TouchableOpacity>
-                  </View>
-                </View>
+              {/*==== Subtotal ====*/}
+              <View className="mt-5 flex-row justify-between items-center">
+                <Text className="text-base text-baseGreen">Subtotal</Text>
+                <Text className="font-semibold text-lg text-baseGreen">₦ { cartTotal?.total!.toLocaleString() }</Text>
               </View>
-              
-              <View className="h-[1px] w-full bg-gray-200" />
+              <Text className="text-xs text-gray-500">Delivery fees not included yet.</Text>
             </View>
-          )))
+          )
           : (
-            <View className="h-[300px] w-full flex-1 items-center justify-center">
-              <Text className="text-lg">No item available</Text>
+            <View className="h-[100px] w-full flex-1 items-center justify-center border border-gray-200 rounded-lg">
+              <Text className="text-lg">No item in your cart</Text>
             </View>
           ) }
 
-
-          {/*==== Subtotal ====*/}
-          <View className="mt-5 flex-row justify-between items-center">
-            <Text className="text-base text-baseGreen">Subtotal</Text>
-            <Text className="font-semibold text-lg text-baseGreen">₦ { carts[0].price.toLocaleString() }</Text>
-          </View>
-          <Text className="text-xs text-gray-500">Delivery fees not included yet.</Text>
-
           <TouchableOpacity 
-            onPress={() => null}
+            onPress={() => {
+              navigation.navigate("deliveryAddressScreen")
+            }}
             className="h-[55px] w-auto mt-10 flex flex-row items-center justify-center rounded-xl bg-baseGreen"
           >
             <Text className="text-lg text-white mr-2">Proceed To Checkout</Text>
@@ -104,7 +130,9 @@ const CartScreen = () => {
           </TouchableOpacity>
 
           <TouchableOpacity 
-            onPress={() => null}
+            onPress={() => {
+              navigation.navigate("productListScreen", { screenTitle: "All Products" });
+            }}
             className="h-[55px] w-auto mt-4 flex flex-row items-center justify-center rounded-xl bg-gold"
           >
             <Text className="font-medium text-lg text-baseGreen mr-2">Continue Shopping</Text>
@@ -158,6 +186,9 @@ const CartScreen = () => {
 
         </ScrollView>
       </SafeAreaView>
+      
+      { (cartItemsLoading) && <AppLoader loadingAdditionalMessage="Loading cart items." /> }
+      { (cartTotalLoading) && <AppLoader loadingAdditionalMessage="Loading total price." /> }
     </GestureHandlerRootView>
   )
 }

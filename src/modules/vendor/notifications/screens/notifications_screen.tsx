@@ -7,7 +7,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../../../../redux/store/store';
 import AppHeaderComp from '../../general/components/appHeader_comp';
 
-const NotificationsScreen = () => {
+const VendorNotificationsScreen = () => {
     const { notifications } = useSelector((state: RootState) => state.notificationsState);
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
 
@@ -62,4 +62,4 @@ const NotificationsScreen = () => {
     );
 };
 
-export default NotificationsScreen;
+export default VendorNotificationsScreen;

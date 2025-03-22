@@ -1,19 +1,41 @@
 interface ICart {
-    user?:        string;
+    __v?:         number;
+    _id?:         string;
     basketId?:    string;
     basketItems?: BasketItem[];
-    _id?:         string;
-    updatedAt?:   Date;
     createdAt?:   Date;
-    __v?:         number;
+    updatedAt?:   Date;
+    user?:        string;
 }
 
 interface BasketItem {
-    product?:  string;
-    quantity?: number;
-    sku?:      string;
-    _id?:      string;
+    _id?:                string;
+    actualAmount?:       number;
+    bespokeColor?:       string;
+    bespokeInstruction?: string;
+    bodyMeasurements?:   BodyMeasurement[];
+    color?:              string;
+    currency?:           string;
+    discountedAmount?:   null;
+    image?:              string;
+    originalAmount?:     number;
+    productId?:          string;
+    quantity?:           number;
+    sku?:                string;
+    title?:              string;
 }
 
+interface BodyMeasurement {
+    name?:         string;
+    measurements?: Measurement[];
+    _id?:          string;
+}
+
+interface Measurement {
+    field?: string;
+    value?: number;
+    unit?:  string;
+    _id?:   string;
+}
 
 export default ICart;

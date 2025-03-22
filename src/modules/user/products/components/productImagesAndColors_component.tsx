@@ -18,7 +18,7 @@ const ProductImagesAndColorsComponent: React.FC<IProps> = ({ product }) => {
   const { selectedColor, selectedSize, selectedQuantity } = useSelector((state: RootState) => state.productState);
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
   const dispatch = useDispatch();
-  console.log("SELECTED COLOR::: ", selectedColor);
+  // console.log("SELECTED COLOR::: ", selectedColor);
   
 
   const {
@@ -28,9 +28,6 @@ const ProductImagesAndColorsComponent: React.FC<IProps> = ({ product }) => {
     handleUpdateDefaultFeaturedImageAndThumbnails,
     handleSizeSelection,
     handleColorSelection,
-    // handleAddProductToCart,
-    handleIncreamentProductQuantity,
-    handleDecreamentProductQuantity,
   } = useProductsHook();
   
 
@@ -69,34 +66,13 @@ const ProductImagesAndColorsComponent: React.FC<IProps> = ({ product }) => {
               />
             </View>
 
-            <View className="mt-20 ml-3">
-              <Text className="font-montserratMedium text-base text-gold">23</Text>
-              <Text className="font-montserratMedium">In stock</Text>
-
-              <Text className="mt-5">Quantity</Text>
-              <View className="mt-2 flex-row items-center gap-x-3">
-                <TouchableOpacity onPress={ () => handleDecreamentProductQuantity() } >
-                  <Text className="text-2xl">&minus;</Text>
-                </TouchableOpacity>
-
-                <View className="h-[30px] w-[30px] flex-row justify-center items-center border border-gray-400 rounded-lg">
-                  <Text className="">{ selectedQuantity }</Text>
-                </View>
-
-
-                <TouchableOpacity onPress={ () => handleIncreamentProductQuantity() } >
-                  <Text className="text-2xl">&#43;</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-
             {/*==== Color Palette ====*/}
             <View className="h-[280px] w-[150px] items-end flex justify-center relative">
               <TouchableOpacity onPress={ () => {
                 toggleSlide();
                 console.log("OPEN DRAWER:::")
               } }
-              className=" right-[70.5px]">
+              className=" right-[0.5px]">
                 <Image
                   source={ require("../../../../../assets/images/drawer_button.png") }
                   resizeMode="contain"
@@ -106,7 +82,7 @@ const ProductImagesAndColorsComponent: React.FC<IProps> = ({ product }) => {
 
               { (featuredColors.length !== 0) && (
                   <Animated.View
-                    className="h-[260px] w-[150px] pr-0 right-[70px] items-end justify-center rounded-l-full border border-[#0D986A] bg-gray-100 absolute"
+                    className="h-[260px] w-[150px] pr-0 right-[0px] items-end justify-center rounded-l-full border border-[#0D986A] bg-gray-100 absolute"
                     style={[
                       { transform: [{ translateX: slideAnim }] },
                     ]}

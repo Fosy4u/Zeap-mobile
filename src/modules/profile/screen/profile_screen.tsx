@@ -14,6 +14,8 @@ const ProfileScreen = () => {
   const { userData } = useSelector((state: RootState) => state.profileState );
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
   const { clearStorage } = useLogoutHook();
+  // console.log("USER DATA::: ", userData);
+  
 
   const handleLogoutUser = async (): Promise<void> => {
     await clearStorage();
@@ -35,7 +37,7 @@ const ProfileScreen = () => {
           <Text className="font-semibold text-lg text-baseGreen">My Profile</Text>
           <TouchableOpacity
             className="bg-lightGreen p-2.5 rounded-full"
-            onPress={ () => null }
+            onPress={ () => navigation.navigate(userData?.isVendor ? "vendorNotificationsScreen" : "userNotificationsScreen") }
           >
             <Notification color="#133522" size={24} variant="Bold" />
           </TouchableOpacity>
@@ -71,7 +73,9 @@ const ProfileScreen = () => {
                 </View>
               </TouchableOpacity>
 
-              <TouchableOpacity onPress={ () => null }>
+              <TouchableOpacity 
+                onPress={ () => navigation.navigate(userData?.isVendor ? "vendorNotificationsScreen" : "userNotificationsScreen") }
+              >
                 <View className="h-auto w-full mb-4 flex-row items-center justify-between">
                   <View className="h-auto w-fit flex-row items-center gap-x-4">
                     <View className="h-[55px] w-[55px] flex items-center justify-center rounded-xl border border-[#EDEFF4] bg-[#F8F9FE]">

@@ -41,14 +41,19 @@ interface IClothes {
     occasionEnums?:        string[];
     fitEnums?:             string[];
     brandEnums?:           string[];
+    clothSizeEnums?:       string[];
     colorEnums?:           IColorEnum[];
     bodyMeasurementEnums?: IBodyMeasurementEnum[];
-    clothSizeEnums?:       string[];
 }
 
 interface IBodyMeasurementEnum {
-    name?:         string;
-    measurements?: string[];
+    gender?: string;
+    value?:  IValue[];
+}
+
+interface IValue {
+    name?: string;
+    fields?: string[];
 }
 
 interface IShoes {
@@ -70,5 +75,5 @@ interface IShoes {
 }
 
 
-export type { IAccessories, IBodyMeasurementEnum, IColorEnum, IClothes, IShoes };
+export type { IAccessories, IBodyMeasurementEnum, IColorEnum, IValue, IClothes, IShoes };
 export default IProductOptions;
