@@ -107,7 +107,7 @@ const SavedScreen = () => {
           <Text className="font-semibold text-lg text-baseGreen">My Favorites</Text>
           <TouchableOpacity
             className="bg-lightGreen p-2.5 rounded-full"
-            onPress={ () => null }
+            onPress={ () => navigation.navigate("userNotificationsScreen") }
           >
             <Notification color="#133522" size={24} variant="Bold" />
           </TouchableOpacity>

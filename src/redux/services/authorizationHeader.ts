@@ -36,6 +36,7 @@ const AuthorizationHeader = async (headers: Headers) => {
     }
 };
 
+// Get saved anonymous token
 const getSavedAnonymousToken =  async() => {
     const token = await EncryptedStorage.getItem("anonymousToken");
 

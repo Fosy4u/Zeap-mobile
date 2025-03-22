@@ -1,9 +1,17 @@
+import IDraftProduct from "./vendorDraftProducts_model";
+
 interface IVendorProductState {
+    productMode: string;
+    selectedStep: number;
     tabs: string[];
+    clotheType: string;
     selectedTab: string;
     timelines: string[];
     savedMeasurements: ISavedMeasurement[];
     savedAddresses: ISavedAddress[];
+
+    draftProducts: IDraftProduct[];
+    selectedDraftProduct: IDraftProduct;
 };
 
 

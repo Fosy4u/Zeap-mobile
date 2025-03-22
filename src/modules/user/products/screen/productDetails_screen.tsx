@@ -15,6 +15,7 @@ import { useGetProductReviewsQuery } from '../apis/review_api';
 import AppLoader from '../../../general/components/appLoader';
 import ProductImagesAndColorsComponent from '../components/productImagesAndColors_component';
 import SizeGuideBottomSheet from '../components/sizeGuideBottomSheet_component';
+import useMeasurementHook from '../../measurements/hooks/measurement_hook';
 
 interface IProps {
   route: RouteProp<RootNavigationStackModel, "productDetailScreen">
@@ -31,12 +32,12 @@ const ProductDetailScreen: React.FC<IProps> = ({ route }) => {
   const { data: product, isLoading: productsLoading } = useGetProductByProductIDQuery(productID!);
   const { data: reviews, isLoading: reviewsLoading } = useGetProductReviewsQuery(productID!);
 
-  useEffect(() => {
-    dispatch(setProductID(productID!));
+  useEffect(() => {;
     if (product) {
       dispatch(setProduct(product!));
+      dispatch(setProductID(productID!))
     }
-  }, [product])
+  }, [product]);
 
 
   
@@ -68,7 +69,6 @@ const ProductDetailScreen: React.FC<IProps> = ({ route }) => {
 
       {(!productsLoading) ? (
         <>
-
           <ScrollView
               showsVerticalScrollIndicator={ false }
               className="mt-[30px]"

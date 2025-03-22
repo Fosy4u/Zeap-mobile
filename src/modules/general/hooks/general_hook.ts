@@ -1,9 +1,6 @@
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { useLazyGetProductOptionsQuery } from "../apis/general_api";
 import { setAccessoriesOptions, setBespokeClothesOptions, setBespokeShoesOptions, setReadyMadeClothesOptions, setReadyMadeShoesOptions } from "../slices/general_slice";
-import { IColorEnum } from "../models/productOptions_model";
-import { RootState } from "../../../redux/store/store";
-import { IVariation } from "../../user/products/models/productDetails_model";
 
 
 /**
@@ -11,7 +8,7 @@ import { IVariation } from "../../user/products/models/productDetails_model";
  * @returns { handleGetProductOptions }
  */
 const useGeneralHook = () => {
-    const { readyMadeClothesOptions, readyMadeShoesOptions, bespokeClothesOptions, bespokeShoesOptions, accessoriesOptions } = useSelector((state: RootState) => state.generalState);
+    // const { readyMadeClothesOptions, readyMadeShoesOptions, bespokeClothesOptions, bespokeShoesOptions, accessoriesOptions } = useSelector((state: RootState) => state.generalState);
     const [getProductOptions] = useLazyGetProductOptionsQuery();
     const dispatch = useDispatch();
     

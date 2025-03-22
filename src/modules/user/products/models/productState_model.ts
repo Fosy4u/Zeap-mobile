@@ -2,23 +2,24 @@ import { ImageSourcePropType } from "react-native";
 import IProduct from "./product_model";
 import { IColorEnum } from "../../../general/models/productOptions_model";
 import IProductDetails from "./productDetails_model";
+import IPromoProduct from "./promoProduct_model";
 
 interface IProductState {
     productID: string;
     tabs: string[];
     selectedTab: string;
     timelines: string[];
-    savedAddresses: ISavedAddress[];
-    newestProducts: INewestProduct[];
     femaleClothing: IProduct[];
     maleClothing: IProduct[];
     shoes: IProduct[];
     accessories: IProduct[];
     bags: IProduct[];
     popularProducts: IProduct[];
+    newestArrivals: IProduct[];
     selectedCategory: ICategory;
+    promoProducts: IPromoProduct[];
     product: IProductDetails;
-    products: IProduct[];
+    allProducts: IProduct[];
     categories: ICategory[];
 
     featuredPrice: number;
@@ -31,20 +32,12 @@ interface IProductState {
     showSizedGuideBottomSheet: boolean;
 };
 
-interface INewestProduct {
-    id: string;
-    discount: number;
-    message: string;
-    imageLink: string
-};
-
-interface ISavedAddress {
-    id: string;
-    title: string;
-    phone: string;
-    email: string;
-    streetAddress: string;
-}
+// interface INewestProduct {
+//     id: string;
+//     discount: number;
+//     message: string;
+//     imageLink: string
+// };
 
 interface ICategory {
     id: number;
@@ -54,5 +47,5 @@ interface ICategory {
     image: ImageSourcePropType;
 };
 
-export type { INewestProduct, ISavedAddress, ICategory };
+export type { ICategory };
 export default IProductState;
