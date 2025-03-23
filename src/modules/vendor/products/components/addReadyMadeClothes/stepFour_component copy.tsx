@@ -1,6 +1,6 @@
 import React, {useState} from 'react';
 import {Image, Text, TextInput, TouchableOpacity, View} from "react-native";
-import {Add, ArrowLeft, DocumentUpload} from "iconsax-react-native";
+import {Add, DocumentUpload} from "iconsax-react-native";
 import CheckBox from "@react-native-community/checkbox";
 
 const StepFourComponent = () => {

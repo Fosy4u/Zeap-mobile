@@ -49,26 +49,17 @@ const bespokeProductAPI = api.injectEndpoints({
         }),
 
         // Upload product images
-        uploadProductImages: builder.mutation<IDraftProduct, any>({
-            query: (requestData) => {
-                console.log("REQUEST DATA: ", requestData);
-                return {
-                    url: "/product/update/addColorAndImages",
-                    method: "PUT",
-                    body: requestData.body,
-                    headers: {
-                        "Content-Type": `"multipart/form-data"; charset=utf-8`
-                    },
-                };
-            },
+        uploadProductImages: builder.mutation<IDraftProduct, FormData>({
+            query: (requestData) => ({
+                url: "/product/update/addColorAndImages",
+                method: "PUT",
+                body: requestData,
+            }),
             invalidatesTags: ["DraftProduct", "Products"],
             transformResponse(response: { data: any }) {
                 // console.log("RESPONSE: ", response);
                 return response.data;
             },
-            // transformErrorResponse: (response) => {
-            //     return response;
-            // },
         }),
 
         // Add product variation

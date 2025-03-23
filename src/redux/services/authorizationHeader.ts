@@ -28,7 +28,7 @@ const AuthorizationHeader = async (headers: Headers) => {
         // Add token to headers
         headers.set("Authorization", `Bearer ${token}`);
         headers.set("Accept", "application/json");
-        headers.set("Content-Type", "application/json");
+        // headers.set("Content-Type", "application/json");
 
         return headers;
     } catch (error) {
@@ -37,11 +37,16 @@ const AuthorizationHeader = async (headers: Headers) => {
 };
 
 // Get saved anonymous token
-const getSavedAnonymousToken =  async() => {
-    const token = await EncryptedStorage.getItem("anonymousToken");
+const getSavedAnonymousToken =  async () => {
+    const auth = getAuth();
+    const currentUser = auth.currentUser;
 
-    if (token) {
-        return token;;
+    if (currentUser) {
+        const token = await currentUser.getIdToken(true);
+        console.log("REFRESHED TOKEN::: ", token);
+        return token;
+    } else {
+        throw new Error("User not logged in.");
     }
 };
 

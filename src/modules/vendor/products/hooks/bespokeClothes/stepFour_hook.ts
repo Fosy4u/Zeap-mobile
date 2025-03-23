@@ -4,6 +4,8 @@ import { Asset, ImageLibraryOptions, launchImageLibrary } from "react-native-ima
 import { useSelector } from "react-redux";
 import { RootState } from "../../../../../redux/store/store";
 import { useUploadProductImagesMutation } from "../../apis/bespokeProduct_api";
+import { ur } from "intl-tel-input/i18n";
+import { getSavedAnonymousToken } from "../../../../../redux/services/authorizationHeader";
 
 
 interface ImageFile {
@@ -209,23 +211,18 @@ const useStepFourHook = () => {
             formData.append("productId", productId);
             formData.append("color", "Bespoke");
 
-            let i = 0;
+            selectedImages.forEach((image: ImageFile, index: number) => {
+                const imageUri = image.uri;
+                const imageName = image.name || `image_${index}.jpg`;
+                const imageType = image.type || "image/jpeg";
 
-            selectedImages.forEach((image: ImageFile) => {
-                const uri = Platform.OS === 'android' ? image.uri.replace('file://', '') : image.uri;
-                const imageData = {
-                    uri: image.uri,
-                    type: "image/jpg",
-                    name: image.name,
-                };
-                formData.append("images[" + i + "]", imageData as any);
-                console.log("IMAGE DATA: ", imageData);
-                
-
-                i ++;
+                formData.append("images", {
+                    uri: imageUri,
+                    name: imageName,
+                    type: imageType,
+                });
             });
-            console.log("FORM DATA: ", formData);                   
-            
+
             const uploadProductImagesResponseData = await uploadProductImages(formData).unwrap();
             console.log("RESPONSE DATA: ", uploadProductImagesResponseData);
 

@@ -1,10 +1,17 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../../../redux/store/store";
 import { useSaveAutoPricePercentageMutation, useSubmitProductMutation } from "../../apis/bespokeProduct_api";
-import useAddBespokeClothesHook from "./addBespokeClothes_hook";
 
-const useStepSixHook = () => {
+interface IProps {
+    setShowWarningModal: React.Dispatch<React.SetStateAction<boolean>>;
+    setShowSuccessModal: React.Dispatch<React.SetStateAction<boolean>>;
+};
+
+const useStepSixHook = (
+    setShowWarningModal: { (value: React.SetStateAction<boolean>): void; (arg0: boolean): void; }, 
+    setShowSuccessModal: { (value: React.SetStateAction<boolean>): void; (arg0: boolean): void; }
+) => {
 
     const { selectedDraftProduct } = useSelector((state: RootState) => state.vendorProductState);
     const [isAutoPriceAdjustment, setIsAutoPriceAdjustment] = useState(false);
@@ -12,9 +19,6 @@ const useStepSixHook = () => {
     const [loadingMessage, setLoadingMessage] = useState<string>("");
     const [showPriceAdjustmentModal, setShowPriceAdjustmentModal] = useState<boolean>(false);
     const [priceAdjustmentModalType, setPriceAdjustmentModalType] = useState<string>("Activate");
-
-
-    const { setShowWarningModal, setShowSuccessModal } = useAddBespokeClothesHook();
 
     const [saveAutoPricePercentage, { isLoading: saveAutoPricePercentageIsLoading, isSuccess: saveAutoPricePercentageIsSuccess }] = useSaveAutoPricePercentageMutation();
     const [submitProduct, { isLoading: submitProductIsLoading, isSuccess: submitProductIsSuccess }] = useSubmitProductMutation();   
