@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../../../redux/store/store";
 import { useUpdateWithCategoriesMutation } from "../../apis/bespokeProduct_api";
+import { Alert } from "react-native";
 
 
 interface IOption {
@@ -16,191 +17,199 @@ const useStepTwoHook = () => {
 
     const { selectedDraftProduct } = useSelector((state: RootState) => state.vendorProductState );
     const { bespokeClothesOptions } = useSelector((state: RootState) => state.generalState);
-    const [mainOptions , setMainOptions] = useState<IOption[]>([]);
-    const [styleOptions, setStyleOptions] = useState<IOption[]>([]);
-    const [genderOptions, setGenderOptions] = useState<IOption[]>([]);
-    const [ageGroupOptions, setAgeGroupOptions] = useState<IOption[]>([]);
-    const [ageRangeOptions, setAgeRangeOptions] = useState<IOption[]>([]);
-    const [brandOptions, setBrandOptions] = useState<IOption[]>([]);
-    const [designOptions, setDesignOptions] = useState<IOption[]>([]);
-    const [occasionOptions, setOccasionOptions] = useState<IOption[]>([]);
-    const [sleeveLengthOptions, setSleeveLengthOptions] = useState<IOption[]>([]);
-    const [fasteningOptions, setFasteningOptions] = useState<IOption[]>([]);
-    const [fitOptions, setFitOptions] = useState<IOption[]>([]);
+    const [mainOptions , setMainOptions] = useState<string[]>([]);
+    const [styleOptions, setStyleOptions] = useState<string[]>([]);
+    const [genderOptions, setGenderOptions] = useState<string[]>([]);
+    const [ageGroupOptions, setAgeGroupOptions] = useState<string[]>([]);
+    const [ageRangeOptions, setAgeRangeOptions] = useState<string[]>([]);
+    const [brandOptions, setBrandOptions] = useState<string[]>([]);
+    const [designOptions, setDesignOptions] = useState<string[]>([]);
+    const [occasionOptions, setOccasionOptions] = useState<string[]>([]);
+    const [sleeveLengthOptions, setSleeveLengthOptions] = useState<string[]>([]);
+    const [fasteningOptions, setFasteningOptions] = useState<string[]>([]);
+    const [fitOptions, setFitOptions] = useState<string[]>([]);
     const [loadingMessage, setLoadingMessage] = useState("");
 
 
     const [selectedMain, setSelectedMain] = useState<string[]>([]);
     const [selectedStyle, setSelectedStyle] = useState<string[]>([]);
     const [selectedGender, setSelectedGender] = useState<string[]>([]);
+    const [selectedAgeGroup, setSelectedAgeGroup] = useState<string>("");
+    const [selectedAgeRange, setSelectedAgeRange] = useState<string>("");
+    const [selectedBrand, setSelectedBrand] = useState<string>("");
     const [selectedDesign, setSelectedDesign] = useState<string[]>([]);
     const [selectedOccasion, setSelectedOccasion] = useState<string[]>([]);
+    const [selectedSleeveLength, setSelectedSleeveLength] = useState<string>("");
     const [selectedFastening, setSelectedFastening] = useState<string[]>([]);
     const [selectedFit, setSelectedFit] = useState<string[]>([]);
-    const [selectedAge, setSelectedAge] = useState<string>("");
+    
+    const [showMainDropDown, setShowMainDropDown] = useState(false);
+    const [showStyleDropDown, setShowStyleDropDown] = useState(false);
+    const [showGenderDropDown, setShowGenderDropDown] = useState(false);
+    const [showAgeDropDown, setShowAgeDropDown] = useState(false);
+    const [showAgeRangeDropDown, setShowAgeRangeDropDown] = useState(false);
+    const [showBrandDropDown, setShowBrandDropDown] = useState(false);
+    const [showDesignDropDown, setShowDesignDropDown] = useState(false);
+    const [showOccasionDropDown, setShowOccasionDropDown] = useState(false);
+    const [showSleeveLengthDropDown, setShowSleeveLengthDropDown] = useState(false);
+    const [showFasteningDropDown, setShowFasteningDropDown] = useState(false);
+    const [showFitDropDown, setShowFitDropDown] = useState(false);
+    
+    
     
 
-    const [updateWithCategories, { isLoading, isSuccess }] = useUpdateWithCategoriesMutation();
-    
-    const { control, handleSubmit, formState: { errors } } = useForm<IStepTwoAddBespokeClothes>({
-        defaultValues: {
-            main: [],
-            style: [],
-            gender: [],
-            ageGroup: "",
-            ageRange: "",
-            brand: "",
-            design: [],
-            occasion: [],
-            sleeveLength: "",
-            fastening: [],
-            fit: [],
-        },
-        resolver: yupResolver(stepTwoAddBespokeClothesSchema),
-        mode: "onChange"
-    });
-    
+    const [updateWithCategories, { isLoading, isSuccess }] = useUpdateWithCategoriesMutation();   
 
-    const onSubmit: SubmitHandler<IStepTwoAddBespokeClothes> = async (data) => {
+    const handleSubmit = async () => {
         setLoadingMessage("Updating product categories...");
         const productId = selectedDraftProduct?.productId || "";
         // console.log("PRODUCT ID::: ", productId);
         
-
         try {
             const categoriesData = {
-                main: data.main,
-                style: data.style,
-                gender: data.gender,
-                age: { ageGroup: data.ageGroup, ageRange: data.ageRange },
-                brand: data.brand,
-                design: data.design,
-                occasion: data.occasion,
-                sleeveLength: data.sleeveLength,
-                fastening: data.fastening,
-                fit: data.fit,
+                main: selectedMain,
+                style: selectedStyle,
+                gender: selectedGender,
+                age: { ageGroup: selectedAgeGroup, ageRange: selectedAgeRange },
+                brand: selectedBrand,
+                design: selectedDesign,
+                occasion: selectedOccasion,
+                sleeveLength: selectedSleeveLength,
+                fastening: selectedFastening,
+                fit: selectedFit,
             };
 
+            // Validate categories data
+            const validatedCategoriesData = await stepTwoAddBespokeClothesSchema.validate(categoriesData);
+
             const requestData = {
-                categories: categoriesData,
+                categories: validatedCategoriesData,
                 productId,
             }
-            // console.log("REQUEST DATA::: ", requestData);
+            console.log("REQUEST DATA::: ", requestData);
 
-            const updateWithCategoryResponseData = await updateWithCategories(requestData).unwrap();
-            // console.log("RESPONSE::: ", updateWithCategoryResponseData);
+            // const updateWithCategoryResponseData = await updateWithCategories(requestData).unwrap();
+            // // console.log("RESPONSE::: ", updateWithCategoryResponseData);
 
-            if (updateWithCategoryResponseData) {
-                setLoadingMessage("");
-            }
-        } catch (error) {
+            // if (updateWithCategoryResponseData) {
+            //     setLoadingMessage("");
+            // }
+        } catch (error: any) {
             console.log("ERROR::: ", error);
+            Alert.alert("Error", error.errors[0]);
         }
     };
 
+    // Handle format drop-down options
     const handleFormatDropDownOptions = async () => {
         if (!bespokeClothesOptions) return;
     
-        // Format main categories
-        const formattedMain = bespokeClothesOptions.mainEnums!.map((main: string) => ({
-            key: main,
-            value: main,
-        }));
+        setMainOptions(bespokeClothesOptions.mainEnums!);
+        setStyleOptions(bespokeClothesOptions.clothStyleEnums!);
+        setGenderOptions(bespokeClothesOptions.genderEnums!);
+        setAgeGroupOptions(bespokeClothesOptions.ageGroupEnums!);
+        setAgeRangeOptions(bespokeClothesOptions.ageRangeEnums!);
+        setAgeRangeOptions(bespokeClothesOptions.ageRangeEnums!);
+        setBrandOptions(bespokeClothesOptions.brandEnums!);
+        setDesignOptions(bespokeClothesOptions.designEnums!);
+        setOccasionOptions(bespokeClothesOptions.occasionEnums!);
+        setSleeveLengthOptions(bespokeClothesOptions.sleeveLengthEnums!);
+        setFasteningOptions(bespokeClothesOptions.fasteningEnums!);
+        setFitOptions(bespokeClothesOptions.fitEnums!);
+    };
 
+    // Handle update default values
+    const handleUpdateDefaultValues = () => {
+        if (!selectedDraftProduct.categories) return;
+
+        // Format main categories
+        const mainData = selectedDraftProduct.categories!.main!;
+        setSelectedMain(mainData);    // Update the selectedMain(local state) with the selected values
+        
         // Format styles
-        const formattedStyles = bespokeClothesOptions.clothStyleEnums!.map((style: string) => ({
-            key: style,
-            value: style,
-        }));
+        const styleData = selectedDraftProduct.categories!.style!;
+        setSelectedStyle(styleData);
 
         // Format gender
-        const formattedGender = bespokeClothesOptions.genderEnums!.map((gender: string) => ({
-            key: gender,
-            value: gender,
-        }));
+        const genderData = selectedDraftProduct.categories!.gender!;
+        setSelectedGender(genderData);
 
         // Format age group
-        const formattedAge = bespokeClothesOptions.ageGroupEnums!.map((ageGroup: string) => ({
-            key: ageGroup,
-            value: ageGroup,
-        }));
+        const ageGroupData = selectedDraftProduct.categories!.age!.ageGroup!;
+        setSelectedAgeGroup(ageGroupData);
 
         // Format age range
-        const formattedAgeRange = bespokeClothesOptions.ageRangeEnums!.map((ageRange: string) => ({
-            key: ageRange,
-            value: ageRange,
-        }));
+        const ageRangeData = selectedDraftProduct.categories!.age!.ageRange!;
+        setSelectedAgeRange(ageRangeData);
 
         // Format brand
-        const formattedBrand = bespokeClothesOptions.brandEnums!.map((brand: string) => ({
-            key: brand,
-            value: brand,
-        }));
+        const brandData = selectedDraftProduct.categories!.brand!;
+        setSelectedBrand(brandData);
 
-        // Format design
-        const formattedDesign = bespokeClothesOptions.designEnums!.map((design: string) => ({
-            key: design,
-            value: design,
-        }));
+        // Format designs
+        const designData = selectedDraftProduct.categories!.design!;
+        setSelectedDesign(designData);
 
-        // Format occasion
-        const formattedOccasion = bespokeClothesOptions.occasionEnums!.map((occasion: string) => ({
-            key: occasion,
-            value: occasion,
-        }));
+        // Format occasions
+        const occasionData = selectedDraftProduct.categories!.occasion!;
+        setSelectedOccasion(occasionData);
 
-        // Format sleeve length
-        const formattedSleeveLength = bespokeClothesOptions.sleeveLengthEnums!.map((sleeveLength: string) => ({
-            key: sleeveLength,
-            value: sleeveLength,
-        }));
+        // Format sleeve lengths
+        const sleeveLengthData = selectedDraftProduct.categories!.sleeveLength!;
+        setSelectedSleeveLength(sleeveLengthData);
 
-        // Format fastener
-        const formattedFastening = bespokeClothesOptions.fasteningEnums!.map((fastening: string) => ({
-            key: fastening,
-            value: fastening,
-        }));
+        // Format fastenings
+        const fasteningData = selectedDraftProduct.categories!.fastening!;
+        setSelectedFastening(fasteningData);
 
-        // Format fitness
-        const formattedFitn = bespokeClothesOptions.fitEnums!.map((fit: string) => ({
-            key: fit,
-            value: fit,
-        }));
-    
-        setMainOptions(formattedMain);
-        setStyleOptions(formattedStyles);
-        setGenderOptions(formattedGender);
-        setAgeGroupOptions(formattedAge);
-        setAgeRangeOptions(formattedAgeRange);
-        setBrandOptions(formattedBrand);
-        setDesignOptions(formattedDesign);
-        setOccasionOptions(formattedOccasion);
-        setSleeveLengthOptions(formattedSleeveLength);
-        setFasteningOptions(formattedFastening);
-        setFitOptions(formattedFitn);
+        // Format fitnesses
+        const fitData = selectedDraftProduct.categories!.fit!;
+        setSelectedFit(fitData);
     };
 
     useEffect(() => {
         if (bespokeClothesOptions?.mainEnums) {
             handleFormatDropDownOptions();
         }
-    }, [bespokeClothesOptions])
+    }, [bespokeClothesOptions]);
+
+    useEffect(() => {
+        handleUpdateDefaultValues();
+    }, [selectedDraftProduct]);
 
 
     return {
-        control, handleSubmit, errors, onSubmit,
+        handleSubmit,
         isLoading, isSuccess, loadingMessage,
-        mainOptions, styleOptions, genderOptions, ageGroupOptions, ageRangeOptions, brandOptions,
-        designOptions, occasionOptions, sleeveLengthOptions, fasteningOptions, fitOptions,
 
-        selectedMain, setSelectedMain,
-        selectedStyle, setSelectedStyle,
-        selectedGender, setSelectedGender,
-        selectedDesign, setSelectedDesign,
-        selectedOccasion, setSelectedOccasion,
-        selectedFastening, setSelectedFastening,
-        selectedFit, setSelectedFit,
-        selectedAge, setSelectedAge,
+        manageState: {
+            mainOptions, styleOptions, genderOptions, ageGroupOptions, ageRangeOptions, brandOptions,
+            designOptions, occasionOptions, sleeveLengthOptions, fasteningOptions, fitOptions,
+
+            selectedMain, setSelectedMain,
+            selectedStyle, setSelectedStyle,
+            selectedGender, setSelectedGender,
+            selectedAgeGroup, setSelectedAgeGroup,
+            selectedAgeRange, setSelectedAgeRange,
+            selectedBrand, setSelectedBrand,
+            selectedDesign, setSelectedDesign,
+            selectedOccasion, setSelectedOccasion,
+            selectedSleeveLength, setSelectedSleeveLength,
+            selectedFastening, setSelectedFastening,
+            selectedFit, setSelectedFit,
+
+            showMainDropDown, setShowMainDropDown,
+            showStyleDropDown, setShowStyleDropDown,
+            showGenderDropDown, setShowGenderDropDown,
+            showAgeDropDown, setShowAgeDropDown,
+            showAgeRangeDropDown, setShowAgeRangeDropDown,
+            showBrandDropDown, setShowBrandDropDown,
+            showDesignDropDown, setShowDesignDropDown,
+            showOccasionDropDown, setShowOccasionDropDown,
+            showSleeveLengthDropDown, setShowSleeveLengthDropDown,
+            showFasteningDropDown, setShowFasteningDropDown,
+            showFitDropDown, setShowFitDropDown,
+        },
     };
 };
 

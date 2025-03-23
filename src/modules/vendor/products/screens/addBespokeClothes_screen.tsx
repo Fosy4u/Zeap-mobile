@@ -41,7 +41,9 @@ const AddBespokeClothesScreen = () => {
         loadingMessage: stepOneLoadingMessage,
     } = useStepOneHook();
 
-    const { control: stepTwoController, handleSubmit: stepTwoHandleSubmit, errors: stepTwoErrors, onSubmit: stepTwoOnSubmit,
+    const { 
+        manageState,
+        handleSubmit: stepTwoHandleSubmit,
         isSuccess: stepTwoIsSuccess, isLoading: stepTwoIsLoading,
         loadingMessage: stepTwoLoadingMessage
     } = useStepTwoHook();
@@ -71,7 +73,7 @@ const AddBespokeClothesScreen = () => {
         showPriceAdjustmentModal, setShowPriceAdjustmentModal,
         priceAdjustmentModalType, setPriceAdjustmentModalType,
         handleSubmitProduct,
-    } = useStepSixHook();
+    } = useStepSixHook(setShowWarningModal, setShowSuccessModal);
 
     const isSuccess = stepOneIsSuccess || stepTwoIsSuccess || stepThreeIsSuccess || stepFourIsSuccess || stepFiveIsSuccess || saveAutoPricePercentageIsSuccess || submitProductIsSuccess;
     const isLoading = stepOneIsLoading || stepTwoIsLoading || stepThreeIsLoading || stepFourIsLoading || stepFiveIsLoading || saveAutoPricePercentageIsLoading || submitProductIsLoading;
@@ -88,11 +90,7 @@ const AddBespokeClothesScreen = () => {
         }
 
         if (selectedStep === 2) {
-            stepTwoHandleSubmit(async(data) => {
-                await stepTwoOnSubmit(data);
-            }, (error) => {
-                console.log("ERROR::: ", error);
-            })();
+            stepTwoHandleSubmit();
         }
 
         if (selectedStep === 3) {
@@ -141,12 +139,12 @@ const AddBespokeClothesScreen = () => {
 
             {/*==== Step Indicators ====*/}
             <View className="h-auto w-full px-5 pt-4 pb-2 flex-row gap-x-2">
-                <View className={`h-1 w-full flex-1 border rounded ${ selectedStep === 1 ? "border-baseGreen bg-gray-50" : selectedStep > 1 ? "border-baseGreen bg-baseGreen" : "border-gray-100 bg-gray-50"}`} />
-                <View className={`h-1 w-full flex-1 border rounded ${ selectedStep === 2 ? "border-baseGreen bg-gray-50" : selectedStep > 2 ? "border-baseGreen bg-baseGreen" : "border-gray-100 bg-gray-50"}`} />
-                <View className={`h-1 w-full flex-1 border rounded ${ selectedStep === 3 ? "border-baseGreen bg-gray-50" : selectedStep > 3 ? "border-baseGreen bg-baseGreen" : "border-gray-100 bg-gray-50"}`} />
-                <View className={`h-1 w-full flex-1 border rounded ${ selectedStep === 4 ? "border-baseGreen bg-gray-50" : selectedStep > 4 ? "border-baseGreen bg-baseGreen" : "border-gray-100 bg-gray-50"}`} />
-                <View className={`h-1 w-full flex-1 border rounded ${ selectedStep === 5 ? "border-baseGreen bg-gray-50" : selectedStep > 5 ? "border-baseGreen bg-baseGreen" : "border-gray-100 bg-gray-50"}`} />
-                <View className={`h-1 w-full flex-1 border rounded ${ selectedStep === 6 ? "border-baseGreen bg-gray-50" : selectedStep > 6 ? "border-baseGreen bg-baseGreen" : "border-gray-100 bg-gray-50"}`} />
+                <View className={`h-1 w-full flex-1 border rounded ${ selectedStep === 1 ? "border-baseGreen bg-gray-50" : selectedStep > 1 ? "border-baseGreen bg-baseGreen" : "border-gray-200 bg-gray-50"}`} />
+                <View className={`h-1 w-full flex-1 border rounded ${ selectedStep === 2 ? "border-baseGreen bg-gray-50" : selectedStep > 2 ? "border-baseGreen bg-baseGreen" : "border-gray-200 bg-gray-50"}`} />
+                <View className={`h-1 w-full flex-1 border rounded ${ selectedStep === 3 ? "border-baseGreen bg-gray-50" : selectedStep > 3 ? "border-baseGreen bg-baseGreen" : "border-gray-200 bg-gray-50"}`} />
+                <View className={`h-1 w-full flex-1 border rounded ${ selectedStep === 4 ? "border-baseGreen bg-gray-50" : selectedStep > 4 ? "border-baseGreen bg-baseGreen" : "border-gray-200 bg-gray-50"}`} />
+                <View className={`h-1 w-full flex-1 border rounded ${ selectedStep === 5 ? "border-baseGreen bg-gray-50" : selectedStep > 5 ? "border-baseGreen bg-baseGreen" : "border-gray-200 bg-gray-50"}`} />
+                <View className={`h-1 w-full flex-1 border rounded ${ selectedStep === 6 ? "border-baseGreen bg-gray-50" : selectedStep > 6 ? "border-baseGreen bg-baseGreen" : "border-gray-200 bg-gray-50"}`} />
             </View>
 
             <ScrollView showsVerticalScrollIndicator={ false } className="h-full w-full px-5">
@@ -154,7 +152,7 @@ const AddBespokeClothesScreen = () => {
                 { selectedStep === 1 ? (
                     <StepOneComponent  control={ stepOneController } errors={ stepOneErrors } />
                 ) : (selectedStep === 2) ? (
-                    <StepTwoComponent control={ stepTwoController } errors={ stepTwoErrors } />
+                    <StepTwoComponent manageState={ manageState } />
                 ) : (selectedStep === 3) ? (
                     <StepThreeComponent formattedMeasurements={formattedMeasurements} />
                 ) : (selectedStep === 4) ? (
