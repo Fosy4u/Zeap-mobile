@@ -68,7 +68,7 @@ const AddProductScreen = () => {
                                             dispatch(setSelectedDraftProduct(product));
                                             dispatch(setProductMode("Draft"));
                                             // dispatch(setSelectedStep(product.currentStep! + 1));
-                                            dispatch(setSelectedStep(3 + 1));
+                                            dispatch(setSelectedStep(1 + 1));
                                             navigation.navigate("addBespokeClothesScreen");
                                         } }
                                         className="h-[35px] w-auto px-2 flex flex-row items-center justify-center rounded-md bg-baseGreen"
