@@ -1,4 +1,6 @@
 import IDraftProduct from "./vendorDraftProducts_model";
+import IVendorProduct from "./vendorProduct_model";
+import IVendorProductDetails from "./vendorProductDetails_model";
 
 interface IVendorProductState {
     productMode: string;
@@ -10,8 +12,13 @@ interface IVendorProductState {
     savedMeasurements: ISavedMeasurement[];
     savedAddresses: ISavedAddress[];
 
+    products: IVendorProduct[];
+    product: IVendorProductDetails;
     draftProducts: IDraftProduct[];
     selectedDraftProduct: IDraftProduct;
+
+    isLoadingProducts: boolean;
+    loadingMessage: string;
 };
 
 

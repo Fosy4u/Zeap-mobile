@@ -48,9 +48,9 @@ const AddBespokeClothesScreen = () => {
         loadingMessage: stepTwoLoadingMessage
     } = useStepTwoHook();
 
-    const { handleSubmit: stepThreeHandleSubmit, onSubmit: stepThreeOnSubmit,
+    const { handleSubmit: stepThreeHandleSubmit,
         isSuccess: stepThreeIsSuccess, isLoading: stepThreeIsLoading, loadingMessage: stepThreeLoadingMessage,
-        formattedMeasurements,
+        formattedMeasurements, bodyMeasurementOptions, handleSelectMeasurementField,
      } = useStepThreeHook();
 
      const { selectedImages, handleAddImage, handleRemoveImage, handleUploadImage,
@@ -94,11 +94,7 @@ const AddBespokeClothesScreen = () => {
         }
 
         if (selectedStep === 3) {
-            stepThreeHandleSubmit(async(data) => {
-                await stepThreeOnSubmit(data);
-            }, (error) => {
-                console.log("ERROR::: ", error);
-            })();
+            stepThreeHandleSubmit();
         }
 
         if (selectedStep === 4) {
@@ -107,10 +103,6 @@ const AddBespokeClothesScreen = () => {
 
         if (selectedStep === 5) {
             handleAddVariations();
-        }
-
-        if (selectedStep === 6) {
-            
         }
     };
     
@@ -154,7 +146,11 @@ const AddBespokeClothesScreen = () => {
                 ) : (selectedStep === 2) ? (
                     <StepTwoComponent manageState={ manageState } />
                 ) : (selectedStep === 3) ? (
-                    <StepThreeComponent formattedMeasurements={formattedMeasurements} />
+                    <StepThreeComponent
+                        formattedMeasurements={formattedMeasurements}
+                        bodyMeasurementOptions={ bodyMeasurementOptions }
+                        handleSelectMeasurementField={ handleSelectMeasurementField }
+                    />
                 ) : (selectedStep === 4) ? (
                     <StepFourComponent
                         selectedImages={ selectedImages }
@@ -245,8 +241,7 @@ const AddBespokeClothesScreen = () => {
 
             { showSuccessModal &&
                 <SuccessPopupModal
-                    bodyText="You have successfully created your account. Kindly proceed to setting up your account."
-                    screenURL="profileSetupScreen"
+                    bodyText="You have successfully uploaded your item. It will be reviewed before it is listed for customers."
                     setShowSuccessModal={ setShowSuccessModal }
                 />
             }

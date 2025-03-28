@@ -1,4 +1,4 @@
-import React, {useCallback, useMemo, useRef, useState} from 'react';
+import React from 'react';
 import {
   Image,
   SafeAreaView,
@@ -15,21 +15,16 @@ import RootNavigationStackModel from '../../../../routes/model/routes_model.ts';
 import {BottomSheetModalProvider} from '@gorhom/bottom-sheet';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import {ArrowRotateRight, TickSquare, Truck} from 'iconsax-react-native';
-import OrderFilterBottomSheetComponent from '../components/orderFilterBottomSheet_component.tsx';
+import { useDispatch } from 'react-redux';
+import { setShowOrderFilterBottomSheet } from '../../home/slices/vendorHome_slice.tsx';
 
 const StyledImage = styled(Image);
 const StyledView = styled(View);
 
 const OrdersScreen = () => {
-  const [showOrderFilterBottomSheet, setShowOrderFilterBottomSheet] =
-    useState(false);
 
-  const handleShowOrderFilterBottomSheet = (value: boolean) => {
-    setShowOrderFilterBottomSheet(value);
-  };
-
-  const navigation =
-    useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
+  const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
+  const dispatch = useDispatch();
 
   const payments = [
     {
@@ -136,7 +131,7 @@ const OrdersScreen = () => {
               </Text>
               <TouchableOpacity
                 className="bg-[#20704329] p-2.5 rounded-xl"
-                onPress={() => handleShowOrderFilterBottomSheet(true)}>
+                onPress={() => dispatch(setShowOrderFilterBottomSheet(true))}>
                 <StyledImage
                   source={require('../../../../../assets/images/filter_gold.png')}
                   className="h-[25px] w-[25px]"
@@ -200,15 +195,6 @@ const OrdersScreen = () => {
               )}
             </View>
           </ScrollView>
-
-          {/* Bottom Sheet */}
-          {showOrderFilterBottomSheet && (
-            <OrderFilterBottomSheetComponent
-              handleShowOrderFilterBottomSheet={
-                handleShowOrderFilterBottomSheet
-              }
-            />
-          )}
         </SafeAreaView>
       </BottomSheetModalProvider>
     </GestureHandlerRootView>
