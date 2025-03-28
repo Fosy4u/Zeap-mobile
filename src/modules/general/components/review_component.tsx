@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { ArrowRight, Dislike, Like1, Star1 } from 'iconsax-react-native';
+import { ArrowRight, Dislike, Edit2, Like1, Star1 } from 'iconsax-react-native';
 import { View, Text, Image, ScrollView, TextInput, TouchableOpacity } from 'react-native';
 import IReview from '../models/review_model';
-import useReviewsHook from '../hooks/reviews_hook';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import RootNavigationStackModel from '../../../../routes/model/routes_model';
+import RootNavigationStackModel from '../../../routes/model/routes_model';
+import useVendorProductHook from '../../vendor/products/hooks/vendorProduct_hook';
+import { Controller } from 'react-hook-form';
 
 interface IProps {
   reviews: IReview[];
@@ -15,8 +16,8 @@ interface IProps {
 const ReviewComponent: React.FC<IProps> = ({ reviews, productID }) => {
   const [showReviewForm, setShowReviewForm] = useState(false);
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
-  const { onSubmit, handleSubmit, handleReviewLike, handleReviewDislike, control, errors, isLoading } = useReviewsHook(productID);
-  
+  const { onSubmit, handleSubmit, handleReviewLike, handleReviewDislike, control, errors, isLoadingAddReview } = useVendorProductHook();
+
 
   return (
     <ScrollView className="h-auto">
@@ -29,10 +30,10 @@ const ReviewComponent: React.FC<IProps> = ({ reviews, productID }) => {
                 <Image
                   className="h-[45px] w-[45px] mr-3 rounded-full"
                   resizeMode="cover"
-                  source={ 
+                  source={
                     review.user!.imageUrl!?.link!
                     ? { uri: review.user!.imageUrl!?.link! }
-                    : require("../../../../../assets/images/app_logo.png")
+                    : require("../../../../assets/images/app_logo.png")
                   }
                 />
 
@@ -44,7 +45,7 @@ const ReviewComponent: React.FC<IProps> = ({ reviews, productID }) => {
 
               <View className="mb-1 flex-row">
                 <Star1 color="#E4A01C" size={16} variant="Bold" className="mr-0.5" />
-                <Text className="text-xs">4.3</Text>
+                <Text className="text-xs">{ review.rating! }</Text>
               </View>
             </View>
 
@@ -72,8 +73,8 @@ const ReviewComponent: React.FC<IProps> = ({ reviews, productID }) => {
           </View>
         ) }
 
-        { !showReviewForm && (
-          <TouchableOpacity 
+        { (reviews && reviews.length !== 0) && (
+          <TouchableOpacity
             onPress={ () => productID && navigation.navigate("reviewListScreen", {
               reviews,
               productID
@@ -85,18 +86,18 @@ const ReviewComponent: React.FC<IProps> = ({ reviews, productID }) => {
           </TouchableOpacity>
         ) }
 
-        {/* { !showReviewForm && (
-          <TouchableOpacity 
+        { !showReviewForm && (
+          <TouchableOpacity
             onPress={ () => setShowReviewForm(true) }
             className="h-[55px] w-[80%] mx-auto mt-5 flex-row items-center justify-center rounded-xl bg-baseGreen"
           >
             <Text className="text-lg text-white mr-2">Write a review</Text>
             <Edit2 size={20} className="text-white" />
           </TouchableOpacity>
-        ) } */}
+        ) }
 
         {/* ==== Form ==== */}
-        {/* { (showReviewForm) && (
+        { (showReviewForm) && (
           <View className="mt-8">
             <View className="flex-row justify-between">
               <Text className="font-medium text-lg text-baseGreen text-center">Review</Text>
@@ -175,16 +176,16 @@ const ReviewComponent: React.FC<IProps> = ({ reviews, productID }) => {
               { errors.review && (<Text className="text-red-500 text-xs">{errors.review.message}</Text>) }
             </View>
 
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={ handleSubmit(onSubmit) }
               className="h-[55px] w-auto mt-4 flex flex-row items-center justify-center rounded-xl bg-lightGreen"
             >
-              <Text className="text-base text-baseGreen mr-2">{ isLoading ? "Please wait..." : "Send Review" }</Text>
-              { isLoading ? null : <ArrowRight className="text-baseGreen" /> }
+              <Text className="text-base text-baseGreen mr-2">{ isLoadingAddReview ? "Please wait..." : "Send Review" }</Text>
+              { isLoadingAddReview ? null : <ArrowRight className="text-baseGreen" /> }
             </TouchableOpacity>
           </View>
-        ) } */}
-        
+        ) }
+
       </View>
     </ScrollView>
   )

@@ -1,7 +1,6 @@
 import React from 'react';
 import {ScrollView, Text, TouchableOpacity, View} from "react-native";
 import { ArrowDown2, ArrowUp2} from "iconsax-react-native";
-import useStepTwoHook from '../../hooks/bespokeClothes/stepTwo_hook';
 import CheckBox from '@react-native-community/checkbox';
 import IStepTwoProps from '../../models/stepTwoProps_model';
 

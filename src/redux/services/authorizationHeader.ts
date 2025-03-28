@@ -1,4 +1,3 @@
-import EncryptedStorage from 'react-native-encrypted-storage';
 import { getAuth } from '@react-native-firebase/auth';
 
 /**
@@ -11,10 +10,7 @@ const AuthorizationHeader = async (headers: Headers) => {
     try {
         let token;
         
-        /**
-         * Get the Firebase Auth instance.
-         * @returns The Auth instance
-         */
+        // Get the Firebase Auth instance.
         const auth = getAuth();
         const currentUser = auth.currentUser;
 

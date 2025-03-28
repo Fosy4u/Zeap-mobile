@@ -8,20 +8,11 @@ import RootNavigationStackModel from "../../../../routes/model/routes_model.ts";
 
 interface Props {
     bodyText: string;
-    screenURL: keyof RootNavigationStackModel;
     setShowSuccessModal:  React.Dispatch<React.SetStateAction<boolean>>;
 };
 
-const SuccessPopupModal: React.FC<Props> = ({bodyText, screenURL, setShowSuccessModal}) => {
+const SuccessPopupModal: React.FC<Props> = ({bodyText, setShowSuccessModal}) => {
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
-
-    const screenName = (screenURL === "profileSetupScreen")
-        ? ("Setup") : (screenURL === "loginScreen")
-            ? ("Login") : ("Shop");
-    const url = (screenURL === "profileSetupScreen")
-        ? ("profileSetupScreen") : (screenURL === "loginScreen")
-            ? ("loginScreen") : ("shopSetupScreen");
-
 
     return (
         <SafeAreaView className="h-full w-full absolute inset-0 flex items-center justify-center">
@@ -44,22 +35,33 @@ const SuccessPopupModal: React.FC<Props> = ({bodyText, screenURL, setShowSuccess
                         source={require("../../../../../assets/images/success_animation.gif")}
                     />
                 </View>
-                <View className="px-4 pb-2 flex-1 items-center justify-center">
+                <View className="px-3 flex-1 items-center justify-center">
                     <Text className="font-semibold text-xl text-green-600">Congratulations</Text>
-                    <Text className="mx-7 mt-2.5 text-center text-base leading-5">
+                    <Text className="mx-2 mt-2.5 text-center text-base leading-5">
                         { bodyText }
                     </Text>
 
-                    <TouchableOpacity 
-                        onPress={ () => {
-                            setShowSuccessModal(false);
-                            navigation.navigate(url);
-                        } }
-                        className="h-[50px] w-auto mt-5 px-8 flex flex-row items-center justify-center rounded-xl bg-baseGreen"
-                    >
-                        <Text className="text-base text-white mr-2">Proceed To { screenName }</Text>
-                        <ArrowRight className="text-white" />
-                    </TouchableOpacity>
+                    <View className="h-auto w-full mt-5 flex-row items-center justify-center space-x-2">
+                        <TouchableOpacity 
+                            onPress={ () => {
+                                setShowSuccessModal(false);
+                                navigation.navigate("vendorHomeScreen", { screen: "Products" });
+                            } }
+                            className="h-[50px] w-auto flex-1 flex-row items-center justify-center rounded-xl bg-lightGreen"
+                        >
+                            <Text className="text-base text-baseGreen">View Products</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity 
+                            onPress={ () => {
+                                setShowSuccessModal(false);
+                                navigation.navigate("vendorHomeScreen", { screen: "Dashboard" });
+                            } }
+                            className="h-[50px] w-auto flex-1 flex-row items-center justify-center rounded-xl bg-baseGreen"
+                        >
+                            <Text className="text-base text-white">Ok, Go Home</Text>
+                        </TouchableOpacity>
+                    </View>
                 </View>
             </View>
         </SafeAreaView>

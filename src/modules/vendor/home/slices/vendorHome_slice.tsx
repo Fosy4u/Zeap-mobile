@@ -4,6 +4,9 @@ import IAnalytic from "../models/analytic_model";
 
 
 const initialState: IVendorHomeState = {
+    showProductFilterBottomSheet: false,
+    showOrderFilterBottomSheet: false,
+
     analytics: {},
     overviews: [
         {
@@ -58,6 +61,12 @@ export const vendorHomeSlice = createSlice({
     name: "vendorHomeSlice",
     initialState,
     reducers: {
+        setShowProductFilterBottomSheet: (state: IVendorHomeState, action: PayloadAction<boolean>) => {
+            state.showProductFilterBottomSheet = action.payload;
+        },
+        setShowOrderFilterBottomSheet: (state: IVendorHomeState, action: PayloadAction<boolean>) => {
+            state.showOrderFilterBottomSheet = action.payload;
+        },
         setAnalytics: (state: IVendorHomeState, action: PayloadAction<IAnalytic>) => {
             state.analytics = action.payload;
         },
@@ -70,6 +79,8 @@ export const vendorHomeSlice = createSlice({
 const { actions, reducer } = vendorHomeSlice;
 
 export const {
+    setShowProductFilterBottomSheet,
+    setShowOrderFilterBottomSheet,
     setAnalytics,
     setOverviews,
 } = actions;
