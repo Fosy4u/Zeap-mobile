@@ -40,10 +40,11 @@ const stepTwoAddBespokeClothesSchema = yup.object().shape({
 });
 
 const stepThreeAddBespokeClothesSchema = yup.object().shape({
-    bodyMeasurementOptions: yup
-        .array()
-        .of(yup.string())
-        .min(1, "Body measurement is required."),
+    productId: yup.string().required("Product ID is required."),
+    measurements: yup.array().of(yup.object().shape({
+        name: yup.string().required("Measurement name is required."),
+        fields: yup.array().of(yup.string()).min(1, "Field is required."),
+    })).min(1, "At least one measurement is required."),
 });
 
 export type IStepOneAddBespokeClothes = yup.InferType<typeof stepOneAddBespokeClothesSchema>
@@ -53,4 +54,5 @@ export type IStepThreeAddBespokeClothes = yup.InferType<typeof stepThreeAddBespo
 export {
     stepOneAddBespokeClothesSchema,
     stepTwoAddBespokeClothesSchema,
+    stepThreeAddBespokeClothesSchema,
 };

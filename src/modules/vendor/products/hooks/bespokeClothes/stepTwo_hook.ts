@@ -83,17 +83,17 @@ const useStepTwoHook = () => {
             const validatedCategoriesData = await stepTwoAddBespokeClothesSchema.validate(categoriesData);
 
             const requestData = {
-                categories: validatedCategoriesData,
                 productId,
+                categories: validatedCategoriesData,
             }
             console.log("REQUEST DATA::: ", requestData);
 
-            // const updateWithCategoryResponseData = await updateWithCategories(requestData).unwrap();
-            // // console.log("RESPONSE::: ", updateWithCategoryResponseData);
+            const updateWithCategoryResponseData = await updateWithCategories(requestData).unwrap();
+            // console.log("RESPONSE::: ", updateWithCategoryResponseData);
 
-            // if (updateWithCategoryResponseData) {
-            //     setLoadingMessage("");
-            // }
+            if (updateWithCategoryResponseData) {
+                setLoadingMessage("");
+            }
         } catch (error: any) {
             console.log("ERROR::: ", error);
             Alert.alert("Error", error.errors[0]);

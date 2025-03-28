@@ -1,4 +1,4 @@
-import IReview from "../../modules/user/products/models/review_model";
+import IReview from "../../modules/general/models/review_model";
 
 type RootNavigationStackModel = {
   splashScreen: undefined;

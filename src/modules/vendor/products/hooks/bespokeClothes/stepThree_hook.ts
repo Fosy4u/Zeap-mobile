@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
+import * as yup from "yup";
 import { RootState } from "../../../../../redux/store/store";
 import { IBodyMeasurementEnum } from "../../../../general/models/productOptions_model";
-import { SubmitHandler, useForm } from "react-hook-form";
-import { IStepThreeAddBespokeClothes } from "../../validations/addBespokeClothes_validation";
+import { stepThreeAddBespokeClothesSchema } from "../../validations/addBespokeClothes_validation";
 import { useUpdateWithBodyMeasurementsMutation } from "../../apis/bespokeProduct_api";
+import { Alert } from "react-native";
 
 
 const useStepThreeHook = () => {
@@ -14,13 +15,13 @@ const useStepThreeHook = () => {
     const [bodyMeasurementOptions, setBodyMeasurementOptions] = useState<IBodyMeasurementEnum[]>([]);
     const [formattedMeasurements, setFormattedMeasurements] = useState<any[]>([]);
     const [loadingMessage, setLoadingMessage] = useState("");
+    // console.log("FORMATTED MEASUREMENTS::: ", selectedDraftProduct);
+    
 
     const [updateWithBodyMeasurements, { isLoading, isSuccess }] = useUpdateWithBodyMeasurementsMutation();
     
 
-    const { control, handleSubmit } = useForm<IStepThreeAddBespokeClothes>();
-
-    const onSubmit: SubmitHandler<IStepThreeAddBespokeClothes> = async () => {
+    const handleSubmit = async () => {
         setLoadingMessage("Updating body measurements...");
         const productId = selectedDraftProduct?.productId || "";
 
@@ -29,7 +30,10 @@ const useStepThreeHook = () => {
                 productId,
                 measurements: formattedMeasurements,
             };
-            // console.log("REQUEST DATA::: ", JSON.stringify(requestData));
+
+            // Validate request data
+            const validatedRequestData = await stepThreeAddBespokeClothesSchema.validate(requestData);
+            // console.log("REQUEST DATA::: ", JSON.stringify(validatedRequestData));
 
             const updateWithBodyMeasurementsResponseData = await updateWithBodyMeasurements(requestData).unwrap();
             // console.log("RESPONSE::: ", updateWithBodyMeasurementsResponseData);
@@ -37,8 +41,25 @@ const useStepThreeHook = () => {
             if (updateWithBodyMeasurementsResponseData) {
                 setLoadingMessage("");
             }
-        } catch (error) {
-            console.log("ERROR::: ", error);
+        } catch (error: any) {
+            let errorMessage = "";
+        
+            // Handle Yup validation errors
+            if (error instanceof yup.ValidationError) {
+                errorMessage = error.message;
+            } 
+            // Handle RTK Query API errors (assuming they follow a standard structure)
+            else if (error?.status) {
+                errorMessage = error["data"]["error"];
+            } 
+            // Handle other generic errors
+            else {
+                errorMessage = error.message || "An unexpected error occurred.";
+            }
+
+            Alert.alert("Error", errorMessage);
+            console.log("Error: ", errorMessage);
+            
         };
     };
 
@@ -50,8 +71,8 @@ const useStepThreeHook = () => {
         setBodyMeasurementOptions(formattedAfricanAgbadaOptions);
     };
 
+    // handleSelectMeasurementField: This format the measurements and appends it to the formattedMeasurements array
     const handleSelectMeasurementField = (
-        onChange: { (...event: any[]): void; (arg0: boolean): any; } | null,
         selectedValue: boolean,
         measurementName: string,
         fieldName: string
@@ -95,7 +116,7 @@ const useStepThreeHook = () => {
         });
         
         // Call the original onChange if it exists
-        onChange && onChange(selectedValue);
+        // onChange && onChange(selectedValue);
     };
     // console.log("FORMATTED MEASUREMENTS::: ", formattedMeasurements);
 
@@ -108,7 +129,7 @@ const useStepThreeHook = () => {
 
 
     return {
-        control, handleSubmit, onSubmit,
+        handleSubmit,
         isLoading, isSuccess, loadingMessage,
         bodyMeasurementOptions,
         formattedMeasurements,

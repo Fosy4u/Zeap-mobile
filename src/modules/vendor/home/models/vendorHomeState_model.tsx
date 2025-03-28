@@ -2,6 +2,8 @@ import { BottomSheetModalMethods } from "@gorhom/bottom-sheet/lib/typescript/typ
 import IAnalytic from "./analytic_model";
 
 interface IVendorHomeState {
+    showProductFilterBottomSheet: boolean;
+    showOrderFilterBottomSheet: boolean;
     analytics: IAnalytic;
     overviews: IOverview[];
     weeklySalesChartData: IChartData[];

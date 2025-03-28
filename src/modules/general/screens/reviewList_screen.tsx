@@ -4,8 +4,8 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ArrowLeft, Dislike, Like1, Star1 } from 'iconsax-react-native';
 import { Image, SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import RootNavigationStackModel from '../../../../routes/model/routes_model';
-import useReviewsHook from '../hooks/reviews_hook';
+import RootNavigationStackModel from '../../../routes/model/routes_model';
+import useGeneralHook from '../hooks/general_hook';
 
 interface IProps {
     route: RouteProp<RootNavigationStackModel, "reviewListScreen">
@@ -14,7 +14,7 @@ interface IProps {
 const ReviewListScreen: React.FC<IProps> = ({ route }) => {
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const { reviews, productID } = route.params;
-    const { handleReviewLike, handleReviewDislike } = useReviewsHook(productID);
+    const { handleReviewLike, handleReviewDislike } = useGeneralHook();
     console.log("PRODUCT ID::: ", productID);
     
 
@@ -50,7 +50,7 @@ const ReviewListScreen: React.FC<IProps> = ({ route }) => {
                                 source={ 
                                     review.user!.imageUrl!?.link!
                                     ? { uri: review.user!.imageUrl!?.link! }
-                                    : require("../../../../../assets/images/app_logo.png")
+                                    : require("../../../../assets/images/app_logo.png")
                                 }
                             />
 
@@ -69,18 +69,18 @@ const ReviewListScreen: React.FC<IProps> = ({ route }) => {
                         <Text className="h-auto w-full mt-2 text-xs">{ review.review! }</Text>
 
                         <View className="mt-2 flex-row items-center">
-                        <View className="mr-10 flex-row items-center">
-                            <TouchableOpacity onPress={ () => handleReviewLike({ reviewId: review._id! }) }>
-                            <Like1 size={16} variant="Bold" className="mr-1.5 text-blue-800" />
-                            </TouchableOpacity>
-                            <Text className="text-xs">{ review.likes!.value! } Likes</Text>
-                        </View>
-                        <View className="flex-row items-center">
-                            <TouchableOpacity onPress={ () => handleReviewDislike({ reviewId: review._id! }) }>
-                            <Dislike size={16} variant="Bold" className="mr-1.5 text-red-800" />
-                            </TouchableOpacity>
-                            <Text className="text-xs">{ review.dislikes!.value! } Dislikes</Text>
-                        </View>
+                            <View className="mr-10 flex-row items-center">
+                                <TouchableOpacity onPress={ () => handleReviewLike({ reviewId: review._id! }) }>
+                                <Like1 size={16} variant="Bold" className="mr-1.5 text-blue-800" />
+                                </TouchableOpacity>
+                                <Text className="text-xs">{ review.likes!.value! } Likes</Text>
+                            </View>
+                            <View className="flex-row items-center">
+                                <TouchableOpacity onPress={ () => handleReviewDislike({ reviewId: review._id! }) }>
+                                <Dislike size={16} variant="Bold" className="mr-1.5 text-red-800" />
+                                </TouchableOpacity>
+                                <Text className="text-xs">{ review.dislikes!.value! } Dislikes</Text>
+                            </View>
                         </View>
                     </View>
                     ))

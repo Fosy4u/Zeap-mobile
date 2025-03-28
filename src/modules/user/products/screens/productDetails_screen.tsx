@@ -5,17 +5,16 @@ import { ArrowLeft, ArrowRight, Heart, Star1 } from 'iconsax-react-native';
 import { Image, SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View } from 'react-native'
 import RootNavigationStackModel from '../../../../routes/model/routes_model';
 import DescriptionComponent from '../components/description_component';
-import ReviewComponent from '../components/review_component';
+import ReviewComponent from '../../../general/components/review_component';
 import TimelineComponent from '../components/timeline_component';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../../redux/store/store';
 import { setProduct, setProductID, setSelectedTab } from '../slices/product_slice';
 import { useGetProductByProductIDQuery } from '../apis/product_api';
-import { useGetProductReviewsQuery } from '../apis/review_api';
+import { useGetProductReviewsQuery } from '../../../general/apis/review_api';
 import AppLoader from '../../../general/components/appLoader';
 import ProductImagesAndColorsComponent from '../components/productImagesAndColors_component';
 import SizeGuideBottomSheet from '../components/sizeGuideBottomSheet_component';
-import useMeasurementHook from '../../measurements/hooks/measurement_hook';
 
 interface IProps {
   route: RouteProp<RootNavigationStackModel, "productDetailScreen">

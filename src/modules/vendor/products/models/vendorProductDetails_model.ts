@@ -30,7 +30,7 @@ interface IPromo {
 
 interface ICategories {
     age?:          IAge;
-    fit?:          any[];
+    fit?:          string[];
     style?:        string[];
     gender?:       string[];
     brand?:        string;
@@ -49,11 +49,11 @@ interface IAge {
 
 interface IColor {
     value?:  string;
-    images?: Image[];
+    images?: IImage[];
     _id?:    string;
 }
 
-interface Image {
+interface IImage {
     link?:      string;
     name?:      string;
     isDefault?: boolean;
@@ -67,12 +67,14 @@ interface Currency {
 }
 
 interface By {
+    _id?:                 string;
+    __v?:                 number;
+    uid?:                 string;
     imageUrl?:            ImageURL;
     createdBy?:           string;
     phoneNumberVerified?: boolean;
     isVendor?:            boolean;
     points?:              number;
-    _id?:                 string;
     userId?:              string;
     signInCount?:         number;
     firstName?:           string;
@@ -85,8 +87,6 @@ interface By {
     emailVerified?:       boolean;
     updatedAt?:           Date;
     createdAt?:           Date;
-    __v?:                 number;
-    uid?:                 string;
     shopEnabled?:         boolean;
     shopId?:              string;
     address?:             string;
@@ -129,9 +129,17 @@ interface IVariation {
     price?:      number;
     colorValue?: string;
     size?:       string;
+    discount?:   number;
     quantity?:   number;
+    bespoke?:    IBespoke;
     _id?:        string;
+    currency?:   string;
 }
 
-export type { ICategories, IAge, IColor, Image, Currency, By, ImageURL, IShop, ITimeLine, IVariation };
+interface IBespoke {
+    isBespoke?:       boolean;
+    availableColors?: any[];
+}
+
+export type { ICategories, IAge, IColor, IImage, Currency, By, ImageURL, IShop, ITimeLine, IVariation };
 export default IVendorProductDetails;

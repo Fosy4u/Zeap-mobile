@@ -5,6 +5,8 @@ import { IColorEnum } from "../../../general/models/productOptions_model";
 import { useEffect, useState } from "react";
 import { useIncreamentProductQuantityMutation, useDecreamentProductQuantityMutation, useRemoveProductFromCartMutation } from "../apis/product_api";
 import { setFeaturedPrice, setSelectedColor, setSelectedSize } from "../slices/product_slice";
+import { SubmitHandler } from "react-hook-form";
+import { ILikeReview } from "../../../general/validations/review_validation";
 
 
 /**
@@ -18,7 +20,7 @@ import { setFeaturedPrice, setSelectedColor, setSelectedSize } from "../slices/p
  * }
  */
 const useProductsHook = () => {
-    const { product, selectedColor, selectedSize } = useSelector((state: RootState) => state.productState);
+    const { product } = useSelector((state: RootState) => state.productState);
     const { readyMadeClothesOptions, readyMadeShoesOptions, bespokeClothesOptions, bespokeShoesOptions, accessoriesOptions } = useSelector((state: RootState) => state.generalState);
     const dispatch = useDispatch();
 
@@ -202,6 +204,7 @@ const useProductsHook = () => {
             console.log("ERROR::: ", error);
         }
     };
+    
 
     return {
         defaultFeaturedImageAndThumbnails, setDefaultFeaturedImageAndThumbnails,
