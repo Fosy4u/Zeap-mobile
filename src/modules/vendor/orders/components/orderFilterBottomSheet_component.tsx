@@ -14,18 +14,15 @@ import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import RootNavigationStackModel from '../../../../routes/model/routes_model.ts';
 import DatePicker from 'react-native-date-picker';
+import { useDispatch } from 'react-redux';
+import { setShowOrderFilterBottomSheet } from '../../home/slices/vendorHome_slice.tsx';
 
-interface IProps {
-  handleShowOrderFilterBottomSheet: (value: boolean) => void;
-}
 
-const OrderFilterBottomSheetComponent: React.FC<IProps> = ({
-  handleShowOrderFilterBottomSheet,
-}) => {
-  const navigation =
-    useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
+const OrderFilterBottomSheetComponent = () => {
+  const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
+  const dispatch = useDispatch();
   const screenHeight = Dimensions.get('window').height;
-  const modalHeight = screenHeight / 1.6;
+  const modalHeight = screenHeight / 1.3;
   const slideAnimation = useRef<Animatable.View>(null);
 
   const [showStatusType, setShowStatusType] = useState(false);
@@ -58,10 +55,10 @@ const OrderFilterBottomSheetComponent: React.FC<IProps> = ({
           500,
         )
         .then(() => {
-          handleShowOrderFilterBottomSheet(false);
+          dispatch(setShowOrderFilterBottomSheet(false));
         });
     } else {
-      handleShowOrderFilterBottomSheet(false);
+      dispatch(setShowOrderFilterBottomSheet(false));
     }
   };
 
@@ -75,20 +72,18 @@ const OrderFilterBottomSheetComponent: React.FC<IProps> = ({
           transform: [{translateY: modalHeight}],
         }}>
         {/*==== Header ====*/}
-        <View className="h-[110px] w-full pt-4 px-5 rounded-t-xl rounded-b-3xl bg-baseGreen">
-          <View className="h-auto w-full flex-row items-center justify-between ">
-            <View className="px-6" />
+        <View className="h-[110px] w-full px-5 pb-4 flex-row items-center justify-between rounded-t-xl rounded-b-3xl bg-baseGreen">
+          <View className="px-5" />
 
-            <Text className="font-montserratMedium text-xl text-white">
-              Filter Order Request
-            </Text>
+          <Text className="font-montserratMedium text-xl text-white">
+            Filter Order Request
+          </Text>
 
-            <TouchableOpacity
-              onPress={() => handleCloseOrderFilterBottomSheet()}
-              className="bg-[#20704329] p-1 rounded-xl">
-              <Add color="#D5B07B" size={36} className="rotate-45" />
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            onPress={() => handleCloseOrderFilterBottomSheet()}
+            className="bg-[#20704329] p-1 rounded-xl">
+            <Add color="#D5B07B" size={36} className="rotate-45" />
+          </TouchableOpacity>
         </View>
 
         <View className="h-[calc(78%)] w-full px-5 flex-col justify-between">
@@ -242,9 +237,10 @@ const OrderFilterBottomSheetComponent: React.FC<IProps> = ({
                 />
               </View>
             </View>
+
             <TouchableOpacity
               // onPress={() => handleProceed()}
-              className="h-[55px] w-auto mt-7 flex flex-row items-center justify-center rounded-xl bg-baseGreen">
+              className="h-[55px] w-auto mt-10 flex flex-row items-center justify-center rounded-xl bg-baseGreen">
               <Text className="text-lg text-white mr-2">Filter Result</Text>
               <ArrowRight className="text-white" />
             </TouchableOpacity>

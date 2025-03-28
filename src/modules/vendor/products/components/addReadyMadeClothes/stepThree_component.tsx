@@ -6,15 +6,21 @@ import CheckBox from '@react-native-community/checkbox';
 
 interface IProps {
     formattedMeasurements: any[];
+    bodyMeasurementOptions: IBodyMeasurementEnum[];
+    handleSelectMeasurementField: (
+        selectedValue: boolean,
+        measurementName: string,
+        fieldName: string
+    ) => void;
 };
 
-const StepThreeComponent: React.FC<IProps> = ({ formattedMeasurements }) => {
+const StepThreeComponent: React.FC<IProps> = ({ formattedMeasurements, bodyMeasurementOptions, handleSelectMeasurementField }) => {
 
     const [selectedTab, setSelectedTab] = useState<string>("Male Measurement");
-    const { bodyMeasurementOptions, handleSelectMeasurementField } = useStepThreeHook();
     const maleBodyMeasurementOptions = bodyMeasurementOptions?.find((bodyMeasurement: IBodyMeasurementEnum) => bodyMeasurement.gender === "male")?.value || [];
     const femaleBodyMeasurementOptions = bodyMeasurementOptions?.find((bodyMeasurement: IBodyMeasurementEnum) => bodyMeasurement.gender === "female")?.value || [];
-
+    // console.log("BODY MEASUREMENT OPTIONS", JSON.stringify(maleBodyMeasurementOptions[5]));
+    
 
     return (
         <View>
@@ -53,7 +59,7 @@ const StepThreeComponent: React.FC<IProps> = ({ formattedMeasurements }) => {
                             { measurement.fields?.map((field: string, index: number) => (
                                  <View key={ index } className="h-auto w-full mt-4 px-1 flex-row items-center justify-start">
                                     <CheckBox
-                                        onValueChange={ (selectedValue) => handleSelectMeasurementField(null, selectedValue, measurement.name!, field) }
+                                        onValueChange={ (selectedValue) => handleSelectMeasurementField(selectedValue, measurement.name!, field) }
                                         value={formattedMeasurements.find(fm => fm.name === measurement.name)?.fields.includes(field) || false}
                                     />
                                     <Text className="font-montserratMedium text-base text-baseGreen">{ field }</Text>
@@ -78,7 +84,7 @@ const StepThreeComponent: React.FC<IProps> = ({ formattedMeasurements }) => {
                             { measurement.fields?.map((field: string, index: number) => (
                                  <View key={ index } className="h-auto w-full mt-4 px-1 flex-row items-center justify-start">
                                     <CheckBox
-                                        onValueChange={ (selectedValue) => handleSelectMeasurementField(null, selectedValue, measurement.name!, field) }
+                                        onValueChange={ (selectedValue) => handleSelectMeasurementField(selectedValue, measurement.name!, field) }
                                         value={formattedMeasurements.find(fm => fm.name === measurement.name)?.fields.includes(field) || false}
                                         className="h-auto w-full mt-1 px-3 py-2 border rounded-xl border-gray-200 bg-gray-50 z-50"
                                     />

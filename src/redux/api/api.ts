@@ -35,7 +35,8 @@ const api = createApi({
 
         // Vebdor
         "VendorAnalytics",
-        "DraftProduct"
+        "DraftProduct",
+        "VendorProductPreview"
     ],
     endpoints: () => ({}),
 });

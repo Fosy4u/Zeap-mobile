@@ -125,6 +125,8 @@ const useStepSixHook = (
 
     useEffect(() => {
         if (selectedDraftProduct) {
+            console.log("SELECTED DRAFT::: ", selectedDraftProduct);
+            
             setAutoPricePercentage(selectedDraftProduct.autoPriceAdjustment!.adjustmentPercentage!.toString() || "0");
             setIsAutoPriceAdjustment(selectedDraftProduct.autoPriceAdjustment!.isAdjustable! || false);
         }
