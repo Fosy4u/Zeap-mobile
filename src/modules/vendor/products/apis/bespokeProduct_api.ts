@@ -1,9 +1,7 @@
 import api from "../../../../redux/api/api.ts";
-import { getSavedAnonymousToken } from "../../../../redux/services/authorizationHeader.ts";
-import IAddBodyMeasurement from "../models/vendorAddBodyMeasurement_model.ts";
 import IDraftProduct from "../models/vendorDraftProducts_model.ts";
 import IVendorProductDetails from "../models/vendorProductDetails_model.ts";
-import { IStepOneAddBespokeClothes } from "../validations/addBespokeClothes_validation.ts";
+import { IStepOneAddBespokeClothes, IStepThreeAddBespokeClothes, IStepTwoAddBespokeClothes } from "../validations/addBespokeClothes_validation.ts";
 
 
 const bespokeProductAPI = api.injectEndpoints({
@@ -23,7 +21,7 @@ const bespokeProductAPI = api.injectEndpoints({
         }),
 
         // Update with categories (Step 2)
-        updateWithCategories: builder.mutation<IDraftProduct, any>({
+        updateWithCategories: builder.mutation<IDraftProduct, { productId : string; categories: IStepTwoAddBespokeClothes }>({
             query: (requestData) => ({
                 url: "/product/update",
                 method: "PUT",
@@ -36,7 +34,7 @@ const bespokeProductAPI = api.injectEndpoints({
         }),
 
         // Update with body measurements (Step 3)
-        updateWithBodyMeasurements: builder.mutation<IDraftProduct, IAddBodyMeasurement>({
+        updateWithBodyMeasurements: builder.mutation<IDraftProduct, IStepThreeAddBespokeClothes>({
             query: (requestData) => ({
                 url: "/product/bodyMeasurement/add",
                 method: "POST",
@@ -45,7 +43,7 @@ const bespokeProductAPI = api.injectEndpoints({
             invalidatesTags: ["BodyMeasurement", "DraftProduct", "Products"],
             transformResponse(response: { data: any }) {
                 return response.data;
-            },
+            }
         }),
 
         // Upload product images
@@ -113,18 +111,6 @@ const bespokeProductAPI = api.injectEndpoints({
                 return response.data;
             },
         }),
-
-        // Get product by product ID
-        getProductByProductID: builder.query<IVendorProductDetails, string>({
-            query: (productID) =>({
-                url: `/product?productId=${encodeURIComponent(productID)}`,
-                method: "GET",
-            }),
-            providesTags:["Product"],
-            transformResponse(response: { data: IVendorProductDetails }) {
-                return response.data;
-            },
-        }),
     }),
 });
 
@@ -137,6 +123,5 @@ export const {
     useSaveAutoPricePercentageMutation,
     useSubmitProductMutation,
     useLazyGetDraftProductsQuery,
-    useGetProductByProductIDQuery
 } = bespokeProductAPI;
 export default bespokeProductAPI;

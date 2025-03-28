@@ -1,8 +1,11 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import IGeneralStateModel from "../models/generalState_model";
 import {IAccessories, IClothes, IShoes} from "../models/productOptions_model";
+import { setProduct } from "../../user/products/slices/product_slice";
 
 const initialState: IGeneralStateModel = {
+    productTypes: [],
+
     readyMadeClothesOptions: {
         mainEnums:          [],
         genderEnums:        [],
@@ -89,6 +92,9 @@ export const generalSlice = createSlice({
     name: "generalSlice",
     initialState,
     reducers: {
+        setProductTypes: (state: IGeneralStateModel, action: PayloadAction<string[]>) => {
+            state.productTypes = action.payload;
+        },
         setReadyMadeClothesOptions: (state: IGeneralStateModel, action: PayloadAction<IClothes>) => {
             state.readyMadeClothesOptions = action.payload;
         },
@@ -110,6 +116,7 @@ export const generalSlice = createSlice({
 const { actions, reducer } = generalSlice;
 
 export const {
+    setProductTypes,
     setReadyMadeClothesOptions,
     setReadyMadeShoesOptions,
     setBespokeClothesOptions,

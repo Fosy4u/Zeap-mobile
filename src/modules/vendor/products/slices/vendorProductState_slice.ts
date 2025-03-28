@@ -1,6 +1,9 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import IVendorProductState from "../models/vendorProductState_model.ts";
 import IDraftProduct from "../models/vendorDraftProducts_model.ts";
+import IVendorProduct from "../models/vendorProduct_model.ts";
+import IVendorProductDetails from "../models/vendorProductDetails_model.ts";
+import { State } from "react-native-gesture-handler";
 
 const initialState: IVendorProductState = {
     productMode: "New",
@@ -12,8 +15,13 @@ const initialState: IVendorProductState = {
     savedMeasurements: [],
     savedAddresses: [],
 
+    products: [],
+    product: {},
     draftProducts: [],
     selectedDraftProduct: {},
+
+    isLoadingProducts: false,
+    loadingMessage: "Please wait...",
 };
 
 export const vendorProductSlice = createSlice({
@@ -32,11 +40,23 @@ export const vendorProductSlice = createSlice({
         setSelectedTab: (state: IVendorProductState, action: PayloadAction<string>) => {
             state.selectedTab = action.payload;
         },
+        setProducts: (state: IVendorProductState, action: PayloadAction<IVendorProduct[]>) => {
+            state.products = action.payload;
+        },
+        setProduct: (state: IVendorProductState, action: PayloadAction<IVendorProductDetails>) => {
+            state.product = action.payload;
+        },
         setDraftProducts: (state: IVendorProductState, action: PayloadAction<IDraftProduct[]>) => {
             state.draftProducts = action.payload;
         },
         setSelectedDraftProduct: (state: IVendorProductState, action: PayloadAction<IDraftProduct>) => {
             state.selectedDraftProduct = action.payload;
+        },
+        setIsLoadingProducts: (state: IVendorProductState, action: PayloadAction<boolean>) => {
+            state.isLoadingProducts = action.payload;
+        },
+        setLoadingMessage: (State: IVendorProductState, action: PayloadAction<string>) => {
+            State.loadingMessage = action.payload;
         },
     }
 });
@@ -48,7 +68,11 @@ export const {
     setSelectedStep,
     setClotheType,
     setSelectedTab,
+    setProducts,
+    setProduct,
     setDraftProducts,
     setSelectedDraftProduct,
+    setIsLoadingProducts,
+    setLoadingMessage,
 } = actions;
 export default reducer;

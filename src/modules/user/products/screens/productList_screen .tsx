@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import {ArrowLeft, Heart, SearchNormal1, Star1} from 'iconsax-react-native';
 import {useSelector} from 'react-redux';
-import {RootState} from '../../../../redux/store/store';
+import {RootState} from '../../../../redux/store/store.ts';
 import {GestureHandlerRootView, ScrollView} from 'react-native-gesture-handler';
 import {
   BottomSheetModal,
@@ -19,8 +19,9 @@ import {
 } from '@gorhom/bottom-sheet';
 import {RouteProp, useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import RootNavigationStackModel from '../../../../routes/model/routes_model';
+import RootNavigationStackModel from '../../../../routes/model/routes_model.ts';
 import CategoryFilterBottomSheetComponent from '../components/categoryFilterBottomSheet_component.tsx';
+import FastImage from 'react-native-fast-image';
 
 interface IProps {
   route: RouteProp<RootNavigationStackModel, 'productListScreen'>;
@@ -171,7 +172,7 @@ const ProductListScreen: React.FC<IProps> = ({ route }) => {
                   }}>
                   <View className="h-auto w-full mt-4 p-4 flex-row rounded-xl bg-[#F8F9FE]">
                     <View className="h-[150px] w-[130px] relative mr-4 py-2 flex justify-center items-center rounded-xl bg-white">
-                      <Image
+                      {/* <Image
                         className="h-[120px] w-[90px] rounded-2xl"
                         resizeMode="cover"
                         source={
@@ -179,6 +180,16 @@ const ProductListScreen: React.FC<IProps> = ({ route }) => {
                             ? {uri: product.colors[0]?.images[1]?.link}
                             : require('../../../../../assets/images/app_logo.png')
                         }
+                      /> */}
+                      <FastImage
+                        source={{
+                          uri: product.colors[0]?.images[1]?.link!,
+                          priority: FastImage.priority.normal
+                        }}
+                        defaultSource={ require('../../../../../assets/images/app_logo.png') }
+                        resizeMode={ FastImage.resizeMode.cover }
+                        className="h-[120px] w-[90px] rounded-2xl"
+                        fallback
                       />
                       <View className="h-[35px] w-[35px] absolute top-2 right-2 flex items-center justify-center rounded-xl bg-gray-200">
                         <Heart color="gray" />
