@@ -2479,6 +2479,11 @@
     prompts "^2.4.2"
     semver "^7.5.2"
 
+"@react-native-community/slider@^4.5.6":
+  version "4.5.6"
+  resolved "https://registry.yarnpkg.com/@react-native-community/slider/-/slider-4.5.6.tgz#dfbfdd6a582b160d41719ad42a7b524794b06dd5"
+  integrity sha512-UhLPFeqx0YfPLrEz8ffT3uqAyXWu6iqFjohNsbp4cOU7hnJwg2RXtDnYHoHMr7MOkZDVdlLMdrSrAuzY6KGqrg==
+
 "@react-native-firebase/app@^21.0.0":
   version "21.12.0"
   resolved "https://registry.yarnpkg.com/@react-native-firebase/app/-/app-21.12.0.tgz#6239c10d53885c40c6a5318ba055aa16f1499aaf"

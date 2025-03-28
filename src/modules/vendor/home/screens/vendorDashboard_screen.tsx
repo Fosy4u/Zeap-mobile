@@ -1,23 +1,28 @@
 import React, { useEffect } from "react";
-import { Image, Pressable, SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View } from "react-native"
+import { Dimensions, Image, Pressable, SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View } from "react-native"
 import { useSelector } from "react-redux";
 import { RootState } from "../../../../redux/store/store";
 import { Add, ArrowDown, ArrowRight, ArrowUp, Calendar, Edit2, Notification, Star1 } from "iconsax-react-native";
 import { useNavigation } from "@react-navigation/native";
+import ShimmerPlaceHolder from 'react-native-shimmer-placeholder';
+import LinearGradient from "react-native-linear-gradient";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import RootNavigationStackModel from "../../../../routes/model/routes_model";
 import { BarChart } from "react-native-gifted-charts";
 import useVendorHomeHook from "../hooks/vendorHome_hook";
 import useGeneralHook from "../../../general/hooks/general_hook";
+import FastImage from "react-native-fast-image";
 
 
 const VendorDashboardScreen = () => {
+  const { isLoadingProducts } = useSelector((state: RootState) => state.vendorProductState);
   const { analytics, overviews, weeklySalesChartData } = useSelector((state: RootState) => state.vendorHomeState);
+  const { products } = useSelector((state: RootState) => state.vendorProductState);
   const { payments } = useSelector((state: RootState) => state.paymentState);
   const { shop } = useSelector((state: RootState) => state.vendorGeneralState);
   const { userData } = useSelector((state: RootState) => state.profileState);
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
-  // console.log("USER DATA::: ", userData);
+  const product = products?.[0];
 
   const {
     handleGetShop,
@@ -37,6 +42,7 @@ const VendorDashboardScreen = () => {
       await handleGeVendortAnalytics(userData.shopId!)
     })();
   }, [userData]);
+  
   
 
   return (
@@ -188,68 +194,91 @@ const VendorDashboardScreen = () => {
           </View>
 
           {/* ==== Product List ==== */}
-          <View className="h-auto w-full mt-5 mb-4 p-3 pb-4 border border-gray-200 rounded-xl bg-lightGray">
-            <View className="flex-row items-center justify-between">
-              <Text className="font-normal text-base text-baseGreen">Product List</Text>
-              <TouchableOpacity 
-                onPress={ () => {
-                  navigation.getParent()?.navigate('Products');
-                } }
-                className="px-3 py-2 flex flex-row items-center justify-center rounded-lg bg-gold"
-              >
-                <Text className="text-sm text-baseGreen mr-2">View All</Text>
-                <ArrowRight size={ 18 } className="text-baseGreen" /> 
+          { !isLoadingProducts ? (
+            <View className="h-auto w-full mt-5 mb-4 p-3 pb-4 border border-gray-200 rounded-xl bg-lightGray">
+              <View className="flex-row items-center justify-between">
+                <Text className="font-normal text-base text-baseGreen">Product List</Text>
+                <TouchableOpacity 
+                  onPress={ () => navigation.getParent()?.navigate('Products') }
+                  className="px-3 py-2 flex flex-row items-center justify-center rounded-lg bg-gold"
+                >
+                  <Text className="text-sm text-baseGreen mr-2">View All</Text>
+                  <ArrowRight size={ 18 } className="text-baseGreen" /> 
+                </TouchableOpacity>
+              </View>
+
+              <TouchableOpacity onPress={ () => navigation.navigate("vendorProductDetailsScreen", { productID: product?.productId! }) }>
+                <View className="relative mt-2 flex items-center justify-center">
+                {!isLoadingProducts && product?.colors?.[0]?.images?.[0]?.link ? (
+                  <FastImage
+                    source={{
+                      uri: product.colors[0].images[0].link,
+                      priority: FastImage.priority.normal
+                    }}
+                    defaultSource={require("../../../../../assets/images/app_logo.png")}
+                    resizeMode={FastImage.resizeMode.cover}
+                    className="h-[300px] w-[180px] rounded-lg"
+                    style={{ aspectRatio: 0.7 }}
+                    fallback
+                  />
+                ) : (
+                  <ShimmerPlaceHolder
+                    LinearGradient={LinearGradient}
+                    shimmerColors={['#ebebeb', '#fefefe', '#ebebeb']}
+                    height={250}
+                    width={Dimensions.get('window').width - 40}
+                  />
+                )}
+
+                  <View className="absolute top-5 left-4 right-4 flex-row justify-between">
+                    <View className="w-[110px] px-2 py-1 rounded-lg border border-white/60 backdrop-blur-lg bg-white/50">
+                      <View className="flex-row items-center">
+                        <Star1 color="#E4A01C" size={14} variant="Bold" className="mr-1" />
+                        <Text className="text-xs">4.3</Text>
+                      </View>
+                      <Text className="text-[11px]">200 reviews</Text>
+                    </View>
+
+                    <View className="flex-row items-center gap-2">
+                      <View className="p-2 flex items-center justify-center rounded-lg border border-orange/30 backdrop-blur-lg bg-orange/20">
+                        <Text className="text-xs text-orange/90">{product?.status?.charAt(0).toUpperCase() + product?.status?.slice(1)}</Text>
+                      </View>
+                    </View>
+                  </View>
+
+                  <View className="absolute bottom-24 right-4 p-2 flex items-center justify-center rounded-lg border border-gray-200/70 backdrop-blur-lg bg-white/40">
+                    <Edit2 color="#3461B9" size={18} variant="Bold" className="mr-1" />
+                  </View>
+
+                  <View className="h-auto w-full mt-4 flex-row items-center">
+                    <View className="mr-1.5 px-2 py-1 flex-row items-center border border-[#9EBDF8] rounded-md bg-[#E3ECFF]">
+                      <Text className="text-xs text-[#3461B9] ">{ product?.categories?.gender! }'s wear</Text>
+                    </View>
+                    <View className="px-2 py-1 flex-row items-center border border-[#9EBDF8] rounded-md bg-[#E3ECFF]">
+                      <Text className="text-xs text-[#3461B9] ">{ product?.categories?.age?.ageGroup! }</Text>
+                    </View>
+                  </View>
+
+                  <View>
+                    <View className="h-auto w-full flex-row items-center justify-between">
+                      <Text className="flex-1 font-montserratMedium text-base">{ product?.title }</Text>
+                      <Text className={`font-montserratMedium text-xs ${product?.variation?.[0].quantity! >= 10 ? "text-green-600" : "text-red-600"}`}>{ product?.variations?.[0].quantity! } in stock</Text>
+                    </View>
+                    <Text className="font-montserratMedium text-base">₦{ product?.variations?.[0].price!.toLocaleString() }</Text>
+                  </View>
+                </View>
               </TouchableOpacity>
             </View>
-
-            <TouchableOpacity onPress={ () => navigation.navigate("vendorProductDetailsScreen", { productID: "productId" }) }>
-              <View className="relative mt-2 flex items-center justify-center">
-
-                <Image
-                    source={ require("../../../../../assets/images/home/sweat_shirt.png") }
-                    resizeMode="contain"
-                    className="h-[250px] w-full"
-                />
-
-                <View className="absolute top-5 left-4 right-4 flex-row justify-between">
-                  <View className="w-[110px] px-2 py-1 rounded-lg border border-white/60 backdrop-blur-lg bg-white/50">
-                    <View className="flex-row items-center">
-                      <Star1 color="#E4A01C" size={14} variant="Bold" className="mr-1" />
-                      <Text className="text-xs">4.3</Text>
-                    </View>
-                    <Text className="text-[11px]">200 reviews</Text>
-                  </View>
-
-                  <View className="flex-row items-center gap-2">
-                    <View className="p-2 flex items-center justify-center rounded-lg border border-orange/30 backdrop-blur-lg bg-orange/20">
-                      <Text className="text-xs text-orange/90">Pending Review</Text>
-                    </View>
-                  </View>
-                </View>
-
-                <View className="absolute bottom-24 right-4 p-2 flex items-center justify-center rounded-lg border border-gray-200/70 backdrop-blur-lg bg-white/40">
-                  <Edit2 color="#3461B9" size={18} variant="Bold" className="mr-1" />
-                </View>
-
-                <View className="h-auto w-full mt-4 flex-row items-center">
-                  <View className="mr-1.5 px-2 py-1 flex-row items-center border border-[#9EBDF8] rounded-md bg-[#E3ECFF]">
-                    <Text className="text-xs text-[#3461B9] ">Men's wear</Text>
-                  </View>
-                  <View className="px-2 py-1 flex-row items-center border border-[#9EBDF8] rounded-md bg-[#E3ECFF]">
-                    <Text className="text-xs text-[#3461B9] ">Adult</Text>
-                  </View>
-                </View>
-
-                <View>
-                  <View className="h-auto w-full mt-1 flex-row items-center justify-between">
-                    <Text className="text-base">Men's Vintage Shirt</Text>
-                    <Text className="text-xs text-green-600">20 in stock</Text>
-                  </View>
-                  <Text className="font-medium text-base">{ `₦5400.90`}</Text>
-                </View>
-              </View>
-            </TouchableOpacity>
-          </View>
+          ) : (
+            <ShimmerPlaceHolder
+              // visible={!isLoadingProducts}
+              LinearGradient={LinearGradient}
+              shimmerColors={['#ebebeb', '#fefefe', '#ebebeb']}
+              height={330}
+              width={Dimensions.get('window').width - 40}
+              shimmerStyle={{ borderRadius: 16, marginTop: 20 }}
+            />
+          ) }
         </View>
       </ScrollView>
     </SafeAreaView>
