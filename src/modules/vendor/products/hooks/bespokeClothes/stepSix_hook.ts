@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../../../../redux/store/store";
 import { useSaveAutoPricePercentageMutation, useSubmitProductMutation } from "../../apis/bespokeProduct_api";
+import { setLoadingMessage, setProduct, setProductIsLoading } from "../../slices/vendorProductState_slice";
 
 interface IProps {
     setShowWarningModal: React.Dispatch<React.SetStateAction<boolean>>;
@@ -13,12 +14,12 @@ const useStepSixHook = (
     setShowSuccessModal: { (value: React.SetStateAction<boolean>): void; (arg0: boolean): void; }
 ) => {
 
-    const { selectedDraftProduct } = useSelector((state: RootState) => state.vendorProductState);
+    const { product } = useSelector((state: RootState) => state.vendorProductState);
     const [isAutoPriceAdjustment, setIsAutoPriceAdjustment] = useState(false);
     const [autoPricePercentage, setAutoPricePercentage] = useState<string>("0");
-    const [loadingMessage, setLoadingMessage] = useState<string>("");
     const [showPriceAdjustmentModal, setShowPriceAdjustmentModal] = useState<boolean>(false);
     const [priceAdjustmentModalType, setPriceAdjustmentModalType] = useState<string>("Activate");
+    const dispatch = useDispatch();
 
     const [saveAutoPricePercentage, { isLoading: saveAutoPricePercentageIsLoading, isSuccess: saveAutoPricePercentageIsSuccess }] = useSaveAutoPricePercentageMutation();
     const [submitProduct, { isLoading: submitProductIsLoading, isSuccess: submitProductIsSuccess }] = useSubmitProductMutation();   
@@ -26,8 +27,9 @@ const useStepSixHook = (
 
     // Handle save auto price percentage
     const handleSaveAutoPricePercentage = async () => {
-        setLoadingMessage("Saving the auto price percentage...");
-        const productId = selectedDraftProduct?.productId || "";
+        dispatch(setLoadingMessage("Saving the auto price percentage..."));
+        dispatch(setProductIsLoading(true));
+        const productId = product?.productId || "";
 
         try {
             // Update auto price adjustment
@@ -35,6 +37,7 @@ const useStepSixHook = (
                 productId,
                 isAdjustable: isAutoPriceAdjustment,
                 adjustmentPercentage: Number(autoPricePercentage),
+                currentStep: 6,
             };
             console.log("REQUEST DATA: ", autoPriceAdjustmentData);
             
@@ -43,14 +46,17 @@ const useStepSixHook = (
             console.log("RESPONSE: ", saveAutoPricePercentageResponseData);
 
             if (saveAutoPricePercentageResponseData) {
-                setLoadingMessage("");
                 setAutoPricePercentage(saveAutoPricePercentageResponseData.autoPriceAdjustment!.adjustmentPercentage!.toString());
                 setIsAutoPriceAdjustment(saveAutoPricePercentageResponseData.autoPriceAdjustment!.isAdjustable!);
                 setShowPriceAdjustmentModal(false);
+                dispatch(setProduct(saveAutoPricePercentageResponseData));
+                dispatch(setProductIsLoading(false));
+                dispatch(setLoadingMessage(""));
             }
         } catch (error) {
             console.log("ERROR: ", error);
-            setLoadingMessage("");
+            dispatch(setProductIsLoading(false));
+            dispatch(setLoadingMessage(""));
             setShowPriceAdjustmentModal(false);
             return;
         }
@@ -58,8 +64,9 @@ const useStepSixHook = (
 
     // Handle deactivate auto price adjustment
     const handleDeactivateAutoPriceAdjustment = async () => {
-        setLoadingMessage("Deactivating auto price adjustment...");
-        const productId = selectedDraftProduct?.productId || "";
+        dispatch(setLoadingMessage("Deactivating auto price adjustment..."));
+        dispatch(setProductIsLoading(true));
+        const productId = product?.productId || "";
 
         try {
             // Update auto price adjustment
@@ -67,6 +74,7 @@ const useStepSixHook = (
                 productId,
                 isAdjustable: false,
                 adjustmentPercentage: 0,
+                currentStep: 6,
             };
             console.log("REQUEST DATA: ", autoPriceAdjustmentData);
             
@@ -75,14 +83,17 @@ const useStepSixHook = (
             console.log("RESPONSE: ", saveAutoPricePercentageResponseData);
 
             if (saveAutoPricePercentageResponseData) {
-                setLoadingMessage("");
                 setAutoPricePercentage(saveAutoPricePercentageResponseData.autoPriceAdjustment!.adjustmentPercentage!.toString());
                 setIsAutoPriceAdjustment(saveAutoPricePercentageResponseData.autoPriceAdjustment!.isAdjustable!);
                 setShowPriceAdjustmentModal(false);
+                dispatch(setProduct(saveAutoPricePercentageResponseData));
+                dispatch(setProductIsLoading(false));
+                dispatch(setLoadingMessage(""));
             }
         } catch (error) {
             console.log("ERROR: ", error);
-            setLoadingMessage("");
+            dispatch(setProductIsLoading(false));
+            dispatch(setLoadingMessage(""));
             setShowPriceAdjustmentModal(false);
             return;
         }
@@ -90,8 +101,9 @@ const useStepSixHook = (
 
     // Handle submit product
     const handleSubmitProduct = async () => {
-        setLoadingMessage("Submitting the product...");
-        const productId = selectedDraftProduct?.productId || "";
+        dispatch(setLoadingMessage("Submitting the product..."));
+        dispatch(setProductIsLoading(true));
+        const productId = product?.productId || "";
 
         try {
             // Update auto price adjustment
@@ -104,33 +116,34 @@ const useStepSixHook = (
             console.log("RESPONSE: ", submitProductResponseData);
 
             if (submitProductResponseData) {
-                setLoadingMessage("");
+                dispatch(setProduct(submitProductResponseData));
+                dispatch(setProductIsLoading(false));
+                dispatch(setLoadingMessage(""));
                 setShowSuccessModal(true);
                 setShowWarningModal(false);
             }
         } catch (error) {
             console.log("ERROR: ", error);
-            setLoadingMessage("");
+            dispatch(setProductIsLoading(false));
+            dispatch(setLoadingMessage(""));
             return;
         }
     };
-    
-    // useEffect(() => {
-    //     if (isAutoPriceAdjustment) {
-    //         setShowPriceAdjustmentModal(true);
-    //     } else {
-    //         setShowPriceAdjustmentModal(false);
-    //     }
-    // }, [isAutoPriceAdjustment, setShowPriceAdjustmentModal]);
+
+    // Handle set auto price adjustment from the draft product
+    const handleSetAutoPriceAdjustment = () => {
+        if (!product) return;
+        const autoPriceAdjustment = product.autoPriceAdjustment!;
+
+        if (autoPriceAdjustment) {
+            setAutoPricePercentage(autoPriceAdjustment.adjustmentPercentage!.toString() || "0");
+            setIsAutoPriceAdjustment(autoPriceAdjustment.isAdjustable! || false);
+        }
+    };
 
     useEffect(() => {
-        if (selectedDraftProduct) {
-            console.log("SELECTED DRAFT::: ", selectedDraftProduct);
-            
-            setAutoPricePercentage(selectedDraftProduct.autoPriceAdjustment!.adjustmentPercentage!.toString() || "0");
-            setIsAutoPriceAdjustment(selectedDraftProduct.autoPriceAdjustment!.isAdjustable! || false);
-        }
-    }, [selectedDraftProduct]);
+        handleSetAutoPriceAdjustment();
+    }, [product]);
 
 
     return {
@@ -138,7 +151,7 @@ const useStepSixHook = (
         handleSaveAutoPricePercentage, handleDeactivateAutoPriceAdjustment,
         saveAutoPricePercentageIsLoading, saveAutoPricePercentageIsSuccess, 
         isAutoPriceAdjustment, setIsAutoPriceAdjustment,
-        submitProductIsLoading, submitProductIsSuccess, loadingMessage,
+        submitProductIsLoading, submitProductIsSuccess,
         handleSubmitProduct,
         showPriceAdjustmentModal, setShowPriceAdjustmentModal,
         priceAdjustmentModalType, setPriceAdjustmentModalType,

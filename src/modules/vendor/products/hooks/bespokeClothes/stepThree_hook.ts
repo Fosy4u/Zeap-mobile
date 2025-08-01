@@ -1,45 +1,62 @@
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import * as yup from "yup";
 import { RootState } from "../../../../../redux/store/store";
 import { IBodyMeasurementEnum } from "../../../../general/models/productOptions_model";
-import { stepThreeAddBespokeClothesSchema } from "../../validations/addBespokeClothes_validation";
-import { useUpdateWithBodyMeasurementsMutation } from "../../apis/bespokeProduct_api";
+import { stepThreeAddBespokeClothesSchema } from "../../validations/addProduct_validation";
+import { useLazyGetProductBodyMeasurementsQuery, useUpdateWithBodyMeasurementsMutation } from "../../apis/bespokeProduct_api";
 import { Alert } from "react-native";
+import { setLoadingMessage, setProduct, setProductIsLoading, setSelectedStep } from "../../slices/vendorProductState_slice";
+import { useLazyGetProductByProductIDQuery } from "../../apis/product_api";
 
 
 const useStepThreeHook = () => {
 
-    const { selectedDraftProduct } = useSelector((state: RootState) => state.vendorProductState );
+    const { product } = useSelector((state: RootState) => state.vendorProductState );
     const { bespokeClothesOptions } = useSelector((state: RootState) => state.generalState);
     const [bodyMeasurementOptions, setBodyMeasurementOptions] = useState<IBodyMeasurementEnum[]>([]);
     const [formattedMeasurements, setFormattedMeasurements] = useState<any[]>([]);
-    const [loadingMessage, setLoadingMessage] = useState("");
-    // console.log("FORMATTED MEASUREMENTS::: ", selectedDraftProduct);
+    const dispatch = useDispatch();    
+
+    const [getProductBodyMeasurements] = useLazyGetProductBodyMeasurementsQuery();
+    const [updateWithBodyMeasurements] = useUpdateWithBodyMeasurementsMutation();
+    const [getProductByProductID] = useLazyGetProductByProductIDQuery(); 
     
 
-    const [updateWithBodyMeasurements, { isLoading, isSuccess }] = useUpdateWithBodyMeasurementsMutation();
-    
-
+    // Handle submit
     const handleSubmit = async () => {
-        setLoadingMessage("Updating body measurements...");
-        const productId = selectedDraftProduct?.productId || "";
+        dispatch(setLoadingMessage("Updating body measurements..."));
+        dispatch(setProductIsLoading(true));
+        const productId = product?.productId || "";
 
         try {
             const requestData = {
                 productId,
                 measurements: formattedMeasurements,
+                currentStep: 3,
             };
 
             // Validate request data
             const validatedRequestData = await stepThreeAddBespokeClothesSchema.validate(requestData);
             // console.log("REQUEST DATA::: ", JSON.stringify(validatedRequestData));
 
-            const updateWithBodyMeasurementsResponseData = await updateWithBodyMeasurements(requestData).unwrap();
+            const updateWithBodyMeasurementsResponseData = await updateWithBodyMeasurements(validatedRequestData).unwrap();
             // console.log("RESPONSE::: ", updateWithBodyMeasurementsResponseData);
 
             if (updateWithBodyMeasurementsResponseData) {
-                setLoadingMessage("");
+
+                dispatch(setLoadingMessage("Getting product details..."));
+
+                // Get the updated product data
+                const updatedProduct = await getProductByProductID(productId).unwrap();
+                console.log("UPDATED PRODUCT::: ", updatedProduct);
+
+                if (updatedProduct) {
+                    dispatch(setProduct(updatedProduct));
+                    dispatch(setProductIsLoading(false));
+                    dispatch(setLoadingMessage(""));
+                    dispatch(setSelectedStep(4));
+                }
             }
         } catch (error: any) {
             let errorMessage = "";
@@ -62,6 +79,25 @@ const useStepThreeHook = () => {
             
         };
     };
+    
+    // Handle get peoduct body measurements
+    const handleGetProductBodyMeasurements = async () => {
+        if (!product) return;
+        dispatch(setLoadingMessage("Getting product measurements..."));
+        dispatch(setProductIsLoading(true));
+
+        const productId = product.productId!;
+        // console.log("PRODUCT ID: ", productId);
+
+        const responseData = await getProductBodyMeasurements(productId).unwrap();
+        // console.log("BODY MEASUREMENTS RESPONSE: ", JSON.stringify(responseData.measurements!));
+        
+        if (responseData) {
+            setFormattedMeasurements(responseData.measurements!);
+            dispatch(setProductIsLoading(false));
+            dispatch(setLoadingMessage(""));
+        }
+    };
 
     const handleFormatBodyMeasurementOptions = async () => {
         if (!bespokeClothesOptions) return;
@@ -77,12 +113,12 @@ const useStepThreeHook = () => {
         measurementName: string,
         fieldName: string
     ) => {
-        setFormattedMeasurements((prevMeasurements: any) => {
-            // Create a copy of the current measurements
-            let updatedMeasurements = [...prevMeasurements];
+        const measurements = (prevMeasurements: any) => {
+            // Create a deep clone of the current measurements
+            let updatedMeasurements = JSON.parse(JSON.stringify(prevMeasurements));
             
             // Find if the section already exists in formattedMeasurements
-            const sectionIndex = updatedMeasurements.findIndex(m => m.name === measurementName);
+            const sectionIndex = updatedMeasurements.findIndex((m: any) => m.name === measurementName);
             
             if (selectedValue) { 
                 // When checkbox is checked
@@ -94,43 +130,48 @@ const useStepThreeHook = () => {
                     });
                 } else {
                     // If section exists, add field if it's not already there
-                    const isIncluded = !updatedMeasurements[sectionIndex].fields.includes(fieldName);
-                    if (isIncluded) {
-                        updatedMeasurements[sectionIndex].fields.push(fieldName);
+                    const section = updatedMeasurements[sectionIndex];
+                    if (!section.fields.includes(fieldName)) {
+                        section.fields.push(fieldName);
                     }
                 }
-            } else { 
+            } else {
                 // When checkbox is unchecked
                 if (sectionIndex !== -1) {
+                    const section = updatedMeasurements[sectionIndex];
+
                     // Remove the field from the section
-                    updatedMeasurements[sectionIndex].fields = updatedMeasurements[sectionIndex].fields.filter((field: string) => field !== fieldName);
+                    section.fields = section.fields.filter((field: string) => field !== fieldName);
                     
                     // If no fields remain in the section, remove the entire section
-                    if (updatedMeasurements[sectionIndex].fields.length === 0) {
-                        updatedMeasurements = updatedMeasurements.filter(measurement => measurement.name !== measurementName);
+                    if (section.fields.length === 0) {
+                        updatedMeasurements = updatedMeasurements.filter((measurement: any) => measurement.name !== measurementName);
+                        // updatedMeasurements.splice(sectionIndex, 1);
                     }
                 }
             }
             
             return updatedMeasurements;
-        });
+        };
         
-        // Call the original onChange if it exists
-        // onChange && onChange(selectedValue);
+        setFormattedMeasurements(measurements);
     };
-    // console.log("FORMATTED MEASUREMENTS::: ", formattedMeasurements);
 
     
     useEffect(() => {
         if (bespokeClothesOptions?.mainEnums) {
             handleFormatBodyMeasurementOptions();
         }
-    }, [bespokeClothesOptions])
+    }, [bespokeClothesOptions]);
+    useEffect(() => {
+        if (product) {
+            handleGetProductBodyMeasurements();
+        }
+    }, [product]);
 
 
     return {
         handleSubmit,
-        isLoading, isSuccess, loadingMessage,
         bodyMeasurementOptions,
         formattedMeasurements,
         handleSelectMeasurementField,

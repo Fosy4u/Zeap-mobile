@@ -7,6 +7,7 @@ interface IProduct {
     shopId:           string;
     title:            string;
     status:           string;
+    autoPriceAdjustment: IAutoPriceAdjustment;
     currentStep:      number;
     categories:       ICategories;
     description:      string;
@@ -20,6 +21,13 @@ interface IProduct {
     __v:              number;
     timeLine:         ITimeLine[];
     rejectionReasons: any[];
+    promo: IPromo
+    sizeStandard: string
+}
+
+interface IAutoPriceAdjustment {
+  isAdjustable: boolean
+  adjustmentPercentage: number
 }
 
 interface ICategories {
@@ -68,6 +76,11 @@ interface IVariation {
     _id:        string;
 }
 
+interface IPromo {
+  promoId: string
+  discountPercentage: number
+}
 
-export type { ICategories, IAge, IColor, IImage, ITimeLine, IVariation };
+
+export type { IAutoPriceAdjustment, ICategories, IAge, IColor, IImage, ITimeLine, IVariation, IPromo };
 export default IProduct;

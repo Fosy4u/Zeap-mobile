@@ -1,6 +1,8 @@
+import rootAPI from "../../../../redux/api/rootAPI.ts";
+import { ICountryStateCityAccessToken } from "../models/countriesStatesCities_model";
 
 
-const settingsAPI = api.injectEndpoints({
+const settingsAPI = rootAPI.injectEndpoints({
     endpoints: (builder) => ({
         getCountryStateCityAccessToken: builder.query<ICountryStateCityAccessToken, void>({
             query: () => ({

@@ -1,30 +1,31 @@
 import React, { useEffect } from 'react'
 import { SafeAreaView, Text, View } from 'react-native'
-import { useSelector } from 'react-redux';
 import usePaymentHook from '../hooks/userPayment_hook';
-import { RootState } from '../../../../redux/store/store';
 import AppLoader from '../../../general/components/appLoader';
-import PaystackModal from '../modals/paystack_modal';
 import { Paystack } from 'react-native-paystack-webview';
-// import { Paystack } from 'react-native-paystack-webview';
+import { RouteProp, useRoute } from '@react-navigation/native';
+import RootNavigationStackModel from '../../../../routes/model/routes_model';
 
 const UserPaymentScreen = () => {
-    const { cart } = useSelector((state: RootState) => state.cartState);
-    const { selectedAddress } = useSelector((state: RootState) => state.addressState);
-    // console.log("CART::: ", cart);
+    const route = useRoute<RouteProp<RootNavigationStackModel, 'userPaymentScreen'>>();
+    const requestParams = route.params?.data!;
     
     const {
-        paymentReference, getPaymentReferenceLoading, handleGetPaymentReference,
-        isVerifyPaymentLoading,
+        handleGetPaymentReference,
+        isLoading, loadingMessage,
         handlePaymentSuccess, handlePaymentCancel,
+        paymentReference,
     } = usePaymentHook();
-    console.log("PAYMENT REFERENCE::: ", paymentReference);
-
 
     useEffect(() => {
-        handleGetPaymentReference(selectedAddress?._id!);
-    }, []);
+        if (requestParams) {
+            handleGetPaymentReference(requestParams);
+        }
+    }, [requestParams]);
 
+    if (isLoading) {
+        return <AppLoader loadingAdditionalMessage={ loadingMessage } />;
+    }
     
     return (
         <SafeAreaView className="h-full, w-full flex-1 bg-lightGray">
@@ -55,12 +56,8 @@ const UserPaymentScreen = () => {
                     <Text>Transaction was successfully.</Text>
                 </View>
             )}
-
-            { (getPaymentReferenceLoading) && <AppLoader loadingAdditionalMessage="Loading payment reference." /> }
-            { (isVerifyPaymentLoading) && <AppLoader loadingAdditionalMessage="Verifying payment." /> }
-
         </SafeAreaView>
     );
-}
+};
 
 export default UserPaymentScreen;

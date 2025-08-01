@@ -1,28 +1,31 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import IAddressState from "../models/addressState_model";
-import { set } from "react-hook-form";
 import IAddress from "../models/address_model";
 
 const initialState: IAddressState = {
-    allSavedAddresses: [],
+    deliveryAddresses: [],
     selectedAddress: {},
 
     selectedDeliveryAddressID: "",
     saveAddressForNextTime: false,
-    showSavedAddressesBottomSheet: false,
     selectedCountry: "Nigeria",
+
+    showEditEmail: false,
+    showNewDeliveryAddressForm: false,
+
+    isLoading: false,
+    loadingMessage: "",
 };
 
 export const addressSlice = createSlice({
     name: "addressSlice",
     initialState,
     reducers: {
-        setAllSavedAddresses: (state: IAddressState, action: PayloadAction<IAddress[]>) => {
-            state.allSavedAddresses = action.payload;
+        setDeliveryAddresses: (state: IAddressState, action: PayloadAction<IAddress[]>) => {
+            state.deliveryAddresses = action.payload;
         },
         setSelectedAddress: (state: IAddressState, action: PayloadAction<IAddress>) => {
             state.selectedAddress = action.payload;
-            
         },
         setSelectedDeliveryAddressID: (state: IAddressState, action: PayloadAction<string>) => {
             state.selectedDeliveryAddressID = action.payload;
@@ -30,12 +33,21 @@ export const addressSlice = createSlice({
         setSaveAddressForNextTime: (state: IAddressState, action: PayloadAction<boolean>) => {
             state.saveAddressForNextTime = action.payload;
         },
-        setShowSavedAddressesBottomSheet: (state: IAddressState, action: PayloadAction<boolean>) => {
-            state.showSavedAddressesBottomSheet = action.payload;
-        },
         setSelectedCountry: (state: IAddressState, action: PayloadAction<string>) => {
             state.selectedCountry = action.payload;
         },
+        setShowEditEmail: (state: IAddressState, action: PayloadAction<boolean>) => {
+            state.showEditEmail = action.payload;
+        },
+        setShowNewDeliveryAddressForm: (state: IAddressState, action: PayloadAction<boolean>) => {
+            state.showNewDeliveryAddressForm = action.payload;
+        },
+        setIsLoading: (state: IAddressState, action: PayloadAction<boolean>) => {
+            state.isLoading = action.payload;
+        },
+        setLoadingMessage: (state: IAddressState, action: PayloadAction<string>) => {
+            state.loadingMessage = action.payload;
+        }
     },
     
 });
@@ -43,12 +55,15 @@ export const addressSlice = createSlice({
 const { actions, reducer } = addressSlice;
 
 export const {
-    setAllSavedAddresses,
+    setDeliveryAddresses,
     setSelectedAddress,
     setSelectedDeliveryAddressID,
     setSaveAddressForNextTime,
-    setShowSavedAddressesBottomSheet,
     setSelectedCountry,
+    setShowEditEmail,
+    setShowNewDeliveryAddressForm,
+    setIsLoading,
+    setLoadingMessage
 } = actions;
 
 export default reducer;

@@ -12,31 +12,23 @@ import SuccessPopupModal from '../modals/successPopup_modal';
 import { BottomSheetModal, BottomSheetModalProvider, BottomSheetView } from '@gorhom/bottom-sheet';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import useRegisterHook from '../hooks/register_hook';
-import getAnonymousToken from '../../../configs/firebaseAuth';
 import { Controller } from 'react-hook-form';
 import { setShowConfirmPassword, setShowPassword } from '../slices/authState_slice';
-import EncryptedStorage from 'react-native-encrypted-storage';
+import AppLoader from '../../general/components/appLoader';
 
 const RegisterScreen = () => {
   const { showPassword, showConfirmPassword, isVendorData, showSuccessModal } = useSelector((state: RootState) => state.authState);
+  const { isLoading, loadingMessage } = useSelector((state: RootState) => state.generalState);
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
   const dispatch = useDispatch();
 
-  const { control, handleSubmit, onSubmit, errors, isLoading } = useRegisterHook();
+  const { control, handleSubmit, onSubmit, errors } = useRegisterHook();
 
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const snapPoints = useMemo(() => ["80%"], []);
 
   const setShowBottomSheetModal = useCallback(() => {
     bottomSheetModalRef.current?.present();
-  }, []);
-
-  useEffect(() => {
-    (async () => {
-      const token = await getAnonymousToken();
-      await EncryptedStorage.setItem("anonymousToken", token);
-      console.log("FIREBASE TOKEN::: ", token);
-    })();
   }, []);
   
 
@@ -93,7 +85,7 @@ const RegisterScreen = () => {
                 { errors.email && (<Text className="text-red-500 text-xs">{errors.email.message}</Text>) }
               </View>
 
-              <View className="mt-6 flex flex-row items-center">
+              {/* <View className="mt-6 flex flex-row items-center">
                 <Text>Will you like to sell too?</Text>
                 <TouchableOpacity
                     onPress={ () => setShowBottomSheetModal() }
@@ -123,7 +115,7 @@ const RegisterScreen = () => {
                     ) }
                 />
                 { errors.isVendor && (<Text className="text-red-500 text-xs">{errors.isVendor.message}</Text>) }
-              </View>
+              </View> */}
 
               <Text aria-label="Password" nativeID="password" className="mt-6">Password</Text>
               <View className="h-auto w-full mt-1.5 px-3 py-1 flex-row items-center justify-between border border-gray-300 rounded-xl bg-gray-100">
@@ -179,7 +171,7 @@ const RegisterScreen = () => {
 
               <TouchableOpacity
                   onPress={handleSubmit(onSubmit)}
-                  disabled={isLoading}
+                  disabled={ isLoading }
                   className="h-[55px] w-auto mt-6 flex flex-row items-center justify-center rounded-xl bg-baseGreen"
               >
                 <Text className="text-lg text-white mr-2">{ isLoading ? "Creating Account..." : "Create Account" }</Text>
@@ -228,7 +220,7 @@ const RegisterScreen = () => {
           { showSuccessModal &&
             <SuccessPopupModal
               bodyText="You have successfully created your account. Kindly proceed to setting up your account."
-              screenURL="profileSetupScreen"
+              screenURL="loginScreen"
             />
           }
 
@@ -261,6 +253,10 @@ const RegisterScreen = () => {
           </BottomSheetModal>
             
         </SafeAreaView>
+
+        { !isLoading &&
+          <AppLoader loadingAdditionalMessage={ loadingMessage } />
+        }
       </BottomSheetModalProvider>
     </GestureHandlerRootView>
   );

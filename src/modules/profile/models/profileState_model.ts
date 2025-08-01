@@ -12,6 +12,9 @@ interface IProfileState {
     shoeSizeOptions: IDropdownOptions[];
     bestOutfitOptions: IDropdownOptions[];
     bestColorOptions: IDropdownOptions[];
+    acceptMarketing: boolean;
+    isLoading: boolean;
+    loadingMessage: string;
 };
 
 
@@ -25,19 +28,21 @@ interface IUser {
     lastName?:            string;
     disabled?:            boolean;
     isAdmin?:             boolean;
+    isVendor?:            boolean;
+    isGuest?:             boolean;
     superAdmin?:          boolean;
+    acceptMarketing?:     boolean;
     email?:               string;
     emailVerified?:       boolean;
     createdBy?:           string;
     social?:              ISocial;
     phoneNumber?:         string;
     phoneNumberVerified?: boolean;
-    isVendor?:            boolean;
     points?:              number;
+    prefferedCurrency?:   string;
     updatedAt?:           Date;
     createdAt?:           Date;
     __v?:                 number;
-    shopId?:              string;
 };
 
 interface ISocial {
