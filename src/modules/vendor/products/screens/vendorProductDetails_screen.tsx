@@ -4,7 +4,7 @@ import { Edit2, Star1, Trash } from "iconsax-react-native";
 import AppHeaderComp from "../../general/components/appHeader_comp.tsx";
 import {useDispatch, useSelector} from "react-redux";
 import {RootState} from "../../../../redux/store/store.ts";
-import {RouteProp} from "@react-navigation/native";
+import {RouteProp, useNavigation} from "@react-navigation/native";
 import RootNavigationStackModel from "../../../../routes/model/routes_model.ts";
 import AppLoader from '../../../general/components/appLoader.tsx';
 import useProductHook from '../hooks/vendorProduct_hook.ts';
@@ -14,7 +14,9 @@ import LinearGradient from "react-native-linear-gradient";
 import VendorProductDescriptionComponent from '../components/vendorProductDescription_component.tsx';
 import ReviewComponent from '../../../general/components/review_component.tsx';
 import VendorProductTimelineComponent from '../components/vendorProductTimeline_component.tsx';
-import { setSelectedTab } from '../slices/vendorProductState_slice.ts';
+import { setProduct, setProductMode, setSelectedStep, setSelectedTab } from '../slices/vendorProductState_slice.ts';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import DeleteProducWarningPopupModal from '../modals/deleteProductWarningPopup_modal.tsx';
 
 
 interface IProps {
@@ -22,20 +24,24 @@ interface IProps {
 }
 
 const VendorProductDetailsScreen: React.FC<IProps> = ({ route }) => {
-    const { product, selectedTab, tabs, loadingMessage } = useSelector((state: RootState) => state.vendorProductState);
+    const { product, productPromotion, selectedTab, tabs } = useSelector((state: RootState) => state.vendorProductState);
+    const { isLoading, loadingMessage } = useSelector((state: RootState) => state.generalState);
+    const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const dispatch = useDispatch();
     const { productID } = route.params!;
-    // console.log("PRODUCT ID::: ", productID);
+    // console.log("PROMOTION: ", productPromotion);
     
     const { 
-        isLoadingProduct, isLoadingReviews,
         featuredImage, setFeaturedImage,
         defaultFeaturedImageAndThumbnails,
-        handleGetProductByProductID, 
+        handleGetProductByProductID,
+        showDeleteProductWarningModal, setShowDeleteProductWarningModal,
+        handleDeleteProduct,
         reviewData,
-        featuredColors
+        featuredColors,
+        handleFormatDate,
     } = useProductHook();
-    const isLoading = isLoadingProduct || isLoadingReviews;
+    // const isLoading = isLoadingReviews || isLoadingDeleteProduct;
     
 
     useEffect(() => {
@@ -86,29 +92,41 @@ const VendorProductDetailsScreen: React.FC<IProps> = ({ route }) => {
                             </Text>
                         </View>
                     </View>
-                    <Text className="mt-2 font-montserratMedium text-[23px] text-baseGreen">{ product?.title }</Text>    
+                    <Text className="mt-2 font-montserratMedium text-[23px] text-baseGreen">{ product?.title! }</Text>    
                 </View>
 
                 <View className="mt-2">
-                    <Text className="font-montserratSemiBold text-xl text-baseGreen">₦{ product?.variations?.[0].price!.toLocaleString() }</Text>
-                    <View className="mt-2.5 flex-row items-center">
-                        <Star1 color="#E4A01C" size={18} variant="Bold" className="mr-0.5" />
-                        <Text className="font-montserratMedium text-xs text-gray-600">{ `${reviewData?.averageRating! ? reviewData?.averageRating!.toFixed(1) : 0}.0 (${reviewData?.reviews?.length} ${ reviewData?.reviews?.length! > 1 ? "reviews" : "review" })` }</Text>
-
-                        <Text className="ml-5 font-montserratMedium text-green-600">
-                            { product?.variations?.[0].quantity! }
-                            <Text className="text-xs text-black"> In stock</Text>
+                    <View className="h-auto flex-row items-end space-x-3">
+                        <Text className="font-montserratSemiBold text-xl text-baseGreen">
+                            ₦{ productPromotion?.discount?.fixedPercentage! ? product?.variations?.[0].discount?.toLocaleString() : product?.variations?.[0].price!.toLocaleString() }
                         </Text>
-
-                        <Text className="ml-5 font-montserratMedium text-gold">
-                            { 0 }
-                            <Text className="text-xs text-black"> Sold</Text>
+                        <Text className={`font-montserratNormal text-sm text-gray-400 line-through ${ productPromotion?.discount?.fixedPercentage! ? "flex" : "hidden" }`}>
+                            ₦{ product?.variations?.[0].price!.toLocaleString() }
                         </Text>
+                    </View>
+                    <View className="mt-2.5 flex-row items-center space-x-3">
+                        <View className="flex-row items-center">
+                            <Star1 color="#E4A01C" size={18} variant="Bold" className="mr-0.5" />
+                            <Text className="font-montserratMedium text-blue-600">
+                                { reviewData?.averageRating! ? reviewData?.averageRating!.toFixed(1) : 0.0 }
+                            </Text>
+                            <Text className="ml-1 font-montserratMedium text-xs text-black">({ reviewData?.reviews?.length! } { reviewData?.reviews?.length! > 1 ? "reviews" : "review" })</Text>
+                        </View>
 
-                        <Text className="ml-5 font-montserratMedium text-gold">
-                            { product?.variations?.[0].discount ? `${product?.variations?.[0].discount!}` : 0 }
-                            <Text className="text-xs text-black">% Discount</Text>
-                        </Text>
+                        <View className="flex-row items-center">
+                            <Text className={`font-montserratMedium ${ product?.variations?.[0].quantity! >= 10 ? "text-green-600" : "text-red-600" }`}>{ product?.variations?.[0].quantity! }</Text>
+                            <Text className="ml-1 font-montserratMedium text-xs text-black">In stock</Text>
+                        </View>
+
+                        <View className="flex-row items-center">
+                            <Text className="font-montserratMedium text-gold">{ 0 }</Text>
+                            <Text className="ml-1 font-montserratMedium text-xs text-black">Sold</Text>
+                        </View>
+
+                        <View className="flex-row items-center">
+                            <Text className="font-montserratMedium text-green-600">{ productPromotion?.discount?.fixedPercentage! ? productPromotion?.discount?.fixedPercentage! : 0 }</Text>
+                            <Text className="ml-[1px] font-montserratMedium text-xs text-black">% Discount</Text>
+                        </View>
                     </View>
                 </View>
 
@@ -142,24 +160,30 @@ const VendorProductDetailsScreen: React.FC<IProps> = ({ route }) => {
                 {/*==== Thumbnails ====*/}
                 <View className="mt-5">
                     {/* <Text className="font-montserratSemiBold text-[16px] text-gray-700">Available Colors</Text> */}
-                    <View className="h-auto w-full mt-2 flex-row items-center justify-start flex-wrap space-x-5">
-                        { defaultFeaturedImageAndThumbnails?.images?.map((eachImage, index) => (
-                            <TouchableOpacity  key={ eachImage._id } 
-                                onPress={ () => setFeaturedImage(eachImage) }
-                                className={`h-[75px] w-[70px] rounded-2xl border ${ (eachImage._id! === featuredImage?._id!) ? "border-baseGreen" : "border-gray-300" } bg-[#F8F9FE]`}
-                            >
-                                <Image
-                                    source={
-                                        defaultFeaturedImageAndThumbnails?.images![index]?.link!
-                                        ? { uri: defaultFeaturedImageAndThumbnails?.images![index]?.link! }
-                                        : require("../../../../../assets/images/app_logo.png")
-                                    }
-                                    resizeMode="cover"
-                                    className="h-[73px] w-[68px] rounded-2xl"
-                                />
-                            </TouchableOpacity>
-                        )) }
-                    </View>
+                    <ScrollView
+                        showsHorizontalScrollIndicator={false}
+                        horizontal={true}
+                        className="h-auto w-full"
+                    >
+                        <View className="h-auto w-full mt-2 flex-row items-center justify-start space-x-4">
+                            { defaultFeaturedImageAndThumbnails?.images?.map((eachImage, index) => (
+                                <TouchableOpacity  key={ eachImage._id } 
+                                    onPress={ () => setFeaturedImage(eachImage) }
+                                    className={`h-[78px] w-[70px] rounded-2xl border ${ (eachImage._id! === featuredImage?._id!) ? "border-baseGreen" : "border-gray-300" } bg-[#F8F9FE]`}
+                                >
+                                    <Image
+                                        source={
+                                            defaultFeaturedImageAndThumbnails?.images![index]?.link!
+                                            ? { uri: defaultFeaturedImageAndThumbnails?.images![index]?.link! }
+                                            : require("../../../../../assets/images/app_logo.png")
+                                        }
+                                        resizeMode="cover"
+                                        className="h-[76px] w-[68px] rounded-2xl"
+                                    />
+                                </TouchableOpacity>
+                            )) }
+                        </View>
+                    </ScrollView>
                 </View>
 
                 {/*==== Available Sizes ====*/}
@@ -214,9 +238,9 @@ const VendorProductDetailsScreen: React.FC<IProps> = ({ route }) => {
                 { (selectedTab === "Description") ? (
                     <VendorProductDescriptionComponent product={ product! } />
                 ) : (selectedTab === "Reviews") ? (
-                    <ReviewComponent reviews={ reviewData?.reviews! } productID={ product!.productId! } />
+                    <ReviewComponent reviews={ reviewData?.reviews! } productID={ product!.productId! } loadingMessage={ loadingMessage } />
                 ) : (
-                    <VendorProductTimelineComponent timelines={ product!.timeLine! } />
+                    <VendorProductTimelineComponent timelines={ product!.timeLine! } handleFormatDate={ handleFormatDate } />
                 ) }
 
                 <View className="h-[1.5px] w-full mt-5 bg-gray-200" />
@@ -224,7 +248,18 @@ const VendorProductDetailsScreen: React.FC<IProps> = ({ route }) => {
                 {/* ==== Add Product ==== */}
                 <View className="h-auto w-full mt-6 flex-row">
                     <TouchableOpacity
-                        onPress={ () => null }
+                        onPress={ () => {
+                            dispatch(setProduct(product!));
+                            dispatch(setProductMode("Draft"));
+                            dispatch(setSelectedStep(1));
+                            navigation.navigate(
+                                product.productType === "bespokeCloth" ? "addBespokeClothesScreen" :
+                                product.productType === "readyMadeCloth" ? "addReadyMadeClothesScreen" :
+                                product.productType === "bespokeShoe" ? "addBespokeShoesScreen" :
+                                product.productType === "readyMadeShoe" ? "addReadyMadeShoesScreen" :
+                                "addAccessoriesScreen"
+                            );
+                        } }
                         className="h-[55px] mt-5 flex-1 flex-row items-center justify-center rounded-xl bg-blue-100"
                     >
                         <Edit2 className="text-blue-800" variant="Bold" />
@@ -234,7 +269,7 @@ const VendorProductDetailsScreen: React.FC<IProps> = ({ route }) => {
                     <View className="w-[20px]" />
 
                     <TouchableOpacity
-                        onPress={ () => null }
+                        onPress={ () => setShowDeleteProductWarningModal(true) }
                         className="h-[55px] mt-5 flex-1 flex-row items-center justify-center rounded-xl bg-red-100"
                     >
                         <Trash className="text-red-700" variant="Bold" />
@@ -243,28 +278,26 @@ const VendorProductDetailsScreen: React.FC<IProps> = ({ route }) => {
                     </TouchableOpacity>
                 </View>
 
-                <View className="h-auto w-full flex-row">
-                    <TouchableOpacity
-                        onPress={ () => null }
-                        className="h-[55px] mt-5 flex-1 flex-row items-center justify-center rounded-xl bg-lightOrange"
-                    >
-                        <View className="w-[5px]" />
-                        <Text className="font-montserratMedium text-amber-700">Manage Variations</Text>
-                    </TouchableOpacity>
-                    <View className="w-[20px]" />
-
-                    <TouchableOpacity
-                        onPress={ () => null }
-                        className="h-[55px] mt-5 flex-1 flex-row items-center justify-center rounded-xl bg-yellow-50"
-                    >
-                        <View className="w-[5px]" />
-                        <Text className="font-montserratMedium text-amber-600">Add Promo</Text>
-                    </TouchableOpacity>
-                </View>
+                <TouchableOpacity
+                    onPress={ () => navigation.navigate("promoScreen") }
+                    className="h-[55px] mt-5 flex-1 flex-row items-center justify-center rounded-xl bg-yellow-50"
+                >
+                    <View className="w-[5px]" />
+                    <Text className="font-montserratMedium text-amber-600">Add Promo</Text>
+                </TouchableOpacity>
 
                 <View className="h-10" />
 
             </ScrollView>
+
+            {/* ==== Show Delete Product Warning Popup ==== */}
+            { showDeleteProductWarningModal &&
+                <DeleteProducWarningPopupModal
+                    productID={ product?.productId! }
+                    setShowDeleteProductWarningModal={ setShowDeleteProductWarningModal }
+                    handleDeleteProduct={ handleDeleteProduct }
+                />
+            }
             
             { isLoading && 
                 <AppLoader loadingAdditionalMessage={ loadingMessage } />

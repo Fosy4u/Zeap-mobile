@@ -8,6 +8,7 @@ interface IVendorProductDetails {
     disabled?:         boolean;
     shopId?:           string;
     title?:            string;
+    subTitle?:         string;
     status?:           string;
     currentStep?:      number;
     description?:      string;
@@ -21,12 +22,13 @@ interface IVendorProductDetails {
     timeLine?:         ITimeLine[];
     rejectionReasons?: any[];
     currency?:         Currency;
-}
+    autoPriceAdjustment?: IAutoPriceAdjustment;
+};
 
 interface IPromo {
     promoId?:            string;
     discountPercentage?: number;
-}
+};
 
 interface ICategories {
     age?:          IAge;
@@ -36,35 +38,42 @@ interface ICategories {
     brand?:        string;
     design?:       string[];
     occasion?:     string[];
+    sleeveLength?: string;
     heelHeight?:   string;
     heelType?:     string;
     fastening?:    string[];
     main?:         string[];
     productGroup?: string;
-}
+};
 
 interface IAge {
     ageGroup?: string;
-}
+    ageRange?: string;
+};
+
+interface IAutoPriceAdjustment {
+    isAdjustable?: boolean;
+    adjustmentPercentage?: number;
+};
 
 interface IColor {
     value?:  string;
     images?: IImage[];
     _id?:    string;
-}
+};
 
 interface IImage {
     link?:      string;
     name?:      string;
     isDefault?: boolean;
     _id?:       string;
-}
+};
 
 interface Currency {
     name?:   string;
     symbol?: string;
     _id?:    string;
-}
+};
 
 interface By {
     _id?:                 string;
@@ -94,12 +103,12 @@ interface By {
     country?:             string;
     phoneNumber?:         string;
     role?:                string;
-}
+};
 
 interface ImageURL {
     link?: string;
     name?: string;
-}
+};
 
 interface IShop {
     isMakeUpArtist?: boolean;
@@ -115,14 +124,14 @@ interface IShop {
     updatedAt?:      Date;
     createdAt?:      Date;
     __v?:            number;
-}
+};
 
 interface ITimeLine {
     date?:        string;
     description?: string;
     actionBy?:    By;
     _id?:         string;
-}
+};
 
 interface IVariation {
     sku?:        string;
@@ -134,12 +143,13 @@ interface IVariation {
     bespoke?:    IBespoke;
     _id?:        string;
     currency?:   string;
-}
+};
 
 interface IBespoke {
     isBespoke?:       boolean;
-    availableColors?: any[];
-}
+    colorType?:      string;
+    availableColors?: string[];
+};
 
-export type { ICategories, IAge, IColor, IImage, Currency, By, ImageURL, IShop, ITimeLine, IVariation };
+export type { ICategories, IAge, IAutoPriceAdjustment, IColor, IImage, Currency, By, ImageURL, IShop, ITimeLine, IVariation };
 export default IVendorProductDetails;

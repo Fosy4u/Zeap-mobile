@@ -1,23 +1,22 @@
-import api from "../../../../redux/api/api";
-import IVendorProduct from "../models/vendorProduct_model";
+import rootAPI from "../../../../redux/api/rootAPI.ts";
 import IVendorProductDetails from "../models/vendorProductDetails_model";
 import IVendorProductQueryParams from "../models/vendorProductFilter_model";
-import IVendorProductPreview from "../../../general/models/vendorReview_model";
+import IPromotion, { IPromotionPayload } from "../models/promotion_model";
 
-const productAPI = api.injectEndpoints({
+const productAPI = rootAPI.injectEndpoints({
     overrideExisting: true,
     endpoints: (builder) => ({
         // Get all products
-        getProducts: builder.query<IVendorProduct[], IVendorProductQueryParams>({
+        getProducts: builder.query<IVendorProductDetails[], IVendorProductQueryParams>({
             query: ({ shopId, productType, accessoryType, price, sizes, title, colors, brand, design, gender, ageGroup, ageRange, style, main, sleeveLength, fastening, fit, occasion, productId, limit, pageNumber }) => ({
-                url: "/products/live",
+                url: "/products/auth/shop",
                 method: "GET",
                 params: {
                     shopId, productType, accessoryType, price, sizes, title, colors, brand, design, gender, ageGroup, ageRange, style, main, sleeveLength, fastening, fit, occasion, productId, limit, pageNumber
                 }
             }),
             providesTags: ["Products"],
-            transformResponse: (response: { data: {  products: IVendorProduct[] } }) => {
+            transformResponse: (response: { data: {  products: IVendorProductDetails[] } }) => {
                 return response.data.products;
             }
         }),
@@ -33,14 +32,58 @@ const productAPI = api.injectEndpoints({
                 return response.data;
             },
         }),
-        
+
         // Delete a product
-        deleteProduct: builder.mutation<IVendorProduct, string>({
-            query: (productId) => ({
-                url: `/products/${productId}`,
-                method: "DELETE",
+        deleteProduct: builder.mutation<any, { productIds: string[]; }>({
+            query: (productIds) => ({
+                url: "/product/delete",
+                method: "PUT",
+                body: productIds,
             }),
-            invalidatesTags: ["Product"],
+            invalidatesTags: ["Products", "Product"],
+            transformResponse: (response: { message: string }) => {
+                return response.message;
+            }
+        }),
+
+        // Get available promotions
+        getAvailablePromos: builder.query<IPromotion[], void>({
+            query: () => ({
+                url: "/promos/available",
+                method: "GET",
+            }),
+            providesTags: ["Promotions"],
+            transformResponse: (response: { data: IPromotion[]}) => {
+                return response.data;
+            }
+        }),
+
+        // Get product's promotion
+        getProductPromotion: builder.query<IPromotion, string>({
+            query: (productID) => ({
+                url: "/product/promo",
+                method: "GET",
+                params: {
+                    productId: productID,
+                }
+            }),
+            providesTags: ["Promotion", "Product"],
+            transformResponse: (response: { data: { promo: IPromotion }}) => {
+                return response.data.promo;
+            }
+        }),
+
+        // Apply promotion
+        applyPromotion: builder.mutation<any, IPromotionPayload>({
+            query: (requestData) => ({
+                url: "/promo/join",
+                method: "PUT",
+                body: requestData,
+            }),
+            invalidatesTags: ["Products", "Product"],
+            transformResponse: (response: { message: string }) => {
+                return response.message;
+            }
         }),
     }),
 });
@@ -49,4 +92,7 @@ export const {
     useLazyGetProductsQuery,
     useLazyGetProductByProductIDQuery,
     useDeleteProductMutation,
+    useLazyGetAvailablePromosQuery,
+    useLazyGetProductPromotionQuery,
+    useApplyPromotionMutation,
 } = productAPI;

@@ -1,9 +1,11 @@
-import api from "../../../../redux/api/api";
+import rootAPI from "../../../../redux/api/rootAPI.ts";
+import { allBodyMeasurementTemplateRoute, bodyMeasurementEnumsRoute, bodyMeasurementGuideRoute, requiredMeasurementFormFieldsRoute, singleBodyMeasurementTemplateRoute } from "../../../../routes/api/api_route.ts";
 import IBodyMeasurement from "../models/bodyMeasurement_model.ts";
 import IBodyMeasurementEnumerations from "../models/bodyMeasurementEnumeration_model.ts";
+import IBodyMeasurementGuide from "../models/bodyMeasurementGuide_model.ts";
 import IRequiredMeasurementFormFields from "../models/requiredMeasurementFormField_model.ts";
 
-const measurementAPI = api.injectEndpoints({
+const measurementAPI = rootAPI.injectEndpoints({
     endpoints: (builder) => ({
         // Add Body Measurement Template
         addBodyMeasurementTemplate: builder.mutation<any, any>({
@@ -12,16 +14,16 @@ const measurementAPI = api.injectEndpoints({
                 method: "POST",
                 body: requestData,
             }),
-            invalidatesTags: ["BodyMeasurements", "Cart", "CartTotal"],
+            invalidatesTags: ["BodyMeasurements", "Cart"],
             transformResponse: (response: { data: any }) => {
                 return response.data;
             },
         }),
 
-        // Get All Existing Body Measurement Templates
-        getAllBodyMeasurementTemplates: builder.query<IBodyMeasurement[], void>({
+        // Get All Saved Body Measurements
+        getAllSavedMeasurements: builder.query<IBodyMeasurement[], void>({
             query: () => ({
-                url: "/bodyMeasurementTemplate/authUser",
+                url: allBodyMeasurementTemplateRoute,
                 method: "GET",
             }),
             providesTags: ["BodyMeasurements"],
@@ -30,11 +32,14 @@ const measurementAPI = api.injectEndpoints({
             },
         }),
 
-        // Get Existing Body Measurement Template
-        getBodyMeasurementTemplate: builder.query<IBodyMeasurement, string>({
+        // Get Single Body Measurement
+        getSingleSavedMeasurement: builder.query<IBodyMeasurement, string>({
             query: (templateID) => ({
-                url: `/bodyMeasurementTemplate?template_id=${templateID}`,
+                url: singleBodyMeasurementTemplateRoute,
                 method: "GET",
+                params: {
+                    template_id: templateID
+                }
             }),
             providesTags: ["BodyMeasurement"],
             transformResponse: (response: { data: IBodyMeasurement }) => {
@@ -45,8 +50,11 @@ const measurementAPI = api.injectEndpoints({
         // Get Required Measurement Form Fields
         getRequiredMeasurementFormFields: builder.query<IRequiredMeasurementFormFields, string>({
             query: (productID) => ({
-                url: `/bodyMeasurement/product?productId=${encodeURIComponent(productID)}`,
+                url: requiredMeasurementFormFieldsRoute,
                 method: "GET",
+                params: {
+                    productId: productID
+                }, // Use params here
             }),
             providesTags: ["RequiredMeasurementFormFields"],
             transformResponse: (response: { data: IRequiredMeasurementFormFields }) => {
@@ -57,7 +65,7 @@ const measurementAPI = api.injectEndpoints({
         // Get Body Measurement Enumerations
         getBodyMeasurementEnumerations: builder.query<IBodyMeasurementEnumerations, void>({
             query: () => ({
-                url: `/bodyMeasurementEnums`,
+                url: bodyMeasurementEnumsRoute,
                 method: "GET",
             }),
             providesTags: ["BodyMeasurementEnumerations"],
@@ -65,14 +73,28 @@ const measurementAPI = api.injectEndpoints({
                 return response.data;
             },
         }),
+
+        // Get Body Measurement Guide
+        getBodyMeasurementGuide: builder.query<IBodyMeasurementGuide[], string>({
+            query: (gender: string) => ({
+                url: bodyMeasurementGuideRoute,
+                method: "GET",
+                params: { gender },
+            }),
+            providesTags: ["BodyMeasurementGuide"],
+            transformResponse: (response: { data: IBodyMeasurementGuide[] }) => {
+                return response.data;
+            },
+        })
     }),
 });
 
 export const {
     useAddBodyMeasurementTemplateMutation,
-    useLazyGetAllBodyMeasurementTemplatesQuery,
-    useGetBodyMeasurementTemplateQuery,
+    useLazyGetAllSavedMeasurementsQuery,
+    useGetSingleSavedMeasurementQuery,
     useLazyGetRequiredMeasurementFormFieldsQuery,
-    useGetBodyMeasurementEnumerationsQuery
+    useGetBodyMeasurementEnumerationsQuery,
+    useLazyGetBodyMeasurementGuideQuery
 } = measurementAPI;
 export default measurementAPI;

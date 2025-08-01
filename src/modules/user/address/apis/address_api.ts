@@ -1,9 +1,9 @@
-import api from "../../../../redux/api/api";
+import rootAPI from "../../../../redux/api/rootAPI.ts";
 import IAddress from "../models/address_model";
 import { IAddressFormFieldsSchema } from "../validations/address_validation";
 
 
-const addressAPI = api.injectEndpoints({
+const addressAPI = rootAPI.injectEndpoints({
     endpoints: (builder) => ({
 
         // Add delivery address
@@ -20,13 +20,14 @@ const addressAPI = api.injectEndpoints({
         }),
 
         // Get all delivery addresses
-        getAllDeliveryAddresses: builder.query<any, void>({
-            query: () => ({
-                url: "/deliveryAddresses",
+        getDeliveryAddresses: builder.query<IAddress[], { user_id: string }>({
+            query: ({ user_id }) => ({
+                url: `/deliveryAddresses?user_id=${user_id}`,
                 method: "GET",
+                // params: { user_id },
             }),
             providesTags: ["DeliveryAddresses"],
-            transformResponse: (response: { data: any }) => {
+            transformResponse: (response: { data: IAddress[] }) => {
                 return response.data;
             },
         }),
@@ -43,12 +44,40 @@ const addressAPI = api.injectEndpoints({
                 return response.data;
             },
         }),
+
+        // Set as default address
+        setAsDefaultAddress: builder.mutation<IAddress, { address_id: string }>({
+            query: ({ address_id }) => ({
+                url: "/deliveryAddress/setDefault",
+                method: "PUT",
+                body: { address_id },
+            }), 
+            invalidatesTags: ["DeliveryAddress"],
+            transformResponse: (response: { data: IAddress }) => {
+                return response.data;
+            },
+        }),
+
+        // Delete address
+        deleteAddress: builder.mutation<IAddress, { address_id: string }>({
+            query: ({ address_id }) => ({
+                url: "/deliveryAddress/delete",
+                method: "DELETE",
+                body: { address_id },
+            }),
+            invalidatesTags: ["DeliveryAddress"],
+            transformResponse: (response: { data: IAddress }) => {
+                return response.data;
+            },
+        }),
     }),
 });
 
-export const { 
+export const {
     useAddDeliveryAddressMutation,
-    useLazyGetAllDeliveryAddressesQuery,
+    useLazyGetDeliveryAddressesQuery,
     useLazyGetDeliveryAddressQuery,
+    useSetAsDefaultAddressMutation,
+    useDeleteAddressMutation,
 } = addressAPI;
 export default addressAPI;

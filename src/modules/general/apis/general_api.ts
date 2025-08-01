@@ -1,7 +1,7 @@
-import api from "../../../redux/api/api";
+import rootAPI from "../../../redux/api/rootAPI.ts";
 import IProductOptions from "../models/productOptions_model";
 
-const generalAPI = api.injectEndpoints({
+const generalAPI = rootAPI.injectEndpoints({
     endpoints: (builder) => ({
         // Get Products Options
         getProductOptions: builder.query<IProductOptions, void>({

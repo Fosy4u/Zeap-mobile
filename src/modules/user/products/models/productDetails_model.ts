@@ -38,6 +38,7 @@ interface Categories {
     occasion?:     string[];
     heelHeight?:   string;
     heelType?:     string;
+    sleeveLength?: string;
     fastening?:    string[];
     main?:         string[];
     productGroup?: string;

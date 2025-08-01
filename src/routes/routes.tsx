@@ -12,30 +12,30 @@ import ForgotPasswordScreen from '../modules/auths/screen/forgotPassword_screen'
 import OTPScreen from '../modules/auths/screen/otp_screen';
 import ResetPasswordScreen from '../modules/auths/screen/resetPassword_screen';
 import RegisterScreen from '../modules/auths/screen/register_screen';
-import ProfileSetupScreen from '../modules/profile/screen/profileSetup_screen';
+import LoginInfoScreen from '../modules/auths/screen/loginInfo_screen';
+import ProfileSetupScreen from '../modules/profile/screens/profileSetup_screen.tsx';
 import ShopSetupScreen from "../modules/vendor/setting/screen/shopSetup_screen";
 import HomeScreen from '../modules/user/home/screens/home_screen';
 import DashboardScreen from '../modules/user/home/screens/dashboard_screen';
-import CartScreen from '../modules/user/cart/screen/cart_screen';
+import CartScreen from '../modules/user/cart/screens/cart_screen.tsx';
 import SavedScreen from '../modules/user/saved/screen/saved_screen';
-import ProfileScreen from '../modules/profile/screen/profile_screen';
+import ProfileScreen from '../modules/profile/screens/profile_screen.tsx';
 import CategoryScreen from '../modules/user/products/screens/allCategory_screen.tsx';
 import ProductListScreen from '../modules/user/products/screens/productList_screen .tsx';
 import InviteFriendScreen from '../modules/user/home/screens/inviteFriend_screen ';
 import ProductDetailScreen from '../modules/user/products/screens/productDetails_screen.tsx';
 import MeasurementScreen from '../modules/user/measurements/screens/measurement_screen.tsx';
-import DeliveryAddressScreen from '../modules/user/address/screens/deliveryAddress_screen.tsx';
 import VendorHomeScreen from '../modules/vendor/home/screens/vendorHome_screen';
 import MarketScreen from '../modules/vendor/market/screens/market_screen';
 import VendorDashboardScreen from '../modules/vendor/home/screens/vendorDashboard_screen';
-import VendorNotificationsScreen from '../modules/vendor/notifications/screens/notifications_screen';
+import VendorNotificationsScreen from '../modules/notifications/screens/notifications_screen';
 import ReviewListScreen from '../modules/general/screens/reviewList_screen.tsx';
-import PersonalInformationScreen from '../modules/profile/screen/personalInformation_screen';
-import EditAccountDetailsScreen from '../modules/profile/screen/editAccountDetails_screen';
-import EditDeliveryAddressScreen from '../modules/profile/screen/editDeliveryAddress_screen';
+import PersonalInformationScreen from '../modules/profile/screens/personalInformation_screen.tsx';
+import EditAccountDetailsScreen from '../modules/profile/screens/editAccountDetails_screen.tsx';
+import EditDeliveryAddressScreen from '../modules/user/address/screens/editDeliveryAddress_screen.tsx';
 import PaymentScreen from '../modules/vendor/payments/screens/payment_screen';
 import OverviewScreen from '../modules/vendor/home/screens/overview_screen';
-import PromoScreen from '../modules/vendor/home/screens/promo_screen';
+import PromoScreen from '../modules/vendor/products/screens/promo_screen.tsx';
 import VendorProductsScreen from "../modules/vendor/products/screens/vendorProducts_screen.tsx";
 import VendorProductDetailsScreen from "../modules/vendor/products/screens/vendorProductDetails_screen.tsx";
 import AddProductScreen from "../modules/vendor/products/screens/addProduct_screen.tsx";
@@ -43,10 +43,28 @@ import AddReadyMadeClothesScreen from "../modules/vendor/products/screens/addRea
 import SearchItemScreen from '../modules/user/products/screens/searchItem_screen.tsx';
 import SearchResultsScreen from '../modules/user/products/screens/searchResults_screen.tsx';
 import UserPaymentScreen from '../modules/user/payment/screens/userPayment_screen.tsx';
-import UserNotificationsScreen from '../modules/user/notifications/screens/notifications_screen.tsx';
+import UserNotificationsScreen from '../modules/notifications/screens/notifications_screen.tsx';
 import OrderRequestDetailsScreen from '../modules/vendor/orders/screens/orderRequest_screen.tsx';
 import OrdersScreen from '../modules/vendor/orders/screens/orders_screen.tsx';
 import AddBespokeClothesScreen from '../modules/vendor/products/screens/addBespokeClothes_screen.tsx';
+import AddBespokeShoesScreen from '../modules/vendor/products/screens/addBespokeShoes_screen.tsx';
+import AddReadyMadeShoesScreen from '../modules/vendor/products/screens/addReadyMadeShoes_screen.tsx';
+import AddAccessoriesScreen from '../modules/vendor/products/screens/addAccessories_screen.tsx';
+import PromotionScreen from '../modules/vendor/products/screens/promotion_screen.tsx';
+import UserOrdersScreen from '../modules/user/orders/screens/orders_screen';
+import UserOrderDetailsScreen from '../modules/user/orders/screens/orderDetails_screen';
+import AddressScreen from '../modules/user/address/screens/address_screen.tsx';
+import CheckoutScreen from '../modules/user/cart/screens/checkout_screen.tsx';
+import SettingsScreen from '../modules/settings/screens/settings_screen.tsx';
+import CurrencySettingsScreen from '../modules/settings/screens/currencySettings_screen.tsx';
+import LanguageSettingsScreen from '../modules/settings/screens/languageSettings_screen.tsx';
+import NotificationSettingsScreen from '../modules/settings/screens/notificationSettings_screen.tsx';
+import SecuritySettingsScreen from '../modules/settings/screens/securitySettings_screen.tsx';
+import ChangePasswordSettingsScreen from '../modules/settings/screens/changePasswordSettings_screen.tsx';
+import UserDashboardScreen from '../modules/profile/screens/userDashboard_screen.tsx';
+import PointAndVoucherScreen from '../modules/user/pointAndVoucher/screens/pointAndVoucher_screen.tsx';
+import ReviewAndRatingScreen from '../modules/user/raviewAndRating/screens/reviewAndRating_screen.tsx';
+import RateAndReviewScreen from '../modules/user/raviewAndRating/screens/rateAndReview_screen.tsx';
 
 const Stack = createNativeStackNavigator<RootNavigationStackModel>();
 
@@ -81,6 +99,9 @@ const AppRoutes = () => {
         <Stack.Screen
           name="signUpScreen" component={RegisterScreen} options={{ headerShown: false }}
         />
+        <Stack.Screen
+          name="loginInfoScreen" component={LoginInfoScreen} options={{ headerShown: false }}
+        />
 
         {/**
          * USERS ROUTES
@@ -111,9 +132,11 @@ const AppRoutes = () => {
 
         {/* ==== Cart ==== */}
         <Stack.Screen name="cartScreen" component={CartScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="checkoutScreen" component={CheckoutScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="deliveryMethodScreen" component={AddressScreen} options={{ headerShown: false }} />
 
         {/*==== Address ====*/}
-        <Stack.Screen name="deliveryAddressScreen" component={DeliveryAddressScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="addressScreen" component={AddressScreen} options={{ headerShown: false }} />
 
         {/*==== User Payment ====*/}
         <Stack.Screen name="userPaymentScreen" component={UserPaymentScreen} options={{ headerShown: false }} />
@@ -127,6 +150,7 @@ const AppRoutes = () => {
         <Stack.Screen
           name="profileScreen" component={ProfileScreen} options={{ headerShown: false }}
         />
+        <Stack.Screen name="profileSetupScreen" component={ProfileSetupScreen} options={{ headerShown: false }} />
         <Stack.Screen
           name="personalInformationScreen" component={PersonalInformationScreen} options={{ headerShown: false }}
         />
@@ -136,14 +160,23 @@ const AppRoutes = () => {
         <Stack.Screen
           name="editDeliveryAddressScreen" component={EditDeliveryAddressScreen} options={{ headerShown: false }}
         />
+        <Stack.Screen
+          name="userDashboardScreen" component={UserDashboardScreen} options={{ headerShown: false }}
+        />
+
+        {/* ==== Points & Vouchers ==== */}
+        <Stack.Screen name="pointAndVoucherScreen" component={PointAndVoucherScreen} options={{ headerShown: false }} />
+
+        {/* ==== Review & Rating ==== */}
+        <Stack.Screen name="reviewAndRatingScreen" component={ReviewAndRatingScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="rateAndReviewScreen" component={RateAndReviewScreen} options={{ headerShown: false }} />
 
         {/* ==== Settings ==== */}
-        <Stack.Screen name="profileSetupScreen" component={ProfileSetupScreen} options={{ headerShown: false }} />
-
-        {/* ==== Others ==== */}
         <Stack.Screen name="userNotificationsScreen" component={UserNotificationsScreen} options={{ headerShown: false }} />
 
-
+        {/* ==== Orders ==== */}
+        <Stack.Screen name="ordersScreen" component={UserOrdersScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="orderDetailsScreen" component={UserOrderDetailsScreen} options={{ headerShown: false }} />
 
         {/**
          * VENDORS ROUTES
@@ -172,6 +205,15 @@ const AppRoutes = () => {
         <Stack.Screen
           name="addReadyMadeClothesScreen" component={AddReadyMadeClothesScreen} options={{ headerShown: false }}
         />
+        <Stack.Screen
+          name="addBespokeShoesScreen" component={AddBespokeShoesScreen} options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="addReadyMadeShoesScreen" component={AddReadyMadeShoesScreen} options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="addAccessoriesScreen" component={AddAccessoriesScreen} options={{ headerShown: false }}
+        />
 
         {/* ==== Orders ==== */}
         <Stack.Screen
@@ -185,8 +227,6 @@ const AppRoutes = () => {
         <Stack.Screen
           name="marketScreen" component={MarketScreen}  options={{ headerShown: false }}
         />
-
-        {/* ==== Settings ==== */}
         <Stack.Screen
           name="shopSetupScreen" component={ShopSetupScreen} options={{ headerShown: false }}
         />
@@ -196,6 +236,15 @@ const AppRoutes = () => {
         <Stack.Screen name="paymentScreen" component={PaymentScreen} options={{ headerShown: false }} />
         <Stack.Screen name="overviewScreen" component={OverviewScreen} options={{ headerShown: false }} />
         <Stack.Screen name="promoScreen" component={PromoScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="promotionScreen" component={PromotionScreen} options={{ headerShown: false }} />
+
+        {/* ==== Settings ==== */}
+        <Stack.Screen name="settingsScreen" component={SettingsScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="languageSettingsScreen" component={LanguageSettingsScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="currencySettingsScreen" component={CurrencySettingsScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="notificationSettingsScreen" component={NotificationSettingsScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="securitySettingsScreen" component={SecuritySettingsScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="changePasswordSettingsScreen" component={ChangePasswordSettingsScreen} options={{ headerShown: false }} />
       </Stack.Navigator>
     </NavigationContainer>
   );
