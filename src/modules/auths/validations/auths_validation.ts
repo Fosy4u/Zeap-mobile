@@ -5,9 +5,6 @@ const registerUserSchema = yup.object().shape({
         .string()
         .required("Email is required.")
         .email("Email must be a valid email."),
-    isVendor: yup
-        .boolean()
-        .required("Seller option is required."),
     password: yup
         .string()
         .required("Password is required."),

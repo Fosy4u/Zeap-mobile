@@ -1,5 +1,5 @@
 import { yupResolver } from "@hookform/resolvers/yup";
-import { useAddDeliveryAddressMutation, useLazyGetAllDeliveryAddressesQuery, useLazyGetDeliveryAddressQuery } from "../apis/address_api";
+import { useAddDeliveryAddressMutation, useLazyGetDeliveryAddressesQuery, useLazyGetDeliveryAddressQuery, useDeleteAddressMutation, useSetAsDefaultAddressMutation } from "../apis/address_api";
 import { SubmitHandler, useForm } from "react-hook-form";
 import addressFormFieldsSchema, { IAddressFormFieldsSchema } from "../validations/address_validation";
 import { useNavigation } from "@react-navigation/native";
@@ -7,71 +7,182 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import RootNavigationStackModel from "../../../../routes/model/routes_model";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../../../redux/store/store";
-import { setAllSavedAddresses, setSelectedAddress, setSelectedDeliveryAddressID } from "../slices/address_slice";
+import { setDeliveryAddresses, setIsLoading, setLoadingMessage, setSelectedAddress, setShowNewDeliveryAddressForm } from "../slices/address_slice";
+import handleError from "../../../general/hooks/errorHandler_hook";
+import IAddress from "../models/address_model";
+import { useEffect } from "react";
 
 
 const useAddressHook = () => {
     const { selectedAddress } = useSelector((state: RootState) => state.addressState);
+    const { userData } = useSelector((state: RootState) => state.profileState );
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const dispatch = useDispatch();
-    // console.log("SELECTED ADDRESS::: ", selectedAddress);
+    // console.log("USER DATA::: ", userData);
 
-    const [addDeliveryAddress, { isLoading }] = useAddDeliveryAddressMutation();
-    const [getAllDeliveryAddresses, { data: allDeliveryAddresses, isLoading: isLoadingAllDeliveryAddresses }] = useLazyGetAllDeliveryAddressesQuery();
+    const [addDeliveryAddress] = useAddDeliveryAddressMutation();
+    const [getDeliveryAddresses] = useLazyGetDeliveryAddressesQuery();
     const [getDeliveryAddress, { data: deliveryAddress }] = useLazyGetDeliveryAddressQuery();
+    const [setAsDefaultAddress] = useSetAsDefaultAddressMutation();
+    const [deleteAddress] = useDeleteAddressMutation();
 
-    const { control, handleSubmit, formState: { errors }, getValues } = useForm<IAddressFormFieldsSchema>({
+    const { control, handleSubmit, formState: { errors }, getValues, reset } = useForm<IAddressFormFieldsSchema>({
         defaultValues: {
-            address: selectedAddress.address! || "",
-            region: selectedAddress.region! || "",
-            country: selectedAddress.country! || "",
-            postalCode: "",
-            phoneNumber: selectedAddress.phoneNumber! || ""
+            firstName: "",
+            lastName: "",
+            address: selectedAddress?.address! || "",
+            region: selectedAddress?.region! || "",
+            country: selectedAddress?.country! || "",
+            phoneNumber: selectedAddress?.phoneNumber! || ""
         },
         resolver: yupResolver(addressFormFieldsSchema)
     });
 
+    
+
     const onSubmit: SubmitHandler<IAddressFormFieldsSchema> = async (data) => {
-        console.log("DATA::: ", data);
+        dispatch(setLoadingMessage("Saving delivery address..."));
+        dispatch(setIsLoading(true));
 
-        try {
-            const addDeliveryAddressResponse = await addDeliveryAddress(data).unwrap();
-            dispatch(setSelectedDeliveryAddressID(addDeliveryAddressResponse._id!));
-            // console.log("RESPONSE DATA::: ", addDeliveryAddressResponse);
+        //  If user is not a guest, add delivery address else navigate the payment screen and pass the form data to the payment screen
+        if (userData.isGuest) {
+            // navigation.navigate("userPaymentScreen", { data });
+        } else {
+            try {
+                const addDeliveryAddressResponse = await addDeliveryAddress(data).unwrap();
+                console.log("RESPONSE DATA::: ", addDeliveryAddressResponse);
 
-            navigation.navigate("userPaymentScreen");
-        } catch (error) {
-            console.log("ERROR::: ", error);
+                if (addDeliveryAddressResponse) {
+                    dispatch(setSelectedAddress(addDeliveryAddressResponse));
+                    dispatch(setShowNewDeliveryAddressForm(false));
+
+                    // Get back the delivery addresses
+                    await handleGetDeliveryAddresses();
+                }
+            } catch (error) {
+                handleError(error);
+            } finally {
+                dispatch(setIsLoading(false));
+                dispatch(setLoadingMessage(""));
+            }
+        }
+        
+    };
+
+    // Handle update address form fiels.
+    const handleUpdateAddressFormFields = () => {
+        if (selectedAddress && Object.entries(selectedAddress).length > 0) {
+            // Reset the address form fields with the selected address values.
+            reset({
+                firstName: "",
+                lastName: "",
+                address: selectedAddress?.address! || "",
+                region: selectedAddress?.region! || "",
+                country: selectedAddress?.country! || "",
+                phoneNumber: selectedAddress?.phoneNumber! || ""
+            });
         }
     };
 
     // Get all delivery addresses
-    const handleGetAllDeliveryAddresses = async () => {
+    const handleGetDeliveryAddresses = async () => {
+        dispatch(setLoadingMessage("Fetching delivery addresses..."));
+        dispatch(setIsLoading(true));
+
+        const user_id = userData._id!
         try {
-            const allDeliveryAddressesResponse = await getAllDeliveryAddresses().unwrap();
-            dispatch(setAllSavedAddresses(allDeliveryAddressesResponse));
-            dispatch(setSelectedAddress(allDeliveryAddressesResponse[0]));
-            // console.log("RESPONSE DATA::: ", getAllDeliveryAddressesResponse);
+            const deliveryAddressesResponse = await getDeliveryAddresses({ user_id }).unwrap();
+
+            if (deliveryAddressesResponse) {
+                // Check which address that is the default and set it as the selected address else set the first address as the selected address
+                const defaultAddress = deliveryAddressesResponse.find((address: IAddress) => address.isDefault);
+                if (defaultAddress) {
+                    dispatch(setSelectedAddress(defaultAddress));
+                } else {
+                    dispatch(setSelectedAddress(deliveryAddressesResponse[0]));
+                }
+                dispatch(setDeliveryAddresses(deliveryAddressesResponse));
+            }
         } catch (error) {
-            console.log("ERROR::: ", error);
+            handleError(error);
+        } finally {
+            dispatch(setIsLoading(false));
+            dispatch(setLoadingMessage(""));
         }
     };
 
     // Get delivery address
     const handleGetDeliveryAddress = async (address_id: string) => {
+        dispatch(setLoadingMessage("Fetching delivery address..."));
+        dispatch(setIsLoading(true));
+
         try {
             const getDeliveryAddressResponse = await getDeliveryAddress({ address_id }).unwrap();
-            dispatch(setSelectedAddress(getDeliveryAddressResponse));
-            // console.log("RESPONSE DATA::: ", getDeliveryAddressResponse);
+
+            if (getDeliveryAddressResponse) {                
+                dispatch(setSelectedAddress(getDeliveryAddressResponse));
+            }
         } catch (error) {
-            console.log("ERROR::: ", error);
+            handleError(error);
+        } finally {
+            dispatch(setIsLoading(false));
+            dispatch(setLoadingMessage(""));
         }
     };
+
+    // Handle set as default address
+    const handleSetAsDefaultAddress = async (address_id: string) => {
+        dispatch(setLoadingMessage("Setting default address..."));
+        dispatch(setIsLoading(true));
+        
+        try {
+            const setAsDefaultAddressResponse = await setAsDefaultAddress({ address_id }).unwrap();
+
+            if (setAsDefaultAddressResponse) {
+                await handleGetDeliveryAddresses();
+            }
+        } catch (error) {
+            handleError(error);
+        } finally {
+            dispatch(setIsLoading(false));
+            dispatch(setLoadingMessage(""));
+        }
+    };
+
+    // Handle delete address
+    const handleDeleteAddress = async (address_id: string) => {
+        dispatch(setLoadingMessage("Deleting address..."));
+        dispatch(setIsLoading(true));
+
+        try {
+            const deleteAddressResponse = await deleteAddress({ address_id }).unwrap();
+
+            if (deleteAddressResponse) {
+                await handleGetDeliveryAddresses();
+            }
+        } catch (error) {
+            handleError(error);
+        } finally {
+            dispatch(setIsLoading(false));
+            dispatch(setLoadingMessage(""));
+        }
+    };
+
+    useEffect(() => {
+      handleUpdateAddressFormFields();
+    }, [selectedAddress, reset]);
+
+    useEffect(() => {
+        handleGetDeliveryAddresses();
+    }, []);
     
+
     return {
-        control, handleSubmit, onSubmit, errors, getValues, isLoading,
-        allDeliveryAddresses, handleGetAllDeliveryAddresses, isLoadingAllDeliveryAddresses,
+        control, handleSubmit, onSubmit, errors, getValues,
+        handleGetDeliveryAddresses,
         deliveryAddress, handleGetDeliveryAddress,
+        handleSetAsDefaultAddress,
+        handleDeleteAddress,
     };
 };
 

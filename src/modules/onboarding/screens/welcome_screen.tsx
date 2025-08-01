@@ -52,7 +52,7 @@ const WelcomeScreen = () => {
         </TouchableOpacity>
 
         <TouchableOpacity 
-          onPress={ () => null }
+          onPress={ () => navigation.navigate("homeScreen", { screen: "Dashboard" }) }
           className="h-[55px] w-full mt-5 flex flex-row items-center justify-center rounded-xl bg-lightGold"
         >
           <Text className="font-medium text-lg text-baseGreen">Continue As Guest</Text>

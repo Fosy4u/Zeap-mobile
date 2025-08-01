@@ -1,10 +1,10 @@
 import React from 'react';
 import {Text, TextInput, View} from "react-native";
 import { Control, Controller } from 'react-hook-form';
-import { IStepOneAddBespokeClothes } from '../../validations/addBespokeClothes_validation';
+import { IStepOneAddProduct } from '../../validations/addProduct_validation';
 
 interface IProps {
-    control: Control<IStepOneAddBespokeClothes>;
+    control: Control<IStepOneAddProduct>;
     errors: any;
 }
 

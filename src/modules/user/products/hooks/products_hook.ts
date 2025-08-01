@@ -3,10 +3,14 @@ import { IColor, IImage, IVariation } from "../models/productDetails_model";
 import { RootState } from "../../../../redux/store/store";
 import { IColorEnum } from "../../../general/models/productOptions_model";
 import { useEffect, useState } from "react";
-import { useIncreamentProductQuantityMutation, useDecreamentProductQuantityMutation, useRemoveProductFromCartMutation } from "../apis/product_api";
-import { setFeaturedPrice, setSelectedColor, setSelectedSize } from "../slices/product_slice";
-import { SubmitHandler } from "react-hook-form";
-import { ILikeReview } from "../../../general/validations/review_validation";
+import { useLazyGetProductByProductIDQuery, useLazyGetProductPromotionQuery, useAddProductToCartMutation, useLazyGetSizeGuideQuery, useLazyGetRecentlyViewedProductsQuery, useLazyGetRecommendedProductsQuery } from "../apis/product_api";
+import { setFeaturedPrice, setIsLoading, setLoadingMessage, setProduct, setProductPromotion, setReviewAndRating, setRecentlyViewedProducts, setRecommendedProducts, setSelectedColor, setSelectedSize, setSizeGuide } from "../slices/product_slice";
+import handleError from "../../../general/hooks/errorHandler_hook";
+import { useLazyGetProductReviewsQuery } from "../../../general/apis/review_api";
+import { addBespokeMultipleColorProduct, addBespokeSingleColorProduct, addReadyMadeProduct } from "../models/addProduct_model";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import RootNavigationStackModel from "../../../../routes/model/routes_model";
 
 
 /**
@@ -20,8 +24,10 @@ import { ILikeReview } from "../../../general/validations/review_validation";
  * }
  */
 const useProductsHook = () => {
-    const { product } = useSelector((state: RootState) => state.productState);
+
+    const { selectedColor, selectedSize, selectedQuantity } = useSelector((state: RootState) => state.productState);
     const { readyMadeClothesOptions, readyMadeShoesOptions, bespokeClothesOptions, bespokeShoesOptions, accessoriesOptions } = useSelector((state: RootState) => state.generalState);
+    const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const dispatch = useDispatch();
 
     const [featuredImage, setFeaturedImage] = useState<IImage>({
@@ -30,7 +36,6 @@ const useProductsHook = () => {
         isDefault: true,
         _id: "",
     });
-
     const [defaultFeaturedImageAndThumbnails, setDefaultFeaturedImageAndThumbnails] = useState<IColor>({
         value: "",
         images: [],
@@ -38,25 +43,46 @@ const useProductsHook = () => {
     });
     const [featuredColors, setFeaturedColors] = useState<IColorEnum[]>([]);
     
-    const [increamentProductQuantity, { isLoading: increamentProductQuantityLoading }] = useIncreamentProductQuantityMutation();
-    const [decreamentProductQuantity, { isLoading: decreamentProductQuantityLoading }] = useDecreamentProductQuantityMutation();
-    const [removeProductFromCart, { isLoading: removeProductFromCartLoading }] = useRemoveProductFromCartMutation();
+    const [getProductByProductID, { data: product }] = useLazyGetProductByProductIDQuery();
+    const [getProductPromotion] = useLazyGetProductPromotionQuery();
+    const [getProductReviews] = useLazyGetProductReviewsQuery();
+    const [addProductToCart] = useAddProductToCartMutation();
+    const [getRecentlyViewedProducts, { isLoading: recentlyViewedProductsLoading }] = useLazyGetRecentlyViewedProductsQuery();
+    const [getRecommendedProducts, { isLoading: recommendedProductsLoading }] = useLazyGetRecommendedProductsQuery();
+    const [getSizeGuide] = useLazyGetSizeGuideQuery();
 
-    useEffect(() => {
-        if (product) {
-            handleGetDefaultFeaturedImageAndThumbnails();
-            handleGetFeaturedColors();
+    // Handle get product by product ID
+    const handleGetProductByProductID = async (productID: string) => {
+        dispatch(setLoadingMessage("Fetching product..."));
+        dispatch(setIsLoading(true));
+
+        try {
+            const productResponse = await getProductByProductID(productID!).unwrap();
+            // console.log("PRODUCT RESPONSE::: ", productResponse);
+
+            if (productResponse) {
+                dispatch(setProduct(productResponse!));
+
+                // Get product promo and reviews
+                dispatch(setLoadingMessage("Fetching product promo and reviews..."));
+                const [productPromotionResponse, reviewAndRatingResponse] = await Promise.all([
+                    getProductPromotion(productID!).unwrap(),
+                    getProductReviews(productID!).unwrap(),
+                ]);
+
+                if (productPromotionResponse) {
+                    dispatch(setProductPromotion(productPromotionResponse));
+                }
+                if (reviewAndRatingResponse) {
+                    dispatch(setReviewAndRating(reviewAndRatingResponse));
+                }
+                dispatch(setIsLoading(false));
+                dispatch(setLoadingMessage(""));
+            }
+        } catch (error: any) {
+            handleError(error);
         }
-    }, [product, setFeaturedImage]);
-
-    useEffect(() => {
-        const firstAvailableVariation = product?.variations?.find((variation) => product?.sizes?.includes(variation.size!));
-        if (firstAvailableVariation) {
-            dispatch(setSelectedSize(firstAvailableVariation.size!));
-            dispatch(setFeaturedPrice(firstAvailableVariation.price!));
-        }
-    }, [product, product?.sizes!, product?.variations!, dispatch]);
-
+    };
 
     const handleGetDefaultFeaturedImageAndThumbnails = () => {
         const defaultImageAndThumbnails = product?.colors?.find((eachColor: IColor) => eachColor.images?.some((eachImage: IImage) => eachImage.isDefault === true));
@@ -137,73 +163,146 @@ const useProductsHook = () => {
         }
     };
 
-    // const handleAddProductToCart = async (productType: string) => {
-    //     try {
-    //         const productID = product?.productId || "";
-    //         const sku = product?.variations?.find(variation => variation.colorValue === selectedColor.name && variation.size === selectedSize)?.sku || "";
-    //         let requestData: addReadyMadeProduct || addBespokeMultipleColorProduct || addBespokeSingleColorProduct = {};
+    // Add product to cart
+    const handleAddProductToCart = async (productType: string) => {
+        dispatch(setLoadingMessage("Adding product to cart..."));
+        dispatch(setIsLoading(true));        
 
-    //         if (productType === "ReadyMade") {
-    //             requestData = {
-    //                 productId: productID,
-    //                 quantity: selectedQuantity,
-    //                 sku: sku
-    //             };
-    //         } 
-    //         if (productType === "Bespoke Muliple Color") {
-    //             requestData = {
-    //                 productId: productID,
-    //                 quantity: selectedQuantity,
-    //                 sku: "BESPOKE-MULTIPLE",
-    //                 bespokeInstruction: "Please follow the instructions on the product",
-    //                 bodyMeasurements: []
-    //             };
-    //         }
-    //         if (productType === "Bespoke Single Color") {
-    //             requestData = {
-    //                 productId: productID,
-    //                 quantity: selectedQuantity,
-    //                 sku: "BESPOKE",
-    //                 bespokeColor: selectedColor.name,
-    //                 bespokeInstruction: "Please follow the instructions on the product",
-    //                 bodyMeasurements: []
-    //             };
-    //         }
+        try {
+            const productID = product?.productId!;
+            const sku = product?.variations?.find((variation) => variation.colorValue === selectedColor.name && variation.size === selectedSize)?.sku || "";
+            let requestData: addReadyMadeProduct | addBespokeMultipleColorProduct | addBespokeSingleColorProduct = {
+                productId: "",
+                quantity: 0,
+                sku: "",
+                size: 0,
+            };
+
+            if (productType === "readyMadeShoe" || productType === "readyMadeCloth") {
+                requestData = {
+                    productId: productID,
+                    quantity: selectedQuantity,
+                    sku: sku,
+                    size: Number(selectedSize),
+                };
+            } 
+            if (productType === "Bespoke Muliple Color") {
+                requestData = {
+                    productId: productID,
+                    quantity: selectedQuantity,
+                    sku: "BESPOKE-MULTIPLE",
+                    bespokeInstruction: "Please follow the instructions on the product",
+                    bodyMeasurements: []
+                };
+            }
+            if (productType === "Bespoke Single Color") {
+                requestData = {
+                    productId: productID,
+                    quantity: selectedQuantity,
+                    sku: "BESPOKE",
+                    bespokeColor: selectedColor.name,
+                    bespokeInstruction: "Please follow the instructions on the product",
+                    bodyMeasurements: []
+                };
+            }
             
-    //         console.log("REQUEST DATA::: ", requestData);
-    //         const addProductResponse =  await addReadyMadeProductToCart(requestData).unwrap();
-    //         console.log("ADD PRODUCT RESPONSE::: ", addProductResponse);
-    //     } catch (error) {
-    //         console.log("ERROR::: ", error);
-    //     }
-    // };
+            // console.log("REQUEST DATA::: ", requestData);
+            const addProductResponse =  await addProductToCart(requestData).unwrap();
+            // console.log("ADD PRODUCT RESPONSE::: ", addProductResponse);
 
-    const handleIncreamentProductQuantity = async (sku: string) => {
-        try {
-            const itemQuantityResponse =  await increamentProductQuantity(sku).unwrap();
-            // console.log("ITEM QUANTITY RESPONSE::: ", itemQuantityResponse);
+            if (addProductResponse) {
+                dispatch(setIsLoading(false));
+                dispatch(setLoadingMessage(""));
+                
+                // Navigate to cart screen
+                navigation.navigate("cartScreen");
+            }
         } catch (error) {
-            console.log("ERROR::: ", error);
-        }
-    };
-    
-    const handleDecreamentProductQuantity = async (sku: string) => {
-        try {
-            const itemQuantityResponse =  await decreamentProductQuantity(sku).unwrap();
-            // console.log("ITEM QUANTITY RESPONSE::: ", itemQuantityResponse);
-        } catch (error) {
-            console.log("ERROR::: ", error);
+            handleError(error);
         }
     };
 
-    const handleRemoveProductFromCart = async (sku: string) => {
+    // Handle get recently viewed products
+    const handleGetRecentlyViewedProducts = async () => {
+        dispatch(setLoadingMessage("Fetching recently viewed products..."));
+        dispatch(setIsLoading(true));
+
         try {
-            const itemQuantityResponse =  await removeProductFromCart(sku).unwrap();
-            // console.log("ITEM QUANTITY RESPONSE::: ", itemQuantityResponse);
+            const recentlyViewedProductsResponse = await getRecentlyViewedProducts().unwrap();
+            // console.log("RECENTLY VIEWED PRODUCTS RESPONSE::: ", recentlyViewedProductsResponse);
+
+            if (recentlyViewedProductsResponse) {
+                dispatch(setRecentlyViewedProducts(recentlyViewedProductsResponse));
+                dispatch(setIsLoading(false));
+                dispatch(setLoadingMessage(""));
+            }
         } catch (error) {
-            console.log("ERROR::: ", error);
+            handleError(error);
+        } finally {
+            dispatch(setIsLoading(false));
+            dispatch(setLoadingMessage(""));
         }
     };
+
+    // Handle get recommended products
+    const handleGetRecommendedProducts = async () => {
+        dispatch(setLoadingMessage("Fetching recommended products..."));
+        dispatch(setIsLoading(true));
+
+        try {
+            const recommendedProductsResponse = await getRecommendedProducts().unwrap();
+            // console.log("RECOMMENDED PRODUCTS RESPONSE::: ", recommendedProductsResponse);
+
+            if (recommendedProductsResponse) {
+                dispatch(setRecommendedProducts(recommendedProductsResponse));
+                dispatch(setIsLoading(false));
+                dispatch(setLoadingMessage(""));
+            }
+        } catch (error) {
+            handleError(error);
+        } finally {
+            dispatch(setIsLoading(false));
+            dispatch(setLoadingMessage(""));
+        }
+    }
+
+    // Handle get the readyMade product size guide
+    const handleGetSizeGuide = async () => {
+        dispatch(setLoadingMessage("Fetching size guide..."));
+        dispatch(setIsLoading(true));
+
+        try {
+            const response = await getSizeGuide().unwrap();
+            // console.log("SIZE GUIDE RESPONSE::: ", JSON.stringify(response));
+
+            if (response) {
+                dispatch(setSizeGuide(response));
+                dispatch(setIsLoading(false));
+                dispatch(setLoadingMessage(""));
+            }
+        } catch (error) {
+            handleError(error);
+        } finally {
+            dispatch(setIsLoading(false));
+            dispatch(setLoadingMessage(""));
+        };
+    };
+
+    useEffect(() => {
+        if (product) {
+            handleGetDefaultFeaturedImageAndThumbnails();
+            handleGetFeaturedColors();
+            handleGetSizeGuide();
+        }
+    }, [product, setFeaturedImage]);
+
+    useEffect(() => {
+        const firstAvailableVariation = product?.variations?.find((variation) => product?.sizes?.includes(variation.size!));
+        if (firstAvailableVariation) {
+            dispatch(setSelectedSize(firstAvailableVariation.size!));
+            dispatch(setFeaturedPrice(firstAvailableVariation.price!));
+        }
+    }, [product, product?.sizes!, product?.variations!, dispatch]);
     
 
     return {
@@ -213,13 +312,11 @@ const useProductsHook = () => {
         handleUpdateDefaultFeaturedImageAndThumbnails,
         handleSizeSelection,
         handleColorSelection,
-        // handleAddProductToCart,
-        handleIncreamentProductQuantity,
-        handleDecreamentProductQuantity,
-        handleRemoveProductFromCart,
-        increamentProductQuantityLoading,
-        decreamentProductQuantityLoading,
-        removeProductFromCartLoading,
+        handleGetProductByProductID,
+        handleAddProductToCart,
+
+        handleGetRecentlyViewedProducts, recentlyViewedProductsLoading,
+        handleGetRecommendedProducts, recommendedProductsLoading,
     };
 };
 

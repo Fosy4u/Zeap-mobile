@@ -1,27 +1,42 @@
 import { useEffect, useState } from "react";
 import { Alert, PermissionsAndroid, Platform } from "react-native";
-import { Asset, ImageLibraryOptions, launchImageLibrary } from "react-native-image-picker";
-import { useSelector } from "react-redux";
+import { ImageLibraryOptions, launchImageLibrary } from "react-native-image-picker";
+import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../../../../redux/store/store";
-import { useUploadProductImagesMutation } from "../../apis/bespokeProduct_api";
-import { ur } from "intl-tel-input/i18n";
-import { getSavedAnonymousToken } from "../../../../../redux/services/authorizationHeader";
+import { useDeleteProductImageMutation, useSetDefaultProductImageMutation, useUpdateProductImagesMutation, useUploadProductImagesMutation } from "../../apis/bespokeProduct_api";
+import { useLazyGetProductByProductIDQuery } from "../../apis/product_api";
+import { setLoadingMessage, setProduct, setProductIsLoading, setSelectedStep } from "../../slices/vendorProductState_slice";
+import IVendorProductDetails from "../../models/vendorProductDetails_model";
 
 
 interface ImageFile {
-    uri: string;
-    name: string;
-    type: string;
-    size: number;
+    uri: string | undefined;
+    name: string | undefined;
+    type: string | undefined;
+    size: number | undefined;
+};
+interface UploadedImageFile {
+    uri: string | undefined;
+    name: string | undefined;
+    type: string | undefined;
+    size: number | undefined;
+    isDefault: boolean | undefined;
 };
 
 const useStepFourHook = () => {
 
-    const { selectedDraftProduct } = useSelector((state: RootState) => state.vendorProductState );
+    const { product } = useSelector((state: RootState) => state.vendorProductState );
     const [selectedImages, setSelectedImages] = useState<ImageFile[]>([]);
-    const [loadingMessage, setLoadingMessage] = useState("");
+    const [uploadedImages, setUploadedImages] = useState<UploadedImageFile[]>([]);
+    const [selectedDefaultImage, setSelectedDefaultImage] = useState<UploadedImageFile>({} as UploadedImageFile);
+    const [showDefaultImageModal, setShowDefaultImageModal] = useState(false);
+    const dispatch = useDispatch();
 
-    const [uploadProductImages, { isLoading, isSuccess }] = useUploadProductImagesMutation();
+    const [uploadProductImages] = useUploadProductImagesMutation();
+    const [updateProductImages] = useUpdateProductImagesMutation();
+    const [setDefaultProductImage] = useSetDefaultProductImageMutation();
+    const [deleteProductImage] = useDeleteProductImageMutation();
+    const [getProductByProductID] = useLazyGetProductByProductIDQuery();
 
     // Request gallery permissions for Android
     const requestPermission = async () => {
@@ -52,7 +67,7 @@ const useStepFourHook = () => {
         }
     };
 
-    // Handle the add image.
+    // Handle add image.
     const handleAddImage = async () => {
         // Check total number of images
         if (selectedImages.length >= 5) {
@@ -123,85 +138,29 @@ const useStepFourHook = () => {
         });
     };
 
-    // Handle the remove image.
+    // Handle remove image
     const handleRemoveImage = (index: number) => {
         setSelectedImages(prevState => prevState.filter((_, i) => i !== index));
     };
 
-
-    // Handle the upload image.
-    // const handleUploadImage = async () => {
-    //     setLoadingMessage("Updating body measurements...");
-    //     const productId = selectedDraftProduct?.productId || "";
-
-    //     // try {
-    //         // Check if there are images to upload
-    //         if (selectedImages.length === 0) {
-    //             Alert.alert("Error", "Please select at least one image to upload.");
-    //             setLoadingMessage("");
-    //             return;
-    //         }
-
-    //         // Create a FormData instance
-    //         const formData = new FormData();
-            
-    //         // formData.append("productId", productId);
-    //         // formData.append("color", "Bespoke");
-
-    //         let i = 0;
-
-    //         // selectedImages.forEach((image: ImageFile) => {
-    //         //     formData.append("images[" + i + "]", image as any);
-
-    //         //     i ++;
-    //         // });
-    //         console.log(selectedImages[0])
-    //         // formData.append("images", selectedImages[0]);
-            
-    //         // const uploadProductImagesResponseData = await fetch('https://zeap-api.onrender.com/product/update/addColorAndImages', {
-    //         //     method: 'PUT',
-    //         //     body: new URLSearchParams(formData),
-    //         //     headers: {
-    //         //         "Content-Type": "application/x-www-form-urlencoded",
-    //         //         "Authorization": `Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6IjMwYjIyMWFiNjU2MTdiY2Y4N2VlMGY4NDYyZjc0ZTM2NTIyY2EyZTQiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL3NlY3VyZXRva2VuLmdvb2dsZS5jb20vemVhcC03ZGUzZCIsImF1ZCI6InplYXAtN2RlM2QiLCJhdXRoX3RpbWUiOjE3NDI0NTYzMDYsInVzZXJfaWQiOiJvQlBGdkJNcmhiY3JSRGJkRnU1R20xNUY0bzgzIiwic3ViIjoib0JQRnZCTXJoYmNyUkRiZEZ1NUdtMTVGNG84MyIsImlhdCI6MTc0MjY4MDk1MiwiZXhwIjoxNzQyNjg0NTUyLCJlbWFpbCI6InNvYmFyNDc4MDdAcGF4bncuY29tIiwiZW1haWxfdmVyaWZpZWQiOmZhbHNlLCJmaXJlYmFzZSI6eyJpZGVudGl0aWVzIjp7ImVtYWlsIjpbInNvYmFyNDc4MDdAcGF4bncuY29tIl19LCJzaWduX2luX3Byb3ZpZGVyIjoicGFzc3dvcmQifX0.sxyPE6iXO_kl83YO4Se6-YFDpf09VvZoOvoeRxCfqpFZkEahVIL0XMjW3Lg4iedTQnk8YC5D129Zlqy6qFmFHUNlgLNWPTbFHiGlWFWgnwKX8lb0SnS4cbvJ4FW1rCarH_d9x5_UQQN9oq6VpFFo-Wjpcas7rWbHFfmoos5D2zHJQE_8P683AIfD1hNHpZmOgYtJF7SYWgUoYypY17Goiw15x4n-wgO7n2ku9tnlKlioLhDaqAPusoqwMuJtpVP_drV3tkzEAf8D6magRYWxJRQwtsNuPEcvfvE1FgeKuiniTqg1XVZe5-J3noup56jDjbEdfAJ_LVeQBe5Mdc7dJg`,
-    //         //     },
-    //         // })
-    //         // .then((response) => response.json())
-    //         // .then((response) => {
-    //         //         setLoadingMessage("");
-    //         //         console.log("RESPONSE: ", response);
-    //         // })
-    //         // .catch((error) => {
-    //         //     console.log("ERROR: ", error);
-    //         // });
-            
-    //         await uploadProductImages({
-    //             body: formData
-    //         })
-    //             .unwrap()
-    //             .then((response) => {
-    //                 setLoadingMessage("");
-    //             })
-    //             .catch((error) => {
-    //                 console.log("ERROR: ", error);
-    //             });
-
-    //         // if (uploadProductImagesResponseData) {
-    //         // }
-    //     // } catch (error) {
-    //     //     console.log("ERROR: ", error);
-    //     // }
-    // };
-
+    // Handle upload image
     const handleUploadImage = async () => {
-        setLoadingMessage("Updating body measurements...");
-        const productId = selectedDraftProduct?.productId || "";
+        dispatch(setLoadingMessage("Uploading product image..."));
+        dispatch(setProductIsLoading(true));
+        const productId = product?.productId || "";
 
         try {
             // Check if there are images to upload
-            if (selectedImages.length === 0) {
+            if (selectedImages.length === 0 && uploadedImages.length === 0) {
                 Alert.alert("Error", "Please select at least one image to upload.");
-                setLoadingMessage("");
+                dispatch(setProductIsLoading(false));
+                dispatch(setLoadingMessage(""));
+                return;
+            }
+            if (selectedImages.length === 0 && uploadedImages.length > 0) {
+                dispatch(setProductIsLoading(false));
+                dispatch(setLoadingMessage(""));
+                dispatch(setSelectedStep(5));
                 return;
             }
 
@@ -210,6 +169,7 @@ const useStepFourHook = () => {
             
             formData.append("productId", productId);
             formData.append("color", "Bespoke");
+            formData.append("currentStep", 4);
 
             selectedImages.forEach((image: ImageFile, index: number) => {
                 const imageUri = image.uri;
@@ -222,21 +182,130 @@ const useStepFourHook = () => {
                     type: imageType,
                 });
             });
-
-            const uploadProductImagesResponseData = await uploadProductImages(formData).unwrap();
-            console.log("RESPONSE DATA: ", uploadProductImagesResponseData);
+            
+            let uploadProductImagesResponseData: IVendorProductDetails | undefined;
+            if (selectedImages.length > 0 && uploadedImages.length === 0) {
+                uploadProductImagesResponseData = await uploadProductImages(formData).unwrap();
+            }
+            if (selectedImages.length > 0 && uploadedImages.length > 0) {
+                uploadProductImagesResponseData = await updateProductImages(formData).unwrap();
+            }
+            // console.log("RESPONSE DATA: ", uploadProductImagesResponseData);
 
             if (uploadProductImagesResponseData) {
-                setLoadingMessage("");
+                setSelectedImages([]);
+                
+                // Get the updated product data
+                const updatedProduct = await getProductByProductID(productId).unwrap();
+                console.log("UPDATED PRODUCT::: ", updatedProduct);
+
+                if (updatedProduct) {
+                    dispatch(setProduct(updatedProduct));
+                    dispatch(setProductIsLoading(false));
+                    dispatch(setLoadingMessage(""));
+                    dispatch(setSelectedStep(5));
+                }
             }
-        } catch (error) {
+        } catch (error: any) {
+            dispatch(setProductIsLoading(false));
+            dispatch(setLoadingMessage(""));
+            Alert.alert("Error", error.errors[0]);
             console.log("ERROR: ", error);
         }
     };
 
+    // Handle delete image
+    const handleDeleteImage = async (index: number) => {
+        
+        if (product.colors?.[0].images?.[index]) {
+            dispatch(setLoadingMessage("Deleting product image..."));
+            dispatch(setProductIsLoading(true));
+
+            const productId = product?.productId || "";
+            const imageName = uploadedImages[index].name || "";
+            const color = "Bespoke";
+
+            try {
+                const deleteProductImageResponseData = await deleteProductImage({ productId, imageName, color }).unwrap();
+                console.log("DELETE PRODUCT IMAGE RESPONSE: ", deleteProductImageResponseData);
+
+                if (deleteProductImageResponseData) {
+                    const updatedProduct = await getProductByProductID(productId).unwrap();
+
+                    if (updatedProduct) {
+                        dispatch(setProduct(updatedProduct));
+                        dispatch(setProductIsLoading(false));
+                        dispatch(setLoadingMessage(""));
+                    }
+                }
+            } catch (error) {
+                dispatch(setProductIsLoading(false));
+                dispatch(setLoadingMessage(""));
+                console.log("ERROR: ", error);
+            }
+        } else {
+            setSelectedImages(prevState => prevState.filter((_, i) => i !== index));
+        }
+    };
+
+    // Handle set uploaded images from draft product
+    const handleSetUploadedImagesFromDraftProduct = () => {
+        if (!product) return;
+
+        const productImages = product.colors?.[0].images || [];
+
+        // Format selected images
+        const formattedSelectedImages = productImages.map((image) => ({
+            uri: image?.link,
+            name: image?.name,
+            type: image?.name?.split(".")[1],
+            size: 0,
+            isDefault: image?.isDefault,
+        }));
+        // console.log("FORMATTED SELECTED IMAGES", formattedSelectedImages);
+        
+        setUploadedImages(formattedSelectedImages);
+    };
+
+    // Handle set default image
+    const handleSetDefaultImage = async () => {
+        if (!selectedDefaultImage) return;
+
+        dispatch(setLoadingMessage("Setting default product image..."));
+        dispatch(setProductIsLoading(true));
+
+        const productId = product?.productId || "";
+        const imageName = selectedDefaultImage.name || "";
+        const color = "Bespoke";
+        console.log("REQUEST DATA: ", { productId, imageName, color });
+        
+        try {
+            const setDefaultProductImageResponseData = await setDefaultProductImage({ productId, imageName, color }).unwrap();
+            console.log("SET DEFAULT PRODUCT IMAGE RESPONSE: ", JSON.stringify(setDefaultProductImageResponseData));
+
+            if (setDefaultProductImageResponseData) {
+                setShowDefaultImageModal(false);
+                dispatch(setProduct(setDefaultProductImageResponseData));
+                dispatch(setProductIsLoading(false));
+                dispatch(setLoadingMessage(""));
+            }
+        } catch (error) {
+            setShowDefaultImageModal(false);
+            dispatch(setProductIsLoading(false));
+            dispatch(setLoadingMessage(""));
+            console.log("ERROR: ", error);
+        }
+    };
+
+    useEffect(() => {
+        handleSetUploadedImagesFromDraftProduct();
+    }, [product]);
+
+
     return {
-        isLoading, isSuccess, loadingMessage,
         selectedImages, handleAddImage, handleRemoveImage, handleUploadImage,
+        uploadedImages, handleDeleteImage,
+        setSelectedDefaultImage, showDefaultImageModal, setShowDefaultImageModal, handleSetDefaultImage,
     };
 };
 

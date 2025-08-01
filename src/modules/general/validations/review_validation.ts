@@ -16,7 +16,7 @@ const reviewSchema = yup.object().shape({
 });
 
 const likeReviewSchema = yup.object().shape({
-    reviewId: yup
+    _id: yup
         .string()
         .required("Like is required."),
 });

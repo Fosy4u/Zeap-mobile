@@ -1,31 +1,45 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ArrowRight, Dislike, Edit2, Like1, Star1 } from 'iconsax-react-native';
 import { View, Text, Image, ScrollView, TextInput, TouchableOpacity } from 'react-native';
-import IReview from '../models/review_model';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import RootNavigationStackModel from '../../../routes/model/routes_model';
 import useVendorProductHook from '../../vendor/products/hooks/vendorProduct_hook';
-import { Controller } from 'react-hook-form';
+import { Controller, set } from 'react-hook-form';
+import AppLoader from './appLoader';
+import useReviewHook from '../hooks/review_hook';
+import { formatDate } from '../../../utils/formatDate';
+import IReviewAndRating from '../models/review_model';
+import RatingCardComponent from './ratingCard_component';
 
 interface IProps {
-  reviews: IReview[];
+  reviewAndRating: IReviewAndRating;
   productID: string;
+  loadingMessage: string;
 };
 
-const ReviewComponent: React.FC<IProps> = ({ reviews, productID }) => {
+const ReviewComponent: React.FC<IProps> = ({ reviewAndRating, productID, loadingMessage }) => {
   const [showReviewForm, setShowReviewForm] = useState(false);
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
-  const { onSubmit, handleSubmit, handleReviewLike, handleReviewDislike, control, errors, isLoadingAddReview } = useVendorProductHook();
+
+  const {
+    onSubmit, handleSubmit, isLoadingAddReview, control, errors,
+    reviewIndicators
+  } = useReviewHook(productID, reviewAndRating);
+  const { handleReviewLike, handleReviewDislike } = useVendorProductHook();
 
 
   return (
     <ScrollView className="h-auto">
-      <View className="bg-lightGray">
-        { (reviews && reviews.length !== 0)
-        ? reviews.slice(0, 3).map((review) => (
-          <View key={ review._id } className="mt-6">
-            <View className="h-auto w-full flex-row items-end justify-between">
+      <View className="mt-2 px-2 pb-4 bg-lightGray">
+
+        {/* ==== Rating card ==== */}
+        <RatingCardComponent reviewAndRating={ reviewAndRating } reviewIndicators={ reviewIndicators } />
+
+        { (reviewAndRating.reviews && reviewAndRating.reviews.length !== 0)
+        ? reviewAndRating.reviews.slice(0, 3).map((review) => (
+          <View key={ review._id } className="mt-2 px-2 py-3 rounded-md border-b border-gray-300">
+            <View className="h-auto w-full flex-row items-start justify-between">
               <View className="flex-row items-center justify-start">
                 <Image
                   className="h-[45px] w-[45px] mr-3 rounded-full"
@@ -38,8 +52,11 @@ const ReviewComponent: React.FC<IProps> = ({ reviews, productID }) => {
                 />
 
                 <View>
-                  <Text className="font-medium">{ review.user!.firstName! + " " + review.user!.lastName! }</Text>
-                  <Text className="mt-1.5 text-xs">Posted { new Date(review.updatedAt!).toLocaleString() }</Text>
+                  <Text className="font-medium">{ review.displayName! }</Text>
+                  <View className="mt-1.5 flex-row items-center">
+                    <Text>Posted: </Text>
+                    <Text>{ review.updatedAt ? formatDate(review.updatedAt!.toString()) : '' }</Text>
+                  </View>
                 </View>
               </View>
 
@@ -53,13 +70,13 @@ const ReviewComponent: React.FC<IProps> = ({ reviews, productID }) => {
 
             <View className="mt-2 flex-row items-center">
               <View className="mr-10 flex-row items-center">
-                <TouchableOpacity onPress={ () => handleReviewLike({ reviewId: review._id! }) }>
+                <TouchableOpacity onPress={ () => handleReviewLike({ _id: review._id! }) }>
                   <Like1 size={16} variant="Bold" className="mr-1.5 text-blue-800" />
                 </TouchableOpacity>
                 <Text className="text-xs">{ review.likes!.value! } Likes</Text>
               </View>
               <View className="flex-row items-center">
-                <TouchableOpacity onPress={ () => handleReviewDislike({ reviewId: review._id! }) }>
+                <TouchableOpacity onPress={ () => handleReviewDislike({ _id: review._id! }) }>
                   <Dislike size={16} variant="Bold" className="mr-1.5 text-red-800" />
                 </TouchableOpacity>
                 <Text className="text-xs">{ review.dislikes!.value! } Dislikes</Text>
@@ -68,15 +85,24 @@ const ReviewComponent: React.FC<IProps> = ({ reviews, productID }) => {
           </View>
         ))
         : (
-          <View className="h-auto w-full pt-10 flex items-center">
-            <Text>No review for this product.</Text>
+          <View className="h-auto w-full p-2">
+            <View className="h-auto w-full items-center p-10 bg-gray-200 rounded-md">
+              <View className="h-auto w-full flex-row items-center justify-center">
+                { Array(5).fill(0).map((_, index) => (
+                  <Star1 key={ index } color="#C0C0C0" size={12} variant="Bold" className="mr-0.5" />
+                ))}
+              </View>
+              <Text className="mt-2 font-semibold text-lg text-baseGreen">No review yet</Text>
+              <Text>Be the first to write a review.</Text>
+            </View>
           </View>
         ) }
 
-        { (reviews && reviews.length !== 0) && (
+        { (reviewAndRating.reviews) && (
           <TouchableOpacity
             onPress={ () => productID && navigation.navigate("reviewListScreen", {
-              reviews,
+              reviewAndRating,
+              reviewIndicators,
               productID
             }) }
             className="h-[55px] w-full mx-auto mt-5 flex-row items-center justify-center rounded-xl bg-lightGreen"
@@ -187,8 +213,13 @@ const ReviewComponent: React.FC<IProps> = ({ reviews, productID }) => {
         ) }
 
       </View>
+
+      { isLoadingAddReview && 
+        <AppLoader loadingAdditionalMessage={ loadingMessage } />
+      }
     </ScrollView>
   )
 }
 
 export default ReviewComponent;
+

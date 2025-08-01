@@ -1,13 +1,18 @@
 import IAddress from "./address_model";
 
 interface IAddressState {
-    allSavedAddresses: IAddress[];
+    deliveryAddresses: IAddress[];
     selectedAddress: IAddress;
 
     selectedDeliveryAddressID: string;
     saveAddressForNextTime: boolean;
-    showSavedAddressesBottomSheet: boolean;
     selectedCountry: string;
+
+    showEditEmail: boolean;
+    showNewDeliveryAddressForm: boolean;
+
+    isLoading: boolean;
+    loadingMessage: string;
 };
 
 export default IAddressState;

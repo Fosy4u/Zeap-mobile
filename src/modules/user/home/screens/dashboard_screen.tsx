@@ -1,9 +1,10 @@
-import React, { useState, useCallback, useEffect } from "react";
-import { Image, Text, View, Pressable, SafeAreaView, StatusBar, ScrollView, TextInput, TouchableOpacity, Dimensions } from "react-native";
+import React, { useEffect } from "react";
+import { Image, Text, View, Pressable, SafeAreaView, StatusBar, ScrollView, TextInput, TouchableOpacity, useWindowDimensions, Linking } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useNavigation } from "@react-navigation/native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { ArrowRight, Heart, Notification, SearchNormal1, Star1 } from "iconsax-react-native";
+import Video from "react-native-video";
 import { useDispatch, useSelector } from "react-redux";
 import ShimmerPlaceHolder from 'react-native-shimmer-placeholder';
 import LinearGradient from 'react-native-linear-gradient';
@@ -11,16 +12,21 @@ import LinearGradient from 'react-native-linear-gradient';
 import { RootState } from "../../../../redux/store/store";
 import RootNavigationStackModel from "../../../../routes/model/routes_model";
 import Carousel from "react-native-reanimated-carousel";
-import { setProduct, setSelectedCategory } from "../../products/slices/product_slice";
+import { setProductID, setSelectedCategory } from "../../products/slices/product_slice";
 import useGeneralHook from "../../../general/hooks/general_hook";
 import useHomeHook from "../hooks/home_hook";
+import IProduct from "../../products/models/product_model";
+import FastImage from "react-native-fast-image";
+import { ICategory } from "../../products/models/productState_model";
+import FormatWords from "../../../../utils/formatWords";
 
 const DashboardScreen = () => {
   const { promoProducts, categories, selectedCategory, popularProducts, newestArrivals } = useSelector((state: RootState) => state.productState);
   const { userData } = useSelector((state: RootState) => state.profileState);
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
   const dispatch = useDispatch();
-  const width = Dimensions.get('window').width - 44;
+  const width = useWindowDimensions().width - 40;
+  // console.log("PROMO PRODUCTS::: ", promoProducts);
   
   const {
     handleGetAllLiveProducts,
@@ -36,48 +42,28 @@ const DashboardScreen = () => {
     newestArrivalsIsLoading,
   } = useHomeHook();
   const { handleGetProductOptions } = useGeneralHook();
-  
 
-  const [buttonContainerVisible, setButtonContainerVisible] = useState(false);
+  useEffect(() => {
+    const fetchAllData = async () => {
+      const fetchFunctions = [
+        handleGetProductOptions,
+        handleGetPromoProducts,
+        handleGetPopularProducts,
+        handleGetNewestArrivals,
+        handleGetAllLiveProducts,
+        handleGetFemaleClothing,
+        handleGetMaleClothing,
+        handleGetShoes,
+        handleGetAccessories,
+        handleGetBags,
+      ];
+  
+      await Promise.all(fetchFunctions.map(fn => fn()));
+    };
+  
+    fetchAllData();
+  }, []);
 
-  const openButtonContainer = useCallback(() => {
-    setButtonContainerVisible(true);
-  }, []);
-
-  const closeButtonContainer = useCallback(() => {
-    setButtonContainerVisible(false);
-  }, []);
-
-  
-  useEffect(() => {
-    (async () => {
-      await handleGetProductOptions();
-      await handleGetPromoProducts();
-    })();
-  }, []);
-  
-  useEffect(() => {
-    (async () => {
-      await handleGetPopularProducts();
-    })();
-  }, []);
-  
-  useEffect(() => {
-    (async () => {
-      await handleGetNewestArrivals();
-    })();
-  }, []);
-  
-  useEffect(() => {
-    (async () => {
-      await handleGetAllLiveProducts();
-      await handleGetFemaleClothing();
-      await handleGetMaleClothing();
-      await handleGetShoes();
-      await handleGetAccessories();
-      await handleGetBags();
-    })();
-  }, []);
 
   return (
     <GestureHandlerRootView>
@@ -98,7 +84,20 @@ const DashboardScreen = () => {
                         />
                         <View className="ml-2">
                           <Text className="text-gray-400 text-base">Welcome back,</Text>
-                          <Text className="mt-1 font-medium text-base text-white">{ (userData.firstName) ? userData.firstName : "User" }</Text>
+                          <View className="mt-1 flex-row items-center space-x-2">
+                            <Text className="font-medium text-base text-white">
+                              { (userData.isGuest) ? (userData.lastName) && userData.lastName : userData.firstName }
+                            </Text>
+                            { (userData.isGuest) && (
+                              <TouchableOpacity
+                                className="px-5 py-1 flex items-center justify-center rounded-lg bg-white/[.2]"
+                                onPress={ () => navigation.navigate("loginScreen") }>
+                                <Text className="text-sm text-white">
+                                  { (userData.isGuest) && "Login" }
+                                </Text>
+                              </TouchableOpacity>
+                            )}
+                          </View>
                         </View>
                       </View>
                       <Pressable
@@ -126,9 +125,9 @@ const DashboardScreen = () => {
 
                 <View className="px-5 py-6">
                   
-                    {/*==== New Arrivals Section ====*/}
+                    {/*==== New Promo Section ====*/}
                     { (promoProducts.length !== 0) ? (
-                      <View className="flex flex-row items-center justify-between rounded-2xl bg-lightGold">
+                      <View className="h-[150px] rounded-2xl bg-lightGold">
                         <Carousel
                           loop
                           width={width}
@@ -137,24 +136,31 @@ const DashboardScreen = () => {
                           data={promoProducts}
                           scrollAnimationDuration={1000}
                           autoPlayInterval={5000}
-                          renderItem={({ index }) => (
-                              <View key={index} className="px-5 py-7 flex flex-row items-center justify-between">
-                                <View className="w-[60%]">
-                                  <Text className="text-sm text-gray-600">New Promo</Text>
-                                  <Text className="mt-1 font-semibold text-lg text-gray-600">{ promoProducts[index].subTitle! }</Text>
-                                  <Text className="mt-1.5 text-sm text-gray-800">{ promoProducts[index].description! }</Text>
-                                </View>
-                                <Image
-                                  className="h-[120px] w-[100px] mr-2 rounded-lg"
-                                  resizeMode="cover"
-                                  source={
-                                    promoProducts[index]?.largeScreenImageUrl?.link
-                                      ? { uri: promoProducts[index].largeScreenImageUrl?.link! }
-                                      : require("../../../../../assets/images/app_logo.png")
-                                  }
-                                />
-                              </View>
-                          )}
+                          style={{ height: 150, width: width, borderRadius: 5 }}
+                          renderItem={({ index }: { index: number }) => {
+                            const item = promoProducts[index];
+                        
+                            return (item?.largeScreenImageUrl?.type === "video") ? (
+                              <Video
+                                source={{ uri: item.largeScreenImageUrl.link }}
+                                style={{ width: "100%", height: 150 }}
+                                resizeMode="cover"
+                                repeat
+                                muted
+                              />
+                            ) : (
+                              <Image
+                                key={index}
+                                className="h-[150px] w-full"
+                                resizeMode="cover"
+                                source={
+                                  item?.largeScreenImageUrl?.link
+                                    ? { uri: item.largeScreenImageUrl.link }
+                                    : require("../../../../../assets/images/app_logo.png")
+                                }
+                              />
+                            );
+                          }}
                         />
                       </View>
                     ) : (
@@ -162,8 +168,8 @@ const DashboardScreen = () => {
                         LinearGradient={LinearGradient}
                         shimmerColors={['#ebebeb', '#fefefe', '#ebebeb']}
                         width={width}
-                        height={width / 2}
-                        shimmerStyle={{ borderRadius: 16, marginTop: 5, marginRight: 15 }}
+                        height={150}
+                        shimmerStyle={{ borderRadius: 5, marginTop: 5, marginRight: 15 }}
                       />
                     ) }
                     
@@ -182,7 +188,7 @@ const DashboardScreen = () => {
                         showsHorizontalScrollIndicator={ false }
                         className="mt-3"
                       >
-                        { categories.map((category) => (
+                        { categories.map((category: ICategory) => (
                           <TouchableOpacity
                             key={ category.id }
                             onPress={ () => dispatch(setSelectedCategory(category)) }
@@ -224,61 +230,35 @@ const DashboardScreen = () => {
                       <ScrollView
                         horizontal
                         showsHorizontalScrollIndicator={ false }
-                        className="h-auto w-full"
-                      >
-                        { Array.from({ length: 5 }, (_, index) => (
-                          <ShimmerPlaceHolder
-                            key={`item-${index}`}
-                            visible={!popularProductIsLoading}
-                            LinearGradient={LinearGradient}
-                            shimmerColors={['#ebebeb', '#fefefe', '#ebebeb']}
-                            height={220}
-                            width={150}
-                            shimmerStyle={{ borderRadius: 16, marginTop: 5, marginRight: 15 }}
-                          />
-                        ))}
-                      </ScrollView>
-                      <ScrollView
-                        horizontal
-                        showsHorizontalScrollIndicator={ false }
                         className="h-auto w-full mt-2"
                       >
-                        { popularProducts.length > 0 && popularProducts.slice(0, 10).map((popularProduct) => (
-                          <TouchableOpacity key={ popularProduct.productId }
-                            onPress={ () => {
-                              navigation.navigate("productDetailScreen", { productID: popularProduct.productId });
-                            } }
-                            className="h-auto w-[170px] mr-4 p-3 rounded-2xl overflow-hidden bg-[#F8F9FE]"
-                          >
-                            <View className="relative p-2 flex items-center rounded-xl bg-white">
-                              <Image
-                                className="h-[120px] w-[100px] rounded-lg"
-                                resizeMode="cover"
-                                source={ 
-                                  popularProduct.colors[0]?.images[1]?.link
-                                  ? { uri: popularProduct.colors[0]?.images[1]?.link }
-                                  : require("../../../../../assets/images/app_logo.png")
-                                }
-                              />
-                              <View className="h-[35px] w-[35px] absolute top-1 right-2 flex items-center justify-center rounded-xl bg-gray-200">
-                                <Heart color="gray" />
-                              </View>
-                            </View>
-                            <View className="mt-3">
-                              <Text className="text-sm text-gray-800">{ (popularProduct.title.length >= 35) ? popularProduct.title.slice(0, 33) + "..." : popularProduct.title }</Text>
-                              <View className="mt-1.5 flex-row items-center justify-between">
-                                <Text className="px-2.5 py-1 text-xs rounded-lg bg-lightGreen">{ popularProduct.categories.productGroup.split("-").join(" ") }</Text>
-
-                                <View className="flex-row">
-                                  <Star1 color="#E4A01C" size={18} variant="Bold" className="mr-0.5" />
-                                  <Text>4.3</Text>
-                                </View>
-                              </View>
-                              <Text className="mt-2.5 text-base font-medium text-gray-900">₦{ popularProduct.variations[0].price.toLocaleString() }</Text>
-                            </View>
-                          </TouchableOpacity>
-                        )) }
+                        { popularProductIsLoading ? (
+                          Array.from({ length: 5 }, (_, index) => (
+                            <ShimmerPlaceHolder
+                              key={`item-${index}`}
+                              // visible={!popularProductIsLoading}
+                              LinearGradient={LinearGradient}
+                              shimmerColors={['#ebebeb', '#fefefe', '#ebebeb']}
+                              height={220}
+                              width={150}
+                              shimmerStyle={{ borderRadius: 16, marginTop: 5, marginRight: 15 }}
+                            />
+                          ))
+                        ) : (
+                          popularProducts.slice(0, 10).map((popularProduct: IProduct) => (
+                            <ProductCardItem
+                              key={ popularProduct.productId }
+                              product={ popularProduct }
+                              handleOnPress={ () => {
+                                dispatch(setProductID(popularProduct.productId));
+                                navigation.navigate("productDetailScreen");
+                              } }
+                              orrientation="Vertical"
+                            />
+                          ))
+                        ) }
                       </ScrollView>
+                      
                     </View>
                     
                     {/*==== Newest Arrivals Section ====*/}
@@ -289,65 +269,37 @@ const DashboardScreen = () => {
                           <Text className="text-sm text-baseGreen">See all</Text>
                         </TouchableOpacity>
                       </View>
-
-                      <ScrollView
-                        horizontal
-                        showsHorizontalScrollIndicator={ false }
-                        className="h-auto w-full"
-                      >
-                        { Array.from({ length: 5 }, (_, index) => (
-                          <ShimmerPlaceHolder
-                            key={`item-${index}`}
-                            visible={!newestArrivalsIsLoading}
-                            LinearGradient={LinearGradient}
-                            shimmerColors={['#ebebeb', '#fefefe', '#ebebeb']}
-                            height={150}
-                            width={300}
-                            shimmerStyle={{ borderRadius: 16, marginTop: 5, marginRight: 15 }}
-                          />
-                        ))}
-                      </ScrollView>
+                      
                       <ScrollView
                         horizontal
                         showsHorizontalScrollIndicator={ false }
                         className="h-auto w-full mt-2"
                       >
-                        { newestArrivals.length > 0 && newestArrivals.slice(0, 10).map((newestArrival) => (
-                          <TouchableOpacity key={ newestArrival.productId }
-                            onPress={ () => {
-                              navigation.navigate("productDetailScreen", { productID: newestArrival.productId });
-                            } }
-                            className="h-auto w-[340px] mr-4 px-3 py-3 flex-row justify-start rounded-2xl overflow-hidden bg-[#F8F9FE]"
-                          >
-                            <View className="h-[150px] w-[130px] relative mr-4 p-2 flex justify-center rounded-xl bg-white">
-                              <Image
-                                className="h-[120px] w-[100px] rounded-lg"
-                                resizeMode="cover"
-                                source={ 
-                                  newestArrival.colors[0]?.images[1]?.link
-                                  ? { uri: newestArrival.colors[0]?.images[1]?.link }
-                                  : require("../../../../../assets/images/app_logo.png")
-                                }
-                              />
-                              <View className="h-[35px] w-[35px] absolute top-2 right-2 flex items-center justify-center rounded-xl bg-gray-200">
-                                <Heart color="gray" />
-                              </View>
-                            </View>
-
-                            <View className="w-[160px] mt-3">
-                              <Text className="text-base text-gray-800">{ (newestArrival.title.length >= 40) ? newestArrival.title.slice(0, 40) + "..." : newestArrival.title }</Text>
-                              <View className="mt-3 flex-row items-center justify-between">
-                                <Text className="px-2.5 py-1 text-xs rounded-lg bg-lightGreen">{ newestArrival.categories.productGroup.split("-").join(" ") }</Text>
-
-                                <View className="flex-row">
-                                  <Star1 color="#E4A01C" size={18} variant="Bold" className="mr-0.5" />
-                                  <Text>4.3</Text>
-                                </View>
-                              </View>
-                              <Text className="mt-2.5 text-base font-medium text-gray-900">₦{ newestArrival.variations[0].price.toLocaleString() }</Text>
-                            </View>
-                          </TouchableOpacity>
-                        )) }
+                        { newestArrivalsIsLoading ? (
+                          Array.from({ length: 5 }, (_, index) => (
+                            <ShimmerPlaceHolder
+                              key={`item-${index}`}
+                              // visible={!newestArrivalsIsLoading}
+                              LinearGradient={LinearGradient}
+                              shimmerColors={['#ebebeb', '#fefefe', '#ebebeb']}
+                              height={150}
+                              width={300}
+                              shimmerStyle={{ borderRadius: 16, marginTop: 5, marginRight: 15 }}
+                            />
+                          ))
+                        ) : (
+                          newestArrivals.slice(0, 10).map((newestArrival: IProduct) => (
+                            <ProductCardItem
+                              key={ newestArrival.productId }
+                              product={ newestArrival }
+                              handleOnPress={ () => {
+                                dispatch(setProductID(newestArrival.productId));
+                                navigation.navigate("productDetailScreen");
+                              } }
+                              orrientation="Horizontal"
+                            />
+                          ))
+                        ) }
                       </ScrollView>
                     </View>
 
@@ -379,3 +331,53 @@ const DashboardScreen = () => {
 };
 
 export default DashboardScreen;
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Product Card Item
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+interface IProductCardItemProps {
+  product: IProduct;
+  handleOnPress: () => void;
+  orrientation: "Horizontal" | "Vertical";
+}
+
+const ProductCardItem = (props: IProductCardItemProps) => {
+  const { product, handleOnPress, orrientation } = props;
+
+  return (
+    <TouchableOpacity
+      onPress={ handleOnPress }
+      className={`h-auto mr-4 p-3 rounded-2xl overflow-hidden bg-[#F8F9FE] ${ orrientation === "Horizontal" ? "w-[340px] flex-row justify-start" : "w-[170px]" }`}
+    >
+      <View className={`relative p-2 flex rounded-xl bg-white ${ orrientation === "Horizontal" ? "h-[150px] w-[130px] mr-4 justify-center" : "items-center" }`}>
+        <FastImage
+          source={{
+              uri: product?.colors?.[0]?.images?.[0]?.link!,
+              priority: FastImage.priority.normal
+          }}
+          defaultSource={ require("../../../../../assets/images/app_logo.png") }
+          resizeMode={ FastImage.resizeMode.cover }
+          className="h-[120px] w-[100px] rounded-lg"
+          fallback
+        />
+        <View className="h-[35px] w-[35px] absolute top-2 right-2 flex items-center justify-center rounded-xl bg-gray-200">
+          <Heart color="gray" />
+        </View>
+      </View>
+      <View className={`mt-3 ${ orrientation === "Horizontal" ? "w-[160px]" : "" }`}>
+        <Text className={`text-gray-800 ${ orrientation === "Horizontal" ? "text-base" : "text-sm" }`}>{ FormatWords.truncateWords(product.title, 30) }</Text>
+        <View className="mt-1.5 flex-row items-center justify-between">
+          <Text className="px-2.5 py-1 text-xs rounded-lg bg-lightGreen">{ product.categories.productGroup.split("-").join(" ") }</Text>
+
+          <View className="flex-row">
+            <Star1 color="#E4A01C" size={18} variant="Bold" className="mr-0.5" />
+            <Text>4.3</Text>
+          </View>
+        </View>
+        <Text className="mt-2.5 text-base font-medium text-gray-900">₦{ product.variations[0].price.toLocaleString() }</Text>
+      </View>
+    </TouchableOpacity>
+  );
+};

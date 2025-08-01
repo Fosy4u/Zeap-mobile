@@ -1,11 +1,12 @@
-import api from "../../../../redux/api/api";
+import rootAPI from "../../../../redux/api/rootAPI.ts";
 import ICart from "../../cart/models/cart_model";
 import IProductDetails from "../models/productDetails_model";
 import IProductQueryParams from "../models/productFilter_model";
 import IProduct from "../models/product_model";
-import IPromoProduct from "../models/promoProduct_model";
+import IPromoProduct from "../models/promotion_model.ts";
 
-const productAPI = api.injectEndpoints({
+const productAPI = rootAPI.injectEndpoints({
+    overrideExisting: true,
     endpoints: (builder) => ({
         // Get All Live Products
         getAllLiveProducts: builder.query<IProduct[], IProductQueryParams>({
@@ -46,7 +47,6 @@ const productAPI = api.injectEndpoints({
             }),
             providesTags: ["Products"],
             transformResponse: (response: { data: { products: IProduct[] } }, meta) => {
-                // console.log("META: ", meta?.response?.status);
                 return response.data.products;
             }
         }),
@@ -84,9 +84,10 @@ const productAPI = api.injectEndpoints({
 
         // Get Product By Product ID
         getProductByProductID: builder.query<IProductDetails, string>({
-            query: (productID) =>({
-                url: `/product?productId=${encodeURIComponent(productID)}`,
+            query: (productId) =>({
+                url: `/product?productId=${encodeURIComponent(productId)}`,
                 method: "GET",
+                // params: { productId },
             }),
             providesTags:["Product"],
             transformResponse(response: { data: IProductDetails }) {
@@ -101,49 +102,7 @@ const productAPI = api.injectEndpoints({
                 method: "POST",
                 body: cartRequestData,
             }),
-            invalidatesTags: ["Cart", "CartTotal"],
-            transformResponse: (response: { data: any }) => {
-                console.log("CART RESPONSE::: ", response);
-                
-                return response.data;
-            },
-        }),
-        
-
-        // Increament product count
-        increamentProductQuantity: builder.mutation<any, string>({
-            query: (sku) => ({
-                url: "/basket/product/increase",
-                method: "PUT",
-                body: { sku },
-            }),
-            invalidatesTags: ["Cart", "CartTotal"],
-            transformResponse: (response: { data: any }) => {
-                return response.data;
-            },
-        }),
-
-        // Decreament product count
-        decreamentProductQuantity: builder.mutation<any, string>({
-            query: (sku) => ({
-                url: "/basket/product/decrease",
-                method: "PUT",
-                body: { sku },
-            }),
-            invalidatesTags: ["Cart", "CartTotal"],
-            transformResponse: (response: { data: any }) => {
-                return response.data;
-            },
-        }),
-
-        // Remove product from cart
-        removeProductFromCart: builder.mutation<any, string>({
-            query: (sku) => ({
-                url: "/basket/product/remove",
-                method: "PUT",
-                body: { sku },
-            }),
-            invalidatesTags: ["Cart", "CartTotal"],
+            invalidatesTags: ["Cart"],
             transformResponse: (response: { data: any }) => {
                 return response.data;
             },
@@ -160,6 +119,57 @@ const productAPI = api.injectEndpoints({
                 return response.data;
             }
         }),
+
+        // Get product's promotion
+        getProductPromotion: builder.query<IPromoProduct, string>({
+            query: (productID) => ({
+                url: "/product/promo",
+                method: "GET",
+                params: {
+                    productId: productID,
+                }
+            }),
+            providesTags: ["Promotion", "Product"],
+            transformResponse: (response: { data: { promo: IPromoProduct }}) => {
+                return response.data.promo;
+            }
+        }),
+
+        // Get Recently Viewed Products
+        getRecentlyViewedProducts: builder.query<IProduct[], void>({
+            query: () => ({
+                url: "/products/recentViews",
+                method: "GET",
+            }),
+            providesTags: ["Products"],
+            transformResponse: (response: { data: IProduct[] }) => {
+                return response.data;
+            }
+        }),
+
+        // Get Recommeded Products
+        getRecommendedProducts: builder.query<IProduct[], void>({
+            query: () => ({
+                url: "/products/live/recommended",
+                method: "GET",
+            }),
+            providesTags: ["Products"],
+            transformResponse: (response: { data: IProduct[] }) => {
+                return response.data;
+            }
+        }),
+
+        // Get size guide
+        getSizeGuide: builder.query<any, void>({
+            query: () => ({
+                url: "/bodyMeasurementGuide/readyMade",
+                method: "GET",
+            }),
+            providesTags: ["SizeGuide"],
+            transformResponse: (response: { data: any }) => {
+                return response.data;
+            }
+        }),
     }),
 });
 
@@ -169,12 +179,12 @@ export const {
     useLazySearchProductQuery,
     useLazyGetProductsByCategoriesQuery,
     useLazyGetPopularProductsQuery,
-    useGetProductByProductIDQuery,
+    useLazyGetProductByProductIDQuery,
     useAddProductToCartMutation,
     useLazyGetPromoProductsQuery,
-
-    useIncreamentProductQuantityMutation,
-    useDecreamentProductQuantityMutation,
-    useRemoveProductFromCartMutation,
+    useLazyGetProductPromotionQuery,
+    useLazyGetRecentlyViewedProductsQuery,
+    useLazyGetRecommendedProductsQuery,
+    useLazyGetSizeGuideQuery
 } = productAPI;
 export default productAPI;
