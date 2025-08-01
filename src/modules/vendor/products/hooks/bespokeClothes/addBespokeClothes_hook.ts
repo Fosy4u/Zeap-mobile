@@ -2,14 +2,14 @@ import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../../../../redux/store/store";
 import { useLazyGetDraftProductsQuery } from "../../apis/bespokeProduct_api";
-import { setDraftProducts, setProductMode, setSelectedDraftProduct, setSelectedStep } from "../../slices/vendorProductState_slice";
+import { setDraftProducts, setProduct, setProductMode, setSelectedStep } from "../../slices/vendorProductState_slice";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import RootNavigationStackModel from "../../../../../routes/model/routes_model";
 
 const useAddBespokeClothesHook = () => {
 
-    const { selectedDraftProduct } = useSelector((state: RootState) => state.vendorProductState );
+    const { product } = useSelector((state: RootState) => state.vendorProductState );
     const { userData } = useSelector((state: RootState) => state.profileState );
     const [showWarningModal, setShowWarningModal] = useState(false);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -23,7 +23,7 @@ const useAddBespokeClothesHook = () => {
     const handleResetProductMode = () => {
         dispatch(setProductMode("New"));
         dispatch(setSelectedStep(1));
-        dispatch(setSelectedDraftProduct({}));
+        dispatch(setProduct({}));
     };
 
     // Get Draft Product
@@ -40,8 +40,8 @@ const useAddBespokeClothesHook = () => {
 
     // Handle the Continue Saved Draft Product
     const handleContinueSavedDraftProduct = async () => {
-        if (selectedDraftProduct?.currentStep) {
-            dispatch(setSelectedStep(selectedDraftProduct?.currentStep + 1));
+        if (product?.currentStep) {
+            dispatch(setSelectedStep(product?.currentStep + 1));
             navigation.navigate("addBespokeClothesScreen");
         }
     };

@@ -55,5 +55,11 @@
 		<string>Montserrat-Regular.ttf</string>
 		<string>Montserrat-SemiBold.ttf</string>
 	</array>
+
+
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>We use your location to recommend a currency that suits your area</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>We use your location to recommend a currency and provide relevant services</string>
 </dict>
 </plist>

@@ -1,43 +1,38 @@
-import React, { useEffect } from 'react'
-import { Animated, Text, View } from 'react-native';
+import React, { useEffect } from 'react';
+import { SafeAreaView, Text } from 'react-native';
+import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming } from 'react-native-reanimated';
 
 interface IProps {
     loadingAdditionalMessage?: string;
-};
+}
 
 const AppLoader: React.FC<IProps> = ({ loadingAdditionalMessage }) => {
-
-    const spinValue = new Animated.Value(0);
+    const spinValue = useSharedValue(0);
 
     useEffect(() => {
-        const spinAnimation = Animated.loop(
-            Animated.timing(spinValue, {
-            toValue: 1, // Full rotation (360 degrees)
-            duration: 1000, // Duration of one spin in milliseconds
-            useNativeDriver: true, // Improve performance with native animations
-            })
+        spinValue.value = withRepeat(
+            withTiming(1, { duration: 1000 }),
+            -1,
+            false
         );
-        spinAnimation.start();
-        return () => spinAnimation.stop();
-    }, [spinValue]);
+    }, []);
 
-    // Interpolating the spin value to create a rotation effect
-    const spin = spinValue.interpolate({
-        inputRange: [0, 1],
-        outputRange: ["0deg", "360deg"],
+    const animatedStyle = useAnimatedStyle(() => {
+        return {
+            transform: [{ rotate: `${spinValue.value * 360}deg` }]
+        };
     });
 
-
     return (
-        <View className="h-full w-full absolute inset-0 flex-1 items-center justify-center bg-black/80">
+        <SafeAreaView className="h-full w-full absolute inset-0 flex-1 items-center justify-center bg-black/80">
           <Animated.Image
             source={require("../../../../assets/images/app_icon.png")}
-            style={[{ transform: [{ rotate: spin }] }]}
+            style={animatedStyle}
             className="h-[50px] w-[50px]"
             resizeMode="cover"
           />
           <Text className="mt-4 font-montserratNormal text-sm text-white">{ loadingAdditionalMessage ? loadingAdditionalMessage : "Please wait..." }</Text>
-        </View>
+        </SafeAreaView>
     );
 };
 

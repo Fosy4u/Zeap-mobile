@@ -7,11 +7,12 @@ import {
   Text,
   TextInput,
   View,
+  FlatList,
 } from 'react-native';
-import {ArrowLeft, Heart, SearchNormal1, Star1} from 'iconsax-react-native';
-import {useSelector} from 'react-redux';
-import {RootState} from '../../../../redux/store/store.ts';
-import {GestureHandlerRootView, ScrollView} from 'react-native-gesture-handler';
+import {ArrowLeft, SearchNormal1} from 'iconsax-react-native';
+import {useDispatch, useSelector} from 'react-redux';
+import {AppDispatch, RootState} from '../../../../redux/store/store.ts';
+import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import {
   BottomSheetModal,
   BottomSheetModalProvider,
@@ -21,6 +22,7 @@ import {RouteProp, useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import RootNavigationStackModel from '../../../../routes/model/routes_model.ts';
 import CategoryFilterBottomSheetComponent from '../components/categoryFilterBottomSheet_component.tsx';
+import ProductListCard from '../components/productListCard_component';
 import FastImage from 'react-native-fast-image';
 
 interface IProps {
@@ -28,8 +30,12 @@ interface IProps {
 }
 
 const ProductListScreen: React.FC<IProps> = ({ route }) => {
-  const { allProducts, femaleClothing, maleClothing, shoes, accessories, bags, popularProducts , newestArrivals } = useSelector((state: RootState) => state.productState);
-  const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();  const { screenTitle } = route.params || {};
+  const {
+    allProducts, femaleClothing, maleClothing, shoes, accessories, bags, popularProducts ,
+    newestArrivals, recentlyViewedProducts, recommendedProducts, wishListProducts
+  } = useSelector((state: RootState) => state.productState);
+  const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
+  const { screenTitle } = route.params || {};
   
   const [isFocused, setIsFocused] = useState(false);
   const iconTranslateX = useRef(new Animated.Value(0)).current;
@@ -97,8 +103,14 @@ const ProductListScreen: React.FC<IProps> = ({ route }) => {
   ? popularProducts
   : screenTitle === "Newest Arrivals"
   ? newestArrivals
+  : screenTitle === "Recently Viewed"
+  ? recentlyViewedProducts
+  : screenTitle === "Recommended"
+  ? recommendedProducts
+  : screenTitle === "Wish List"
+  ? wishListProducts
   :[];
-  // console.log("SCREEN TITLE::: ", screenTitle);
+
 
   return (
     <GestureHandlerRootView>
@@ -158,76 +170,15 @@ const ProductListScreen: React.FC<IProps> = ({ route }) => {
           </View>
 
           {/*==== Product List ====*/}
-          <ScrollView
+          <FlatList
+            data={products}
+            renderItem={({ item }) => <ProductListCard product={item} />}
+            keyExtractor={(item, index) => `${index}-item.productId`}
             showsVerticalScrollIndicator={false}
-            className="h-auto w-full mt-3">
-            {products.length !== 0 ? (
-              products.map(product => (
-                <TouchableOpacity
-                  key={product.productId}
-                  onPress={() => {
-                    navigation.navigate('productDetailScreen', {
-                      productID: product.productId,
-                    });
-                  }}>
-                  <View className="h-auto w-full mt-4 p-4 flex-row rounded-xl bg-[#F8F9FE]">
-                    <View className="h-[150px] w-[130px] relative mr-4 py-2 flex justify-center items-center rounded-xl bg-white">
-                      {/* <Image
-                        className="h-[120px] w-[90px] rounded-2xl"
-                        resizeMode="cover"
-                        source={
-                          product.colors[0]?.images[1]?.link
-                            ? {uri: product.colors[0]?.images[1]?.link}
-                            : require('../../../../../assets/images/app_logo.png')
-                        }
-                      /> */}
-                      <FastImage
-                        source={{
-                          uri: product.colors[0]?.images[1]?.link!,
-                          priority: FastImage.priority.normal
-                        }}
-                        defaultSource={ require('../../../../../assets/images/app_logo.png') }
-                        resizeMode={ FastImage.resizeMode.cover }
-                        className="h-[120px] w-[90px] rounded-2xl"
-                        fallback
-                      />
-                      <View className="h-[35px] w-[35px] absolute top-2 right-2 flex items-center justify-center rounded-xl bg-gray-200">
-                        <Heart color="gray" />
-                      </View>
-                    </View>
-
-                    <View className="w-[160px] mt-3">
-                      <Text className="text-base text-gray-800">
-                        {product.title}
-                      </Text>
-                      <View className="mt-3 flex-row items-center justify-between">
-                        <Text className="px-2.5 py-1 text-xs rounded-lg bg-lightGreen">
-                          {product.categories.productGroup.split('-').join(' ')}
-                        </Text>
-
-                        <View className="flex-row">
-                          <Star1
-                            color="#E4A01C"
-                            size={18}
-                            variant="Bold"
-                            className="mr-0.5"
-                          />
-                          <Text>4.3</Text>
-                        </View>
-                      </View>
-                      <Text className="mt-2.5 text-base font-medium text-gray-900">
-                        ₦{product.variations[0].price.toLocaleString()}
-                      </Text>
-                    </View>
-                  </View>
-                </TouchableOpacity>
-              ))
-            ) : (
-              <View className="h-[300px] w-full flex-1 items-center justify-center">
-                <Text className="text-lg">No item available</Text>
-              </View>
-            )}
-          </ScrollView>
+            className="h-auto w-full mt-3"
+            ListEmptyComponent={renderEmptyList(screenTitle!)}
+            contentContainerStyle={{ flexGrow: 1 }}
+          />
 
           <CategoryFilterBottomSheetComponent
             bottomSheetModalRef={bottomSheetModalRef}
@@ -241,3 +192,22 @@ const ProductListScreen: React.FC<IProps> = ({ route }) => {
 };
 
 export default ProductListScreen;
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Render Empty List
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+const renderEmptyList = (screenTitle: string) => (
+  <View className="h-auto w-full mt-1 p-10 bg-gray-50">
+    <FastImage
+        source={ require("../../../../../assets/images/empty_box.png") }
+        defaultSource={ require("../../../../../assets/images/empty_box.png") }
+        resizeMode={ FastImage.resizeMode.contain }
+        className="h-[70px] w-full"
+    />
+
+    <Text className="mt-4 text-center text-gray-400">You don't have any { screenTitle } products.</Text>
+  </View>
+);

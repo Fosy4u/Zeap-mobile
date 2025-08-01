@@ -10,11 +10,8 @@ interface IProps {
     setPriceAdjustmentModalType: React.Dispatch<React.SetStateAction<string>>;
 };
 
-const StepSixComponent: React.FC<IProps> = ({
-        autoPricePercentage, isAutoPriceAdjustment, setIsAutoPriceAdjustment,
-        setShowPriceAdjustmentModal, setPriceAdjustmentModalType,
-    }) => {
-    // console.log("IS AUTO PRICE ADJUSTMENT: ", isAutoPriceAdjustment);
+const StepSixComponent: React.FC<IProps> = (props) => {
+    const { autoPricePercentage, isAutoPriceAdjustment, setIsAutoPriceAdjustment, setShowPriceAdjustmentModal, setPriceAdjustmentModalType } = props;
 
     return (
         <View>
@@ -40,7 +37,7 @@ const StepSixComponent: React.FC<IProps> = ({
                     onValueChange={ () => {
                         setShowPriceAdjustmentModal(true);
 
-                        if (autoPricePercentage === "0") {
+                        if (autoPricePercentage === "" || autoPricePercentage === "0") {
                             setPriceAdjustmentModalType("Activate");
                             setIsAutoPriceAdjustment(false);
                         } else {
@@ -52,7 +49,7 @@ const StepSixComponent: React.FC<IProps> = ({
                 <Text className="font-montserratMedium text-baseGreen">Enable auto price adjustment</Text>
             </View>
 
-            { autoPricePercentage !== "0" && (
+            { (autoPricePercentage !== "" && autoPricePercentage !== "0") && (
                 <>
                     <Text aria-label="Auto Price Adjustment" nativeID="isAutoPriceAdjustment" className="mt-5 font-montserratSemiBold text-sm text-gray-700">Adjustment Percentage</Text>
                     <TouchableOpacity
@@ -68,6 +65,6 @@ const StepSixComponent: React.FC<IProps> = ({
             )}
 
         </View>
-    )
+    );
 }
 export default StepSixComponent;

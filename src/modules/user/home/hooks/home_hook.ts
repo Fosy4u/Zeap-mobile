@@ -2,9 +2,7 @@ import { useDispatch } from "react-redux";
 import { setAccessories, setAllProducts, setBags, setCategories, setFemaleClothing, setMaleClothing, setNewestArrivals, setPopularProducts, setPromoProducts, setShoes } from "../../products/slices/product_slice";
 
 import { useLazyGetAllLiveProductsQuery, useLazyGetNewestArrivalsQuery, useLazyGetPopularProductsQuery, useLazyGetProductsByCategoriesQuery, useLazyGetPromoProductsQuery } from "../../products/apis/product_api";
-
-
-
+import { Alert, Linking, Platform } from "react-native";
 
 /**
  * The useHomeHook
@@ -19,13 +17,15 @@ import { useLazyGetAllLiveProductsQuery, useLazyGetNewestArrivalsQuery, useLazyG
  * popularProductIsLoading,
  * }
  */
-const useHomeHook = () => {
+const useHomeHook = (): any => {
+    const dispatch = useDispatch();
     const [getPromoProducts] = useLazyGetPromoProductsQuery();
     const [getAllLiveProducts] = useLazyGetAllLiveProductsQuery();
     const [getNewestArrivals, { isLoading: newestArrivalsIsLoading }] = useLazyGetNewestArrivalsQuery();
     const [getProductsByCategories] = useLazyGetProductsByCategoriesQuery();
     const [getPopularProducts, { isLoading: popularProductIsLoading }] = useLazyGetPopularProductsQuery();
-    const dispatch = useDispatch();
+    
+
 
     const handleGetPromoProducts = async () => {
         try {
@@ -168,6 +168,36 @@ const useHomeHook = () => {
         }
     };
 
+    // Handle Open WhatsApp
+    const handleOpenWhatsApp = async () => {
+        try {
+          const url = 'https://wa.me/447375387114';
+          await Linking.openURL(url);
+        } catch (error) {
+          console.error("Error opening WhatsApp:", error);
+        };
+    };
+
+    // useEffect(() => {
+    //     (async () => {
+    //       try {
+    //         // Get UID from the secure storage
+    //         const uid = (await EncryptedStorage.getItem("authUID")) || (await EncryptedStorage.getItem("guestUID")) || "";
+            
+    //         // Get Auth user data
+    //         const userData = await getUserById(uid).unwrap();
+    //         console.log("USER DATA::: ", userData);
+    
+    //         if (userData) {
+    //             // Dispatch to Redux Store
+    //             dispatch(setUserData(userData));
+    //         }
+    //       } catch (error) {
+    //         console.log("ERROR::: ", error);   
+    //       }
+    //     })()
+    // }, []);
+
     
     return {
         handleGetPromoProducts,
@@ -181,6 +211,7 @@ const useHomeHook = () => {
         handleGetBags,
         popularProductIsLoading,
         newestArrivalsIsLoading,
+        handleOpenWhatsApp,
     };
 };
 

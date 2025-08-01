@@ -9,7 +9,7 @@ const height = 72;
 const AppBottomBarComponent = ({ state, descriptors, navigation }: { state: any, descriptors: any, navigation: any }) => {
 
   return (
-    <View className="h-auto w-full absolute bottom-0">
+    // <View className="h-auto w-full fixed bottom-0 ">
 
       <View className="h-auto w-full py-4 flex-row items-center justify-around rounded-t-3xl bg-[#133522]">
         {state.routes.map((route: { key: string | number; name: string; }, index: React.Key | null | undefined) => {
@@ -56,16 +56,16 @@ const AppBottomBarComponent = ({ state, descriptors, navigation }: { state: any,
         })}
       </View>
 
-      {/*==== FAB ====*/}
-      {/* <View className="absolute self-center bottom-[42px]">
-        <TouchableOpacity 
-          className="h-[40px] w-[40px] rounded-full bg-baseGreen justify-center items-center shadow-md"
-          onPress={() => {}}
-        >
-          <ShopAdd size={20} color="white" />
-        </TouchableOpacity>
-      </View> */}
-    </View>
+      // {/*==== FAB ====*/}
+      // {/* <View className="absolute self-center bottom-[42px]">
+      //   <TouchableOpacity 
+      //     className="h-[40px] w-[40px] rounded-full bg-baseGreen justify-center items-center shadow-md"
+      //     onPress={() => {}}
+      //   >
+      //     <ShopAdd size={20} color="white" />
+      //   </TouchableOpacity>
+      // </View> */}
+    // </View>
   );
 };
 

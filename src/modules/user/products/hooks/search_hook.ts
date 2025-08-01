@@ -1,13 +1,8 @@
-import { yupResolver } from "@hookform/resolvers/yup";
-import { SubmitHandler, useForm } from "react-hook-form";
+
 import { useLazySearchProductQuery } from "../apis/product_api";
-import searchSchema, { ISearchProduct } from "../validations/search_validation";
-import { useNavigation } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import RootNavigationStackModel from "../../../../routes/model/routes_model";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../../../redux/store/store";
-import {setAllProducts, setSearchWord} from "../slices/product_slice";
+import {setAllProducts} from "../slices/product_slice";
 import {useState} from "react";
 
 

@@ -1,3 +1,10 @@
+interface IReviewAndRating {
+    [x: string]: Key | null | undefined;
+    reviews?:       IReview[];
+    averageRating?: number;
+    imageMatch?:    ImageMatch;
+}
+
 interface IReview {
     likes?:       ILikes;
     dislikes?:    ILikes;
@@ -10,9 +17,15 @@ interface IReview {
     displayName?: string;
     disabled?:    boolean;
     imageMatch?:  boolean;
-    updatedAt?:   Date;
-    createdAt?:   Date;
+    updatedAt?:   string | Date;
+    createdAt?:   string | Date;
     __v?:         number;
+}
+
+interface ImageMatch {
+    true?:  number;
+    false?: number;
+    total?: number;
 }
 
 interface ILikes {
@@ -37,8 +50,8 @@ interface IUser {
     superAdmin?:          boolean;
     email?:               string;
     emailVerified?:       boolean;
-    updatedAt?:           Date;
-    createdAt?:           Date;
+    updatedAt?:           string | Date;
+    createdAt?:           string | Date;
     __v?:                 number;
     uid?:                 string;
     shopEnabled?:         boolean;
@@ -56,5 +69,5 @@ interface IImageURL {
 }
 
 
-export type { ILikes, IUser, IImageURL };
-export default IReview;
+export type { IReview, ILikes, IUser, IImageURL };
+export default IReviewAndRating;

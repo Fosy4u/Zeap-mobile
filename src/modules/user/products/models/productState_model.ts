@@ -2,7 +2,9 @@ import { ImageSourcePropType } from "react-native";
 import IProduct from "./product_model";
 import { IColorEnum } from "../../../general/models/productOptions_model";
 import IProductDetails from "./productDetails_model";
-import IPromoProduct from "./promoProduct_model";
+import IPromoProduct from "./promotion_model";
+import IReview from "../../../general/models/review_model";
+import IReviewAndRating from "../../../general/models/review_model";
 
 interface IProductState {
     productID: string;
@@ -18,8 +20,12 @@ interface IProductState {
     newestArrivals: IProduct[];
     selectedCategory: ICategory;
     promoProducts: IPromoProduct[];
+    productPromotion: IPromoProduct;
     product: IProductDetails;
     allProducts: IProduct[];
+    recentlyViewedProducts: IProduct[];
+    recommendedProducts: IProduct[];
+    wishListProducts: IProduct[];
     categories: ICategory[];
 
     featuredPrice: number;
@@ -30,6 +36,13 @@ interface IProductState {
     filteredSearchPhrases: string[];
     searchWord: string;
     showSizedGuideBottomSheet: boolean;
+
+    reviewAndRating: IReviewAndRating;
+
+    sizeGuide: any;
+
+    isLoading: boolean;
+    loadingMessage: string;
 };
 
 // interface INewestProduct {

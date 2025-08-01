@@ -1,25 +1,27 @@
-import { useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ArrowRight } from 'iconsax-react-native';
 import React, { useRef, useEffect } from 'react';
-import { View, Text, Dimensions, Image, TouchableOpacity, SafeAreaView, ScrollView } from 'react-native';
+import { View, Text, Dimensions, Image, TouchableOpacity, SafeAreaView, ScrollView, TextInput } from 'react-native';
 import * as Animatable from 'react-native-animatable';
-import RootNavigationStackModel from '../../../../routes/model/routes_model.ts';
 import { AppDispatch, RootState } from '../../../../redux/store/store.ts';
-import { setSelectedMeasurementTemplate, setShowSavedMeasurementBottomSheet } from '../slices/measurement_slice.ts';
+import { setSaveMeasurementForNextTime, setShowAddNewMeasurementBottomSheet } from '../slices/measurement_slice.ts';
 import useMeasurementHook from '../hooks/measurement_hook.ts';
+import { Controller } from 'react-hook-form';
+import CheckBox from '@react-native-community/checkbox';
+import LinearGradient from 'react-native-linear-gradient';
 
 
 const SavedMeasurementsBottomSheet = () => {
-    const { allBodyMeasurementTemplates, selectedMeasurementTemplate } = useSelector((state: RootState) => state.measurementState);
-    const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
+    const { requiredMeasurementFormFields, saveMeasurementForNextTime, selectedUnit, isLoading } = useSelector((state: RootState) => state.measurementState);
     const screenHeight = Dimensions.get("window").height;
     const modalHeight = screenHeight / 1.15;
     const slideAnimation = useRef<Animatable.View>(null);
     const dispatch = useDispatch<AppDispatch>();
 
-    const { onSubmitFromSavedMeasurementTemplate } = useMeasurementHook();
+    const {
+        control, onSubmitFromMeasurementForm, errors, getValues,
+        onSubmitFromSavedMeasurementTemplate,
+    } = useMeasurementHook();
     
 
     useEffect(() => {
@@ -31,31 +33,16 @@ const SavedMeasurementsBottomSheet = () => {
         }
     }, [modalHeight]);
 
-    const handleCloseSavedMeasurementBottomSheet = () => {
+    const handleCloseAddNewMeasurementBottomSheet = () => {
         if (slideAnimation.current) {
             slideAnimation.current.animate({
                 0: { translateY: 0, opacity: 1 },
                 1: { translateY: modalHeight, opacity: 0 }
             }, 500).then(() => {
-                dispatch(setShowSavedMeasurementBottomSheet(false));
+                dispatch(setShowAddNewMeasurementBottomSheet(false));
             });
         } else {
-            dispatch(setShowSavedMeasurementBottomSheet(false));
-        }
-    };
-
-    const handleGoToDeliveryAddressScreen = () => {
-        if (slideAnimation.current) {
-            slideAnimation.current.animate({
-                0: { translateY: 0, opacity: 1 },
-                1: { translateY: modalHeight, opacity: 0 }
-            }, 500).then(() => {
-                navigation.navigate("deliveryAddressScreen");
-                dispatch(setShowSavedMeasurementBottomSheet(false));
-            });
-        } else {
-            navigation.navigate("deliveryAddressScreen");
-            dispatch(setShowSavedMeasurementBottomSheet(false));
+            dispatch(setShowAddNewMeasurementBottomSheet(false));
         }
     };
     
@@ -70,68 +57,187 @@ const SavedMeasurementsBottomSheet = () => {
                     transform: [{ translateY: modalHeight }]
                 }}
             >
-                <View className="h-auto w-full flex-row items-center justify-between">
-                    <Text className="font-Montserrat font-medium text-2xl text-gray-700">Existing Measurement</Text>
+                <View>
+                    <View className="h-auto w-full flex-row items-start justify-between">
+                        <Text className="font-montserratMedium text-2xl text-gray-700">Kindly Provide Us Your Measurement</Text>
 
-                    <TouchableOpacity 
-                        onPress={ () => handleCloseSavedMeasurementBottomSheet() }
-                        // onPress={ () => handleShowSavedMeasurementBottomSheet(false) }
-                    >
-                        <Image
-                            className="h-[30px] w-[30px]"
-                        source={ require("../../../../../assets/images/close.png") }
-                        />
-                    </TouchableOpacity>
+                        <TouchableOpacity 
+                            onPress={ () => handleCloseAddNewMeasurementBottomSheet() }
+                        >
+                            <Image
+                                className="h-[30px] w-[30px]"
+                            source={ require("../../../../../assets/images/close.png") }
+                            />
+                        </TouchableOpacity>
+                    </View>
+                    <LinearGradient
+                        colors={[
+                            "rgba(229, 231, 235, 0)",
+                            "#e5e7eb",
+                            "#9ca3af",
+                            "#e5e7eb",
+                            "rgba(229, 231, 235, 0)"
+                        ]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        className="h-[1px] w-full mt-3 rounded"
+                    />
                 </View>
-                <Text className="my-2 font-Montserrat font-normal text-base text-gray-700">Select your preferred measurement</Text>
 
                 <ScrollView showsVerticalScrollIndicator={ false }>
                     <View className="flex-1 flex-col justify-between">
-                        <View>
-                            { allBodyMeasurementTemplates?.map((measurementTemplate, index) => (
-                                <TouchableOpacity 
-                                    onPress={ () => dispatch(setSelectedMeasurementTemplate(measurementTemplate)) }
-                                    key={ measurementTemplate._id! } 
-                                    className={`h-auto w-full mt-4 px-5 py-5 border ${ measurementTemplate._id! === selectedMeasurementTemplate._id! ? "border-[#D5B07B] bg-[#FFFAF2]" : "border-gray-200 bg-[#F8F9FE]" } rounded-xl`}>
-                                    <View className="flex-row items-center justify-between">
-                                        <Text className="font-montserratSemiBold text-lg text-gray-700">{ measurementTemplate.templateName! }</Text>
-                                        <TouchableOpacity>
-                                            <Text>Edit</Text>
-                                        </TouchableOpacity>
-                                    </View>
-                                    <View  className="mt-2">
-                                        { allBodyMeasurementTemplates?.[index].measurements!.map((measurement) => (
-                                            <View key={ measurement._id! } className="h-auto w-full mt-2">
-                                                <Text className="mt-2 font-montserratSemiBold text-base text-gray-700">
-                                                    { measurement.name!.charAt(0).toUpperCase() + measurement.name!.slice(1) }
-                                                </Text>
+                        
+                        {/*==== Template Name ====*/}
+                        <View className="h-auto w-full mt-5 px-3 py-4 rounded-xl border border-gray-200">
+                            <Text aria-label="TemplateName" nativeID="templateName" className="my-2 font-montserratSemiBold text-base text-gray-700 capitalize">Template Name</Text>
+                            <View className="h-auto w-full mt-1.5 px-3 border border-gray-200 rounded-xl bg-gray-50">
+                            <Controller
+                                control={ control }
+                                name="templateName"
+                                rules={{ required: true }}
+                                render={ ({ field: { onChange, onBlur, value } }) => (
+                                    <TextInput
+                                        aria-label="TemplateName"
+                                        aria-labelledby="templateName"
+                                        keyboardType="default"
+                                        placeholder="Enter a template name"
+                                        placeholderTextColor="#9ca3af"
+                                        className="font-montserratMedium text-base"
+                                        onBlur={ onBlur }
+                                        onChangeText={ onChange }
+                                        value={ value }
+                                    />
+                                ) }
+                            />
+                            { errors.templateName && (<Text className="text-red-500 text-xs">{errors.templateName.message}</Text>) }
+                            </View>
+                        </View>
 
+                        {/* ===== Dynamic Measurement Fields ===== */}
+                        {requiredMeasurementFormFields?.measurements?.map((measurement, measurementIndex) => (
+                            <View key={measurement._id} className="h-auto w-full mt-5 px-3 py-4 relative border border-gray-200 rounded-2xl">
+                            <Text className="mt-2 font-montserratSemiBold text-base text-gray-700 capitalize">
+                                {measurement.name}
+                            </Text>
+                            <Controller
+                                control={control}
+                                name={`measurements.${measurementIndex}.name`}
+                                defaultValue={measurement.name}
+                                render={({ field: { onChange, value } }) => {
+                                useEffect(() => {
+                                    onChange(measurement.name);
+                                }, [measurement.name]);
+                                
+                                return (
+                                    <TextInput
+                                    value={value}
+                                    editable={false}
+                                    className="hidden"
+                                    />
+                                );
+                                }}
+                            />
 
-                                                <View className="h-auto w-full flex-row flex-wrap items-center gap-x-8">
-                                                    { measurement.measurements!.map((measurementItem) => (
-                                                        <Text key={ measurementItem._id! }
-                                                            className="my-1 font-Montserrat font-normal text-base text-gray-700"
-                                                        >
-                                                            { `${measurementItem?.field!.charAt(0).toUpperCase() + measurementItem.field!.slice(1)}: ${measurementItem?.value}` }
-                                                        </Text>
-                                                    )) }
-                                                </View>
-                                            </View>
-                                        )) }
+                            {measurement?.fields?.map((field, fieldIndex) => {
+
+                                const formattedField = {
+                                name: field.toLowerCase(),
+                                label: field.charAt(0).toUpperCase() + field.slice(1)
+                                }
+
+                                return (
+                                <View key={field}>
+                                    <Text aria-label={formattedField.label} nativeID={formattedField.name} className="mt-4 font-montserratMedium">
+                                    {formattedField.label}
+                                    </Text>
+
+                                    <View className="h-auto w-full mt-1.5 px-3 flex flex-row items-center justify-between rounded-xl border border-gray-200 bg-gray-50">
+                                    <Controller
+                                        control={control}
+                                        name={`measurements.${measurementIndex}.fields.${fieldIndex}`}
+                                        // name={`measurements[${measurementIndex}].fields[${fieldIndex}]` as any}
+                                        render={({ field: { onChange, onBlur, value } }) => (
+                                        <TextInput
+                                            aria-label={formattedField.label}
+                                            aria-labelledby={formattedField.name}
+                                            keyboardType="number-pad"
+                                            placeholder="0.00"
+                                            placeholderTextColor="#9ca3af"
+                                            className="flex-1 font-montserratMedium text-base"
+                                            onBlur={onBlur}
+                                            onChangeText={onChange}
+                                            value={value}
+                                        />
+                                        )}
+                                    />
+                                    <View className="h-auto w-[40px] flex-row items-center">
+                                        <View className="h-[30px] w-[1] mr-2 bg-slate-300" />
+                                        <Text className="font-montserratMedium">{selectedUnit}</Text>
                                     </View>
-                                </TouchableOpacity>
-                            )) }
+                                    </View>
+                                    {errors.measurements?.[measurementIndex]?.fields?.[fieldIndex] && (
+                                    <Text className="text-red-500 text-xs">
+                                        {errors.measurements?.[measurementIndex]?.fields?.[fieldIndex]?.message}
+                                    </Text>
+                                    )}
+                                </View>
+                                )
+                            })}
+                            </View>
+                        ))}
+
+                        {/*==== Measurements Instructions ====*/}
+                        <View className="h-auto w-full mt-5 px-3 py-4 rounded-xl border border-gray-200">
+                            <View className="my-2 flex-row items-center">
+                            <Text aria-label="Instructions" nativeID="instructions" className="font-montserratSemiBold text-base text-gray-700 capitalize">Measurement Instructions</Text>
+                            <Text className="ml-2 font-montserratNormal text-xs">(Optional)</Text>
+                            </View>
+                            <View className="h-auto w-full mt-1.5 px-3 border border-gray-200 rounded-xl bg-gray-50">
+                            <Controller
+                                control={ control }
+                                name="instructions"
+                                rules={{ required: true }}
+                                render={ ({ field: { onChange, onBlur, value } }) => (
+                                    <TextInput
+                                        aria-label="Instructions"
+                                        aria-labelledby="instructions"
+                                        keyboardType="default"
+                                        placeholder="Add instructions for measurement"
+                                        placeholderTextColor="#9ca3af"
+                                        multiline={ true }
+                                        textAlignVertical="top"
+                                        className="h-[80px] font-montserratMedium text-base"
+                                        onBlur={ onBlur }
+                                        onChangeText={ onChange }
+                                        value={ value }
+                                    />
+                                ) }
+                            />
+                            { errors.instructions && (<Text className="text-red-500 text-xs">{errors.instructions.message}</Text>) }
+                            </View>
+                        </View>
+
+                        {/*==== Save measurement ====*/}
+                        <View className="mt-5 flex-row items-center">
+                            <CheckBox
+                                value={saveMeasurementForNextTime}
+                                onValueChange={(newValue) => dispatch(setSaveMeasurementForNextTime(newValue))}
+                                tintColors={{ true: "#133522", false: "#151518" }}
+                            />
+                            <Text className="ml-2 font-montserratMedium text-base">Save my measurement for next time</Text>
                         </View>
 
                         <TouchableOpacity 
                             onPress={ () => {
-                                dispatch(setShowSavedMeasurementBottomSheet(false));
-                                onSubmitFromSavedMeasurementTemplate();
+                                // dispatch(setShowAddNewMeasurementBottomSheet(false));
+                                // onSubmitFromSavedMeasurementTemplate();
+                                onSubmitFromMeasurementForm(getValues());
                             } }
-                            className="h-[55px] w-auto mt-7 flex flex-row items-center justify-center rounded-xl bg-baseGreen"
+                            disabled={ isLoading }
+                            className="h-[55px] w-auto mt-5 flex flex-row items-center justify-center rounded-xl bg-baseGreen"
                         >
-                            <Text className="text-lg text-white mr-2">Proceed</Text>
-                            <ArrowRight className="text-white" />
+                            <Text className="text-lg text-white mr-2">{isLoading ? "Please wait..." : "Proceed"}</Text>
+                            {!isLoading && <ArrowRight className="text-white" />}
                         </TouchableOpacity>
                     </View>
                 </ScrollView>

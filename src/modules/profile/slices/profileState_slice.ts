@@ -26,7 +26,6 @@ const initialState: IProfileState = {
         updatedAt: new Date,
         createdAt: new Date,
         __v: 0,
-        shopId: ""
     },
     token: "",
 
@@ -72,6 +71,9 @@ const initialState: IProfileState = {
         { "key": "White", "value": "White" },
         { "key": "Brown", "value": "Brown" },
     ],
+    acceptMarketing: false,
+    isLoading: false,
+    loadingMessage: "",
 };
 
 
@@ -96,7 +98,15 @@ const profileSlice = createSlice({
         },
         setSelectedCountry: (state: IProfileState, action: PayloadAction<string>) => {
             state.selectedCountry = action.payload;
-            
+        },
+        setAcceptMarketing: (state: IProfileState, action: PayloadAction<boolean>) => {
+            state.acceptMarketing = action.payload;
+        },
+        setIsLoading: (state: IProfileState, action: PayloadAction<boolean>) => {
+            state.isLoading = action.payload;
+        },
+        setLoadingMessage: (state: IProfileState, action: PayloadAction<string>) => {
+            state.loadingMessage = action.payload;
         },
     }
 });
@@ -109,5 +119,8 @@ export const {
     setShowPhoneCodeModal,
     setShowCountryModal,
     setSelectedCountry,
+    setAcceptMarketing,
+    setIsLoading,
+    setLoadingMessage,
 } = actions;
 export default reducer;

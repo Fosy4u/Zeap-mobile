@@ -1,50 +1,82 @@
 import { getAuth } from '@react-native-firebase/auth';
+import EncryptedStorage from 'react-native-encrypted-storage';
+
+const TOKEN_KEY = 'auth_token';
 
 /**
- * To get the Firebase token or the refreshed token and return the headers.
- * @param headers 
- * @returns headers - Authorization headers
+ * Prepares authorization headers for API requests
  */
-const AuthorizationHeader = async (headers: Headers) => {
-
+const AuthorizationHeader = async (headers: Headers): Promise<Headers> => {
     try {
-        let token;
-        
-        // Get the Firebase Auth instance.
         const auth = getAuth();
         const currentUser = auth.currentUser;
 
+        // Get token from current user or stored token
+        let token: string;
+        
         if (currentUser) {
-            token = await currentUser.getIdToken(true);
+            // Get fresh token from Firebase
+            token = await currentUser.getIdToken();
             // console.log("REFRESHED TOKEN::: ", token);
+            
+            // Store the token
+            await storeToken(token);
         } else {
-            throw new Error("User not logged in.");
+            // Try to get stored token
+            const storedToken = await getToken();
+            if (!storedToken) {
+                throw new Error('No authentication token available');
+            }
+            token = storedToken;
         }
 
-        // Add token to headers
-        headers.set("Authorization", `Bearer ${token}`);
-        headers.set("Accept", "application/json");
-        // headers.set("Content-Type", "application/json");
-
+        // Set headers
+        headers.set('Authorization', `Bearer ${token}`);
+        headers.set('Accept', 'application/json');
+        
         return headers;
     } catch (error) {
-        console.error("Error::: ", error);
+        throw new Error('Failed to set authorization headers');
     }
 };
 
-// Get saved anonymous token
-const getSavedAnonymousToken =  async () => {
-    const auth = getAuth();
-    const currentUser = auth.currentUser;
-
-    if (currentUser) {
-        const token = await currentUser.getIdToken(true);
-        console.log("REFRESHED TOKEN::: ", token);
-        return token;
-    } else {
-        throw new Error("User not logged in.");
+/**
+ * Store authentication token
+ */
+const storeToken = async (token: string): Promise<void> => {
+    try {
+        await EncryptedStorage.setItem(TOKEN_KEY, JSON.stringify(token));
+    } catch (error) {
+        throw new Error('Failed to store token');
     }
 };
 
-export { getSavedAnonymousToken };
+/**
+ * Get stored authentication token
+ */
+const getToken = async (): Promise<string | null> => {
+    try {
+        const token = await EncryptedStorage.getItem(TOKEN_KEY);
+        return token ? JSON.parse(token) : null;
+    } catch (error) {
+        throw new Error('Failed to get token');
+    }
+};
+
+/**
+ * Clear stored token
+ */
+const clearToken = async (): Promise<void> => {
+    try {
+        await EncryptedStorage.removeItem(TOKEN_KEY);
+    } catch (error) {
+        throw new Error('Failed to clear token');
+    }
+};
+
+export {
+    storeToken,
+    getToken,
+    clearToken
+};
 export default AuthorizationHeader;

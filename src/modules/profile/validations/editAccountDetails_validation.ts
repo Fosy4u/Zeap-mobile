@@ -3,18 +3,20 @@ import * as yup from "yup";
 const editAccountDetailsSchema = yup.object().shape({
     firstName: yup
         .string()
-        .required("First name is required."),
+        .optional(),
     lastName: yup
         .string()
-        .required("Last name is required."),
+        .optional(),
+    email: yup
+        .string()
+        .optional(),
     phoneNumber: yup
         .string()
-        .required("Phone number is required."),
+        .optional(),
     country: yup
         .string()
-        .required("Country is required"),
+        .optional(),
 });
-
 
 export type IEditAccountDetailsSchema = yup.InferType<typeof editAccountDetailsSchema>;
 export default editAccountDetailsSchema;
