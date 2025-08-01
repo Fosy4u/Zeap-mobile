@@ -56,7 +56,10 @@ const PriceAdjustmentModal: React.FC<IProps> = ({
                                 placeholderTextColor="#9ca3af"
                                 className="flex-1 font-montserratMedium text-base"
                                 // onBlur={ onBlur }
-                                onChangeText={ (value) => setAutoPricePercentage(value) }
+                                onChangeText={ (value) => {
+                                    setAutoPricePercentage(value);
+                                    (value === "" || value === "0") ? setIsAutoPriceAdjustment(false) : setIsAutoPriceAdjustment(true);
+                                } }
                                 value={ autoPricePercentage }
                             />
                             <Text className="font-montserratSemiBold text-base text-baseGreen">%</Text>
@@ -67,13 +70,13 @@ const PriceAdjustmentModal: React.FC<IProps> = ({
                         <View className="h-auto w-full mt-6 flex-row justify-between space-x-3">
                             <TouchableOpacity
                                 onPress={ () => {
-                                    setShowPriceAdjustmentModal(false);
-                                    
-                                    if (autoPricePercentage === "0") {
+                                    if (autoPricePercentage === "" || autoPricePercentage === "0") {
                                         setIsAutoPriceAdjustment(false);
                                     } else {
                                         setIsAutoPriceAdjustment(true);
                                     }
+
+                                    setShowPriceAdjustmentModal(false);
                                 } }
                                 className="h-[50px] flex-1 flex-row items-center justify-center rounded-xl bg-red-50"
                             >
@@ -82,7 +85,8 @@ const PriceAdjustmentModal: React.FC<IProps> = ({
 
                             <TouchableOpacity
                                 onPress={() => handleSaveAutoPricePercentage() }
-                                className="h-[50px] flex-1 flex-row items-center justify-center rounded-xl bg-baseGreen"
+                                disabled={ autoPricePercentage === "" || autoPricePercentage === "0" }
+                                className={ autoPricePercentage === "" || autoPricePercentage === "0" ? "h-[50px] flex-1 flex-row items-center justify-center rounded-xl bg-gray-200" : "h-[50px] flex-1 flex-row items-center justify-center rounded-xl bg-baseGreen" }
                             >
                                 <Text className="font-montserratRegular text-white">Save</Text>
                             </TouchableOpacity>

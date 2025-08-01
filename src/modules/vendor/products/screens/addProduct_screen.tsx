@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import {View, Text, TouchableOpacity, ScrollView, StatusBar, SafeAreaView, Image} from 'react-native';
 import AppHeaderComp from "../../general/components/appHeader_comp.tsx";
 import {ArrowRight} from "iconsax-react-native";
-import ClotheTypeBottomSheetComponent from "../components/clotheTypeBottomSheet_component.tsx";
+import ProductTypeBottomSheetComponent from "../components/productTypeBottomSheet_component.tsx";
 import useAddBespokeClothesHook from '../hooks/bespokeClothes/addBespokeClothes_hook.ts';
 import ShimmerPlaceHolder from 'react-native-shimmer-placeholder';
 import LinearGradient from 'react-native-linear-gradient';
@@ -11,18 +11,14 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import RootNavigationStackModel from '../../../../routes/model/routes_model.ts';
 import { RootState } from '../../../../redux/store/store.ts';
-import { setProductMode, setSelectedDraftProduct, setSelectedStep } from '../slices/vendorProductState_slice.ts';
-import IDraftProduct from '../models/vendorDraftProducts_model.ts';
+import { setProduct, setProductMode, setProductType, setSelectedStep, setShowProductTypeBottomSheet } from '../slices/vendorProductState_slice.ts';
+import IVendorProductDetails from '../models/vendorProductDetails_model.ts';
 
 const AddProductScreen = () => {
-    const { draftProducts } = useSelector((state: RootState) => state.vendorProductState);
-    const [showClotheTypeBottomSheet, setShowClotheTypeBottomSheet] = useState(false);
+    const { draftProducts, showProductTypeBottomSheet } = useSelector((state: RootState) => state.vendorProductState);
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const dispatch = useDispatch();
 
-    const handleShowClotheTypeBottomSheet = (value: boolean) => {
-        setShowClotheTypeBottomSheet(value);
-    };
 
     const { handleResetProductMode, handleGetDraftProducts, isLoadingDraftProducts } = useAddBespokeClothesHook();
 
@@ -50,7 +46,7 @@ const AddProductScreen = () => {
                 <Text className="mt-1 font-montserratMedium text-sm">Continue with product in draft</Text>
                 { !isLoadingDraftProducts ? (
                     draftProducts?.length !== 0 ? (
-                        draftProducts?.map((product: IDraftProduct) => (
+                        draftProducts?.map((product: IVendorProductDetails) => (
                             <TouchableOpacity key={ product._id } onPress={ () => null }
                                 className="h-auto w-full mt-3 p-4 rounded-xl border border-gray-200 bg-lightGray">
                                 <Text className="font-montserratMedium text-lg text-gray-700">{ product.title }</Text>
@@ -58,18 +54,24 @@ const AddProductScreen = () => {
                                     <Text className="mt-1 font-montserratMedium text-sm">{
                                         product.productType === "bespokeCloth" ? "Bespoke Clothes" :
                                         product.productType === "readyMadeCloth" ? "Readymade Clothes" : 
-                                        product.productType === "bespokeFootwear" ? "Bespoke Footwear" :
-                                        product.productType === "readyMadeFootwear" ? "Readymade Footwear" : 
+                                        product.productType === "bespokeShoe" ? "Bespoke Shoes" :
+                                        product.productType === "readyMadeShoe" ? "Readymade Shoes" : 
                                         "Accessories"
                                     }</Text>
 
                                     <TouchableOpacity
                                         onPress={ () => {
-                                            dispatch(setSelectedDraftProduct(product));
+                                            dispatch(setProduct(product));
                                             dispatch(setProductMode("Draft"));
-                                            // dispatch(setSelectedStep(product.currentStep! + 1));
-                                            dispatch(setSelectedStep(5 + 1));
-                                            navigation.navigate("addBespokeClothesScreen");
+                                            dispatch(setSelectedStep(product.currentStep! < 6 ? product.currentStep! + 1 : 6));
+                                            // dispatch(setSelectedStep(4));
+                                            navigation.navigate(
+                                                product.productType === "bespokeCloth" ? "addBespokeClothesScreen" :
+                                                product.productType === "readyMadeCloth" ? "addReadyMadeClothesScreen" :
+                                                product.productType === "bespokeShoe" ? "addBespokeShoesScreen" :
+                                                product.productType === "readyMadeShoe" ? "addReadyMadeShoesScreen" :
+                                                "addAccessoriesScreen"
+                                            );
                                         } }
                                         className="h-[35px] w-auto px-2 flex flex-row items-center justify-center rounded-md bg-baseGreen"
                                     >
@@ -86,7 +88,7 @@ const AddProductScreen = () => {
                     )
                 ) : (
                     <ShimmerPlaceHolder
-                        visible={ isLoadingDraftProducts }
+                        // visible={ isLoadingDraftProducts }
                         LinearGradient={ LinearGradient }
                         style={ { height: 100, with: "100%", borderRadius: 10, backgroundColor: "#fbfbfb" } }
                     />
@@ -103,8 +105,8 @@ const AddProductScreen = () => {
                     {/* ==== Clothes ==== */}
                     <TouchableOpacity
                         onPress={ () => {
-                            dispatch(setSelectedStep(1));
-                            handleShowClotheTypeBottomSheet(true);
+                            dispatch(setProductType("Clothes"));
+                            dispatch(setShowProductTypeBottomSheet(true));
                         } }
                         className="h-auto w-full px-5 py-5 flex-1 rounded-xl border border-gray-100 bg-gray-50"
                     >
@@ -123,7 +125,10 @@ const AddProductScreen = () => {
 
                     {/* ==== Footwears ==== */}
                     <TouchableOpacity
-                        onPress={ () => null }
+                        onPress={ () => {
+                            dispatch(setProductType("Shoes"));
+                            dispatch(setShowProductTypeBottomSheet(true));
+                        } }
                         className="h-auto w-full px-5 py-5 flex-1 rounded-xl border border-gray-100 bg-gray-50"
                     >
                         <View className="w-[50px] h-[50px] flex-row items-center justify-center rounded-xl bg-gray-100">
@@ -173,8 +178,8 @@ const AddProductScreen = () => {
                 </TouchableOpacity>
             </ScrollView>
 
-            { showClotheTypeBottomSheet && (
-                <ClotheTypeBottomSheetComponent handleShowClotheTypeBottomSheet={ handleShowClotheTypeBottomSheet } />
+            { showProductTypeBottomSheet && (
+                <ProductTypeBottomSheetComponent />
             ) }
         </SafeAreaView>
     );

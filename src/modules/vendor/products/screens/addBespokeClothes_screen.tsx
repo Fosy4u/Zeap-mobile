@@ -2,16 +2,10 @@ import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View } from "react-native";
 import AppHeaderComp from "../../general/components/appHeader_comp.tsx";
-import StepOneComponent from "../components/addReadyMadeClothes/stepOne_component.tsx";
 import { ArrowLeft, ArrowRight } from "iconsax-react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import RootNavigationStackModel from "../../../../routes/model/routes_model.ts";
-import StepTwoComponent from "../components/addReadyMadeClothes/stepTwo_component.tsx";
-import StepThreeComponent from "../components/addReadyMadeClothes/stepThree_component.tsx";
-import StepFourComponent from "../components/addReadyMadeClothes/stepFour_component.tsx";
-import StepFiveComponent from "../components/addReadyMadeClothes/stepFive_component.tsx";
-import StepSixComponent from "../components/addReadyMadeClothes/stepSix_component.tsx";
 import WarningPopupModal from "../modals/warningPopup_modal.tsx";
 import AppLoader from '../../../general/components/appLoader.tsx';
 import { RootState } from '../../../../redux/store/store.ts';
@@ -25,9 +19,16 @@ import useStepSixHook from '../hooks/bespokeClothes/stepSix_hook.ts';
 import PriceAdjustmentModal from '../modals/priceAdjustment_modal.tsx';
 import useAddBespokeClothesHook from '../hooks/bespokeClothes/addBespokeClothes_hook.ts';
 import SuccessPopupModal from '../modals/successPopup_modal.tsx';
+import StepOneComponent from "../components/addBespokeClothes/stepOne_component.tsx";
+import StepTwoComponent from "../components/addBespokeClothes/stepTwo_component.tsx";
+import StepThreeComponent from "../components/addBespokeClothes/stepThree_component.tsx";
+import StepFourComponent from "../components/addBespokeClothes/stepFour_component.tsx";
+import StepFiveComponent from "../components/addBespokeClothes/stepFive_component.tsx";
+import StepSixComponent from "../components/addBespokeClothes/stepSix_component.tsx";
+import DefaultProductImagePopupModal from '../modals/defaultProductImagePopup_modal.tsx';
 
 const AddBespokeClothesScreen = () => {
-    const { selectedStep } = useSelector((state: RootState) => state.vendorProductState);
+    const { selectedStep , productIsLoading, loadingMessage } = useSelector((state: RootState) => state.vendorProductState);
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const dispatch = useDispatch();
 
@@ -36,29 +37,24 @@ const AddBespokeClothesScreen = () => {
         showSuccessModal, setShowSuccessModal,
     } = useAddBespokeClothesHook();
 
-    const { control: stepOneController, handleSubmit: stepOneHandleSubmit, errors: stepOneErrors, onSubmit: stepOneOnSubmit, 
-        isSuccess: stepOneIsSuccess, isLoading: stepOneIsLoading,
-        loadingMessage: stepOneLoadingMessage,
+    const {
+        control, handleSubmit, errors, onSubmit, 
     } = useStepOneHook();
 
     const { 
-        manageState,
-        handleSubmit: stepTwoHandleSubmit,
-        isSuccess: stepTwoIsSuccess, isLoading: stepTwoIsLoading,
-        loadingMessage: stepTwoLoadingMessage
+        manageState, handleSubmit: stepTwoHandleSubmit,
     } = useStepTwoHook();
 
-    const { handleSubmit: stepThreeHandleSubmit,
-        isSuccess: stepThreeIsSuccess, isLoading: stepThreeIsLoading, loadingMessage: stepThreeLoadingMessage,
-        formattedMeasurements, bodyMeasurementOptions, handleSelectMeasurementField,
+    const {
+        handleSubmit: stepThreeHandleSubmit, formattedMeasurements, bodyMeasurementOptions, handleSelectMeasurementField,
      } = useStepThreeHook();
 
-     const { selectedImages, handleAddImage, handleRemoveImage, handleUploadImage,
-        isSuccess: stepFourIsSuccess, isLoading: stepFourIsLoading, loadingMessage: stepFourLoadingMessage,
+     const {
+        selectedImages, uploadedImages, handleAddImage, handleRemoveImage, handleDeleteImage, handleUploadImage,
+        setSelectedDefaultImage, showDefaultImageModal, setShowDefaultImageModal, handleSetDefaultImage,
      } = useStepFourHook();
 
      const {
-        isSuccess: stepFiveIsSuccess, isLoading: stepFiveIsLoading, loadingMessage: stepFiveLoadingMessage,
         colourType, handleSelectColourType,
         colorOptions, handleSelectColour, selectedColor, getTextColor,
         price, handleChangePrice,
@@ -67,25 +63,18 @@ const AddBespokeClothesScreen = () => {
 
     const {
         autoPricePercentage, setAutoPricePercentage, handleSaveAutoPricePercentage, handleDeactivateAutoPriceAdjustment,
-        saveAutoPricePercentageIsLoading, saveAutoPricePercentageIsSuccess, loadingMessage: stepSixLoadingMessage,
-        submitProductIsLoading, submitProductIsSuccess,
         isAutoPriceAdjustment, setIsAutoPriceAdjustment,
         showPriceAdjustmentModal, setShowPriceAdjustmentModal,
         priceAdjustmentModalType, setPriceAdjustmentModalType,
         handleSubmitProduct,
     } = useStepSixHook(setShowWarningModal, setShowSuccessModal);
 
-    const isSuccess = stepOneIsSuccess || stepTwoIsSuccess || stepThreeIsSuccess || stepFourIsSuccess || stepFiveIsSuccess || saveAutoPricePercentageIsSuccess || submitProductIsSuccess;
-    const isLoading = stepOneIsLoading || stepTwoIsLoading || stepThreeIsLoading || stepFourIsLoading || stepFiveIsLoading || saveAutoPricePercentageIsLoading || submitProductIsLoading;
-    const loadingMessage = stepOneLoadingMessage || stepTwoLoadingMessage || stepThreeLoadingMessage || stepFourLoadingMessage || stepFiveLoadingMessage || stepSixLoadingMessage;
 
     const handleSaveAndContinue = () => {
 
         if (selectedStep === 1) {
-            stepOneHandleSubmit(async(data) => {
-                await stepOneOnSubmit(data);
-            }, (error) => {
-                console.log("ERROR::: ", error);
+            handleSubmit(async(data) => {
+                await onSubmit(data);
             })();
         }
 
@@ -109,14 +98,6 @@ const AddBespokeClothesScreen = () => {
     const handleGoBack = () => {
         (selectedStep >= 1) && dispatch(setSelectedStep(selectedStep - 1));
     };
-
-    useEffect(() => {
-        if (isSuccess) {
-            if (selectedStep <= 5) {
-                dispatch(setSelectedStep(selectedStep + 1));
-            }
-        }
-    }, [isSuccess]);
 
 
     return (
@@ -142,7 +123,7 @@ const AddBespokeClothesScreen = () => {
             <ScrollView showsVerticalScrollIndicator={ false } className="h-full w-full px-5">
 
                 { selectedStep === 1 ? (
-                    <StepOneComponent  control={ stepOneController } errors={ stepOneErrors } />
+                    <StepOneComponent control={ control } errors={ errors } />
                 ) : (selectedStep === 2) ? (
                     <StepTwoComponent manageState={ manageState } />
                 ) : (selectedStep === 3) ? (
@@ -154,8 +135,12 @@ const AddBespokeClothesScreen = () => {
                 ) : (selectedStep === 4) ? (
                     <StepFourComponent
                         selectedImages={ selectedImages }
+                        uploadedImages={ uploadedImages }
                         handleAddImage={ handleAddImage }
                         handleRemoveImage={ handleRemoveImage }
+                        handleDeleteImage={ handleDeleteImage }
+                        setSelectedDefaultImage={ setSelectedDefaultImage }
+                        setShowDefaultImageModal={ setShowDefaultImageModal }
                     />
                 ) : (selectedStep === 5) ? (
                     <StepFiveComponent
@@ -234,7 +219,7 @@ const AddBespokeClothesScreen = () => {
                 <WarningPopupModal 
                     bodyText={"This will change the status of the product to \"under review\" and you will not be able to edit the product without contacting the admin." }
                     screenURL="profileSetupScreen" 
-                    setShowWarningModal={setShowWarningModal} 
+                    setShowWarningModal={setShowWarningModal}
                     handleSubmitProduct={handleSubmitProduct}
                 />
             }
@@ -246,7 +231,15 @@ const AddBespokeClothesScreen = () => {
                 />
             }
 
-            { isLoading && 
+            { showDefaultImageModal &&
+                <DefaultProductImagePopupModal
+                    bodyText="Are you sure you want to use this as default image?"
+                    setShowDefaultImageModal={ setShowDefaultImageModal }
+                    handleSetDefaultImage={ handleSetDefaultImage }
+                />
+            }
+
+            { productIsLoading && 
                 <AppLoader loadingAdditionalMessage={ loadingMessage } />
             }
         </SafeAreaView>

@@ -1,7 +1,7 @@
-import api from "../../../../redux/api/api";
+import rootAPI from "../../../../redux/api/rootAPI.ts";
 import IAnalytic from "../models/analytic_model";
 
-const homeAPI = api.injectEndpoints({
+const homeAPI = rootAPI.injectEndpoints({
     endpoints: (builder) => ({
         // Get dashboard analytics
         getAnalytics: builder.query<IAnalytic, string>({

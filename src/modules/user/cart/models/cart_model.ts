@@ -6,6 +6,8 @@ interface ICart {
     createdAt?:   Date;
     updatedAt?:   Date;
     user?:        string;
+    currency?:    string;
+    subTotal?:    number;
 }
 
 interface BasketItem {
@@ -21,6 +23,7 @@ interface BasketItem {
     originalAmount?:     number;
     productId?:          string;
     quantity?:           number;
+    size?:               string;
     sku?:                string;
     title?:              string;
 }

@@ -2,10 +2,10 @@ import React from 'react';
 import {ScrollView, Text, TouchableOpacity, View} from "react-native";
 import { ArrowDown2, ArrowUp2} from "iconsax-react-native";
 import CheckBox from '@react-native-community/checkbox';
-import IStepTwoProps from '../../models/stepTwoProps_model';
+import IStepTwoBespokeClotheProps from '../../models/stepTwoBespokeClotheProps_model';
 
 
-const StepTwoComponent: React.FC<IStepTwoProps> = ({ manageState }) => {
+const StepTwoComponent: React.FC<IStepTwoBespokeClotheProps> = ({ manageState }) => {
 
     const {
         mainOptions, styleOptions, genderOptions, ageGroupOptions, ageRangeOptions, brandOptions,

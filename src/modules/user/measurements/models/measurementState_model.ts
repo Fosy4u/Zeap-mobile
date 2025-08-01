@@ -1,15 +1,20 @@
 import IBodyMeasurement from "./bodyMeasurement_model";
+import IBodyMeasurementGuide from "./bodyMeasurementGuide_model";
 import IRequiredMeasurementFormFields from "./requiredMeasurementFormField_model";
 
 interface IMeasurementState {
     selectedCartID: string,
     saveMeasurementForNextTime: boolean,
-    showSavedMeasurementBottomSheet: boolean,
+    showAddNewMeasurementBottomSheet: boolean,
+    showSelectGenderBottomSheet: boolean,
     selectedUnit: string,
     unitOptions: IUnitOption[],
-    allBodyMeasurementTemplates: IBodyMeasurement[];
+    allSavedMeasurements: IBodyMeasurement[];
     selectedMeasurementTemplate: IBodyMeasurement;
     requiredMeasurementFormFields: IRequiredMeasurementFormFields;
+    bodyMeasurementGuides: IBodyMeasurementGuide[]
+    loadingMessage: string;
+    isLoading: boolean;
 };
 
 interface IUnitOption {

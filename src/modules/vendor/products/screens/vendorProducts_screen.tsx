@@ -9,14 +9,14 @@ import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { useDispatch, useSelector } from 'react-redux';
 import { setShowProductFilterBottomSheet } from '../../home/slices/vendorHome_slice.tsx';
 import useVendorProductHook from '../hooks/vendorProduct_hook.ts';
-import AppLoader from '../../../general/components/appLoader.tsx';
-import IVendorProduct from '../models/vendorProduct_model.ts';
 import FastImage from 'react-native-fast-image';
 import { RootState } from '../../../../redux/store/store.ts';
+import { setProduct, setProductMode, setSelectedStep } from '../slices/vendorProductState_slice.ts';
+import IVendorProductDetails from '../models/vendorProductDetails_model.ts';
 
 
 const VendorProductsScreen = () => {
-    const { products, isLoadingProducts, loadingMessage } = useSelector((state: RootState) => state.vendorProductState);
+    const { products } = useSelector((state: RootState) => state.vendorProductState);
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const dispatch = useDispatch();
 
@@ -35,7 +35,7 @@ const VendorProductsScreen = () => {
     return (
         <GestureHandlerRootView>
             <BottomSheetModalProvider>
-                <SafeAreaView className="h-auto w-full flex-1 pb-24 bg-lightGray">
+                <SafeAreaView className="h-auto w-full flex-1 pb-[1px] bg-lightGray">
                     <StatusBar
                         backgroundColor="#133522"
                         barStyle="light-content"
@@ -60,6 +60,7 @@ const VendorProductsScreen = () => {
                             </TouchableOpacity>
                         </View>
                     </View>
+
                     <ScrollView
                         showsVerticalScrollIndicator={false}
                         className="h-auto w-full flex-1 px-[20px] pt-5"
@@ -76,7 +77,7 @@ const VendorProductsScreen = () => {
 
                         {/* ==== Product List ==== */}
                         <View className="mb-5">
-                            { products && products.map((product: IVendorProduct) => (
+                            { products && products.map((product: IVendorProductDetails) => (
                                 <TouchableOpacity
                                     key={product._id}
                                     onPress={ () => navigation.navigate("vendorProductDetailsScreen", { productID: product?.productId! }) }
@@ -94,14 +95,17 @@ const VendorProductsScreen = () => {
                                                 fallback
                                             />
 
-                                            <View className="absolute top-5 left-3 right-3 flex-row justify-between">
-                                                <View className="w-[110px] px-2 py-1 rounded-lg border border-white/60 backdrop-blur-lg bg-white/50">
+                                            <View className="absolute top-5 left-2 right-2 flex-row justify-between">
+                                                {/* <View className="w-[110px] px-2 py-1 rounded-lg border border-white/60 backdrop-blur-lg bg-white/50">
                                                     <View className="flex-row items-center">
-                                                        <Star1 color="#E4A01C" size={14} variant="Bold" className="mr-1" />
-                                                        <Text className="font-montserratMedium text-xs">4.3</Text>
+                                                    <Star1 color="#E4A01C" size={14} variant="Bold" className="mr-1" />
+                                                    <Text className="text-xs">{ `${reviewData ? reviewData?.averageRating!.toFixed(1) : 0}.0` }</Text>
                                                     </View>
-                                                    <Text className="font-montserratMedium text-[11px]">200 reviews</Text>
-                                                </View>
+                                                    <Text className="text-[11px]">
+                                                        { reviewData ? `${reviewData?.reviews?.length} ${ reviewData?.reviews?.length! > 1 ? "reviews" : "review" }` : "0 review" }
+                                                    </Text>
+                                                </View> */}
+                                                <View />
 
                                                 <View className="flex-row items-center gap-2">
                                                     <View className={`p-2 flex items-center justify-center rounded-lg border backdrop-blur-lg ${
@@ -114,41 +118,54 @@ const VendorProductsScreen = () => {
                                                             : "border-red-300 bg-red-50"
                                                         }`}>
                                                         <Text className={`font-montserratMedium text-xs ${
-                                                                product.status === "live" 
-                                                                ? "text-green-600" 
-                                                                : product.status === "draft"
-                                                                ? "text-blue-600"
-                                                                : product.status === "under review"
-                                                                ? "text-orange-800"
-                                                                : "text-red-600"
-                                                            }`}>
-                                                            {product.status.charAt(0).toUpperCase() + product.status.slice(1)}
+                                                            product.status === "live" 
+                                                            ? "text-green-600" 
+                                                            : product.status === "draft"
+                                                            ? "text-blue-600"
+                                                            : product.status === "under review"
+                                                            ? "text-orange-800"
+                                                            : "text-red-600"
+                                                        }`}>
+                                                            {product.status!.charAt(0).toUpperCase() + product.status!.slice(1)}
                                                         </Text>
                                                     </View>
                                                 </View>
                                             </View>
 
-                                            <View className="absolute bottom-24 right-4 p-2 flex items-center justify-center rounded-lg border border-gray-200/70 backdrop-blur-lg bg-white/40">
-                                                <TouchableOpacity onPress={ () => null }>
-                                                    <Edit2 color="#3461B9" size={18} variant="Bold" className="mr-1" />
+                                            <View className="h-auto w-full mt-4 flex-row items-center justify-between">
+                                                <View className="h-auto flex-row items-center">
+                                                    <View className="mr-1.5 px-2 py-1 flex-row items-center border border-[#9EBDF8] rounded-md bg-[#E3ECFF]">
+                                                        <Text className="font-montserratMedium text-xs text-[#3461B9] ">{ product.categories?.gender! }'s wear</Text>
+                                                    </View>
+                                                    <View className="px-2 py-1 flex-row items-center border border-[#9EBDF8] rounded-md bg-[#E3ECFF]">
+                                                        <Text className="font-montserratMedium text-xs text-[#3461B9] ">{ product.categories?.age?.ageGroup! }</Text>
+                                                    </View>
+                                                </View>
+                            
+                                                <TouchableOpacity onPress={ () => {
+                                                    dispatch(setProduct(product!));
+                                                    dispatch(setProductMode("Draft"));
+                                                    dispatch(setSelectedStep(1));
+                                                    navigation.navigate(
+                                                        product.productType === "bespokeCloth" ? "addBespokeClothesScreen" :
+                                                        product.productType === "readyMadeCloth" ? "addReadyMadeClothesScreen" :
+                                                        product.productType === "bespokeShoe" ? "addBespokeShoesScreen" :
+                                                        product.productType === "readyMadeShoe" ? "addReadyMadeShoesScreen" :
+                                                        "addAccessoriesScreen"
+                                                    );
+                                                } }  
+                                                    className="p-2 rounded-lg border border-gray-200/70 backdrop-blur-lg bg-white/40"
+                                                >
+                                                    <Edit2 color="#3461B9" size={18} variant="Bold" className="mr-1" /> 
                                                 </TouchableOpacity>
-                                            </View>
-
-                                            <View className="h-auto w-full mt-4 flex-row items-center">
-                                                <View className="mr-1.5 px-2 py-1 flex-row items-center border border-[#9EBDF8] rounded-md bg-[#E3ECFF]">
-                                                    <Text className="font-montserratMedium text-xs text-[#3461B9] ">{ product.categories.gender! }'s wear</Text>
                                                 </View>
-                                                <View className="px-2 py-1 flex-row items-center border border-[#9EBDF8] rounded-md bg-[#E3ECFF]">
-                                                    <Text className="font-montserratMedium text-xs text-[#3461B9] ">{ product.categories.age.ageGroup! }</Text>
-                                                </View>
-                                            </View>
 
                                             <View className="h-auto w-full mt-1">
-                                                <View className="h-auto w-full flex-row items-center justify-between">
+                                                <View className="h-auto w-full flex-row items-end justify-between">
                                                     <Text className="flex-1 font-montserratMedium text-base">{ product.title }</Text>
-                                                    <Text className={`font-montserratMedium text-xs ${product.variations[0].quantity >= 10 ? "text-green-600" : "text-red-600"}`}>{ product.variations[0].quantity } in stock</Text>
+                                                    <Text className={`font-montserratMedium text-xs ${product.variations?.[0]?.quantity! >= 10 ? "text-green-600" : "text-red-600"}`}>{ product.variations?.[0]?.quantity! } in stock</Text>
                                                 </View>
-                                                <Text className="font-montserratMedium text-base">₦{ product.variations[0].price.toLocaleString() }</Text>
+                                                <Text className="mt-1 font-montserratSemiBold text-base">₦{ product.variations?.[0]?.price!.toLocaleString() }</Text>
                                             </View>
                                         </View>
                                     </View>
@@ -183,9 +200,9 @@ const VendorProductsScreen = () => {
 
                     </ScrollView>
 
-                    { isLoadingProducts &&
+                    {/* { isLoadingProducts &&
                         <AppLoader loadingAdditionalMessage={ loadingMessage } />
-                    }
+                    } */}
                 </SafeAreaView>
             </BottomSheetModalProvider>
         </GestureHandlerRootView>

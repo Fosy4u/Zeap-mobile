@@ -3,11 +3,11 @@ interface IAddress {
     _id?:         string;
     address?:     string;
     country?:     string;
-    createdAt?:   Date;
     disabled?:    boolean;
     isDefault?:   boolean;
     phoneNumber?: string;
     region?:      string;
+    createdAt?:   Date;
     updatedAt?:   Date;
     user?:        string;
 }

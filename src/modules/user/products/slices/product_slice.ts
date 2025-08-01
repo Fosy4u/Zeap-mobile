@@ -4,7 +4,9 @@ import IProduct from "../models/product_model";
 import { IColorEnum } from "../../../general/models/productOptions_model";
 import IProductDetails from "../models/productDetails_model";
 import { set } from "react-hook-form";
-import IPromoProduct from "../models/promoProduct_model";
+import IPromoProduct from "../models/promotion_model";
+import IReview from "../../../general/models/review_model";
+import IReviewAndRating from "../../../general/models/review_model";
 
 const initialState: IProductState = {
     productID: "",
@@ -14,8 +16,12 @@ const initialState: IProductState = {
 
     
     promoProducts: [],
+    productPromotion: {},
     product: {},
     allProducts: [],
+    recentlyViewedProducts: [],
+    recommendedProducts: [],
+    wishListProducts: [],
     selectedCategory:{
         id: 1,
         name: "Female Clothings",
@@ -81,6 +87,17 @@ const initialState: IProductState = {
     filteredSearchPhrases: ["Women jacket", "Men jacket", "Men’s summer sweater", "Joggers", "Kids hoodie"],
     searchWord: "",
     showSizedGuideBottomSheet: false,
+
+    reviewAndRating: {
+        averageRating: 0,
+        reviews: [],
+        imageMatch: {}
+    },
+
+    sizeGuide: {},
+
+    isLoading: false,
+    loadingMessage: "",
 };
 
 export const productSlice = createSlice({
@@ -101,11 +118,23 @@ export const productSlice = createSlice({
         setPromoProducts: (state: IProductState, action: PayloadAction<IPromoProduct[]>) => {
             state.promoProducts = action.payload;
         },
+        setProductPromotion: (state: IProductState, action: PayloadAction<IPromoProduct>) => {
+            state.productPromotion = action.payload;
+        },
         setProduct: (state: IProductState, action: PayloadAction<IProductDetails>) => {
             state.product = action.payload;
         },
         setAllProducts: (state: IProductState, action: PayloadAction<IProduct[]>) => {
             state.allProducts = action.payload;
+        },
+        setRecentlyViewedProducts: (state: IProductState, action: PayloadAction<IProduct[]>) => {
+            state.recentlyViewedProducts = action.payload;
+        },
+        setRecommendedProducts: (state: IProductState, action: PayloadAction<IProduct[]>) => {
+            state.recommendedProducts = action.payload;
+        },
+        setWishListProducts: (state: IProductState, action: PayloadAction<IProduct[]>) => {
+            state.wishListProducts = action.payload;
         },
         setSelectedTab: (state: IProductState, action: PayloadAction<string>) => {
             state.selectedTab = action.payload;
@@ -158,6 +187,18 @@ export const productSlice = createSlice({
         },
         setShowSizedGuideBottomSheet: (state: IProductState, action: PayloadAction<boolean>) => {
             state.showSizedGuideBottomSheet = action.payload;
+        },
+        setReviewAndRating: (state: IProductState, action: PayloadAction<IReviewAndRating>) => {
+            state.reviewAndRating = action.payload;
+        },
+        setSizeGuide: (state: IProductState, action: PayloadAction<any>) => {
+            state.sizeGuide = action.payload;
+        },
+        setIsLoading: (state: IProductState, action: PayloadAction<boolean>) => {
+            state.isLoading = action.payload;
+        },
+        setLoadingMessage: (state: IProductState, action: PayloadAction<string>) => {
+            state.loadingMessage = action.payload;
         }
     }
 });
@@ -167,8 +208,12 @@ const { actions, reducer } = productSlice;
 export const {
     setSearchWord,
     setPromoProducts,
+    setProductPromotion,
     setProduct,
     setAllProducts,
+    setRecentlyViewedProducts,
+    setRecommendedProducts,
+    setWishListProducts,
     setProductID,
     setSelectedTab,
     setNewestArrivals,
@@ -185,5 +230,9 @@ export const {
     setSelectedSize,
     setSelectedQuantity,
     setShowSizedGuideBottomSheet,
+    setReviewAndRating,
+    setSizeGuide,
+    setIsLoading,
+    setLoadingMessage,
 } = actions;
 export default reducer;

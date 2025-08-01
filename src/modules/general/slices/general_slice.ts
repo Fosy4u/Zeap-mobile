@@ -85,7 +85,10 @@ const initialState: IGeneralStateModel = {
         occasionEnums:        [],
         brandEnums:           [],
         colorEnums:           [],
-    }
+    },
+
+    isLoading: false,
+    loadingMessage: "",
 };
 
 export const generalSlice = createSlice({
@@ -109,7 +112,14 @@ export const generalSlice = createSlice({
         },
         setAccessoriesOptions: (state: IGeneralStateModel, action: PayloadAction<IAccessories>) => {
             state.accessoriesOptions = action.payload;
-        }
+        },
+
+        setIsLoading: (state: IGeneralStateModel, action: PayloadAction<boolean>) => {
+            state.isLoading = action.payload;
+        },
+        setLoadingMessage: (state: IGeneralStateModel, action: PayloadAction<string>) => {
+            state.loadingMessage = action.payload;
+        },
     }
 });
 
@@ -121,6 +131,9 @@ export const {
     setReadyMadeShoesOptions,
     setBespokeClothesOptions,
     setBespokeShoesOptions,
-    setAccessoriesOptions
+    setAccessoriesOptions,
+
+    setIsLoading,
+    setLoadingMessage,
 } = actions;
 export default reducer;

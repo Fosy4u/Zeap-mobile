@@ -4,15 +4,19 @@ import homeReducer from "../../modules/user/home/slices/home_slice";
 import productReducer from "../../modules/user/products/slices/product_slice";
 import measurementReducer from "../../modules/user/measurements/slices/measurement_slice";
 import addressReducer from "../../modules/user/address/slices/address_slice";
-import cartReducer from "../../modules/user/cart/slices/cart_slice";
 import profileReducer from "../../modules/profile/slices/profileState_slice";
 import generalReducer from "../../modules/general/slices/general_slice";
+import cartReducer from "../../modules/user/cart/slices/cart_slice";
+import orderReducer from "../../modules/user/orders/slices/order_slice";
+import pointAndVoucherReducer from "../../modules/user/pointAndVoucher/slices/pointAndVoucher_slice";
 import vendorHomeReducer from "../../modules/vendor/home/slices/vendorHome_slice";
 import vendorGeneralReducer from "../../modules/vendor/general/slices/general_slice";
-import notificationsReducer from "../../modules/vendor/notifications/slices/notifications_slice";
 import paymentReducer from "../../modules/vendor/payments/slices/payment_slice";
 import vendorProductReducer from "../../modules/vendor/products/slices/vendorProductState_slice";
-import api from "../api/api";
+import settingsReducer from "../../modules/settings/slices/settingsState_slice";
+import notificationsReducer from "../../modules/notifications/slices/notifications_slice";
+import rootAPI from "../api/rootAPI.ts";
+import reviewAndRatingReducer from "../../modules/user/raviewAndRating/slices/reviewAndRating_slice";
 
 
 const appStore = configureStore({
@@ -21,6 +25,7 @@ const appStore = configureStore({
         authState: authReducer,
         profileState: profileReducer,
         generalState: generalReducer,
+        settingsState: settingsReducer,
 
         //  Users
         homeState: homeReducer,
@@ -28,6 +33,9 @@ const appStore = configureStore({
         measurementState: measurementReducer,
         addressState: addressReducer,
         cartState: cartReducer,
+        orderState: orderReducer,
+        pointAndVoucherState: pointAndVoucherReducer,
+        reviewAndRatingState: reviewAndRatingReducer,
 
         //  Vendors
         vendorHomeState: vendorHomeReducer,
@@ -36,13 +44,13 @@ const appStore = configureStore({
         paymentState: paymentReducer,
         vendorProductState: vendorProductReducer,
 
-        [api.reducerPath]: api.reducer,
+        [rootAPI.reducerPath]: rootAPI.reducer,
     },
 
     middleware: (getDefaultMiddleware) => getDefaultMiddleware({
         serializableCheck: false
     }).concat([
-        api.middleware
+        rootAPI.middleware
     ]),
 });
 

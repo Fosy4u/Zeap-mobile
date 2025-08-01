@@ -1,23 +1,26 @@
-import IDraftProduct from "./vendorDraftProducts_model";
-import IVendorProduct from "./vendorProduct_model";
+import IPromotion from "./promotion_model";
 import IVendorProductDetails from "./vendorProductDetails_model";
 
 interface IVendorProductState {
     productMode: string;
     selectedStep: number;
     tabs: string[];
+    productType: string;
     clotheType: string;
+    shoeType: string;
     selectedTab: string;
     timelines: string[];
     savedMeasurements: ISavedMeasurement[];
     savedAddresses: ISavedAddress[];
 
-    products: IVendorProduct[];
+    products: IVendorProductDetails[];
     product: IVendorProductDetails;
-    draftProducts: IDraftProduct[];
-    selectedDraftProduct: IDraftProduct;
+    draftProducts: IVendorProductDetails[];
+    productPromotion: IPromotion;
 
-    isLoadingProducts: boolean;
+    showProductTypeBottomSheet: boolean;
+
+    productIsLoading: boolean;
     loadingMessage: string;
 };
 

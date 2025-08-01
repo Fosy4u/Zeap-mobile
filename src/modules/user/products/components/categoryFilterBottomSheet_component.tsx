@@ -2,8 +2,8 @@ import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 import { BottomSheetModalMethods } from "@gorhom/bottom-sheet/lib/typescript/types";
 import { ArrowDown2, ArrowRight2 } from "iconsax-react-native";
 import React, { useState } from "react";
-import { View, Image, Text } from "react-native";
-import { TouchableOpacity, ScrollView } from "react-native-gesture-handler";
+import { View, Image, Text, TouchableOpacity } from "react-native";
+import { ScrollView } from "react-native-gesture-handler";
 
 export type ICategoryFilterBottomSheetComponent = {
   bottomSheetModalRef: React.RefObject<BottomSheetModalMethods>;

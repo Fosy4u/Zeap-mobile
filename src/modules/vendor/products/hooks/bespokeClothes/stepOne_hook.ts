@@ -1,34 +1,39 @@
-import { useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
-import { IStepOneAddBespokeClothes, IStepTwoAddBespokeClothes, stepOneAddBespokeClothesSchema, stepTwoAddBespokeClothesSchema } from "../../validations/addBespokeClothes_validation";
+import { IStepOneAddProduct, stepOneAddProductSchema } from "../../validations/addProduct_validation";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../../../../redux/store/store";
-import { useAddBespokeClothesMutation } from "../../apis/bespokeProduct_api";
+import { useCreateProductMutation, useUpdateProductMutation } from "../../apis/bespokeProduct_api";
+import { setLoadingMessage, setProduct, setProductIsLoading, setSelectedStep } from "../../slices/vendorProductState_slice";
+import IVendorProductDetails from "../../models/vendorProductDetails_model";
+import { Alert } from "react-native";
 
 
 
 const useStepOneHook = () => {
-    const { selectedDraftProduct } = useSelector((state: RootState) => state.vendorProductState );
+    const { product } = useSelector((state: RootState) => state.vendorProductState );
     const { userData } = useSelector((state: RootState) => state.profileState );
-    const [loadingMessage, setLoadingMessage] = useState("");
+    const dispatch = useDispatch();
 
-    const [addBespokeClothes , { isLoading, isSuccess }] = useAddBespokeClothesMutation();
+    const [createProduct] = useCreateProductMutation();
+    const [updatedProduct] = useUpdateProductMutation();
     
-    const { control, handleSubmit, formState: { errors } } = useForm<IStepOneAddBespokeClothes>({
+    const { control, handleSubmit, formState: { errors } } = useForm<IStepOneAddProduct>({
+        
         defaultValues: {
-            title: selectedDraftProduct?.title || "",
-            subTitle: selectedDraftProduct?.subTitle || "",
-            description: selectedDraftProduct?.description || "",
+            title: product?.title || "",
+            subTitle: product?.subTitle || "",
+            description: product?.description || "",
             productType: "bespokeCloth",
-            shopId: selectedDraftProduct?.shopId || userData?.shopId || "",
+            shopId: product?.shopId || userData?.shopId || "",
         },
-        resolver: yupResolver(stepOneAddBespokeClothesSchema),
+        resolver: yupResolver(stepOneAddProductSchema),
         mode: "onChange" // Validate the form either "onChange" or "onBlur" or "onSubmit" or "all"
     });
 
-    const onSubmit: SubmitHandler<IStepOneAddBespokeClothes> = async (data) => {
-        setLoadingMessage("Saving basic details...");
+    const onSubmit: SubmitHandler<IStepOneAddProduct> = async (data) => {
+        dispatch(setLoadingMessage("Saving basic details..."));
+        dispatch(setProductIsLoading(true));
 
         try {
             const requestData = {
@@ -36,19 +41,35 @@ const useStepOneHook = () => {
                 subTitle: data.subTitle,
                 description: data.description,
                 productType: data.productType,
+                productId: product?.productId! || "",
                 shopId: data.shopId,
+                currentStep: product?.currentStep! || 1,
             };
             console.log("REQUEST DATA::: ", requestData);
 
-            const addBespokeClothesResponseData = await addBespokeClothes(requestData).unwrap();
-            // console.log("RESPONSE::: ", addBespokeClothesResponse);
-
-            if (addBespokeClothesResponseData) {
-                setLoadingMessage("");
+            let createProductResponseData: IVendorProductDetails | undefined;
+            if (!product) {
+                console.log("ADDING BESPOKE SHOES");
+                dispatch(setLoadingMessage("Adding basic details..."));
+                createProductResponseData = await createProduct(requestData).unwrap();
+            } else {
+                console.log("UPDATING BESPOKE SHOES");
+                dispatch(setLoadingMessage("Updating basic details..."));
+                createProductResponseData = await updatedProduct(requestData).unwrap();
             }
-        } catch (error) {
+            console.log("RESPONSE::: ", createProductResponseData);
+
+            if (createProductResponseData) {
+                dispatch(setProduct(createProductResponseData));
+                dispatch(setProductIsLoading(false));
+                dispatch(setLoadingMessage(""));
+                dispatch(setSelectedStep(2));
+            }
+        } catch (error: any) {
+            dispatch(setProductIsLoading(false));
+            dispatch(setLoadingMessage(""));
+            Alert.alert("Error", error.errors[0]);
             console.log("ERROR::: ", error);
-                
         }
     };
 
@@ -56,7 +77,6 @@ const useStepOneHook = () => {
 
     return {
         control, handleSubmit, errors, onSubmit,
-        isSuccess, isLoading, loadingMessage,
     };
 };
 

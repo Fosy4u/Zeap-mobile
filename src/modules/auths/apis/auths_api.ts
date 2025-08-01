@@ -1,42 +1,54 @@
-import api from "../../../redux/api/api";
+import rootAPI from "../../../redux/api/rootAPI.ts";
+import { getToken } from "../../../redux/services/authorizationHeader.ts";
+import { forgotPasswordRoute, loginUserRoute, mergeUserDataRoute, registerUserRoute } from "../../../routes/api/api_route.ts";
 import { IUser } from "../../profile/models/profileState_model";
-import { IRegisterUser } from "../validations/auths_validation";
-import { getSavedAnonymousToken } from "../../../redux/services/authorizationHeader";
 
 /**
  * The authAPI
- * @returns 
+ * @returns
  */
-const authAPI = api.injectEndpoints({
+const authAPI = rootAPI.injectEndpoints({
     overrideExisting: true,
     endpoints: (builder) => ({
-        // Register User
-        registerUser: builder.mutation<any, IRegisterUser>({
+        // Register Guest User
+        registerGuestUser: builder.mutation<any, any>({
             query: (requestData) => ({
-                url: "/user/create",
-                method: "POST",
+                url: registerUserRoute,
+                method: "PUT",
                 headers: {
                     "Accept": "application/json",
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${ getSavedAnonymousToken() }`
+                    "Authorization": `Bearer ${ getToken() }`
                 },
                 body: requestData,
             }),
             invalidatesTags: ["user"],
-            transformResponse: (response: any) => {
-                return response;
+            transformResponse: (response: { data: any }) => {
+                return response.data;
             },
         }),
 
         // Get User By ID
         getUserById: builder.query<IUser, string>({
             query: (uid) => ({
-                url: `/userByUid?uid=${ uid }`,
+                url: loginUserRoute,
                 method: "GET",
+                params: { uid },
             }),
-            providesTags: [
-                "user"
-            ],
+            providesTags: ["user"],
+            transformResponse: (response: { data: IUser }) => {
+                return response.data;
+            },
+        }),
+
+        // Merge User Data
+        mergeUserData: builder.mutation<IUser, { guestUid: string }>({
+            query: (requestData) => ({
+                url: mergeUserDataRoute,
+                method: "PUT",
+                body: requestData
+            }),
+            invalidatesTags: ["user"],
             transformResponse: (response: { data: IUser }) => {
                 return response.data;
             },
@@ -45,7 +57,7 @@ const authAPI = api.injectEndpoints({
         // Forgot Password
         forgotPassword: builder.mutation<any, any>({
             query: (requestData) => ({
-                url: "",
+                url: forgotPasswordRoute,
                 method: "POST",
                 body: requestData
             }),
@@ -57,8 +69,9 @@ const authAPI = api.injectEndpoints({
 });
 
 export const {
-    useRegisterUserMutation,
+    useRegisterGuestUserMutation,
     useLazyGetUserByIdQuery,
+    useMergeUserDataMutation,
     useForgotPasswordMutation
 } = authAPI;
 export default authAPI;

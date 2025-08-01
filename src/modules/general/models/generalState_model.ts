@@ -7,6 +7,9 @@ interface IGeneralStateModel {
     bespokeClothesOptions: IClothes;
     bespokeShoesOptions: IShoes;
     accessoriesOptions: IAccessories;
+
+    isLoading: boolean;
+    loadingMessage: string;
 };
 
 export default IGeneralStateModel;

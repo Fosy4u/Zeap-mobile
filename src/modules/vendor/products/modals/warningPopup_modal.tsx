@@ -1,7 +1,7 @@
 import React, {Dispatch} from 'react'
 import {useNavigation} from '@react-navigation/native';
 import {useDispatch} from 'react-redux';
-import {Image, SafeAreaView, StatusBar, Text, TouchableOpacity, View} from 'react-native'
+import {Image, ImageBackground, SafeAreaView, StatusBar, Text, TouchableOpacity, View} from 'react-native'
 import {NativeStackNavigationProp} from 'react-native-screens/lib/typescript/native-stack/types';
 import RootNavigationStackModel from "../../../../routes/model/routes_model.ts";
 
@@ -33,14 +33,12 @@ const WarningPopupModal: React.FC<Props> = ({ bodyText, screenURL, setShowWarnin
 
             <View className="h-full w-full absolute inset-0 bg-black opacity-60"/>
             <View className="h-[340px] w-[320px] rounded-2xl bg-white">
-                <View
-                    className="h-[120px] w-full p-3 flex items-center justify-center rounded-tl-2xl rounded-tr-2xl bg-baseGreen">
-                    <Image
-                        className="h-auto w-auto"
-                        resizeMode="cover"
-                        source={require("../../../../../assets/images/warning_modal_image.png")}
-                    />
-                </View>
+                <ImageBackground
+                    source={require("../../../../../assets/images/warning_modal_image.png")}
+                    resizeMode="contain"
+                    className="h-[120px] w-full p-3 flex items-center justify-center rounded-tl-2xl rounded-tr-2xl bg-baseGreen"
+                    imageStyle={{ borderTopLeftRadius: 16, borderTopRightRadius: 16 }}
+                />
                 <View className="px-4 pb-2 flex-1 items-center justify-center">
                     <Text className="font-montserratSemiBold text-xl text-gold">Hold Up</Text>
                     <Text className="h-auto w-full mx-7 mt-2.5 font-montserratMedium text-center leading-5">

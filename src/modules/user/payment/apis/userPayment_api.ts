@@ -1,16 +1,19 @@
-import api from "../../../../redux/api/api";
+import rootAPI from "../../../../redux/api/rootAPI.ts";
 import IPaymentReference from "../models/paymentReference_model";
+import IPaymentReferenceParams from "../models/paymentReferenceParams_model.ts";
 
 
-const paymentAPI = api.injectEndpoints({
+
+const paymentAPI = rootAPI.injectEndpoints({
+    overrideExisting: true,
     endpoints: (builder) => ({
 
         // Get Payment Reference.
-        getPaymentReference: builder.query<IPaymentReference, { deliveryAddress_id: string }>({
-            query: ({ deliveryAddress_id }) => ({
+        getPaymentReference: builder.query<IPaymentReference, IPaymentReferenceParams>({
+            query: (params) => ({
                 url: `/payment/reference`,
                 method: "GET",
-                params: { deliveryAddress_id }
+                params
             }),
             providesTags: ["PaymentReference"],
             transformResponse: (response: { data: IPaymentReference }) => {
@@ -25,7 +28,7 @@ const paymentAPI = api.injectEndpoints({
                 method: "POST",
                 body: { reference },
             }),
-            invalidatesTags: ["PaymentReference", "Cart", "CartTotal"],
+            invalidatesTags: ["PaymentReference", "Cart"],
 
             transformResponse: (response: { data: any }) => {
                 return response.data;
