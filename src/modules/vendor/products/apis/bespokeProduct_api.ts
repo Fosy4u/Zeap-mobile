@@ -1,113 +1,181 @@
-import api from "../../../../redux/api/api.ts";
-import IDraftProduct from "../models/vendorDraftProducts_model.ts";
+import rootAPI from "../../../../redux/api/rootAPI.ts";
+import IVendorProductBodyMeasurement from "../models/vendorProductBodyMeasurement_model.ts";
 import IVendorProductDetails from "../models/vendorProductDetails_model.ts";
-import { IStepOneAddBespokeClothes, IStepThreeAddBespokeClothes, IStepTwoAddBespokeClothes } from "../validations/addBespokeClothes_validation.ts";
+import { IStepOneAddProduct, IStepThreeAddBespokeClothes, IStepThreeAddBespokeShoes, IStepTwoAddClothes, IStepTwoAddShoes } from "../validations/addProduct_validation.ts";
 
+type IUpdateProductPayload = IStepTwoAddClothes | IStepTwoAddShoes | IStepThreeAddBespokeClothes | IStepThreeAddBespokeShoes;
 
-const bespokeProductAPI = api.injectEndpoints({
+const bespokeProductAPI = rootAPI.injectEndpoints({
+    overrideExisting: true,
     endpoints: (builder) => ({
 
-        // Add bespoke clothes (Step 1)
-        addBespokeClothes: builder.mutation<IDraftProduct, IStepOneAddBespokeClothes>({
+        // Create product (Step 1)
+        createProduct: builder.mutation<IVendorProductDetails, IStepOneAddProduct>({
             query: (requestData) => ({
                 url: "/product/create",
                 method: "POST",
                 body: requestData,
             }),
-            invalidatesTags: ["DraftProduct", "Products"],
-            transformResponse(response: { data: any }) {
+            invalidatesTags: ["DraftProducts", "Products"],
+            transformResponse(response: { data: IVendorProductDetails }) {
                 return response.data;
             },
         }),
 
-        // Update with categories (Step 2)
-        updateWithCategories: builder.mutation<IDraftProduct, { productId : string; categories: IStepTwoAddBespokeClothes }>({
+        // Update product (Step 1, 2)
+        updateProduct: builder.mutation<IVendorProductDetails, IUpdateProductPayload>({
             query: (requestData) => ({
                 url: "/product/update",
                 method: "PUT",
                 body: requestData,
             }),
-            invalidatesTags: ["DraftProduct", "Products"],
-            transformResponse(response: { data: any }) {
+            invalidatesTags: ["DraftProducts", "Products"],
+            transformResponse(response: { data: IVendorProductDetails }) {
                 return response.data;
             },
         }),
 
         // Update with body measurements (Step 3)
-        updateWithBodyMeasurements: builder.mutation<IDraftProduct, IStepThreeAddBespokeClothes>({
+        updateWithBodyMeasurements: builder.mutation<IVendorProductDetails, IStepThreeAddBespokeClothes>({
             query: (requestData) => ({
                 url: "/product/bodyMeasurement/add",
                 method: "POST",
                 body: requestData,
             }),
-            invalidatesTags: ["BodyMeasurement", "DraftProduct", "Products"],
+            invalidatesTags: ["BodyMeasurement", "DraftProducts", "Products"],
             transformResponse(response: { data: any }) {
                 return response.data;
             }
         }),
 
-        // Upload product images
-        uploadProductImages: builder.mutation<IDraftProduct, FormData>({
+        // Upload product images (Step 4)
+        uploadProductImages: builder.mutation<IVendorProductDetails, FormData>({
             query: (requestData) => ({
                 url: "/product/update/addColorAndImages",
                 method: "PUT",
                 body: requestData,
             }),
-            invalidatesTags: ["DraftProduct", "Products"],
+            invalidatesTags: ["VendorProductDetails", "DraftProducts", "Products"],
             transformResponse(response: { data: any }) {
                 // console.log("RESPONSE: ", response);
                 return response.data;
             },
         }),
 
-        // Add product variation
-        addProductVariation: builder.mutation<IDraftProduct, any>({
+        // Update product images (Step 4)
+        updateProductImages: builder.mutation<IVendorProductDetails, FormData>({
+            query: (requestData) => ({
+                url: "/product/update/addImagesToProductColor",
+                method: "PUT",
+                body: requestData,
+            }),
+            invalidatesTags: ["VendorProductDetails", "DraftProducts", "Products"],
+            transformResponse(response: { data: any }) {
+                // console.log("RESPONSE: ", response);
+                return response.data;
+            },
+        }),
+
+        // Set default product image (Step 4)
+        setDefaultProductImage: builder.mutation<IVendorProductDetails, any>({
+            query: (requestData) => ({
+                url: "/product/update/setProductImageAsDefault",
+                method: "PUT",
+                body: requestData,
+            }),
+            invalidatesTags: ["VendorProductDetails", "DraftProducts", "Products"],
+            transformResponse(response: { data: any }) {
+                return response.data;
+            },
+        }),
+
+        // Delete product image (Step 4)
+        deleteProductImage: builder.mutation<IVendorProductDetails, any>({
+            query: (requestData) => ({
+                url: "/product/update/deleteProductImage",
+                method: "PUT",
+                body: requestData,
+            }),
+            invalidatesTags: ["VendorProductDetails", "DraftProducts", "Products"],
+            transformResponse(response: { data: any }) {
+                return response.data;
+            },
+        }),
+
+        // Add product variation (Step 5)
+        addProductVariation: builder.mutation<any, any>({
             query: (requestData) => ({
                 url: "/product/update/addProductVariation",
                 method: "PUT",
                 body: requestData,
             }),
-            invalidatesTags: ["DraftProduct", "Products"],
+            invalidatesTags: ["VendorProductDetails", "DraftProducts", "Products"],
             transformResponse(response: { data: any }) {
                 return response.data;
             },
         }),
 
-        // Save auto price percentage
-        saveAutoPricePercentage: builder.mutation<IDraftProduct, any>({
+        // Update product variation (Step 5)
+        updateProductVariation: builder.mutation<any, any>({
+            query: (requestData) => ({
+                url: "/product/update/editProductVariation",
+                method: "PUT",
+                body: requestData,
+            }),
+            invalidatesTags: ["VendorProductDetails", "DraftProducts", "Products"],
+            transformResponse(response: { data: any }) {
+                return response.data;
+            },
+        }),
+
+        // Save auto price percentage (Step 6)
+        saveAutoPricePercentage: builder.mutation<IVendorProductDetails, any>({
             query: (requestData) => ({
                 url: "/product/update/autoPriceAdjustment",
                 method: "PUT",
                 body: requestData,
             }),
-            invalidatesTags: ["DraftProduct", "Products"],
-            transformResponse(response: { data: any }) {
+            invalidatesTags: ["VendorProductDetails", "DraftProducts", "Products"],
+            transformResponse(response: { data: IVendorProductDetails }) {
                 return response.data;
             },
         }),
 
         // Submit product
-        submitProduct: builder.mutation<IDraftProduct, any>({
+        submitProduct: builder.mutation<IVendorProductDetails, any>({
             query: (requestData) => ({
                 url: "/product/update/submitProduct",
                 method: "PUT",
                 body: requestData,
             }),
-            invalidatesTags: ["DraftProduct", "Products"],
-            transformResponse(response: { data: any }) {
+            invalidatesTags: ["VendorProductDetails", "DraftProducts", "Products"],
+            transformResponse(response: { data: IVendorProductDetails }) {
                 return response.data;
             },
         }),
 
         // Get draft product
-        getDraftProducts: builder.query<IDraftProduct[], any>({
+        getDraftProducts: builder.query<IVendorProductDetails[], any>({
             query: ({ shopId }) => ({
                 url: "/products/shop/draft",
                 method: "GET",
                 params: { shopId }
             }),
-            providesTags: ["DraftProduct"],
-            transformResponse(response: { data: IDraftProduct[] }) {
+            providesTags: ["DraftProducts"],
+            transformResponse(response: { data: IVendorProductDetails[] }) {
+                return response.data;
+            },
+        }),
+
+        // Get product body measurements
+        getProductBodyMeasurements: builder.query<IVendorProductBodyMeasurement, string>({
+            query: (productId) => ({
+                url: "/bodyMeasurement/product",
+                method: "GET",
+                params: { productId }
+            }),
+            providesTags: ["VendorProductBodyMeasurement"],
+            transformResponse(response: { data: IVendorProductBodyMeasurement }) {
                 return response.data;
             },
         }),
@@ -115,13 +183,18 @@ const bespokeProductAPI = api.injectEndpoints({
 });
 
 export const {
-    useAddBespokeClothesMutation,
-    useUpdateWithCategoriesMutation,
+    useCreateProductMutation,
+    useUpdateProductMutation,
     useUpdateWithBodyMeasurementsMutation,
     useUploadProductImagesMutation,
+    useUpdateProductImagesMutation,
+    useSetDefaultProductImageMutation,
+    useDeleteProductImageMutation,
     useAddProductVariationMutation,
+    useUpdateProductVariationMutation,
     useSaveAutoPricePercentageMutation,
     useSubmitProductMutation,
     useLazyGetDraftProductsQuery,
+    useLazyGetProductBodyMeasurementsQuery,
 } = bespokeProductAPI;
 export default bespokeProductAPI;

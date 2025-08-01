@@ -1,22 +1,19 @@
-import { set, SubmitHandler, useForm } from "react-hook-form";
-import { IStepTwoAddBespokeClothes, stepTwoAddBespokeClothesSchema } from "../../validations/addBespokeClothes_validation";
-import { yupResolver } from "@hookform/resolvers/yup";
+import { stepTwoAddClothesSchema } from "../../validations/addProduct_validation";
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../../../../redux/store/store";
 import { useUpdateWithCategoriesMutation } from "../../apis/bespokeProduct_api";
 import { Alert } from "react-native";
+import { setLoadingMessage, setProduct, setProductIsLoading, setSelectedStep } from "../../slices/vendorProductState_slice";
+import { useLazyGetProductByProductIDQuery } from "../../apis/product_api";
 
-
-interface IOption {
-    key: string;
-    value: string;
-};
 
 const useStepTwoHook = () => {
 
-    const { selectedDraftProduct } = useSelector((state: RootState) => state.vendorProductState );
+    const { product } = useSelector((state: RootState) => state.vendorProductState );
     const { bespokeClothesOptions } = useSelector((state: RootState) => state.generalState);
+    const dispatch = useDispatch();
+    
     const [mainOptions , setMainOptions] = useState<string[]>([]);
     const [styleOptions, setStyleOptions] = useState<string[]>([]);
     const [genderOptions, setGenderOptions] = useState<string[]>([]);
@@ -28,7 +25,6 @@ const useStepTwoHook = () => {
     const [sleeveLengthOptions, setSleeveLengthOptions] = useState<string[]>([]);
     const [fasteningOptions, setFasteningOptions] = useState<string[]>([]);
     const [fitOptions, setFitOptions] = useState<string[]>([]);
-    const [loadingMessage, setLoadingMessage] = useState("");
 
 
     const [selectedMain, setSelectedMain] = useState<string[]>([]);
@@ -55,22 +51,24 @@ const useStepTwoHook = () => {
     const [showFasteningDropDown, setShowFasteningDropDown] = useState(false);
     const [showFitDropDown, setShowFitDropDown] = useState(false);
     
-    
-    
+    const [updateWithCategories] = useUpdateWithCategoriesMutation();
+    const [getProductByProductID] = useLazyGetProductByProductIDQuery();  
 
-    const [updateWithCategories, { isLoading, isSuccess }] = useUpdateWithCategoriesMutation();   
-
+    // Handle submit
     const handleSubmit = async () => {
-        setLoadingMessage("Updating product categories...");
-        const productId = selectedDraftProduct?.productId || "";
-        // console.log("PRODUCT ID::: ", productId);
+        dispatch(setLoadingMessage("Updating product categories..."));
+        dispatch(setProductIsLoading(true));
+        const productId = product?.productId || "";
         
         try {
             const categoriesData = {
                 main: selectedMain,
                 style: selectedStyle,
                 gender: selectedGender,
-                age: { ageGroup: selectedAgeGroup, ageRange: selectedAgeRange },
+                age: {
+                    ageGroup: selectedAgeGroup,
+                    ageRange: selectedAgeRange
+                },
                 brand: selectedBrand,
                 design: selectedDesign,
                 occasion: selectedOccasion,
@@ -80,23 +78,37 @@ const useStepTwoHook = () => {
             };
 
             // Validate categories data
-            const validatedCategoriesData = await stepTwoAddBespokeClothesSchema.validate(categoriesData);
+            const validatedCategoriesData = await stepTwoAddClothesSchema.validate(categoriesData);
 
             const requestData = {
                 productId,
                 categories: validatedCategoriesData,
+                currentStep: 2,
             }
             console.log("REQUEST DATA::: ", requestData);
 
             const updateWithCategoryResponseData = await updateWithCategories(requestData).unwrap();
-            // console.log("RESPONSE::: ", updateWithCategoryResponseData);
+            console.log("RESPONSE::: ", updateWithCategoryResponseData);
 
             if (updateWithCategoryResponseData) {
-                setLoadingMessage("");
+                dispatch(setLoadingMessage("Getting product details..."));
+
+                // Get the updated product data
+                const updatedProduct = await getProductByProductID(productId).unwrap();
+                console.log("UPDATED PRODUCT::: ", updatedProduct);
+
+                if (updatedProduct) {
+                    dispatch(setProduct(updatedProduct));
+                    dispatch(setProductIsLoading(false));
+                    dispatch(setLoadingMessage(""));
+                    dispatch(setSelectedStep(3));
+                }
             }
         } catch (error: any) {
-            console.log("ERROR::: ", error);
+            dispatch(setProductIsLoading(false));
+            dispatch(setLoadingMessage(""));
             Alert.alert("Error", error.errors[0]);
+            console.log("ERROR::: ", error);
         }
     };
 
@@ -120,50 +132,50 @@ const useStepTwoHook = () => {
 
     // Handle update default values
     const handleUpdateDefaultValues = () => {
-        if (!selectedDraftProduct.categories) return;
+        if (!product.categories) return;
 
         // Format main categories
-        const mainData = selectedDraftProduct.categories!.main!;
+        const mainData = product.categories?.main!;
         setSelectedMain(mainData);    // Update the selectedMain(local state) with the selected values
         
         // Format styles
-        const styleData = selectedDraftProduct.categories!.style!;
+        const styleData = product.categories?.style!;
         setSelectedStyle(styleData);
 
         // Format gender
-        const genderData = selectedDraftProduct.categories!.gender!;
+        const genderData = product.categories?.gender!;
         setSelectedGender(genderData);
 
         // Format age group
-        const ageGroupData = selectedDraftProduct.categories!.age!.ageGroup!;
+        const ageGroupData = product.categories?.age?.ageGroup!;
         setSelectedAgeGroup(ageGroupData);
 
         // Format age range
-        const ageRangeData = selectedDraftProduct.categories!.age!.ageRange!;
+        const ageRangeData = product.categories?.age?.ageRange!;
         setSelectedAgeRange(ageRangeData);
 
         // Format brand
-        const brandData = selectedDraftProduct.categories!.brand!;
+        const brandData = product.categories?.brand!;
         setSelectedBrand(brandData);
 
         // Format designs
-        const designData = selectedDraftProduct.categories!.design!;
+        const designData = product.categories?.design!;
         setSelectedDesign(designData);
 
         // Format occasions
-        const occasionData = selectedDraftProduct.categories!.occasion!;
+        const occasionData = product.categories?.occasion!;
         setSelectedOccasion(occasionData);
 
         // Format sleeve lengths
-        const sleeveLengthData = selectedDraftProduct.categories!.sleeveLength!;
+        const sleeveLengthData = product.categories?.sleeveLength!;
         setSelectedSleeveLength(sleeveLengthData);
 
         // Format fastenings
-        const fasteningData = selectedDraftProduct.categories!.fastening!;
+        const fasteningData = product.categories?.fastening!;
         setSelectedFastening(fasteningData);
 
         // Format fitnesses
-        const fitData = selectedDraftProduct.categories!.fit!;
+        const fitData = product.categories?.fit!;
         setSelectedFit(fitData);
     };
 
@@ -175,12 +187,11 @@ const useStepTwoHook = () => {
 
     useEffect(() => {
         handleUpdateDefaultValues();
-    }, [selectedDraftProduct]);
+    }, [product]);
 
 
     return {
         handleSubmit,
-        isLoading, isSuccess, loadingMessage,
 
         manageState: {
             mainOptions, styleOptions, genderOptions, ageGroupOptions, ageRangeOptions, brandOptions,

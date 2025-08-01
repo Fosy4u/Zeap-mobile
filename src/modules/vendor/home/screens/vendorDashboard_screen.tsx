@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Dimensions, Image, Pressable, SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View } from "react-native"
 import { useSelector } from "react-redux";
 import { RootState } from "../../../../redux/store/store";
@@ -12,23 +12,24 @@ import { BarChart } from "react-native-gifted-charts";
 import useVendorHomeHook from "../hooks/vendorHome_hook";
 import useGeneralHook from "../../../general/hooks/general_hook";
 import FastImage from "react-native-fast-image";
+import useVendorProductHook from "../../products/hooks/vendorProduct_hook";
 
 
 const VendorDashboardScreen = () => {
-  const { isLoadingProducts } = useSelector((state: RootState) => state.vendorProductState);
+  const { productIsLoading } = useSelector((state: RootState) => state.vendorProductState);
   const { analytics, overviews, weeklySalesChartData } = useSelector((state: RootState) => state.vendorHomeState);
-  const { products } = useSelector((state: RootState) => state.vendorProductState);
+  const { products, vendorProductReviews } = useSelector((state: RootState) => state.vendorProductState);
   const { payments } = useSelector((state: RootState) => state.paymentState);
   const { shop } = useSelector((state: RootState) => state.vendorGeneralState);
   const { userData } = useSelector((state: RootState) => state.profileState);
+  const [productIndex, setProductIndex] = useState<number | null>(null);
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
-  const product = products?.[0];
+  
+  const product = productIndex !== null ? products?.[productIndex] : undefined;
 
-  const {
-    handleGetShop,
-    handleGeVendortAnalytics,
-  } = useVendorHomeHook();
-  const { handleGetProductOptions } = useGeneralHook();
+  const { handleGetShop, handleGeVendortAnalytics } = useVendorHomeHook();
+  const { generateRandomInteger, handleGetProductOptions } = useGeneralHook();
+  const { handleGetProductReviews } = useVendorProductHook();
 
   useEffect(() => {
     (async () => {
@@ -42,11 +43,19 @@ const VendorDashboardScreen = () => {
       await handleGeVendortAnalytics(userData.shopId!)
     })();
   }, [userData]);
-  
-  
+
+  useEffect(() => {
+    handleGetProductReviews(product?.productId!);
+  }, [product, vendorProductReviews])
+
+  useEffect(() => {
+    if (products?.length) {
+      setProductIndex(generateRandomInteger(products.length - 1));
+    }
+  }, [products]);
 
   return (
-    <SafeAreaView className="flex-1 h-auto w-screen pb-24 bg-gray-50">
+    <SafeAreaView className="h-full w-screen flex-1 pb-[1px] bg-gray-50">
       <StatusBar
           backgroundColor="#133522"
           barStyle="light-content"
@@ -194,7 +203,7 @@ const VendorDashboardScreen = () => {
           </View>
 
           {/* ==== Product List ==== */}
-          { !isLoadingProducts ? (
+          { !productIsLoading ? (
             <View className="h-auto w-full mt-5 mb-4 p-3 pb-4 border border-gray-200 rounded-xl bg-lightGray">
               <View className="flex-row items-center justify-between">
                 <Text className="font-normal text-base text-baseGreen">Product List</Text>
@@ -209,7 +218,7 @@ const VendorDashboardScreen = () => {
 
               <TouchableOpacity onPress={ () => navigation.navigate("vendorProductDetailsScreen", { productID: product?.productId! }) }>
                 <View className="relative mt-2 flex items-center justify-center">
-                {!isLoadingProducts && product?.colors?.[0]?.images?.[0]?.link ? (
+                {!productIsLoading && product?.colors?.[0]?.images?.[0]?.link ? (
                   <FastImage
                     source={{
                       uri: product.colors[0].images[0].link,
@@ -230,48 +239,71 @@ const VendorDashboardScreen = () => {
                   />
                 )}
 
-                  <View className="absolute top-5 left-4 right-4 flex-row justify-between">
-                    <View className="w-[110px] px-2 py-1 rounded-lg border border-white/60 backdrop-blur-lg bg-white/50">
+                  <View className="absolute top-5 left-2 right-2 flex-row justify-between">
+                    {/* <View className="w-[110px] px-2 py-1 rounded-lg border border-white/60 backdrop-blur-lg bg-white/50">
                       <View className="flex-row items-center">
                         <Star1 color="#E4A01C" size={14} variant="Bold" className="mr-1" />
-                        <Text className="text-xs">4.3</Text>
+                        <Text className="text-xs">{ `${vendorProductReviews?.averageRating! ? vendorProductReviews?.averageRating!.toFixed(1) : 0.0}` }</Text>
                       </View>
-                      <Text className="text-[11px]">200 reviews</Text>
-                    </View>
+                      <Text className="text-[11px]">{vendorProductReviews ? `${vendorProductReviews?.reviews?.length} ${ vendorProductReviews?.reviews?.length! > 1 ? "reviews" : "review" }` : "0 review"}</Text>
+                    </View> */}
+                    <View />
 
                     <View className="flex-row items-center gap-2">
-                      <View className="p-2 flex items-center justify-center rounded-lg border border-orange/30 backdrop-blur-lg bg-orange/20">
-                        <Text className="text-xs text-orange/90">{product?.status?.charAt(0).toUpperCase() + product?.status?.slice(1)}</Text>
+                      <View className={`p-2 flex items-center justify-center rounded-lg border backdrop-blur-lg ${
+                          product?.status === "live" 
+                          ? "border-green-300 bg-green-50" 
+                          : product?.status === "draft"
+                          ? "border-blue-300 bg-blue-50"
+                          : product?.status === "under review"
+                          ? "border-orange/30 bg-orange/10"
+                          : "border-red-300 bg-red-50"
+                        }`}>
+                          <Text className={`font-montserratMedium text-xs ${
+                            product?.status === "live" 
+                            ? "text-green-600" 
+                            : product?.status === "draft"
+                            ? "text-blue-600"
+                            : product?.status === "under review"
+                            ? "text-orange-800"
+                            : "text-red-600"
+                          }`}>
+                            { product && product.status.charAt(0).toUpperCase() + product.status.slice(1) }
+                          </Text>
                       </View>
                     </View>
                   </View>
 
-                  <View className="absolute bottom-24 right-4 p-2 flex items-center justify-center rounded-lg border border-gray-200/70 backdrop-blur-lg bg-white/40">
-                    <Edit2 color="#3461B9" size={18} variant="Bold" className="mr-1" />
-                  </View>
+                  <View className="h-auto w-full mt-4 flex-row items-center justify-between">
+                    <View className="h-auto flex-row items-center">
+                      <View className="mr-1.5 px-2 py-1 flex-row items-center border border-[#9EBDF8] rounded-md bg-[#E3ECFF]">
+                        <Text className="text-xs text-[#3461B9] ">{ product?.categories?.gender! }'s wear</Text>
+                      </View>
+                      <View className="px-2 py-1 flex-row items-center border border-[#9EBDF8] rounded-md bg-[#E3ECFF]">
+                        <Text className="text-xs text-[#3461B9] ">{ product?.categories?.age?.ageGroup! }</Text>
+                      </View>
+                    </View>
 
-                  <View className="h-auto w-full mt-4 flex-row items-center">
-                    <View className="mr-1.5 px-2 py-1 flex-row items-center border border-[#9EBDF8] rounded-md bg-[#E3ECFF]">
-                      <Text className="text-xs text-[#3461B9] ">{ product?.categories?.gender! }'s wear</Text>
-                    </View>
-                    <View className="px-2 py-1 flex-row items-center border border-[#9EBDF8] rounded-md bg-[#E3ECFF]">
-                      <Text className="text-xs text-[#3461B9] ">{ product?.categories?.age?.ageGroup! }</Text>
-                    </View>
+                    <TouchableOpacity onPress={ () => null } 
+                      className="p-2 rounded-lg border border-gray-200/70 backdrop-blur-lg bg-white/40"
+                    >
+                      <Edit2 color="#3461B9" size={18} variant="Bold" className="mr-1" /> 
+                    </TouchableOpacity>
                   </View>
 
                   <View>
-                    <View className="h-auto w-full flex-row items-center justify-between">
+                    <View className="h-auto w-full flex-row items-end justify-between">
                       <Text className="flex-1 font-montserratMedium text-base">{ product?.title }</Text>
-                      <Text className={`font-montserratMedium text-xs ${product?.variation?.[0].quantity! >= 10 ? "text-green-600" : "text-red-600"}`}>{ product?.variations?.[0].quantity! } in stock</Text>
+                      <Text className={`font-montserratMedium text-xs ${ product?.variations?.[0].quantity! >= 10 ? "text-green-600" : "text-red-600" }`}>{ product?.variations?.[0].quantity! } in stock</Text>
                     </View>
-                    <Text className="font-montserratMedium text-base">₦{ product?.variations?.[0].price!.toLocaleString() }</Text>
+                    <Text className="font-montserratMedium text-base">₦{ product?.variations?.[0].price!.toLocaleString() }</Text> 
                   </View>
                 </View>
               </TouchableOpacity>
             </View>
           ) : (
             <ShimmerPlaceHolder
-              // visible={!isLoadingProducts}
+              // visible={!productIsLoading}
               LinearGradient={LinearGradient}
               shimmerColors={['#ebebeb', '#fefefe', '#ebebeb']}
               height={330}

@@ -1,7 +1,7 @@
 import { SubmitHandler, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { IRequiredMeasurementFormFieldsSchema, requiredMeasurementFormFieldsSchema } from "../validations/measurement_validation";
-import { useAddBodyMeasurementTemplateMutation, useLazyGetAllBodyMeasurementTemplatesQuery, useLazyGetRequiredMeasurementFormFieldsQuery } from "../apis/measurement_api";
+import { useAddBodyMeasurementTemplateMutation, useLazyGetAllSavedMeasurementsQuery, useLazyGetBodyMeasurementGuideQuery, useLazyGetRequiredMeasurementFormFieldsQuery } from "../apis/measurement_api";
 import { RootState } from "../../../../redux/store/store";
 import { useDispatch, useSelector } from "react-redux";
 import { IMeasurementField } from "../models/requiredMeasurementFormField_model";
@@ -9,8 +9,9 @@ import { useAddProductToCartMutation } from "../../products/apis/product_api";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import RootNavigationStackModel from "../../../../routes/model/routes_model";
-import { setAllBodyMeasurementTemplates, setRequiredMeasurementFormFields, setSelectedCartID } from "../slices/measurement_slice";
+import { setAllSavedMeasurements, setBodyMeasurementGuides, setIsLoading, setLoadingMessage, setRequiredMeasurementFormFields, setSelectedCartID } from "../slices/measurement_slice";
 import { IMeasurement } from "../models/bodyMeasurement_model";
+import handleError from "../../../general/hooks/errorHandler_hook";
 
 const useMeasurementHook = () => {
     const { selectedUnit, requiredMeasurementFormFields, saveMeasurementForNextTime, selectedMeasurementTemplate } = useSelector((state: RootState) => state.measurementState);
@@ -18,10 +19,11 @@ const useMeasurementHook = () => {
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const dispatch = useDispatch();
     
-    const [addProductToCart, {  isSuccess: addProductToCartSuccess, isLoading: addProductToCartLoading }] = useAddProductToCartMutation();
-    const [addBodyMeasurementTemplate, { isLoading: addBodyMeasurementTemplateLoading }] = useAddBodyMeasurementTemplateMutation();
-    const [getAllBodyMeasurementTemplates, { isLoading: allBodyMeasurementTemplatesLoading }] = useLazyGetAllBodyMeasurementTemplatesQuery();
-    const [getRequiredMeasurementFormFields, { isLoading: requiredMeasurementFormFieldsLoading }] = useLazyGetRequiredMeasurementFormFieldsQuery();    
+    const [addProductToCart] = useAddProductToCartMutation();
+    const [addBodyMeasurementTemplate] = useAddBodyMeasurementTemplateMutation();
+    const [getAllSavedMeasurements] = useLazyGetAllSavedMeasurementsQuery();
+    const [getRequiredMeasurementFormFields, { isLoading: requiredMeasurementFormFieldsLoading }] = useLazyGetRequiredMeasurementFormFieldsQuery(); 
+    const [getBodyMeasurementGuide] = useLazyGetBodyMeasurementGuideQuery();   
     
     const { control, handleSubmit, formState: { errors }, getValues } = useForm<IRequiredMeasurementFormFieldsSchema>({
         defaultValues: {
@@ -119,6 +121,9 @@ const useMeasurementHook = () => {
 
     // Handle Add Product To Cart from selectedMeasurementTemplate
     const onSubmitFromSavedMeasurementTemplate = async () => {
+        dispatch(setLoadingMessage("Adding product to cart..."));
+        dispatch(setIsLoading(true));
+
         const cartRequestData = (product.productType === "readyMadeCloth" || product.productType === "readyMadeShoe" || product.productType === "accessory")
             ? ({
                 productId: product.productId,
@@ -145,40 +150,89 @@ const useMeasurementHook = () => {
                     }),
                 }
             );
-    
         console.log("CART REQUEST DATA::: ", cartRequestData);
     
         try {
-            console.log("Mutation triggered, isLoading should be true:", addProductToCartLoading);
             const addProductToCartResponse = await addProductToCart(cartRequestData).unwrap();
-            console.log("Mutation completed, isLoading should be false:", addProductToCartLoading);
             console.log("ADD PRODUCT TO CART RESPONSE::: ", addProductToCartResponse);
         } catch (error) {
-            console.log("ERROR::: ", error);
+            handleError(error);
+        } finally {
+            dispatch(setIsLoading(false));
+            dispatch(setLoadingMessage(""));
         }
     };
 
-    // Get all Measurement related data
-    const handleGetAllMeasurementsRelatedData = async() => {
-        // console.log("PRODUCT ID::: ", product?.productId!);
-        
-        // Get All Existing Body Measurement Templates
-        const allBodyMeasurementTemplatesResponse = await getAllBodyMeasurementTemplates().unwrap();
-        dispatch(setAllBodyMeasurementTemplates(allBodyMeasurementTemplatesResponse));        
+    // Handle get all saved measurements
+    const handleGetAllSavedMeasurements = async () => {
+        dispatch(setLoadingMessage("Fetching saved measurements..."));
+        dispatch(setIsLoading(true));
 
-        // Get Required Measurement Form Fields
-        const requiredMeasurementFormFieldsResponse = await getRequiredMeasurementFormFields(product?.productId!).unwrap();
-        dispatch(setRequiredMeasurementFormFields(requiredMeasurementFormFieldsResponse));
-        // console.log("REQUIRED MEASUREMENT FORM FIELDS RESPONSE::: ", requiredMeasurementFormFieldsResponse)
+        try {
+            const allSavedMeasurementsResponse = await getAllSavedMeasurements().unwrap();
+            console.log("ALL SAVED MEASUREMENTS RESPONSE::: ", allSavedMeasurementsResponse);
+            
+            if (allSavedMeasurementsResponse) {
+                dispatch(setAllSavedMeasurements(allSavedMeasurementsResponse));
+            }
+        } catch (error) {
+            handleError(error);
+        } finally {
+            dispatch(setIsLoading(false));
+            dispatch(setLoadingMessage(""));
+        }
+    };
+
+    // Handle get required measurement form fields
+    const handleGetRequiredMeasurementFormFields = async () => {
+        dispatch(setLoadingMessage("Fetching required measurement form fields..."));
+        dispatch(setIsLoading(true));
+
+        try {
+            const requiredMeasurementFormFieldsResponse = await getRequiredMeasurementFormFields(product?.productId!).unwrap();
+            console.log("REQUIRED MEASUREMENT FORM FIELDS RESPONSE::: ", requiredMeasurementFormFieldsResponse);
+            
+            if (requiredMeasurementFormFieldsResponse) {
+                dispatch(setRequiredMeasurementFormFields(requiredMeasurementFormFieldsResponse));
+            }
+        } catch (error) {
+            handleError(error);
+        } finally {
+            dispatch(setIsLoading(false));
+            dispatch(setLoadingMessage(""));
+        }
+    };
+
+    // Handle get body measurement guide
+    const handleGetBodyMeasurementGuides = async (gender: string) => {
+        dispatch(setLoadingMessage("Fetching body measurement guide..."));
+        dispatch(setIsLoading(true));
+
+        try {
+            const bodyMeasurementGuideResponse = await getBodyMeasurementGuide(gender).unwrap();
+            console.log("BODY MEASUREMENT GUIDE RESPONSE::: ", bodyMeasurementGuideResponse);
+            
+            if (bodyMeasurementGuideResponse) {
+                dispatch(setBodyMeasurementGuides(bodyMeasurementGuideResponse));
+            }
+        } catch (error) {
+            handleError(error);
+        } finally {
+            dispatch(setIsLoading(false));
+            dispatch(setLoadingMessage(""));
+        }
     };
     
     return {
         control, handleSubmit, errors, getValues,
         onSubmitFromMeasurementForm, 
         onSubmitFromSavedMeasurementTemplate,
-        addProductToCartLoading,
-        addBodyMeasurementTemplateLoading,
-        requiredMeasurementFormFieldsLoading, allBodyMeasurementTemplatesLoading, handleGetAllMeasurementsRelatedData,
+
+        handleGetAllSavedMeasurements,
+        handleGetRequiredMeasurementFormFields,
+        handleGetBodyMeasurementGuides,
+
+        requiredMeasurementFormFieldsLoading,
     };
 };
 

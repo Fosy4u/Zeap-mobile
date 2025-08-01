@@ -1,4 +1,7 @@
+import IReviewAndRating from "../../modules/general/models/review_model";
 import IReview from "../../modules/general/models/review_model";
+import IReviewIndicator from "../../modules/general/models/reviewIndicator_model";
+import IPaymentReferenceParams from "../../modules/user/payment/models/paymentReferenceParams_model";
 
 type RootNavigationStackModel = {
   splashScreen: undefined;
@@ -11,6 +14,7 @@ type RootNavigationStackModel = {
   otpScreen: undefined;
   resetPasswordSuccessPopupModal: undefined;
   signUpScreen: undefined;
+  loginInfoScreen: undefined;
 
     // USERS
     // homeScreen: undefined;
@@ -24,24 +28,53 @@ type RootNavigationStackModel = {
     productListScreen: { screenTitle: string } | undefined;
     productDetailScreen: { productID: string } | undefined;
     measurementScreen: undefined;
-    deliveryAddressScreen: undefined;
-    reviewListScreen: { reviews: IReview[], productID: string };
+    reviewListScreen: {
+      reviewAndRating: IReviewAndRating,
+      reviewIndicators: IReviewIndicator[],
+      productID: string
+    };
 
+    // Address Routes
+    addressScreen: undefined;
+    editDeliveryAddressScreen: undefined;
 
     cartScreen: undefined;
+    checkoutScreen: undefined;
+    deliveryMethodScreen: undefined;
     savedScreen: undefined;
     
-    userPaymentScreen: undefined;
+    userPaymentScreen: { data: IPaymentReferenceParams } | undefined;
     // paymentMethodScreen: undefined;
 
     profileScreen: undefined;
     profileSetupScreen: undefined;
     personalInformationScreen: undefined;
     editAccountDetailsScreen: undefined;
-    editDeliveryAddressScreen: undefined;
     searchItemScreen: undefined;
     searchResultsScreen: undefined;
     userNotificationsScreen: undefined;
+    userDashboardScreen: undefined;
+
+    // Point & Voucher
+    pointAndVoucherScreen: undefined;
+
+    // Review & Rating
+    reviewAndRatingScreen: undefined;
+    rateAndReviewScreen: { productData: any } | undefined;
+
+    // Settings
+    settingsScreen: undefined;
+    languageSettingsScreen: undefined;
+    currencySettingsScreen: undefined;
+    notificationSettingsScreen: undefined;
+    securitySettingsScreen: undefined;
+    changePasswordSettingsScreen: undefined;
+
+    // Order Routes
+    ordersScreen: undefined;
+    orderDetailsScreen: undefined;
+
+    
 
     // VENDORS
     vendorHomeScreen: {
@@ -53,6 +86,7 @@ type RootNavigationStackModel = {
     vendorNotificationsScreen: undefined;
     overviewScreen: undefined;
     promoScreen: undefined;
+    promotionScreen: undefined;
     paymentScreen: undefined;
 
   vendorProductsScreen: undefined;
@@ -60,6 +94,9 @@ type RootNavigationStackModel = {
   addProductScreen: undefined;
   addBespokeClothesScreen: undefined;
   addReadyMadeClothesScreen: undefined;
+  addBespokeShoesScreen: undefined;
+  addReadyMadeShoesScreen: undefined;
+  addAccessoriesScreen: undefined;
 
   orderRequestsScreen: undefined;
   OrdersScreen: {screenTitle: string} | undefined;

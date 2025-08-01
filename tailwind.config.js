@@ -32,7 +32,6 @@ module.exports = {
       },
     },
   },
-  plugins: [],
 };
 
 // "Montserrat-Light", "Montserrat-Regular", "Montserrat-Medium", "Montserrat-SemiBold", "Montserrat-Bold"

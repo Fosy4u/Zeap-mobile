@@ -1,21 +1,37 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../../../redux/store/store";
-import { useLazyGetProductByProductIDQuery, useLazyGetProductsQuery } from "../apis/product_api";
+import { useApplyPromotionMutation, useDeleteProductMutation, useLazyGetAvailablePromosQuery, useLazyGetProductByProductIDQuery, useLazyGetProductPromotionQuery, useLazyGetProductsQuery } from "../apis/product_api";
 import IVendorProductQueryParams from "../models/vendorProductFilter_model";
-import { setIsLoadingProducts, setLoadingMessage, setProduct, setProducts } from "../slices/vendorProductState_slice";
+import { setProduct, setProductPromotion, setProducts } from "../slices/vendorProductState_slice";
 import { IColor, IImage, IVariation } from "../models/vendorProductDetails_model";
 import { IColorEnum } from "../../../general/models/productOptions_model";
-import { SubmitHandler, useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
-import reviewSchema, { ILikeReview, IReviewProduct } from "../../../general/validations/review_validation";
-import { useCreateReviewMutation, useDislikeReviewMutation, useLazyGetVendorProductReviewsQuery, useLikeReviewMutation } from "../../../general/apis/review_api";
+import { SubmitHandler } from "react-hook-form";
+import { ILikeReview } from "../../../general/validations/review_validation";
+import { useDislikeReviewMutation, useLazyGetProductReviewsQuery, useLikeReviewMutation } from "../../../general/apis/review_api";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import RootNavigationStackModel from "../../../../routes/model/routes_model";
+import { setIsLoading, setLoadingMessage } from "../../../general/slices/general_slice";
+import IPromotion from "../models/promotion_model";
+import handleError from "../../../general/hooks/errorHandler_hook";
+import { setReviewAndRating } from "../../../user/products/slices/product_slice";
 
 
-const useVendorProductHook = () => {
-    const { product, isLoadingProducts } = useSelector((state: RootState) => state.vendorProductState);
+
+/*************  ✨ Windsurf Command ⭐  *************/
+/**
+ * Vendor product hook
+ *
+ * This hook provides functions and data for use in the vendor product screen.
+ *
+ * @returns An object containing functions and data for use in the vendor product screen.
+ */
+/*******  8cf3fd92-20f9-4b26-83b2-99cc22ac7430  *******/const useVendorProductHook = () => {
+    const { product, productIsLoading } = useSelector((state: RootState) => state.vendorProductState);
     const { userData } = useSelector((state: RootState) => state.profileState);
     const { productTypes, bespokeClothesOptions, bespokeShoesOptions, readyMadeClothesOptions, readyMadeShoesOptions, accessoriesOptions } = useSelector((state: RootState) => state.generalState);
+    const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const dispatch = useDispatch();
 
     const [productTypeOptions, setProductTypeOptions] = useState<string[]>([]);
@@ -25,14 +41,14 @@ const useVendorProductHook = () => {
     const [ageGroupOptions, setAgeGroupOptions] = useState<string[]>([]);
     const [ageRangeOptions, setAgeRangeOptions] = useState<string[]>([]);
     const [brandOptions, setBrandOptions] = useState<string[]>([]);
-    const [sizeOptions, setSizeOptions] = useState<string[]>([]);
-    const [colorOptions, setColorOptions] = useState<string[]>([]);
+    const [, setSizeOptions] = useState<string[]>([]);
+    const [, setColorOptions] = useState<string[]>([]);
     const [designOptions, setDesignOptions] = useState<string[]>([]);
     const [occasionOptions, setOccasionOptions] = useState<string[]>([]);
     const [sleeveLengthOptions, setSleeveLengthOptions] = useState<string[]>([]);
     const [fasteningOptions, setFasteningOptions] = useState<string[]>([]);
     const [fitOptions, setFitOptions] = useState<string[]>([]);
-    const [accessoryTypeOptions, setAccessoryTypeOptions] = useState<string[]>([]);
+    const [, setAccessoryTypeOptions] = useState<string[]>([]);
 
     const [showClothingType, setShowClothingType] = useState(false);
     const [showMainCategory, setShowMainCategory] = useState(false);
@@ -41,8 +57,8 @@ const useVendorProductHook = () => {
     const [showAgeGroup, setShowAgeGroup] = useState(false);
     const [showAgeRange, setShowAgeRange] = useState(false);
     const [showBrand, setShowBrand] = useState(false);
-    const [showSize, setShowSize] = useState(false);
-    const [showColor, setShowColor] = useState(false);
+    // const [showSize, setShowSize] = useState(false);
+    // const [showColor, setShowColor] = useState(false);
     const [showDesign, setShowDesign] = useState(false);
     const [showOccasion, setShowOccasion] = useState(false);
     const [showSleeveLength, setShowSleeveLength] = useState(false);
@@ -57,15 +73,15 @@ const useVendorProductHook = () => {
     const [selectedAgeGroup, setSelectedAgeGroup] = useState<string>("");
     const [selectedAgeRange, setSelectedAgeRange] = useState<string>("");
     const [selectedBrand, setSelectedBrand] = useState<string>("");
-    const [selectedSize, setSelectedSize] = useState<string[]>([]);
-    const [selectedColor, setSelectedColor] = useState<string[]>([]);
+    // const [selectedSize, setSelectedSize] = useState<string[]>([]);
+    // const [selectedColor, setSelectedColor] = useState<string[]>([]);
     const [selectedDesign, setSelectedDesign] = useState<string>("");
     const [selectedOccasion, setSelectedOccasion] = useState<string>("");
     const [selectedSleeveLength, setSelectedSleeveLength] = useState<string>("");
     const [selectedFastening, setSelectedFastening] = useState<string>("");
     const [selectedFit, setSelectedFit] = useState<string>("");
     const [selectedPrice, setSelectedPrice] = useState<number>(0);
-    const [selectedLimit, setSelectedLimit] = useState<number>(20);
+    const [selectedLimit] = useState<number>(20);
     const [selectedPageNumber, setSelectedPageNumber] = useState<number>(1);
     const [requestParams, setRequestParams] = useState<IVendorProductQueryParams>({
         pageNumber: selectedPageNumber,
@@ -83,47 +99,60 @@ const useVendorProductHook = () => {
         _id: "",
     });
     const [featuredColors, setFeaturedColors] = useState<IColorEnum[]>([]);
+    const [selectedPromo, setSelectedPromo] = useState<IPromotion>({});
+    const [showDeleteProductWarningModal, setShowDeleteProductWarningModal] = useState(false);
 
 
     const [getProducts] = useLazyGetProductsQuery();
-    const [getProductByProductID, { isLoading: isLoadingProduct }] = useLazyGetProductByProductIDQuery();
-    const [getVendorProductReviews, { data: reviewData, isLoading: isLoadingReviews }] = useLazyGetVendorProductReviewsQuery();
-    const [createReview, { isLoading: isLoadingAddReview }] = useCreateReviewMutation();
+    const [getProductByProductID] = useLazyGetProductByProductIDQuery();
+    const [deleteProduct] = useDeleteProductMutation();
+    const [getProductReviews] = useLazyGetProductReviewsQuery();
+    // const [createReview, { isLoading: isLoadingAddReview }] = useCreateReviewMutation();
     const [likeReview] = useLikeReviewMutation();
     const [dislikeReview] = useDislikeReviewMutation();
+    const [getAvailablePromos, { data: promotions }] = useLazyGetAvailablePromosQuery();
+    const [getProductPromotion] = useLazyGetProductPromotionQuery();
+    const [applyPromotion] = useApplyPromotionMutation();
 
 
-    const { handleSubmit, control, formState: { errors }, reset } = useForm<IReviewProduct>({
-        defaultValues: {
-            title: "",
-            rating: 0,
-            review: "",
-        },
-        resolver: yupResolver(reviewSchema)
-    });
+    // const { handleSubmit, control, formState: { errors }, reset } = useForm<IReviewProduct>({
+    //     defaultValues: {
+    //         title: "",
+    //         rating: 0,
+    //         review: "",
+    //     },
+    //     resolver: yupResolver(reviewSchema)
+    // });
 
-    const onSubmit: SubmitHandler<IReviewProduct> =  async(data) => {
+    // const onSubmit: SubmitHandler<IReviewProduct> =  async(data) => {
+    //     setLoadingMessage("Submitting review...");
+    //     dispatch(setIsLoading(true));
 
-        const requestData = {
-            productId: product.productId!,
-            displayName: `${userData.firstName} ${userData.lastName}`,
-            title: data.title,
-            rating: data.rating,
-            imageMatch: true,
-            review: data.review,
-        }
-        // console.log("REQUEST DATA::: ", requestData);
+    //     const requestData = {
+    //         productId: product.productId!,
+    //         displayName: `${userData.firstName} ${userData.lastName}`,
+    //         title: data.title,
+    //         rating: data.rating,
+    //         imageMatch: true,
+    //         review: data.review,
+    //     }
+    //     console.log("REQUEST DATA::: ", requestData);
 
-        try {
-            const reviewResponse = await createReview(requestData).unwrap();
+    //     try {
+    //         const reviewResponse = await createReview(requestData).unwrap();
 
-            // Reset form to default values
-            reset();
-            console.log("RESPONSE::: ", reviewResponse);
-        } catch (error) {
-            console.log("ERROR::: ", error);
-        }
-    };
+    //         if (reviewResponse) {
+    //             reset();
+    //             dispatch(setIsLoading(false));
+    //             setLoadingMessage("");
+    //             console.log("RESPONSE::: ", reviewResponse);
+    //         }
+    //     } catch (error: any) {
+    //         dispatch(setIsLoading(false));
+    //         setLoadingMessage("");
+    //         handleError(error);
+    //     }
+    // };
 
 
 
@@ -150,7 +179,7 @@ const useVendorProductHook = () => {
         if (product?.productType! === "readyMadeCloth" || product?.productType! === "readyMadeShoe" || product?.productType! === "accessory") {
                 newColorVariations = product?.variations?.map((variation: IVariation) => variation.colorValue!) || [];
         } else {
-            newColorVariations = product?.variations?.[0].bespoke?.availableColors! || [];
+            newColorVariations = product?.variations?.[0]?.bespoke?.availableColors! || [];
         }
 
         const availableColors = (() => {
@@ -171,13 +200,6 @@ const useVendorProductHook = () => {
         })();
 
         const defaultColor = product?.colors?.find(color => color.images?.find(image => image.isDefault));
-        const defaultSelectedColor = availableColors.find(color => {
-            if (defaultColor?.value === "Bespoke") {
-                return availableColors[0];
-            } else {
-                return color.name === defaultColor?.value!
-            }
-        });
 
         setFeaturedColors(availableColors);
     };
@@ -215,86 +237,187 @@ const useVendorProductHook = () => {
 
     // Handle submit filter products
     const handleFetchFilteredProducts = async () => {
-        dispatch(setIsLoadingProducts(true));
+        dispatch(setIsLoading(true));
         dispatch(setLoadingMessage("Fetching products..."));
 
         try {
-            console.log("REQUEST PARAMS::: ", requestParams);
-            
             const products = await getProducts(requestParams).unwrap();
             // console.log("PRODUCTS::: ", products[0]);
 
             if (products) {
                 dispatch(setProducts(products));
-                dispatch(setIsLoadingProducts(false));
+                dispatch(setIsLoading(false));
                 dispatch(setLoadingMessage(""));
             }
         } catch (error) {
-            dispatch(setIsLoadingProducts(false));
+            dispatch(setIsLoading(false));
             dispatch(setLoadingMessage(""));
-            console.log("ERROR: ", error);
+            handleError(error);
         }
     };
 
     // Handle get product by product ID
     const handleGetProductByProductID = async (productID: string) => {
+        dispatch(setIsLoading(true));
         dispatch(setLoadingMessage("Fetching product..."));
 
         try {
             const productResponse = await getProductByProductID(productID).unwrap();
-            // console.log("PRODUCT RESPONSE: ", product);
+            console.log("PRODUCT RESPONSE: ", productResponse);
 
             if (productResponse) {
                 dispatch(setProduct(productResponse));
 
-                // Get product reviews
-                dispatch(setLoadingMessage("Fetching reviews..."));
-                const reviewsResponse = await getVendorProductReviews(productID).unwrap();
+                // Get product promo and reviews
+                dispatch(setLoadingMessage("Fetching product promo and reviews..."));
+                const [productPromotionResponse, reviewAndRatingResponse] = await Promise.all([
+                    getProductPromotion(productID!).unwrap(),
+                    getProductReviews(productID!).unwrap(),
+                ]);
 
-                if (reviewsResponse) {
-                    dispatch(setLoadingMessage(""));
+                if (productPromotionResponse) {
+                    dispatch(setProductPromotion(productPromotionResponse));
                 }
-            }
-        } catch (error) {
-            dispatch(setLoadingMessage(""));
-            console.log("ERROR: ", error);
-        }
-    };
-
-
-    // Handle get product reviews
-    const handleGetProductReviews = async (productID: string) => {
-        dispatch(setLoadingMessage("Fetching reviews..."));
-
-        try {
-            const reviewsResponse = await getVendorProductReviews(productID).unwrap();
-
-            if (reviewsResponse) {
+                if (reviewAndRatingResponse) {
+                    dispatch(setReviewAndRating(reviewAndRatingResponse));
+                }
+                dispatch(setIsLoading(false));
                 dispatch(setLoadingMessage(""));
             }
         } catch (error) {
+            dispatch(setIsLoading(false));
             dispatch(setLoadingMessage(""));
-            console.log("ERROR: ", error);
+            console.log("ERROR::: ", error);
         }
     };
 
+    // Handle get product reviews
+    const handleGetProductReviews = async (productID: string) => {
+        dispatch(setLoadingMessage("Fetching reviews..."));  
+        dispatch(setIsLoading(true));     
+
+        try {
+            const reviewsResponse = await getProductReviews(productID!).unwrap();
+            // console.log("REVIEWS RESPONSE: ", reviewsResponse);            
+
+            if (reviewsResponse) {
+                dispatch(setReviewAndRating(reviewsResponse));
+                dispatch(setIsLoading(false));
+                dispatch(setLoadingMessage(""));
+            }
+        } catch (error) {
+            dispatch(setIsLoading(true));
+            dispatch(setLoadingMessage(""));
+            handleError(error);
+        }
+    };
+
+    // Handle delete product
+    const handleDeleteProduct = async (productID: string) => {
+        dispatch(setLoadingMessage("Deleting product..."));
+        dispatch(setIsLoading(true));
+
+        try {
+            const requestData = {
+                productIds: [productID]
+            };           
+
+            const deleteProductResponse = await deleteProduct(requestData).unwrap();
+            // console.log("DELETE PRODUCT RESPONSE::: ", deleteProductResponse);
+
+            if (deleteProductResponse) {
+                dispatch(setIsLoading(false));
+                dispatch(setLoadingMessage(""));
+                navigation.navigate("vendorProductsScreen");
+            }
+        } catch (error) {
+            dispatch(setIsLoading(false));
+            dispatch(setLoadingMessage(""));
+            handleError(error);
+        }
+    };
+
+    // Handle review like
     const handleReviewLike: SubmitHandler<ILikeReview> = async (data) => {
         try {
-            const likeResponse = await likeReview(data).unwrap();
+            const requestData = {
+                _id: data._id,
+            };
+
+            const likeResponse = await likeReview(requestData).unwrap();
             console.log("RESPONSE::: ", likeResponse);
-        } catch (error) {
-            console.log("ERROR::: ", error);
+        } catch (error: any) {
+            handleError(error);
         };
     };
 
+    // Handle review dislike
     const handleReviewDislike: SubmitHandler<ILikeReview> = async (data) => {
         console.log("REQUEST DATA::: ", data);
         try {
             const dislikeResponse = await dislikeReview(data).unwrap();
             console.log("RESPONSE::: ", dislikeResponse);
+        } catch (error: any) {
+            handleError(error);
+        };
+    };
+
+    // Handle get available promotions
+    const handleGetAvailablePromos = async () => {
+        dispatch(setIsLoading(true));
+        dispatch(setLoadingMessage("Fetching promotions..."));
+
+        try {
+            const availablePromos = await getAvailablePromos().unwrap();
+            // console.log("AVAILABLE PROMOS::: ", availablePromos);
+            
+            if (availablePromos) {
+                dispatch(setIsLoading(false));
+                dispatch(setLoadingMessage(""));
+            }
+        } catch (error: any) {
+            dispatch(setIsLoading(false));
+            dispatch(setLoadingMessage(""));
+            handleError(error);
+        }
+    };
+
+    // Handle get product promotion
+
+    // Handle apply promotion
+    const handleApplyPromo = async () => {
+        dispatch(setLoadingMessage("Applying promotion..."));
+
+        try {
+            const requestData = {
+                discountPercentage: selectedPromo?.discount?.fixedPercentage!,
+                productId: product.productId!,
+                promoId: selectedPromo?._id!,
+            };
+            console.log("REQUEST DATA::: ", requestData);
+
+            const applyPromotionResponse = await applyPromotion(requestData).unwrap();
+            console.log("RESPONSE::: ", applyPromotionResponse);
         } catch (error) {
             console.log("ERROR::: ", error);
         };
+    };
+
+    // Handle format date
+    const handleFormatDate = (date: string, showTime: boolean = false, divider: string = " : ") => {
+        const dateString = new Date(date).toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+        });
+
+        const timeString = new Date(date).toLocaleTimeString("en-GB", {
+            hour: "2-digit", 
+            minute: "2-digit",
+            hour12: true
+        });
+
+        return `${dateString}${showTime ? divider + timeString : ""}`;
     };
 
 
@@ -314,13 +437,16 @@ const useVendorProductHook = () => {
 
     return {
         requestParams, setRequestParams,
-        isLoadingProducts, handleFetchFilteredProducts,
+        productIsLoading, handleFetchFilteredProducts,
         selectedPageNumber, setSelectedPageNumber,
-        isLoadingProduct, handleGetProductByProductID,
-        onSubmit, handleSubmit, handleReviewLike, handleReviewDislike, control, errors, isLoadingAddReview, reviewData, isLoadingReviews,
+        handleGetProductByProductID,
+        showDeleteProductWarningModal, setShowDeleteProductWarningModal,
+        handleDeleteProduct,
+         handleReviewLike, handleReviewDislike, handleGetProductReviews,
         defaultFeaturedImageAndThumbnails, handleUpdateDefaultFeaturedImageAndThumbnails,
         featuredImage, setFeaturedImage,
         featuredColors,
+        promotions, handleGetAvailablePromos, selectedPromo, setSelectedPromo, handleApplyPromo,
 
 
         productTypeOptions, selectedProductType,
@@ -363,6 +489,8 @@ const useVendorProductHook = () => {
         setSelectedSleeveLength,
         setSelectedFastening,
         setSelectedFit,
+
+        handleFormatDate,
     };
 };
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { ArrowRight, Eye, EyeSlash } from 'iconsax-react-native';
 import { Image, SafeAreaView, ScrollView, StatusBar, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import CheckBox from "@react-native-community/checkbox";

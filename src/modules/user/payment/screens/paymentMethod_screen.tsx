@@ -5,7 +5,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import RootNavigationStackModel from '../../../../routes/model/routes_model.ts';
 import { ArrowLeft, ArrowRight } from 'iconsax-react-native';
 import CheckBox from '@react-native-community/checkbox';
-import SavedAddressesBottomSheet from '../../address/components/savedAddressesBottomSheet_component.tsx';
+import SavedAddressesBottomSheet from '../../address/screens/address_screen.tsx';
 
 const PaymentMethodScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();

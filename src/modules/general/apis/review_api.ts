@@ -1,10 +1,10 @@
-import api from "../../../redux/api/api";
+import rootAPI from "../../../redux/api/rootAPI.ts";
+import IReviewAndRating from "../models/review_model";
 import IReview from "../models/review_model";
-import IVendorPreview from "../models/vendorReview_model";
 import { ILikeReview, IReviewProduct } from "../validations/review_validation";
 
 // 4.3 ({reviewData?.reviews?.length} { reviewData?.reviews?.length! > 1 ? "reviews" : "review" })
-const reviewAPI = api.injectEndpoints({
+const reviewAPI = rootAPI.injectEndpoints({
     endpoints: (builder) => ({
 
         // Add a review
@@ -14,34 +14,22 @@ const reviewAPI = api.injectEndpoints({
                 method: "POST",
                 body: requestData,
             }),
-            invalidatesTags: ["Reviews"],
+            invalidatesTags: ["Reviews", "VendorProductPreview"],
             transformResponse: (response) => {
                 return response;
             }
         }),
 
         // Get product reviews
-        getProductReviews: builder.query<IReview[], string>({
+        getProductReviews: builder.query<IReviewAndRating, string>({
             query: (productID) => ({
                 url: `/reviews?productId=${encodeURIComponent(productID)}`,
                 method: "GET",
             }),
             providesTags: ["Reviews"],
-            transformResponse: (response: { data: { reviews: IReview[] } }) => {
-                return response.data.reviews;
-            }
-        }),
-
-        // Get vendor product reviews
-        getVendorProductReviews: builder.query<IVendorPreview, string>({
-            query: (productID) => ({
-                url: `/reviews?productId=${encodeURIComponent(productID)}`,
-                method: "GET",
-            }),
-            providesTags: ["VendorProductPreview"],
-            transformResponse: (response: { data: IVendorPreview }) => {
+            transformResponse: (response: { data: IReviewAndRating }) => {
                 return response.data;
-            },
+            }
         }),
 
         // Like a review
@@ -51,7 +39,7 @@ const reviewAPI = api.injectEndpoints({
                 method: "PUT",
                 body: requestData,
             }),
-            invalidatesTags: ["Reviews"],
+            invalidatesTags: ["Reviews", "VendorProductPreview"],
             transformResponse: (response) => {
                 return response;
             }
@@ -64,7 +52,7 @@ const reviewAPI = api.injectEndpoints({
                 method: "PUT",
                 body: requestData,
             }),
-            invalidatesTags: ["Reviews"],
+            invalidatesTags: ["Reviews", "VendorProductPreview"],
             transformResponse: (response) => {
                 return response;
             }
@@ -72,11 +60,9 @@ const reviewAPI = api.injectEndpoints({
     }),
 });
 
-export const { 
-    useGetProductReviewsQuery,
-    useLazyGetProductReviewsQuery,
-    useLazyGetVendorProductReviewsQuery,
+export const {
     useCreateReviewMutation,
+    useLazyGetProductReviewsQuery,
     useLikeReviewMutation,
     useDislikeReviewMutation,
 } = reviewAPI;

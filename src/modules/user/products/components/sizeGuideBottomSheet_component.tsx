@@ -1,8 +1,8 @@
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useRef, useEffect } from 'react';
-import { View, Text, Dimensions, Image, TouchableOpacity, SafeAreaView } from 'react-native';
+import React, { useRef, useEffect, useState } from 'react';
+import { View, Text, Dimensions, Image, TouchableOpacity, SafeAreaView, Switch, ScrollView } from 'react-native';
 import * as Animatable from 'react-native-animatable';
 import RootNavigationStackModel from '../../../../routes/model/routes_model.ts';
 import { AppDispatch, RootState } from '../../../../redux/store/store.ts';
@@ -10,12 +10,16 @@ import { setShowSizedGuideBottomSheet } from '../slices/product_slice.ts';
 
 
 const SizeGuideBottomSheet = () => {
-    const {  } = useSelector((state: RootState) => state.productState);
+    const { sizeGuide } = useSelector((state: RootState) => state.productState);
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const dispatch = useDispatch<AppDispatch>();
     const screenHeight = Dimensions.get("window").height;
-    const modalHeight = screenHeight / 1.50;
+    const modalHeight = screenHeight / 1.45;
     const slideAnimation = useRef<Animatable.View>(null);
+
+    const [selectedGender, setSelectedGender] = useState('Female');
+    const [selectedCategory, setSelectedCategory] = useState('Bottom');
+    const [isCm, setIsCm] = useState(true);
     
 
     useEffect(() => {
@@ -40,16 +44,13 @@ const SizeGuideBottomSheet = () => {
         }
     };
 
-    const tableData = [
-        ['S', '32', '14', '34', '40'],
-        ['M', '34', '15', '36', '42'],
-        ['L', '36', '16', '38', '44'],
-        ['XL', '38', '17', '40', '46'],
-        ['XXL', '40', '18', '42', '48'],
-        ['XXXL', '42', '19', '44', '50'],
-      ];
-      const headers = ['Size', 'NG', 'Shoulder', 'Bust', 'Length'];
-
+        // Get current data based on selections
+    const getCurrentData = () => {
+        const unit = isCm ? 'cm' : 'inch';
+        return sizeGuide[selectedGender]?.[selectedCategory]?.[unit] || [];
+    };
+    console.log("CURRENT DATA::: ", getCurrentData());
+    
     
     return (
         <SafeAreaView className="h-full w-full absolute bg-black/40">
@@ -76,34 +77,76 @@ const SizeGuideBottomSheet = () => {
                 </View>
                 
                 <View className="mt-7 flex-1 flex-col">
-                    <Text className="mt-2 font-montserratSemiBold text-base text-gray-700">Product details</Text>
-                    
-                    <View className="h-[44px] w-[250px] mx-auto mt-5 flex-row border border-gray-400 rounded-3xl  bg-gray-100">
-                        <TouchableOpacity className="h-[43px] flex-1 items-center justify-center rounded-tl-3xl rounded-bl-3xl bg-baseGreen">
-                            <Text className="font-montserratMedium text-white">Top</Text>
-                        </TouchableOpacity>
-                      
-                        <TouchableOpacity className="h-[44px] flex-1 items-center justify-center rounded-tl-3xl rounded-bl-3xl">
-                            <Text className="font-montserratMedium">Bottom</Text>
-                        </TouchableOpacity>
-                    </View>
-
-                    <View className="mt-4 border border-gray-300">
-                        <View className="flex-row">
-                            {headers.map((header, index) => (
-                                <Text key={index} className="flex-1 px-1 py-2 font-montserratSemiBold text-center text-xs bg-gray-200 border border-gray-200">{header}</Text>
-                            ))}
-                        </View>
-                        {tableData.map((row, rowIndex) => (
-                            <View key={rowIndex} className="flex-row">
-                                { row.map((cell, cellIndex) => (
-                                    <Text key={cellIndex} className="flex-1 p-1.5 font-montserratMedium text-center border border-gray-200">{cell}</Text>
-                                )) }
-                            </View>
+                    {/* Gender selector */}
+                    <View className="h-auto w-full flex-row justify-center ">
+                        {['Female', 'Male'].map(gender => (
+                            <TouchableOpacity
+                                key={gender}
+                                onPress={() => setSelectedGender(gender)}
+                                className={`flex-1 flex-row  justify-center px-4 py-2 ${selectedGender === gender ? 'bg-pink-50 border-pink-400 border-b-2' : 'border-gray-300 border-b'}`}
+                            >
+                                <Text className="text-black">{gender}</Text>
+                            </TouchableOpacity>
                         ))}
                     </View>
 
-                    <Text className="mt-5 font-montserratMedium">The data is measured manually and may have minor discrepancies.</Text>
+                    <View className="h-auto w-full mt-3 flex-row items-center justify-between">
+
+                      {/* Category Tabs */}
+                      <View className="mt-3 flex-row justify-start mb-4">
+                          {['Top', 'Bottom', 'Footwear'].map(category => (
+                          <TouchableOpacity
+                              key={category}
+                              onPress={() => setSelectedCategory(category)}
+                              className={`mr-1 px-4 py-2 rounded-full border ${selectedCategory === category ? 'bg-green-900' : 'border-gray-300'}`}
+                          >
+                              <Text className={selectedCategory === category ? 'text-white' : 'text-black'}>{category}</Text>
+                          </TouchableOpacity>
+                          ))}
+                      </View>
+
+                      {/* CM Switch */}
+                      <View className="items-start justify-center mb-2">
+                          <Text className="mr-2">Switch to</Text>
+                          <View className="flex-row items-center">
+                            <Text className="w-[35px] mr-1">{  isCm ? "CM" : "INCH"}</Text>
+                            <Switch value={isCm} onValueChange={setIsCm} />
+                          </View>
+                      </View>
+                    </View>
+
+                    {/* ==== Table ==== */}
+                    <ScrollView
+                      showsVerticalScrollIndicator={true}
+                    >
+                      <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={true}
+                        showsVerticalScrollIndicator={true}
+                      >
+                        <View className="mt-4">
+                          {/* Table Header */}
+                          <View className="flex-row bg-pink-100 border-b border-gray-200">
+                              {Object.keys(sizeGuide[selectedGender.toLowerCase()]?.[selectedCategory.toLowerCase()]?.[isCm ? 'cm' : 'inch']?.[0] || {}).map((key, index) => (
+                              <Text key={index} className="px-4 py-2 font-montserratSemiBold text-sm text-gray-700 min-w-[100px]">
+                                  {key}
+                              </Text>
+                              ))}
+                          </View>
+                          
+                          {/* ==== Table Body ==== */}
+                          {sizeGuide[selectedGender.toLowerCase()]?.[selectedCategory.toLowerCase()]?.[isCm ? 'cm' : 'inch']?.map((row: any, rowIndex: number) => (
+                              <View key={rowIndex} className="flex-row border-b border-gray-200">
+                              {Object.values(row).map((value: any, cellIndex) => (
+                                  <Text key={cellIndex} className="px-4 py-2 font-montserratMedium text-xs text-gray-600 min-w-[100px]">
+                                  {value}
+                                  </Text>
+                              ))}
+                              </View>
+                          ))}
+                        </View>
+                      </ScrollView>
+                    </ScrollView>
                 </View>
             </Animatable.View>
         </SafeAreaView>

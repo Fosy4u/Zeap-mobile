@@ -1,13 +1,11 @@
 interface IPaymentReference {
-    amount?:        number;
-    currency?:      Currency;
-    email?:         string;
-    fullName?:      string;
-    orderId?:       null;
-    paymentStatus?: string;
-    reference?:     string;
-};
-
-type Currency = 'NGN' | 'GHS' | 'USD' | 'ZAR' | 'KES';
+    reference: string;
+    amount: number;
+    currency: string;
+    fullName: string;
+    email: string;
+    paymentStatus: string;
+    orderId: any;
+}
 
 export default IPaymentReference;

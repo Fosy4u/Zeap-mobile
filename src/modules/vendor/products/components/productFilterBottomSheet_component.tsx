@@ -10,14 +10,16 @@ import {
 } from 'react-native';
 import * as Animatable from 'react-native-animatable';
 import {Add, ArrowDown2, ArrowRight, ArrowRight2} from 'iconsax-react-native';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { setShowProductFilterBottomSheet } from '../../home/slices/vendorHome_slice.tsx';
 import useVendorProductHook from '../hooks/vendorProduct_hook.ts';
 import Slider from '@react-native-community/slider';
 import AppLoader from '../../../general/components/appLoader.tsx';
+import { RootState } from '../../../../redux/store/store.ts';
 
 
 const ProductFilterBottomSheetComponent = () => {
+  const { loadingMessage } = useSelector((state: RootState) => state.vendorProductState);
   const dispatch = useDispatch();
   const screenHeight = Dimensions.get('window').height;
   const modalHeight = screenHeight / 1.3;
@@ -25,7 +27,7 @@ const ProductFilterBottomSheetComponent = () => {
 
   const {
     requestParams, setRequestParams,
-    handleFetchFilteredProducts, isLoading, loadingMessage,
+    handleFetchFilteredProducts,
 
     productTypeOptions,
     mainCategoryOptions,
@@ -536,7 +538,10 @@ const ProductFilterBottomSheetComponent = () => {
 
             {/* ==== FILTER Button ==== */}
             <TouchableOpacity
-              onPress={() => handleFetchFilteredProducts()}
+              onPress={() => {
+                handleFetchFilteredProducts();
+                handleCloseOrderFilterBottomSheet();
+              }}
               className="h-[55px] w-auto mt-7 flex flex-row items-center justify-center rounded-xl bg-baseGreen">
               <Text className="text-lg text-white mr-2">Filter Result</Text>
               <ArrowRight className="text-white" />
@@ -545,9 +550,9 @@ const ProductFilterBottomSheetComponent = () => {
         </View>
       </Animatable.View>
 
-      { isLoading &&
+      {/* { isLoading &&
         <AppLoader loadingAdditionalMessage={ loadingMessage } />
-      }
+      } */}
     </SafeAreaView>
   );
 };

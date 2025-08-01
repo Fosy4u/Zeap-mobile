@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import {styled} from 'nativewind';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import RootNavigationStackModel from '../../../../routes/model/routes_model.ts';
@@ -17,9 +16,6 @@ import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import {ArrowRotateRight, TickSquare, Truck} from 'iconsax-react-native';
 import { useDispatch } from 'react-redux';
 import { setShowOrderFilterBottomSheet } from '../../home/slices/vendorHome_slice.tsx';
-
-const StyledImage = styled(Image);
-const StyledView = styled(View);
 
 const OrdersScreen = () => {
 
@@ -120,7 +116,7 @@ const OrdersScreen = () => {
   return (
     <GestureHandlerRootView>
       <BottomSheetModalProvider>
-        <SafeAreaView className="h-screen w-full flex-1">
+        <SafeAreaView className="h-screen w-full flex-1 pb-[1px]">
           <StatusBar backgroundColor="#133522" barStyle="light-content" />
           {/* ==== Header ==== */}
           <View className="h-[120px] w-full pt-4 px-5 rounded-b-3xl bg-baseGreen">
@@ -132,7 +128,7 @@ const OrdersScreen = () => {
               <TouchableOpacity
                 className="bg-[#20704329] p-2.5 rounded-xl"
                 onPress={() => dispatch(setShowOrderFilterBottomSheet(true))}>
-                <StyledImage
+                <Image
                   source={require('../../../../../assets/images/filter_gold.png')}
                   className="h-[25px] w-[25px]"
                 />
@@ -153,18 +149,18 @@ const OrdersScreen = () => {
                         order: payment,
                       })
                     }>
-                    <StyledView
+                    <View
                       key={payment.id}
                       className="mb-1 px-3.5 py-4 border border-gray-200 rounded-xl bg-lightGray">
                       <View className="flex-row justify-between">
                         <Text className="text-base text-gray-700 font-semibold">
                           Order# {payment.orderId}
                         </Text>
-                        <StyledView>{renderStatus(payment.status)}</StyledView>
+                        <View>{renderStatus(payment.status)}</View>
                       </View>
                       <View className="flex-row items-center justify-between">
                         <View className="flex-row items-center">
-                          <StyledImage
+                          <Image
                             source={payment.productImage}
                             resizeMode="contain"
                             className="h-[60px] w-[40px] rounded-xl"
@@ -185,7 +181,7 @@ const OrdersScreen = () => {
                           {payment.time}
                         </Text>
                       </View>
-                    </StyledView>
+                    </View>
                   </TouchableOpacity>
                 ))
               ) : (
