@@ -1,6 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "../../modules/auths/slices/authState_slice";
-import homeReducer from "../../modules/user/home/slices/home_slice";
+import dashboardWrapperReducer from "../../modules/user/home/slices/dashboardWrapper_slice";
 import productReducer from "../../modules/user/products/slices/product_slice";
 import measurementReducer from "../../modules/user/measurements/slices/measurement_slice";
 import addressReducer from "../../modules/user/address/slices/address_slice";
@@ -28,7 +28,7 @@ const appStore = configureStore({
         settingsState: settingsReducer,
 
         //  Users
-        homeState: homeReducer,
+        dashboardWrapperState: dashboardWrapperReducer,
         productState: productReducer,
         measurementState: measurementReducer,
         addressState: addressReducer,
