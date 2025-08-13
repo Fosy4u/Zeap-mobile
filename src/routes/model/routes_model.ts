@@ -1,5 +1,4 @@
 import IReviewAndRating from "../../modules/general/models/review_model";
-import IReview from "../../modules/general/models/review_model";
 import IReviewIndicator from "../../modules/general/models/reviewIndicator_model";
 import IPaymentReferenceParams from "../../modules/user/payment/models/paymentReferenceParams_model";
 
@@ -21,7 +20,7 @@ type RootNavigationStackModel = {
     homeScreen: {
         screen?: "Cart" | "Dashboard" | "Saved" | "Profile";
       };
-    dashboardScreen: undefined;
+
     inviteFriendScreen: undefined;
 
     allCategoryScreen: undefined;
@@ -38,15 +37,12 @@ type RootNavigationStackModel = {
     addressScreen: undefined;
     editDeliveryAddressScreen: undefined;
 
-    cartScreen: undefined;
     checkoutScreen: undefined;
     deliveryMethodScreen: undefined;
-    savedScreen: undefined;
     
     userPaymentScreen: { data: IPaymentReferenceParams } | undefined;
     // paymentMethodScreen: undefined;
 
-    profileScreen: undefined;
     profileSetupScreen: undefined;
     personalInformationScreen: undefined;
     editAccountDetailsScreen: undefined;
