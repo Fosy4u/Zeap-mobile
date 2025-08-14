@@ -16,10 +16,6 @@ import LoginInfoScreen from '../modules/auths/screen/loginInfo_screen';
 import ProfileSetupScreen from '../modules/profile/screens/profileSetup_screen.tsx';
 import ShopSetupScreen from "../modules/vendor/setting/screen/shopSetup_screen";
 import HomeScreen from '../modules/user/home/screens/home_screen';
-import DashboardScreen from '../modules/user/home/screens/dashboard_screen';
-import CartScreen from '../modules/user/cart/screens/cart_screen.tsx';
-import SavedScreen from '../modules/user/saved/screen/saved_screen';
-import ProfileScreen from '../modules/profile/screens/profile_screen.tsx';
 import CategoryScreen from '../modules/user/products/screens/allCategory_screen.tsx';
 import ProductListScreen from '../modules/user/products/screens/productList_screen .tsx';
 import InviteFriendScreen from '../modules/user/home/screens/inviteFriend_screen ';
@@ -111,9 +107,6 @@ const AppRoutes = () => {
           name="homeScreen" component={HomeScreen} options={{ headerShown: false }}
         />
         <Stack.Screen
-          name="dashboardScreen" component={DashboardScreen} options={{ headerShown: false }}
-        />
-        <Stack.Screen
           name="inviteFriendScreen" component={InviteFriendScreen} options={{ headerShown: false }}
         />
 
@@ -130,8 +123,7 @@ const AppRoutes = () => {
           name="measurementScreen" component={MeasurementScreen} options={{ headerShown: false }}
         />
 
-        {/* ==== Cart ==== */}
-        <Stack.Screen name="cartScreen" component={CartScreen} options={{ headerShown: false }} />
+        {/* ==== Cart Checkout ==== */}
         <Stack.Screen name="checkoutScreen" component={CheckoutScreen} options={{ headerShown: false }} />
         <Stack.Screen name="deliveryMethodScreen" component={AddressScreen} options={{ headerShown: false }} />
 
@@ -142,14 +134,7 @@ const AppRoutes = () => {
         <Stack.Screen name="userPaymentScreen" component={UserPaymentScreen} options={{ headerShown: false }} />
         {/* <Stack.Screen name="paymentMethodScreen" component={ PaymentMethodScreen } options={{ headerShown: false }} /> */}
 
-        {/* ==== Save ==== */}
-        <Stack.Screen
-          name="savedScreen" component={SavedScreen} options={{ headerShown: false }} />
-
         {/* ==== Profile ==== */}
-        <Stack.Screen
-          name="profileScreen" component={ProfileScreen} options={{ headerShown: false }}
-        />
         <Stack.Screen name="profileSetupScreen" component={ProfileSetupScreen} options={{ headerShown: false }} />
         <Stack.Screen
           name="personalInformationScreen" component={PersonalInformationScreen} options={{ headerShown: false }}

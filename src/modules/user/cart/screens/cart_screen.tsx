@@ -12,6 +12,7 @@ import RootNavigationStackModel from '../../../../routes/model/routes_model';
 import { setProductID } from '../../products/slices/product_slice';
 import useGeneralHook from '../../../general/hooks/general_hook';
 import formatCurrency from '../../../../utils/formatCurrency';
+import ProductCardComponent from '../../../general/components/productCard_component.tsx';
 
 
 const CartScreen = () => {
@@ -25,8 +26,8 @@ const CartScreen = () => {
 
   const {
     handleGetCarts,
-    handleIncreamentProductQuantity, 
-    handleDecreamentProductQuantity, 
+    handleIncreamentProductQuantity,
+    handleDecreamentProductQuantity,
     handleRemoveProductFromCart,
     handleGetDeliveryDate,
     getItemDeliveryPeriod,
@@ -100,13 +101,13 @@ const CartScreen = () => {
 
                         <View className="h-auto flex-1 mt-2 flex-row items-center justify-between">
                           <View className="flex-row items-center gap-x-4">
-                            <TouchableOpacity onPress={ () => {
+                            <TouchableOpacity onPress={ async () => {
                               // If the quantity is 1, show a toast message
                               if (basketItem?.quantity === 1) {
                                   ToastAndroid.show("You cannot decrement the quantity below 1", ToastAndroid.SHORT);
                                   return;
                               }
-                              handleDecreamentProductQuantity(basketItem._id!);
+                              await handleDecreamentProductQuantity(basketItem._id!);
                             }} >
                               <Text className="text-2xl">&minus;</Text>
                             </TouchableOpacity>
@@ -114,7 +115,7 @@ const CartScreen = () => {
                             <View className="h-[25px] w-[25px] flex-row justify-center items-center border border-gray-400 rounded-lg">
                               <Text className="">{ basketItem.quantity! }</Text>
                             </View>
-                            
+
 
                             <TouchableOpacity onPress={ () => handleIncreamentProductQuantity(basketItem._id!) } >
                               <Text className="text-2xl">&#43;</Text>
@@ -127,7 +128,7 @@ const CartScreen = () => {
                             <Trash color="#AA1F1F" size={18} variant="Bold" />
                           </TouchableOpacity>
                         </View>
-                    
+
                         { getItemDeliveryPeriod(cart.basketItems?.[0].sku!, "Standard") && (
                           <Text className="font-montserratMedium text-[10px] text-blue-400">Delivery period: { getItemDeliveryPeriod(cart.basketItems?.[0].sku!, "Standard") } working days</Text>
                         ) }
@@ -157,8 +158,8 @@ const CartScreen = () => {
           ) }
 
           { (cart?.basketItems && cart.basketItems.length > 0) && (
-            <TouchableOpacity 
-              onPress={() => {  
+            <TouchableOpacity
+              onPress={() => {
                 navigation.navigate("checkoutScreen");
               }}
               disabled={ isAddressLoading }
@@ -169,7 +170,7 @@ const CartScreen = () => {
             </TouchableOpacity>
           ) }
 
-          <TouchableOpacity 
+          <TouchableOpacity
             onPress={() => {
               navigation.navigate("productListScreen", { screenTitle: "All Products" });
             }}
@@ -180,8 +181,8 @@ const CartScreen = () => {
           </TouchableOpacity>
 
           {/*==== Similar Items Section ====*/}
-          <View className="mt-10 mb-5">
-          <Text className="font-medium text-base text-baseGreen">Similar items</Text>
+          <View className="mt-10 mb-10">
+            <Text className="font-medium text-base text-baseGreen">Similar items</Text>
 
             <ScrollView
               horizontal
@@ -189,47 +190,22 @@ const CartScreen = () => {
               className="h-auto w-full my-3"
             >
               { popularProducts.map((popularProduct) => (
-                <TouchableOpacity key={ popularProduct.productId }
-                  onPress={ () => {
+                <ProductCardComponent
+                  key={ popularProduct.productId }
+                  product={ popularProduct }
+                  handleOnPress={ () => {
                     dispatch(setProductID(popularProduct.productId));
                     navigation.navigate("productDetailScreen");
                   } }
-                  className="h-auto w-[170px] mr-4 p-3 rounded-2xl overflow-hidden bg-[#F8F9FE]"
-                >
-                  <View className="h-auto w-full relative py-1 rounded-xl bg-white">
-                    <Image
-                      className="h-[100px] w-full rounded-t-2xl"
-                      resizeMode="contain"
-                      source={ 
-                        popularProduct.colors[0]?.images[1]?.link
-                        ? { uri: popularProduct.colors[0]?.images[1]?.link }
-                        : require("../../../../../assets/images/app_logo.png")
-                      }
-                    />
-                    <View className="h-[35px] w-[35px] absolute top-1 right-2 flex items-center justify-center rounded-xl bg-gray-200">
-                      <Heart color="gray" />
-                    </View>
-                  </View>
-                  <View className="mt-3">
-                    <Text className="text-sm text-gray-800">{ popularProduct.title }</Text>
-                    <View className="mt-1.5 flex-row items-center justify-between">
-                      <Text className="px-2.5 py-1 text-xs rounded-lg bg-lightGreen">{ popularProduct.categories.productGroup.split("-").join(" ") }</Text>
-
-                      <View className="flex-row">
-                        <Star1 color="#E4A01C" size={18} variant="Bold" className="mr-0.5" />
-                        <Text>4.3</Text>
-                      </View>
-                    </View>
-                    <Text className="mt-2.5 text-base font-medium text-gray-900">₦{ popularProduct.variations[0].price.toLocaleString() }</Text>
-                  </View>
-                </TouchableOpacity>
+                  orientation="Vertical"
+                />
               )) }
             </ScrollView>
           </View>
 
         </ScrollView>
       </SafeAreaView>
-      
+
       { (isLoading) && <AppLoader loadingAdditionalMessage={ loadingMessage } /> }
     </GestureHandlerRootView>
   )
