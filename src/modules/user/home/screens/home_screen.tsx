@@ -4,7 +4,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Whatsapp } from 'iconsax-react-native';
 
 import CartScreen from '../../cart/screens/cart_screen';
-import DashboardScreen from './dashboard_screen';
+import DashboardWrapperScreen from './dashboardWrapper_screen';
 import SavedScreen from '../../saved/screen/saved_screen';
 import ProfileScreen from '../../../profile/screens/profile_screen';
 import AppBottomBarComponent from '../components/appBottomBar_component';
@@ -24,8 +24,8 @@ const HomeScreen = () => {
           headerShown: false,
         }}
       >
+        <Tab.Screen name="Dashboard" component={ DashboardWrapperScreen } />
         <Tab.Screen name="Cart" component={ CartScreen } />
-        <Tab.Screen name="Dashboard" component={ DashboardScreen } />
         <Tab.Screen name="Saved" component={ SavedScreen } />
         <Tab.Screen name="Profile" component={ ProfileScreen } />
       </Tab.Navigator>
