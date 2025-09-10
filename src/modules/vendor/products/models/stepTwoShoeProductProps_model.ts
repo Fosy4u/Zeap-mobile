@@ -1,6 +1,5 @@
-interface IStepTwoBespokeClotheProps {
+interface IStepTwoShoeProductProps {
     manageState: {
-        mainOptions: string[];
         styleOptions: string[];
         genderOptions: string[];
         ageGroupOptions: string[];
@@ -8,12 +7,10 @@ interface IStepTwoBespokeClotheProps {
         brandOptions: string[];
         designOptions: string[];
         occasionOptions: string[];
-        sleeveLengthOptions: string[];
+        heelHeightOptions: string[];
+        heelTypeOptions: string[];
         fasteningOptions: string[];
-        fitOptions: string[];
 
-        selectedMain: string[];
-        setSelectedMain: React.Dispatch<React.SetStateAction<string[]>>;
         selectedStyle: string[];
         setSelectedStyle: React.Dispatch<React.SetStateAction<string[]>>;
         selectedGender: string[];
@@ -28,15 +25,13 @@ interface IStepTwoBespokeClotheProps {
         setSelectedDesign: React.Dispatch<React.SetStateAction<string[]>>;
         selectedOccasion: string[];
         setSelectedOccasion: React.Dispatch<React.SetStateAction<string[]>>;
-        selectedSleeveLength: string;
-        setSelectedSleeveLength: React.Dispatch<React.SetStateAction<string>>;
+        selectedHeelHeight: string;
+        setSelectedHeelHeight: React.Dispatch<React.SetStateAction<string>>;
+        selectedHeelType: string;
+        setSelectedHeelType: React.Dispatch<React.SetStateAction<string>>;
         selectedFastening: string[];
         setSelectedFastening: React.Dispatch<React.SetStateAction<string[]>>;
-        selectedFit: string[];
-        setSelectedFit: React.Dispatch<React.SetStateAction<string[]>>;
 
-        showMainDropDown: boolean;
-        setShowMainDropDown: React.Dispatch<React.SetStateAction<boolean>>;
         showStyleDropDown: boolean;
         setShowStyleDropDown: React.Dispatch<React.SetStateAction<boolean>>;
         showGenderDropDown: boolean;
@@ -51,13 +46,13 @@ interface IStepTwoBespokeClotheProps {
         setShowDesignDropDown: React.Dispatch<React.SetStateAction<boolean>>;
         showOccasionDropDown: boolean;
         setShowOccasionDropDown: React.Dispatch<React.SetStateAction<boolean>>;
-        showSleeveLengthDropDown: boolean;
-        setShowSleeveLengthDropDown: React.Dispatch<React.SetStateAction<boolean>>;
+        showHeelHeightDropDown: boolean;
+        setShowHeelHeightDropDown: React.Dispatch<React.SetStateAction<boolean>>;
+        showHeelTypeDropDown: boolean;
+        setShowHeelTypeDropDown: React.Dispatch<React.SetStateAction<boolean>>;
         showFasteningDropDown: boolean;
         setShowFasteningDropDown: React.Dispatch<React.SetStateAction<boolean>>;
-        showFitDropDown: boolean;
-        setShowFitDropDown: React.Dispatch<React.SetStateAction<boolean>>;
     };
 };
 
-export default IStepTwoBespokeClotheProps;
+export default IStepTwoShoeProductProps;

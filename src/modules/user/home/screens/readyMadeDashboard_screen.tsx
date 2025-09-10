@@ -104,9 +104,9 @@ const ReadyMadeDashboardScreen = () => {
                 </View>
 
 
-                {/*==== Ready To Wear For an Occasions Section ====*/}
+                {/*==== Ready To Wear For Occasions Section ====*/}
                 <View className="h-[400px] w-full mt-7">
-                    <Text className="font-montserratBold text-baseGreen text-xl">READY TO WEAR FOR OCCASIONS</Text>
+                    <Text className="font-montserratBold text-baseGreen text-xl">Ready To Wear For Occasions</Text>
                     <Text className="text-xs text-baseGreen italic">Designed for Every Special Moment</Text>
 
                     <ScrollView
@@ -136,7 +136,7 @@ const ReadyMadeDashboardScreen = () => {
                     </ScrollView>
                 </View>
 
-                {/*==== Tailored To Perfection Section ====*/}
+                {/*==== Our Return Guarantee Section ====*/}
                 <View className="h-auto w-full mt-5 py-10 px-5 bg-lightGold rounded-md">
                     <FastImage
                         className="h-auto w-[25px] rounded-md"
@@ -164,7 +164,7 @@ const ReadyMadeDashboardScreen = () => {
                     </TouchableOpacity>
                 </View>
 
-                {/*==== Bespoke Shoes Section ====*/}
+                {/*==== Ready To Wear Shoes Section ====*/}
                 <View className="h-[300px] w-full mt-5 bg-baseGreen rounded-md">
                     <FastImage
                         className="h-full w-full rounded-md"
@@ -175,7 +175,7 @@ const ReadyMadeDashboardScreen = () => {
                     />
                     <View className="h-full w-full absolute inset-0 bg-black/50 rounded-md" />
                     <View className="absolute top-0 bottom-0 left-0 right-0 flex items-center justify-center">
-                        <Text className="mt-24 font-montserratBold text-white text-xl">READY TO WEAR SHOES</Text>
+                        <Text className="mt-24 font-montserratBold text-white text-xl">Ready To Wear Shoes</Text>
                         <Text className="text-xs text-white italic text-center">{"Ready made shoes for your specific \nneeds and preferences"}</Text>
 
                         {/*==== Explore Button ====*/}
@@ -194,8 +194,8 @@ const ReadyMadeDashboardScreen = () => {
                 {/*==== Ready to Wear Latest Arrivals Section ====*/}
                 <View className="mt-6">
                     <View className="flex-row justify-between items-center">
-                    <Text className="font-medium text-base text-baseGreen">Latest Arrivals</Text>
-                    <TouchableOpacity onPress={ () => navigation.navigate("productListScreen", { screenTitle: "Latest Arrivals" }) }>
+                    <Text className="font-medium text-base text-baseGreen">Ready to Wear Latest</Text>
+                    <TouchableOpacity onPress={ () => navigation.navigate("productListScreen", { screenTitle: "Ready To Wear Latest" }) }>
                         <Text className="text-sm text-baseGreen">See all</Text>
                     </TouchableOpacity>
                     </View>

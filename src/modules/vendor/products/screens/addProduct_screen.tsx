@@ -19,7 +19,6 @@ const AddProductScreen = () => {
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const dispatch = useDispatch();
 
-
     const { handleResetProductMode, handleGetDraftProducts, isLoadingDraftProducts } = useAddBespokeClothesHook();
 
     useEffect(() => {
@@ -34,7 +33,6 @@ const AddProductScreen = () => {
                 backgroundColor="#133522"
                 barStyle="light-content"
             />
-
 
             {/*==== Header ====*/}
             <AppHeaderComp title="Add Product" />
@@ -100,7 +98,6 @@ const AddProductScreen = () => {
                 <Text className="font-montserratMedium text-lg text-gray-700">Add a new product</Text>
                 <Text className="mt-1 font-montserratMedium text-sm">Select the product type you want to add</Text>
 
-
                 <View className="h-auto w-full mt-5 flex-row">
                     {/* ==== Clothes ==== */}
                     <TouchableOpacity
@@ -148,7 +145,11 @@ const AddProductScreen = () => {
                 <View className="h-auto w-full mt-5 flex-row">
                     {/* ==== Accessories ==== */}
                     <TouchableOpacity
-                        onPress={ () => null }
+                        onPress={ () => {
+                            dispatch(setProductType("Accessories"));
+                            dispatch(setProductMode("New"));
+                            navigation.navigate("addAccessoriesScreen");
+                        } }
                         className="h-auto w-full px-5 py-5 flex-1 rounded-xl border border-gray-100 bg-gray-50"
                     >
                         <View className="w-[50px] h-[50px] flex-row items-center justify-center rounded-xl bg-gray-100">

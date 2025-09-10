@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View} from "react-native";
 import AppHeaderComp from "../../general/components/appHeader_comp";

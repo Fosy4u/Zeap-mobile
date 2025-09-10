@@ -7,6 +7,7 @@ import { set } from "react-hook-form";
 import IPromoProduct from "../models/promotion_model";
 import IReview from "../../../general/models/review_model";
 import IReviewAndRating from "../../../general/models/review_model";
+import IDynamicFilter from "../models/dynamicFilter_model";
 
 const initialState: IProductState = {
     productID: "",
@@ -72,7 +73,8 @@ const initialState: IProductState = {
     accessories: [],
     bags: [],
     popularProducts: [],
-    newestArrivals: [],
+    newestPrpducts: [],
+    currentPage: 1,
 
     featuredPrice: 0,
     selectedColor: {
@@ -85,7 +87,7 @@ const initialState: IProductState = {
 
     searchPhrases: ["Women jacket", "Men jacket", "Men’s summer sweater", "Joggers", "Kids hoodie"],
     filteredSearchPhrases: ["Women jacket", "Men jacket", "Men’s summer sweater", "Joggers", "Kids hoodie"],
-    searchWord: "",
+    searchPhrase: "",
     showSizedGuideBottomSheet: false,
 
     reviewAndRating: {
@@ -95,8 +97,15 @@ const initialState: IProductState = {
     },
 
     sizeGuide: {},
+    dynamicFilterOptions: [],
 
     isLoading: false,
+    promoProductsIsLoading: false,
+    popularProductsIsLoading: false,
+    newestProductsIsLoading: false,
+    recentlyViewedProductsIsLoading: false,
+    recommendedProductsIsLoading: false,
+    wishListProductsIsLoading: false,
     loadingMessage: "",
 };
 
@@ -104,8 +113,8 @@ export const productSlice = createSlice({
     name: "productSlice",
     initialState,
     reducers: {
-        setSearchWord: (state: IProductState, action: PayloadAction<string>) => {
-            state.searchWord = action.payload;
+        setSearchPhrase: (state: IProductState, action: PayloadAction<string>) => {
+            state.searchPhrase = action.payload;
             if (action.payload === "") {
                 state.filteredSearchPhrases = state.searchPhrases;
                 return;
@@ -139,8 +148,11 @@ export const productSlice = createSlice({
         setSelectedTab: (state: IProductState, action: PayloadAction<string>) => {
             state.selectedTab = action.payload;
         },
-        setNewestArrivals: (state: IProductState, action: PayloadAction<IProduct[]>) => {
-            state.newestArrivals = action.payload;
+        setNewestProducts: (state: IProductState, action: PayloadAction<IProduct[]>) => {
+            state.newestPrpducts = action.payload;
+        },
+        setCurrentPage: (state: IProductState, action: PayloadAction<number>) => {
+            state.currentPage = action.payload;
         },
         setFemaleClothing: (state: IProductState, action: PayloadAction<IProduct[]>) => {
             state.femaleClothing = action.payload;
@@ -194,8 +206,29 @@ export const productSlice = createSlice({
         setSizeGuide: (state: IProductState, action: PayloadAction<any>) => {
             state.sizeGuide = action.payload;
         },
+        setDynamicFilterOptions: (state: IProductState, action: PayloadAction<IDynamicFilter[]>) => {
+            state.dynamicFilterOptions = action.payload;
+        },
         setIsLoading: (state: IProductState, action: PayloadAction<boolean>) => {
             state.isLoading = action.payload;
+        },
+        setPromoProductsIsLoading: (state: IProductState, action: PayloadAction<boolean>) => {
+            state.promoProductsIsLoading = action.payload;
+        },
+        setPopularPeoductsIsLoading: (state: IProductState, action: PayloadAction<boolean>) => {
+            state.popularProductsIsLoading = action.payload;
+        },
+        setNewestProductsIsLoading: (state: IProductState, action: PayloadAction<boolean>) => {
+            state.newestProductsIsLoading = action.payload;
+        },
+        setRecentlyViewedProductsIsLoading: (state: IProductState, action: PayloadAction<boolean>) => {
+            state.recentlyViewedProductsIsLoading = action.payload;
+        },
+        setRecommendedProductsIsLoading: (state: IProductState, action: PayloadAction<boolean>) => {
+            state.recommendedProductsIsLoading = action.payload;
+        },
+        setWishListProductsIsLoading: (state: IProductState, action: PayloadAction<boolean>) => {
+            state.wishListProductsIsLoading = action.payload;
         },
         setLoadingMessage: (state: IProductState, action: PayloadAction<string>) => {
             state.loadingMessage = action.payload;
@@ -206,7 +239,7 @@ export const productSlice = createSlice({
 const { actions, reducer } = productSlice;
 
 export const {
-    setSearchWord,
+    setSearchPhrase,
     setPromoProducts,
     setProductPromotion,
     setProduct,
@@ -216,7 +249,8 @@ export const {
     setWishListProducts,
     setProductID,
     setSelectedTab,
-    setNewestArrivals,
+    setNewestProducts,
+    setCurrentPage,
     setFemaleClothing,
     setMaleClothing,
     setShoes,
@@ -232,7 +266,14 @@ export const {
     setShowSizedGuideBottomSheet,
     setReviewAndRating,
     setSizeGuide,
+    setDynamicFilterOptions,
     setIsLoading,
+    setPromoProductsIsLoading,
+    setPopularPeoductsIsLoading,
+    setNewestProductsIsLoading,
+    setRecentlyViewedProductsIsLoading,
+    setRecommendedProductsIsLoading,
+    setWishListProductsIsLoading,
     setLoadingMessage,
 } = actions;
 export default reducer;

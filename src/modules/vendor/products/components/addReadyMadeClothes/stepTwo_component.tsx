@@ -2,10 +2,10 @@ import React from 'react';
 import {ScrollView, Text, TouchableOpacity, View} from "react-native";
 import { ArrowDown2, ArrowUp2} from "iconsax-react-native";
 import CheckBox from '@react-native-community/checkbox';
-import IStepTwoBespokeClotheProps from '../../models/stepTwoBespokeClotheProps_model';
+import IStepTwoClothProductProps from '../../models/stepTwoClothProductProps_model';
 
 
-const StepTwoComponent: React.FC<IStepTwoBespokeClotheProps> = ({ manageState }) => {
+const StepTwoComponent: React.FC<IStepTwoClothProductProps> = ({ manageState }) => {
 
     const {
         mainOptions, styleOptions, genderOptions, ageGroupOptions, ageRangeOptions, brandOptions,
@@ -328,7 +328,7 @@ const StepTwoComponent: React.FC<IStepTwoBespokeClotheProps> = ({ manageState })
                             onPress={ () => setShowBrandDropDown(!showBrandDropDown) }
                             className="px-2 py-4 flex-row items-center justify-between  rounded-lg border border-[#ececed]"
                         >
-                            <Text className="h-auto flex-1 text-base text-[#9ca3af]" >Select at least one brand</Text>
+                            <Text className="h-auto flex-1 text-base text-[#9ca3af]" >Select a brand</Text>
                             <ArrowUp2 size={18} color="#9ca3af" className="mx-1 mt-1" />
                         </TouchableOpacity>
 

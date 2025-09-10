@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import IVendorHomeState, { IOverview } from "../models/vendorHomeState_model";
+import IVendorHomeState, { IOverview, IPieData } from "../models/vendorHomeState_model";
 import IAnalytic from "../models/analytic_model";
 
 
@@ -48,12 +48,12 @@ const initialState: IVendorHomeState = {
         { label: "Sat", value: 30 },
     ],
     salesCountPieData: [
-        {value: 121, color: "#133522", title: "Ready made"},
-        {value: 82, color: "#D5B07B", title: "Bespoke"},
+        {value: 0, color: "#133522", title: "Ready made"},
+        {value: 0, color: "#D5B07B", title: "Bespoke"},
     ],
     salesRevenuePieData: [
-        {value: 12500, color: "#225F3D", title: "Ready made"},
-        {value: 10000, color: "#819656", title: "Bespoke"},
+        {value: 0, color: "#225F3D", title: "Paid", currency: "NGN"},
+        {value: 0, color: "#819656", title: "Pending", currency: "NGN"},
     ],
 };
 
@@ -72,6 +72,12 @@ export const vendorHomeSlice = createSlice({
         },
         setOverviews: (state: IVendorHomeState, action: PayloadAction<IOverview[]>) => {
             state.overviews = action.payload;
+        },
+        setSalesCountPieData: (state: IVendorHomeState, action: PayloadAction<IPieData[]>) => {
+            state.salesCountPieData = action.payload;
+        },
+        setSalesRevenuePieData: (state: IVendorHomeState, action: PayloadAction<IPieData[]>) => {
+            state.salesRevenuePieData = action.payload;
         }
     }
 });
@@ -83,5 +89,7 @@ export const {
     setShowOrderFilterBottomSheet,
     setAnalytics,
     setOverviews,
+    setSalesCountPieData,
+    setSalesRevenuePieData,
 } = actions;
 export default reducer;

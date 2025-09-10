@@ -1,5 +1,5 @@
 import rootAPI from "../../../redux/api/rootAPI";
-import { deleteNotificationRoute, getNotificationsRoute } from "../../../routes/api/api_route";
+import { deleteNotificationRoute, getNotificationsRoute } from "../../../redux/api/api_route";
 import INotificationDetails from "../models/notification_model";
 
 

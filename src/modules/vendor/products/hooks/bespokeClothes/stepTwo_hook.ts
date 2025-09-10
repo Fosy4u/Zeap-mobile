@@ -2,7 +2,7 @@ import { stepTwoAddClothesSchema } from "../../validations/addProduct_validation
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../../../../redux/store/store";
-import { useUpdateWithCategoriesMutation } from "../../apis/bespokeProduct_api";
+// import { useUpdateWithCategoriesMutation } from "../../apis/bespokeProduct_api";
 import { Alert } from "react-native";
 import { setLoadingMessage, setProduct, setProductIsLoading, setSelectedStep } from "../../slices/vendorProductState_slice";
 import { useLazyGetProductByProductIDQuery } from "../../apis/product_api";
@@ -51,7 +51,7 @@ const useStepTwoHook = () => {
     const [showFasteningDropDown, setShowFasteningDropDown] = useState(false);
     const [showFitDropDown, setShowFitDropDown] = useState(false);
     
-    const [updateWithCategories] = useUpdateWithCategoriesMutation();
+    // const [updateWithCategories] = useUpdateWithCategoriesMutation();
     const [getProductByProductID] = useLazyGetProductByProductIDQuery();  
 
     // Handle submit
@@ -87,23 +87,23 @@ const useStepTwoHook = () => {
             }
             console.log("REQUEST DATA::: ", requestData);
 
-            const updateWithCategoryResponseData = await updateWithCategories(requestData).unwrap();
-            console.log("RESPONSE::: ", updateWithCategoryResponseData);
+            // const updateWithCategoryResponseData = await updateWithCategories(requestData).unwrap();
+            // console.log("RESPONSE::: ", updateWithCategoryResponseData);
 
-            if (updateWithCategoryResponseData) {
-                dispatch(setLoadingMessage("Getting product details..."));
+            // if (updateWithCategoryResponseData) {
+            //     dispatch(setLoadingMessage("Getting product details..."));
 
-                // Get the updated product data
-                const updatedProduct = await getProductByProductID(productId).unwrap();
-                console.log("UPDATED PRODUCT::: ", updatedProduct);
+            //     // Get the updated product data
+            //     const updatedProduct = await getProductByProductID(productId).unwrap();
+            //     console.log("UPDATED PRODUCT::: ", updatedProduct);
 
-                if (updatedProduct) {
-                    dispatch(setProduct(updatedProduct));
-                    dispatch(setProductIsLoading(false));
-                    dispatch(setLoadingMessage(""));
-                    dispatch(setSelectedStep(3));
-                }
-            }
+            //     if (updatedProduct) {
+            //         dispatch(setProduct(updatedProduct));
+            //         dispatch(setProductIsLoading(false));
+            //         dispatch(setLoadingMessage(""));
+            //         dispatch(setSelectedStep(3));
+            //     }
+            // }
         } catch (error: any) {
             dispatch(setProductIsLoading(false));
             dispatch(setLoadingMessage(""));

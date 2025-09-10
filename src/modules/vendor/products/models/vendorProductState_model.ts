@@ -1,3 +1,4 @@
+import IReviewAndRating from "../../../general/models/review_model";
 import IPromotion from "./promotion_model";
 import IVendorProductDetails from "./vendorProductDetails_model";
 
@@ -14,9 +15,11 @@ interface IVendorProductState {
     savedAddresses: ISavedAddress[];
 
     products: IVendorProductDetails[];
-    product: IVendorProductDetails;
+    product: IVendorProductDetails | null;
     draftProducts: IVendorProductDetails[];
     productPromotion: IPromotion;
+
+    reviewAndRating: IReviewAndRating;
 
     showProductTypeBottomSheet: boolean;
 

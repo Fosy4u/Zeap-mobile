@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../../../redux/store/store";
-import { useApplyPromotionMutation, useDeleteProductMutation, useLazyGetAvailablePromosQuery, useLazyGetProductByProductIDQuery, useLazyGetProductPromotionQuery, useLazyGetProductsQuery } from "../apis/product_api";
+import { useApplyPromotionMutation, useDeleteProductMutation, useLazyGetAvailablePromosQuery, useLazyGetProductByProductIDQuery, useLazyGetProductPromotionQuery, useLazyGetProductsQuery, useTurnOffPromotionMutation } from "../apis/product_api";
 import IVendorProductQueryParams from "../models/vendorProductFilter_model";
-import { setProduct, setProductPromotion, setProducts } from "../slices/vendorProductState_slice";
+import { setProduct, setProductPromotion, setProducts, setReviewAndRating } from "../slices/vendorProductState_slice";
 import { IColor, IImage, IVariation } from "../models/vendorProductDetails_model";
 import { IColorEnum } from "../../../general/models/productOptions_model";
 import { SubmitHandler } from "react-hook-form";
@@ -15,11 +15,10 @@ import RootNavigationStackModel from "../../../../routes/model/routes_model";
 import { setIsLoading, setLoadingMessage } from "../../../general/slices/general_slice";
 import IPromotion from "../models/promotion_model";
 import handleError from "../../../general/hooks/errorHandler_hook";
-import { setReviewAndRating } from "../../../user/products/slices/product_slice";
+import useReviewHook from "../../../general/hooks/review_hook";
 
 
 
-/*************  ✨ Windsurf Command ⭐  *************/
 /**
  * Vendor product hook
  *
@@ -27,9 +26,8 @@ import { setReviewAndRating } from "../../../user/products/slices/product_slice"
  *
  * @returns An object containing functions and data for use in the vendor product screen.
  */
-/*******  8cf3fd92-20f9-4b26-83b2-99cc22ac7430  *******/const useVendorProductHook = () => {
+const useVendorProductHook = () => {
     const { product, productIsLoading } = useSelector((state: RootState) => state.vendorProductState);
-    const { userData } = useSelector((state: RootState) => state.profileState);
     const { productTypes, bespokeClothesOptions, bespokeShoesOptions, readyMadeClothesOptions, readyMadeShoesOptions, accessoriesOptions } = useSelector((state: RootState) => state.generalState);
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const dispatch = useDispatch();
@@ -106,54 +104,16 @@ import { setReviewAndRating } from "../../../user/products/slices/product_slice"
     const [getProducts] = useLazyGetProductsQuery();
     const [getProductByProductID] = useLazyGetProductByProductIDQuery();
     const [deleteProduct] = useDeleteProductMutation();
-    const [getProductReviews] = useLazyGetProductReviewsQuery();
     // const [createReview, { isLoading: isLoadingAddReview }] = useCreateReviewMutation();
     const [likeReview] = useLikeReviewMutation();
     const [dislikeReview] = useDislikeReviewMutation();
     const [getAvailablePromos, { data: promotions }] = useLazyGetAvailablePromosQuery();
     const [getProductPromotion] = useLazyGetProductPromotionQuery();
     const [applyPromotion] = useApplyPromotionMutation();
+    const [turnOffPromotion] = useTurnOffPromotionMutation();
 
 
-    // const { handleSubmit, control, formState: { errors }, reset } = useForm<IReviewProduct>({
-    //     defaultValues: {
-    //         title: "",
-    //         rating: 0,
-    //         review: "",
-    //     },
-    //     resolver: yupResolver(reviewSchema)
-    // });
-
-    // const onSubmit: SubmitHandler<IReviewProduct> =  async(data) => {
-    //     setLoadingMessage("Submitting review...");
-    //     dispatch(setIsLoading(true));
-
-    //     const requestData = {
-    //         productId: product.productId!,
-    //         displayName: `${userData.firstName} ${userData.lastName}`,
-    //         title: data.title,
-    //         rating: data.rating,
-    //         imageMatch: true,
-    //         review: data.review,
-    //     }
-    //     console.log("REQUEST DATA::: ", requestData);
-
-    //     try {
-    //         const reviewResponse = await createReview(requestData).unwrap();
-
-    //         if (reviewResponse) {
-    //             reset();
-    //             dispatch(setIsLoading(false));
-    //             setLoadingMessage("");
-    //             console.log("RESPONSE::: ", reviewResponse);
-    //         }
-    //     } catch (error: any) {
-    //         dispatch(setIsLoading(false));
-    //         setLoadingMessage("");
-    //         handleError(error);
-    //     }
-    // };
-
+    const { handleGetProductReviews } = useReviewHook();
 
 
     const handleGetDefaultFeaturedImageAndThumbnails = () => {
@@ -242,7 +202,7 @@ import { setReviewAndRating } from "../../../user/products/slices/product_slice"
 
         try {
             const products = await getProducts(requestParams).unwrap();
-            // console.log("PRODUCTS::: ", products[0]);
+            // console.log("PRODUCTS::: ", products.length);
 
             if (products) {
                 dispatch(setProducts(products));
@@ -263,23 +223,23 @@ import { setReviewAndRating } from "../../../user/products/slices/product_slice"
 
         try {
             const productResponse = await getProductByProductID(productID).unwrap();
-            console.log("PRODUCT RESPONSE: ", productResponse);
+            // console.log("PRODUCT RESPONSE: ", productResponse);
 
             if (productResponse) {
                 dispatch(setProduct(productResponse));
 
                 // Get product promo and reviews
                 dispatch(setLoadingMessage("Fetching product promo and reviews..."));
-                const [productPromotionResponse, reviewAndRatingResponse] = await Promise.all([
+                const [productPromotionResponse, _] = await Promise.all([
+                // await Promise.all([
                     getProductPromotion(productID!).unwrap(),
-                    getProductReviews(productID!).unwrap(),
+                    handleGetProductReviews(productID!),
                 ]);
 
                 if (productPromotionResponse) {
                     dispatch(setProductPromotion(productPromotionResponse));
-                }
-                if (reviewAndRatingResponse) {
-                    dispatch(setReviewAndRating(reviewAndRatingResponse));
+                } else {
+                    dispatch(setProductPromotion({}));
                 }
                 dispatch(setIsLoading(false));
                 dispatch(setLoadingMessage(""));
@@ -288,27 +248,6 @@ import { setReviewAndRating } from "../../../user/products/slices/product_slice"
             dispatch(setIsLoading(false));
             dispatch(setLoadingMessage(""));
             console.log("ERROR::: ", error);
-        }
-    };
-
-    // Handle get product reviews
-    const handleGetProductReviews = async (productID: string) => {
-        dispatch(setLoadingMessage("Fetching reviews..."));  
-        dispatch(setIsLoading(true));     
-
-        try {
-            const reviewsResponse = await getProductReviews(productID!).unwrap();
-            // console.log("REVIEWS RESPONSE: ", reviewsResponse);            
-
-            if (reviewsResponse) {
-                dispatch(setReviewAndRating(reviewsResponse));
-                dispatch(setIsLoading(false));
-                dispatch(setLoadingMessage(""));
-            }
-        } catch (error) {
-            dispatch(setIsLoading(true));
-            dispatch(setLoadingMessage(""));
-            handleError(error);
         }
     };
 
@@ -387,19 +326,76 @@ import { setReviewAndRating } from "../../../user/products/slices/product_slice"
     // Handle apply promotion
     const handleApplyPromo = async () => {
         dispatch(setLoadingMessage("Applying promotion..."));
+        dispatch(setIsLoading(true));
 
         try {
             const requestData = {
                 discountPercentage: selectedPromo?.discount?.fixedPercentage!,
-                productId: product.productId!,
-                promoId: selectedPromo?._id!,
+                productId: product?.productId!,
+                promoId: selectedPromo?.promoId!,
             };
             console.log("REQUEST DATA::: ", requestData);
 
             const applyPromotionResponse = await applyPromotion(requestData).unwrap();
             console.log("RESPONSE::: ", applyPromotionResponse);
+
+            if (applyPromotionResponse) {
+
+                // Get back the product promo
+                const productPromotionResponse = await getProductPromotion(product?.productId!).unwrap();
+                console.log("RESPONSE::: ", productPromotionResponse);
+
+                if (productPromotionResponse) {
+                    dispatch(setProductPromotion(productPromotionResponse));
+                } else {
+                    dispatch(setProductPromotion({}));
+                }
+                dispatch(setIsLoading(false));
+                dispatch(setLoadingMessage(""));
+
+                // Return to the product details screen
+                navigation.navigate("productDetailScreen", { productID: product?.productId! });
+            }
         } catch (error) {
-            console.log("ERROR::: ", error);
+            dispatch(setIsLoading(false));
+            dispatch(setLoadingMessage(""));
+            handleError(error);
+        };
+    };
+
+    // Handle torn-off promo
+    const handleTornOffPromo = async (promoID: string) => {
+        dispatch(setLoadingMessage("Turning off promotion..."));
+        dispatch(setIsLoading(true));
+
+        try {
+            const requestData = {
+                productId: product?.productId!,
+                promoId: promoID,
+            };
+            console.log("REQUEST DATA::: ", requestData);
+
+            const tornOffPromotionResponse = await turnOffPromotion(requestData).unwrap();
+            console.log("RESPONSE::: ", tornOffPromotionResponse);
+
+            if (tornOffPromotionResponse) {
+
+                // Get back the product promo
+                const productPromotionResponse = await getProductPromotion(product?.productId!).unwrap();
+                console.log("RESPONSE::: ", productPromotionResponse);
+
+                if (productPromotionResponse) {
+                    dispatch(setProductPromotion(productPromotionResponse));
+                } else {
+                    dispatch(setProductPromotion({}));
+                }
+                dispatch(setIsLoading(false));
+                dispatch(setLoadingMessage(""));
+            }
+        } catch (error) {
+            dispatch(setIsLoading(false));
+            dispatch(setLoadingMessage(""));
+            handleError(error);
         };
     };
 
@@ -446,7 +442,7 @@ import { setReviewAndRating } from "../../../user/products/slices/product_slice"
         defaultFeaturedImageAndThumbnails, handleUpdateDefaultFeaturedImageAndThumbnails,
         featuredImage, setFeaturedImage,
         featuredColors,
-        promotions, handleGetAvailablePromos, selectedPromo, setSelectedPromo, handleApplyPromo,
+        promotions, handleGetAvailablePromos, selectedPromo, setSelectedPromo, handleApplyPromo, handleTornOffPromo,
 
 
         productTypeOptions, selectedProductType,

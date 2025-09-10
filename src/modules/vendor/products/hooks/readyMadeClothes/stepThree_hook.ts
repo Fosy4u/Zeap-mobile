@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import * as yup from "yup";
 import { RootState } from "../../../../../redux/store/store";
 import { stepThreeAddReadyMadeClothesSchema } from "../../validations/addProduct_validation";
-import { Alert } from "react-native";
 import { setLoadingMessage, setProduct, setProductIsLoading, setSelectedStep } from "../../slices/vendorProductState_slice";
 import { useLazyGetProductByProductIDQuery, useUpdateProductMutation } from "../../apis/readyMadeProduct_api";
 import handleError from "../../../../general/hooks/errorHandler_hook";

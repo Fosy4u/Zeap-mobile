@@ -10,12 +10,14 @@ class FormatWords {
     };
 
     // Capitalize first word
-    static capitalizeWord = (text: string) => {
+    static capitalizeWord = (text?: string) => {
+        if (!text) return "";
         return text.charAt(0).toUpperCase() + text.slice(1);
     };
 
     // Capitalize first letter of each word
-    static capitalizeWords = (text: string) => {
+    static capitalizeWords = (text?: string) => {
+        if (!text) return "";
         return text.replace(/\b\w/g, char => char.toUpperCase());
     };
 }
