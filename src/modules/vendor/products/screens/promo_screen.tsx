@@ -12,6 +12,8 @@ const PromoScreen = () => {
     const { isLoading, loadingMessage } = useSelector((state: RootState) => state.generalState);
 
     const { promotions, handleGetAvailablePromos, selectedPromo, setSelectedPromo, handleApplyPromo, handleFormatDate } = useVendorProductHook();
+    console.log("PROMOTIONS", promotions);
+    
 
     useEffect(() => {
         handleGetAvailablePromos();

@@ -71,6 +71,27 @@ const stepTwoAddShoesSchema = yup.object().shape({
     }),
     currentStep: yup.number().required("Current step is required."),
 });
+const stepTwoAddAccessoriesSchema = yup.object().shape({
+    productId: yup.string().required("Product ID is required."),
+    categories: yup.object().shape({
+        style: yup.array().of(yup.string()).min(1, "Style is required."),
+        gender: yup.array().of(yup.string()).min(1, "Gender is required."),
+        age: yup.object().shape({
+            ageGroup: yup.string().required("Age group is required."),
+            ageRange: yup.string().when('ageGroup', {
+            is: (ageGroup: string) => ageGroup === 'Kids',
+            then: (schema) => schema.required("Age range is required for Kids."),
+            otherwise: (schema) => schema.optional(),
+            }),
+        }),
+        accessoryType: yup.string().required("Accessory type is required."),
+        brand: yup.string().required("Brand is required."),
+        design: yup.array().of(yup.string()).min(1, "Design is required."),
+        occasion: yup.array().of(yup.string()).min(1, "Occasion is required."),
+        fastening: yup.array().of(yup.string()).min(1, "Fastening is required."),
+    }),
+    currentStep: yup.number().required("Current step is required."),
+});
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -148,6 +169,7 @@ export {
 
     stepTwoAddClothesSchema,
     stepTwoAddShoesSchema,
+    stepTwoAddAccessoriesSchema,
 
     stepThreeAddBespokeClothesSchema,
     stepThreeAddReadyMadeClothesSchema,

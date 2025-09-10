@@ -5,12 +5,14 @@ import { useForm, SubmitHandler } from "react-hook-form";
 import { setLoadingMessage, setIsLoading } from "../slices/general_slice";
 import reviewSchema, { IReviewProduct } from "../validations/review_validation";
 import handleError from "./errorHandler_hook";
-import { useCreateReviewMutation } from "../apis/review_api";
+import { useCreateReviewMutation, useLazyGetProductReviewsQuery } from "../apis/review_api";
 import { useEffect, useState } from "react";
 import IReviewIndicator from "../models/reviewIndicator_model";
 import IReviewAndRating from "../models/review_model";
+import { setReviewAndRating } from "../../vendor/products/slices/vendorProductState_slice";
 
-const useReviewHook = (productID: string, reviewAndRating: IReviewAndRating) => {
+const useReviewHook = () => {
+    const { product, reviewAndRating} = useSelector((state: RootState) => state.vendorProductState);
     const { userData } = useSelector((state: RootState) => state.profileState);
     const dispatch = useDispatch();
 
@@ -26,6 +28,7 @@ const useReviewHook = (productID: string, reviewAndRating: IReviewAndRating) => 
         ],
       });
 
+    const [getProductReviews] = useLazyGetProductReviewsQuery();
     const [createReview, { isLoading: isLoadingAddReview }] = useCreateReviewMutation();
     
 
@@ -43,14 +46,14 @@ const useReviewHook = (productID: string, reviewAndRating: IReviewAndRating) => 
         dispatch(setIsLoading(true));
 
         const requestData = {
-            productId: productID,
+            productId: product?.productId!,
             displayName: `${userData.firstName} ${userData.lastName}`,
             title: data.title,
             rating: data.rating,
             imageMatch: true,
             review: data.review,
         }
-        console.log("REQUEST DATA::: ", requestData);
+        // console.log("REQUEST DATA::: ", requestData);
 
         try {
             const reviewResponse = await createReview(requestData).unwrap();
@@ -59,11 +62,33 @@ const useReviewHook = (productID: string, reviewAndRating: IReviewAndRating) => 
                 reset();
                 dispatch(setIsLoading(false));
                 setLoadingMessage("");
-                console.log("RESPONSE::: ", reviewResponse);
+                // console.log("RESPONSE::: ", reviewResponse);
             }
         } catch (error: any) {
             dispatch(setIsLoading(false));
             setLoadingMessage("");
+            handleError(error);
+        }
+    };
+
+
+    // Handle get product reviews
+    const handleGetProductReviews = async (productID: string) => {
+        dispatch(setLoadingMessage("Fetching reviews..."));  
+        dispatch(setIsLoading(true));     
+
+        try {
+            const reviewsResponse = await getProductReviews(productID!).unwrap();
+            // console.log("REVIEWS RESPONSE: ", reviewsResponse);            
+
+            if (reviewsResponse) {
+                dispatch(setReviewAndRating(reviewsResponse));
+                dispatch(setIsLoading(false));
+                dispatch(setLoadingMessage(""));
+            }
+        } catch (error) {
+            dispatch(setIsLoading(true));
+            dispatch(setLoadingMessage(""));
             handleError(error);
         }
     };
@@ -74,7 +99,7 @@ const useReviewHook = (productID: string, reviewAndRating: IReviewAndRating) => 
           const rate = i + 1;
           const count = reviewAndRating.reviews!.filter((review) => review.rating === i + 1).length;
           const percentage = (count / reviewAndRating.reviews!.length) * 100;
-          console.log("STATE::: ", state.reviewIndicators[0].count);
+          // console.log("STATE::: ", state.reviewIndicators[0].count);
           
           // Update state
           setState((prevState: any) => ({
@@ -95,6 +120,7 @@ const useReviewHook = (productID: string, reviewAndRating: IReviewAndRating) => 
 
     return {
         onSubmit, handleSubmit, isLoadingAddReview, control, errors,
+        handleGetProductReviews,
         reviewIndicators: state.reviewIndicators
     };
 };

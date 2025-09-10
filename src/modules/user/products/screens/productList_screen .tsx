@@ -1,80 +1,32 @@
-import React, {useCallback, useMemo, useRef, useState} from 'react';
-import {
-  Animated,
-  Image,
-  SafeAreaView,
-  StatusBar,
-  Text,
-  TextInput,
-  View,
-  FlatList,
-} from 'react-native';
-import {ArrowLeft, SearchNormal1} from 'iconsax-react-native';
+import React, {useCallback, useEffect, useMemo, useRef} from 'react';
+import { Animated, Image, SafeAreaView, StatusBar, Text, TextInput, View, FlatList, TouchableOpacity } from 'react-native';
+import {ArrowLeft, ArrowRight, SearchNormal1} from 'iconsax-react-native';
 import {useDispatch, useSelector} from 'react-redux';
-import {AppDispatch, RootState} from '../../../../redux/store/store.ts';
+import {RootState} from '../../../../redux/store/store.ts';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
-import {
-  BottomSheetModal,
-  BottomSheetModalProvider,
-  TouchableOpacity,
-} from '@gorhom/bottom-sheet';
+import { BottomSheetModal, BottomSheetModalProvider} from '@gorhom/bottom-sheet';
 import {RouteProp, useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import RootNavigationStackModel from '../../../../routes/model/routes_model.ts';
-import CategoryFilterBottomSheetComponent from '../components/categoryFilterBottomSheet_component.tsx';
+import DynamicFilterBottomSheetComponent from '../components/dynamicFilterBottomSheet_component.tsx';
 import ProductListCard from '../components/productListCard_component';
-import FastImage from 'react-native-fast-image';
+import useFilterAndSearchHook from '../hooks/filterAndSearch_hook.ts';
+import EmptyListComponent from '../components/emptyList_component.tsx';
+import AppLoader from '../../../general/components/appLoader.tsx';
+import { setSearchPhrase } from '../slices/product_slice.ts';
 
 interface IProps {
   route: RouteProp<RootNavigationStackModel, 'productListScreen'>;
 }
 
 const ProductListScreen: React.FC<IProps> = ({ route }) => {
-  const {
-    allProducts, femaleClothing, maleClothing, shoes, accessories, bags, popularProducts ,
-    newestArrivals, recentlyViewedProducts, recommendedProducts, wishListProducts
-  } = useSelector((state: RootState) => state.productState);
+  const { searchPhrase, dynamicFilterOptions, allProducts, isLoading, loadingMessage } = useSelector((state: RootState) => state.productState);
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
   const { screenTitle } = route.params || {};
-  
-  const [isFocused, setIsFocused] = useState(false);
-  const iconTranslateX = useRef(new Animated.Value(0)).current;
-  const inputTranslateX = useRef(new Animated.Value(0)).current;
+  const dispatch = useDispatch();
 
-  const handleFocus = () => {
-    setIsFocused(true);
-    Animated.parallel([
-      Animated.timing(iconTranslateX, {
-        toValue: 220, // Move icon to the right
-        duration: 200,
-        useNativeDriver: true,
-      }),
-      Animated.timing(inputTranslateX, {
-        toValue: -25, // Move input to the left
-        duration: 200,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  };
-
-  const handleBlur = () => {
-    setIsFocused(false);
-    Animated.parallel([
-      Animated.timing(iconTranslateX, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-      Animated.timing(inputTranslateX, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  };
-
-  const AnimatedSearchIcon = Animated.createAnimatedComponent(SearchNormal1);
-  const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
+  // Import Hooks
+  const { selectedFilters, toggleCheckboxOption, handleSubmit, handleGetFilteredProducts, handlePrevAndNextPagination } = useFilterAndSearchHook();
 
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const snapPoints = useMemo(() => ['100%'], []);
@@ -87,35 +39,14 @@ const ProductListScreen: React.FC<IProps> = ({ route }) => {
     }
   }, []);
 
-  const products = screenTitle === "All Products" ?
-  allProducts
-  : screenTitle === "Female Clothings"
-  ? femaleClothing
-  : screenTitle === "Male Clothings"
-  ? maleClothing
-  : screenTitle === "Shoes"
-  ? shoes
-  : screenTitle === "Accessories"
-  ? accessories
-  : screenTitle === "Bags"
-  ? bags
-  : screenTitle === "Popular Products"
-  ? popularProducts
-  : screenTitle === "Newest Arrivals"
-  ? newestArrivals
-  : screenTitle === "Recently Viewed"
-  ? recentlyViewedProducts
-  : screenTitle === "Recommended"
-  ? recommendedProducts
-  : screenTitle === "Wish List"
-  ? wishListProducts
-  :[];
-
+  useEffect(() => {
+    handleGetFilteredProducts({ screenTitle: screenTitle || "Products", setShowBottomSheetModal });
+  }, [selectedFilters]);
 
   return (
     <GestureHandlerRootView>
       <BottomSheetModalProvider>
-        <SafeAreaView className="h-full w-full flex-1 px-[25px] pt-[20px]">
+        <SafeAreaView className="h-full w-full flex-1 px-[25px] pt-[20px] pb-3">
           <StatusBar backgroundColor="transparent" barStyle="dark-content" />
 
           {/*==== Header ====*/}
@@ -134,29 +65,16 @@ const ProductListScreen: React.FC<IProps> = ({ route }) => {
           {/*==== Search Box ====*/}
           <View className="h-auto w-full mt-8 flex-row items-center justify-center">
             <View className="h-auto w-full px-3 py-1 flex-1 flex-row items-center border border-gray-300 rounded-xl bg-gray-100">
-              <TouchableOpacity onPress={() => null}>
-                <Animated.View
-                  style={{
-                    transform: [{translateX: iconTranslateX}],
-                    marginRight: 5,
-                  }}>
-                  <AnimatedSearchIcon color="#9ca3af" />
-                </Animated.View>
+              <TextInput
+                value={searchPhrase}
+                placeholder="Search item"
+                placeholderTextColor="#9ca3af"
+                className="flex-1 text-base"
+                onChangeText={(value: string) => dispatch(setSearchPhrase(value))}
+              />
+              <TouchableOpacity onPress={() => handleSubmit("Search Products")}>
+                  <SearchNormal1 color="#9ca3af" />
               </TouchableOpacity>
-              <Animated.View
-                style={{
-                  flex: 1,
-                  transform: [{translateX: inputTranslateX}],
-                }}>
-                <AnimatedTextInput
-                  placeholder="Search item"
-                  placeholderTextColor="#9ca3af"
-                  className="text-base"
-                  onChangeText={value => null}
-                  onFocus={handleFocus}
-                  onBlur={handleBlur}
-                />
-              </Animated.View>
             </View>
 
             <TouchableOpacity onPress={() => setShowBottomSheetModal(true)}>
@@ -171,43 +89,53 @@ const ProductListScreen: React.FC<IProps> = ({ route }) => {
 
           {/*==== Product List ====*/}
           <FlatList
-            data={products}
+            data={allProducts}
             renderItem={({ item }) => <ProductListCard product={item} />}
-            keyExtractor={(item, index) => `${index}-item.productId`}
+            keyExtractor={(_, index) => `${index}-item.productId`}
             showsVerticalScrollIndicator={false}
             className="h-auto w-full mt-3"
-            ListEmptyComponent={renderEmptyList(screenTitle!)}
+            ListEmptyComponent={<EmptyListComponent screenTitle={screenTitle} />}
             contentContainerStyle={{ flexGrow: 1 }}
           />
 
-          <CategoryFilterBottomSheetComponent
+
+          {/*==== Next and Previous Buttons ====*/}
+          <View className="h-auto w-full mt-3 flex-row">
+            <TouchableOpacity
+                onPress={ () => handlePrevAndNextPagination({screenTitle: screenTitle || "Products", direction: "Prev"}) }
+                className="h-[50px] flex-1 flex-row items-center justify-center rounded-xl bg-lightGreen"
+            >
+                <ArrowLeft size={ 18 } className="text-baseGreen" />
+                <Text className="ml-2 font-montserratSemiBold text-sm text-baseGreen">Prev</Text>
+            </TouchableOpacity>
+            <View className="w-[10px]" />
+
+            <TouchableOpacity
+                onPress={ () => handlePrevAndNextPagination({screenTitle: screenTitle || "Products", direction: "Next"}) }
+                className="h-[50px] flex-1 flex-row items-center justify-center rounded-xl bg-lightGreen"
+            >
+                <Text className="mr-2 font-montserratSemiBold text-sm text-baseGreen">Next</Text>
+                <ArrowRight size={ 18 } className="text-baseGreen" />
+            </TouchableOpacity>
+          </View>
+
+          <DynamicFilterBottomSheetComponent
             bottomSheetModalRef={bottomSheetModalRef}
             snapPoints={snapPoints}
             setShowBottomSheetModal={setShowBottomSheetModal}
+            selectedFilters={selectedFilters}
+            toggleCheckboxOption={toggleCheckboxOption}
+            dynamicFilterOptions={dynamicFilterOptions}
+            isloading={isLoading}
+            loadingMessage={loadingMessage}
           />
         </SafeAreaView>
+
+        {/*==== Show app loader ====*/}
+        { isLoading && <AppLoader loadingAdditionalMessage={ loadingMessage } /> }
       </BottomSheetModalProvider>
     </GestureHandlerRootView>
   );
 };
 
 export default ProductListScreen;
-
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Render Empty List
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-const renderEmptyList = (screenTitle: string) => (
-  <View className="h-auto w-full mt-1 p-10 bg-gray-50">
-    <FastImage
-        source={ require("../../../../../assets/images/empty_box.png") }
-        defaultSource={ require("../../../../../assets/images/empty_box.png") }
-        resizeMode={ FastImage.resizeMode.contain }
-        className="h-[70px] w-full"
-    />
-
-    <Text className="mt-4 text-center text-gray-400">You don't have any { screenTitle } products.</Text>
-  </View>
-);

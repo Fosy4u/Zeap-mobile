@@ -278,21 +278,10 @@ const AddressScreen = () => {
                                 { errors.phoneNumber && (<Text className="text-red-500 text-xs">{errors.phoneNumber.message}</Text>) }
                             </View>
 
-                            <View className="mt-5 flex-row items-center">
-                                <CheckBox
-                                    value={ saveAddressForNextTime }
-                                    disabled={ userData.isGuest }
-                                    onValueChange={ (newValue) => dispatch(setSaveAddressForNextTime(newValue)) }
-                                    tintColors={{ true: "#133522", false: "#151518" }}
-                                />
-                                <Text className="ml-2 font-montserratMedium text-base">Save my address for next time.</Text>
-                            </View>
-                            <Text className="mt-1 ml-1 font-montserratMedium text-xs text-gray-400">{ userData.isGuest && "You need to be logged in to save your address for next time." }</Text>
-
-                            <View className="flex-row items-center gap-x-4">
+                            <View className="mt-5 flex-row items-center gap-x-4">
                                 <TouchableOpacity
                                     onPress={ () => dispatch(setShowNewDeliveryAddressForm(false)) }
-                                    className="h-[55px] w-[100px] mt-5 flex flex-row items-center justify-center rounded-xl bg-lightGreen"
+                                    className="h-[55px] w-[120px] mt-5 flex flex-row items-center justify-center rounded-xl bg-lightGreen"
                                 >
                                     <Text className="text-lg text-baseGreen">Cancel</Text>
                                 </TouchableOpacity>

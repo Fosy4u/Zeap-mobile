@@ -2,6 +2,7 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import IVendorProductState from "../models/vendorProductState_model.ts";
 import IVendorProductDetails from "../models/vendorProductDetails_model.ts";
 import IPromotion from "../models/promotion_model.ts";
+import IReviewAndRating from "../../../general/models/review_model.ts";
 
 const initialState: IVendorProductState = {
     productMode: "New",
@@ -16,9 +17,15 @@ const initialState: IVendorProductState = {
     savedAddresses: [],
 
     products: [],
-    product: {},
+    product: null,
     draftProducts: [],
     productPromotion: {},
+
+    reviewAndRating: {
+        averageRating: 0,
+        reviews: [],
+        imageMatch: {}
+    },
 
     showProductTypeBottomSheet: false,
 
@@ -60,6 +67,9 @@ export const vendorProductSlice = createSlice({
         setProductPromotion: (state: IVendorProductState, action: PayloadAction<IPromotion>) => {
             state.productPromotion = action.payload;
         },
+        setReviewAndRating: (state: IVendorProductState, action: PayloadAction<IReviewAndRating>) => {
+            state.reviewAndRating = action.payload;
+        },
         setShowProductTypeBottomSheet: (state: IVendorProductState, action: PayloadAction<boolean>) => {
             state.showProductTypeBottomSheet = action.payload;
         },
@@ -85,6 +95,7 @@ export const {
     setProduct,
     setDraftProducts,
     setProductPromotion,
+    setReviewAndRating,
     setShowProductTypeBottomSheet,
     setProductIsLoading,
     setLoadingMessage,

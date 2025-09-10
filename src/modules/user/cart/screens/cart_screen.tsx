@@ -2,7 +2,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { View, Text, SafeAreaView, StatusBar, TouchableOpacity, Image, ScrollView, ToastAndroid } from 'react-native'
 import React, { useCallback } from 'react'
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { ArrowRight, Heart, Notification, Star1, Trash } from 'iconsax-react-native';
+import { ArrowRight, Notification, Trash } from 'iconsax-react-native';
 import { RootState } from '../../../../redux/store/store';
 import AppLoader from '../../../general/components/appLoader';
 import useCartHook from '../hooks/cart_hook';
@@ -13,6 +13,7 @@ import { setProductID } from '../../products/slices/product_slice';
 import useGeneralHook from '../../../general/hooks/general_hook';
 import formatCurrency from '../../../../utils/formatCurrency';
 import ProductCardComponent from '../../../general/components/productCard_component.tsx';
+import EmptyListComponent from '../../products/components/emptyList_component.tsx';
 
 
 const CartScreen = () => {
@@ -101,24 +102,27 @@ const CartScreen = () => {
 
                         <View className="h-auto flex-1 mt-2 flex-row items-center justify-between">
                           <View className="flex-row items-center gap-x-4">
-                            <TouchableOpacity onPress={ async () => {
-                              // If the quantity is 1, show a toast message
-                              if (basketItem?.quantity === 1) {
-                                  ToastAndroid.show("You cannot decrement the quantity below 1", ToastAndroid.SHORT);
-                                  return;
-                              }
-                              await handleDecreamentProductQuantity(basketItem._id!);
-                            }} >
-                              <Text className="text-2xl">&minus;</Text>
+                            <TouchableOpacity
+                             className="h-[30px] w-[30px] p-0 pb-2 justify-center items-center border border-gray-400 rounded-lg"
+                              onPress={ async () => {
+                                // If the quantity is 1, show a toast message
+                                if (basketItem?.quantity === 1) {
+                                    ToastAndroid.show("You cannot decrement the quantity below 1", ToastAndroid.SHORT);
+                                    return;
+                                }
+                                await handleDecreamentProductQuantity(basketItem._id!);
+                              }}
+                            >
+                              <Text className="text-2xl leading-7">&minus;</Text>
                             </TouchableOpacity>
 
-                            <View className="h-[25px] w-[25px] flex-row justify-center items-center border border-gray-400 rounded-lg">
-                              <Text className="">{ basketItem.quantity! }</Text>
-                            </View>
+                            <Text className="font-montserratMedium text-lg">{ basketItem.quantity! }</Text>
 
-
-                            <TouchableOpacity onPress={ () => handleIncreamentProductQuantity(basketItem._id!) } >
-                              <Text className="text-2xl">&#43;</Text>
+                            <TouchableOpacity
+                              className="h-[30px] w-[30px] justify-center items-center border border-gray-400 rounded-lg"
+                              onPress={ () => handleIncreamentProductQuantity(basketItem._id!) }
+                            >
+                              <Text className="text-xl leading-6">&#43;</Text>
                             </TouchableOpacity>
                           </View>
 
@@ -152,9 +156,7 @@ const CartScreen = () => {
             </View>
           )
           : (
-            <View className="h-[100px] w-full flex-1 items-center justify-center border border-gray-200 rounded-lg">
-              <Text className="text-lg">{"If there is an item in your cart,\nit will appear here"}</Text>
-            </View>
+            <EmptyListComponent />
           ) }
 
           { (cart?.basketItems && cart.basketItems.length > 0) && (

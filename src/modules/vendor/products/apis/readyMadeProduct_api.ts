@@ -88,7 +88,7 @@ const readyMadeProductApi = rootAPI.injectEndpoints({
         }),
 
         // Delete product image (Step 4)
-        deleteProductImage: builder.mutation<IVendorProductDetails, any>({
+        deleteProductImage: builder.mutation<IVendorProductDetails, { imageName: string, productId: string, color: string }>({
             query: (requestData) => ({
                 url: "/product/update/deleteProductImage",
                 method: "PUT",

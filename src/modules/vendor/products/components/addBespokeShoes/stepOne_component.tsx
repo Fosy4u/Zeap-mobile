@@ -1,13 +1,16 @@
-import React from 'react';
-import {Text, TextInput, View} from "react-native";
+import React, { useRef } from 'react';
+import {KeyboardAvoidingView, Platform, Text, TextInput, View} from "react-native";
 import { Control, Controller } from 'react-hook-form';
 import { IStepOneAddProduct } from '../../validations/addProduct_validation';
+import { RichToolbar, actions, RichEditor } from 'react-native-pell-rich-editor';
 interface IProps {
     control: Control<IStepOneAddProduct>;
     errors: any;
 }
 
 const StepOneComponent: React.FC<IProps> = ({ control, errors }) => {
+
+    const richTextEditorRef = useRef<RichEditor>(null);
 
     return (
         <View>
@@ -59,24 +62,46 @@ const StepOneComponent: React.FC<IProps> = ({ control, errors }) => {
             </View>
 
             <Text aria-label="Description" nativeID="description" className="mt-5 font-montserratMedium">Product description<Text className="text-red-600">*</Text></Text>
-            <View className="h-auto w-full mt-1.5 px-3 py-0.5 border rounded-xl border-gray-200 bg-gray-50">
+            <View className="h-[170px] w-full mt-1.5  border rounded-xl border-gray-200 bg-white">
                 <Controller
                     control={ control }
                     name="description"
                     render={ ({ field: { onChange, onBlur, value } }) => (
-                        <TextInput
-                            aria-label="Description"
-                            aria-labelledby="description"
-                            keyboardType="default"
-                            placeholder="Enter description"
-                            placeholderTextColor="#9ca3af"
-                            multiline={ true }
-                            textAlignVertical="top"
-                            className="h-[100px] font-montserratMedium text-base"
-                            onBlur={ onBlur }
-                            onChangeText={ onChange }
-                            value={ value }
-                        />
+                        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined}>
+                            <RichToolbar
+                                editor={richTextEditorRef}
+                                actions={[
+                                    actions.setBold,
+                                    actions.setItalic,
+                                    actions.setUnderline,
+                                    actions.setStrikethrough,
+                                    actions.insertBulletsList,
+                                    actions.insertOrderedList,
+                                    actions.indent,
+                                    actions.outdent,
+                                    actions.alignLeft,
+                                    actions.alignRight,
+                                    actions.insertLink,
+                                ]}
+                                iconTint="#000"
+                                iconSize={16}
+                                selectedIconTint="#007AFF"
+                                disabledIconTint="#ccc"
+                                className="rounded-tl-lg rounded-tr-lg bg-gray-200"
+                            />
+                            <RichEditor
+                                ref={ richTextEditorRef }
+                                initialContentHTML={ value } // Bind value here
+                                placeholder='Enter description'
+                                onChange={(html) => onChange(html)} // Update React Hook Form state
+                                onBlur={ onBlur }
+                                editorStyle={{
+                                    backgroundColor: '#FFFFFF',
+                                    cssText: 'body { font-size: 14px !important; }',
+                                }}
+                                className="min-h-[115px] min-w-full"
+                            />
+                        </KeyboardAvoidingView>
                     )}
                 />
                 {  errors.description && <Text className="text-red-600">{errors.description.message}</Text> }

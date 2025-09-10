@@ -13,6 +13,7 @@ import FastImage from 'react-native-fast-image';
 import { RootState } from '../../../../redux/store/store.ts';
 import { setProduct, setProductMode, setSelectedStep } from '../slices/vendorProductState_slice.ts';
 import IVendorProductDetails from '../models/vendorProductDetails_model.ts';
+import formatCurrency from '../../../../utils/formatCurrency.ts';
 
 
 const VendorProductsScreen = () => {
@@ -165,7 +166,15 @@ const VendorProductsScreen = () => {
                                                     <Text className="flex-1 font-montserratMedium text-base">{ product.title }</Text>
                                                     <Text className={`font-montserratMedium text-xs ${product.variations?.[0]?.quantity! >= 10 ? "text-green-600" : "text-red-600"}`}>{ product.variations?.[0]?.quantity! } in stock</Text>
                                                 </View>
-                                                <Text className="mt-1 font-montserratSemiBold text-base">₦{ product.variations?.[0]?.price!.toLocaleString() }</Text>
+                                                <View className="flex-row items-end gap-x-2 text-gray-200">
+                                                    <Text className="font-montserratSemiBold text-base text-green-700">
+                                                        ₦{ (product.variations?.[0]?.discount) ? product?.variations?.[0].discount?.toLocaleString() : product?.variations?.[0].price!.toLocaleString() }
+                                                    </Text>
+                                                    <Text className={`font-montserratNormal text-sm text-gray-400 line-through ${ (product.variations?.[0]?.discount) ? "flex" : "hidden" }`}>
+                                                        ₦{ product?.variations?.[0].price!.toLocaleString() }
+                                                    </Text>
+                                                   
+                                                </View>
                                             </View>
                                         </View>
                                     </View>

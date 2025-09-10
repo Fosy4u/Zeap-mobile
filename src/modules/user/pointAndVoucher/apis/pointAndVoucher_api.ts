@@ -1,5 +1,5 @@
 import rootAPI from "../../../../redux/api/rootAPI";
-import { convertPointsRoute, getActiveVouchersRoute, getInactiveVouchersRoute, getPointsRoute } from "../../../../routes/api/api_route";
+import { convertPointsRoute, getActiveVouchersRoute, getInactiveVouchersRoute, getPointsRoute } from "../../../../redux/api/api_route";
 import IPoint from "../models/point_model";
 import IVoucher from "../models/voucher_model";
 
