@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Image, Text, View, SafeAreaView, StatusBar, ScrollView, TouchableOpacity, useWindowDimensions } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useNavigation } from "@react-navigation/native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { ArrowRight, Heart, Star1 } from "iconsax-react-native";
+import { ArrowRight } from "iconsax-react-native";
 import Video from "react-native-video";
 import { useDispatch, useSelector } from "react-redux";
 import ShimmerPlaceHolder from 'react-native-shimmer-placeholder';
@@ -13,58 +13,17 @@ import { RootState } from "../../../../redux/store/store";
 import RootNavigationStackModel from "../../../../routes/model/routes_model";
 import Carousel from "react-native-reanimated-carousel";
 import { setProductID, setSelectedCategory } from "../../products/slices/product_slice";
-import useGeneralHook from "../../../general/hooks/general_hook";
-import useHomeHook from "../hooks/home_hook";
 import IProduct from "../../products/models/product_model";
 import FastImage from "react-native-fast-image";
 import { ICategory } from "../../products/models/productState_model";
-import FormatWords from "../../../../utils/formatWords";
 import ProductCardComponent from "../../../general/components/productCard_component";
 
 const MainDashboardScreen = () => {
-  const { promoProducts, categories, selectedCategory, popularProducts, newestArrivals } = useSelector((state: RootState) => state.productState);
+  const { promoProducts, categories, selectedCategory, popularProducts, newestPrpducts, popularProductsIsLoading, newestProductsIsLoading } = useSelector((state: RootState) => state.productState);
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
   const dispatch = useDispatch();
   const width = useWindowDimensions().width - 40;
   // console.log("PROMO PRODUCTS::: ", promoProducts);
-
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  
-  const {
-    handleGetAllLiveProducts,
-    handleGetPopularProducts,
-    handleGetNewestArrivals,
-    handleGetFemaleClothing,
-    handleGetMaleClothing,
-    handleGetShoes,
-    handleGetAccessories,
-    handleGetBags,
-    handleGetPromoProducts,
-    popularProductIsLoading,
-    newestArrivalsIsLoading,
-  } = useHomeHook();
-  const { handleGetProductOptions } = useGeneralHook();
-
-  useEffect(() => {
-    const fetchAllData = async () => {
-      const fetchFunctions = [
-        handleGetProductOptions,
-        handleGetPromoProducts,
-        handleGetPopularProducts,
-        handleGetNewestArrivals,
-        handleGetAllLiveProducts,
-        handleGetFemaleClothing,
-        handleGetMaleClothing,
-        handleGetShoes,
-        handleGetAccessories,
-        handleGetBags,
-      ];
-  
-      await Promise.all(fetchFunctions.map(fn => fn()));
-    };
-  
-    fetchAllData();
-  }, []);
 
 
   return (
@@ -192,7 +151,7 @@ const MainDashboardScreen = () => {
                     showsHorizontalScrollIndicator={ false }
                     className="h-auto w-full mt-2"
                   >
-                    { popularProductIsLoading ? (
+                    { popularProductsIsLoading ? (
                       Array.from({ length: 5 }, (_, index) => (
                         <ShimmerPlaceHolder
                           key={`item-${index}`}
@@ -217,8 +176,7 @@ const MainDashboardScreen = () => {
                         />
                       ))
                     ) }
-                  </ScrollView>
-                  
+                  </ScrollView>  
                 </View>
                 
                 {/*==== Newest Arrivals Section ====*/}
@@ -235,7 +193,7 @@ const MainDashboardScreen = () => {
                     showsHorizontalScrollIndicator={ false }
                     className="h-auto w-full mt-2"
                   >
-                    { newestArrivalsIsLoading ? (
+                    { newestProductsIsLoading ? (
                       Array.from({ length: 5 }, (_, index) => (
                         <ShimmerPlaceHolder
                           key={`item-${index}`}
@@ -248,7 +206,7 @@ const MainDashboardScreen = () => {
                         />
                       ))
                     ) : (
-                      newestArrivals.slice(0, 10).map((newestArrival: IProduct) => (
+                      newestPrpducts.slice(0, 10).map((newestArrival: IProduct) => (
                         <ProductCardComponent
                           key={ newestArrival.productId }
                           product={ newestArrival }

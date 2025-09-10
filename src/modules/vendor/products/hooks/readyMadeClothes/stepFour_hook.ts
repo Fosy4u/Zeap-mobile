@@ -301,7 +301,7 @@ const useStepFourHook = () => {
     // Handle delete image
     const handleDeleteImage = async (index: number) => {
         
-        if (product.colors?.[0].images?.[index]) {
+        if (product?.colors?.[0].images?.[index]) {
             dispatch(setLoadingMessage("Deleting product image..."));
             dispatch(setProductIsLoading(true));
 

@@ -127,11 +127,13 @@ interface ITimeLine {
 
 interface IVariation {
     bespoke?:    Bespoke;
-    sku?:        string;
-    price?:      number;
     colorValue?: string;
-    size?:       string;
+    currency?:   string;
+    discount?:   number;
+    price?:      number;
     quantity?:   number;
+    size?:       string;
+    sku?:        string;
     _id?:        string;
 }
 

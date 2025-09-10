@@ -1,5 +1,5 @@
 import rootAPI from "../../../../redux/api/rootAPI";
-import { getAllReviewsRoute } from "../../../../routes/api/api_route";
+import { getAllReviewsRoute } from "../../../../redux/api/api_route";
 import IReview from "../models/review_model";
 
 

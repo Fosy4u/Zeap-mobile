@@ -68,12 +68,14 @@ interface ITimeLine {
 }
 
 interface IVariation {
-    sku:        string;
-    price:      number;
-    colorValue: string;
-    size:       string;
-    quantity:   number;
-    _id:        string;
+    colorValue?: string;
+    currency?:   string;
+    discount?:   number;
+    price?:      number;
+    quantity?:   number;
+    size?:       string;
+    sku?:        string;
+    _id?:        string;
 }
 
 interface IPromo {

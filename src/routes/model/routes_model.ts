@@ -1,6 +1,7 @@
 import IReviewAndRating from "../../modules/general/models/review_model";
 import IReviewIndicator from "../../modules/general/models/reviewIndicator_model";
 import IPaymentReferenceParams from "../../modules/user/payment/models/paymentReferenceParams_model";
+import IOrder from "../../modules/vendor/orders/models/oder_model";
 
 type RootNavigationStackModel = {
   splashScreen: undefined;
@@ -40,7 +41,7 @@ type RootNavigationStackModel = {
     checkoutScreen: undefined;
     deliveryMethodScreen: undefined;
     
-    userPaymentScreen: { data: IPaymentReferenceParams } | undefined;
+    userPaymentScreen: { requestData: IPaymentReferenceParams } | undefined;
     // paymentMethodScreen: undefined;
 
     profileSetupScreen: undefined;
@@ -74,7 +75,7 @@ type RootNavigationStackModel = {
 
     // VENDORS
     vendorHomeScreen: {
-      screen?: "Dashboard" | "Products" | "Orders" | "Profile" | "Market";
+      screen?: "Dashboard" | "Cart" | "Saved" | "Profile";
     };
     vendorDashboardScreen: undefined;
     marketScreen: undefined;
@@ -96,17 +97,8 @@ type RootNavigationStackModel = {
 
   orderRequestsScreen: undefined;
   OrdersScreen: {screenTitle: string} | undefined;
-  orderRequestDetailsScreen: {
+  vendorOrderDetailsScreen: {
     orderId: string;
-    order: {
-      productImage: string;
-      productName: string;
-      date: string;
-      status: string;
-      orderBy: string;
-      time: string;
-      amount: number;
-    };
   };
 };
 

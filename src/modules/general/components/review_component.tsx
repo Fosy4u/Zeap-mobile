@@ -8,9 +8,9 @@ import useVendorProductHook from '../../vendor/products/hooks/vendorProduct_hook
 import { Controller, set } from 'react-hook-form';
 import AppLoader from './appLoader';
 import useReviewHook from '../hooks/review_hook';
-import { formatDate } from '../../../utils/formatDate';
 import IReviewAndRating from '../models/review_model';
 import RatingCardComponent from './ratingCard_component';
+import formatDate from '../../../utils/formatDate';
 
 interface IProps {
   reviewAndRating: IReviewAndRating;
@@ -25,7 +25,7 @@ const ReviewComponent: React.FC<IProps> = ({ reviewAndRating, productID, loading
   const {
     onSubmit, handleSubmit, isLoadingAddReview, control, errors,
     reviewIndicators
-  } = useReviewHook(productID, reviewAndRating);
+  } = useReviewHook();
   const { handleReviewLike, handleReviewDislike } = useVendorProductHook();
 
 

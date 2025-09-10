@@ -40,7 +40,7 @@ import SearchItemScreen from '../modules/user/products/screens/searchItem_screen
 import SearchResultsScreen from '../modules/user/products/screens/searchResults_screen.tsx';
 import UserPaymentScreen from '../modules/user/payment/screens/userPayment_screen.tsx';
 import UserNotificationsScreen from '../modules/notifications/screens/notifications_screen.tsx';
-import OrderRequestDetailsScreen from '../modules/vendor/orders/screens/orderRequest_screen.tsx';
+import VendorOrderDetailsScreen from '../modules/vendor/orders/screens/orderDetails_screen.tsx';
 import OrdersScreen from '../modules/vendor/orders/screens/orders_screen.tsx';
 import AddBespokeClothesScreen from '../modules/vendor/products/screens/addBespokeClothes_screen.tsx';
 import AddBespokeShoesScreen from '../modules/vendor/products/screens/addBespokeShoes_screen.tsx';
@@ -205,7 +205,7 @@ const AppRoutes = () => {
           name="orderRequestsScreen" component={OrdersScreen} options={{ headerShown: false }}
         />
         <Stack.Screen
-          name="orderRequestDetailsScreen" component={OrderRequestDetailsScreen} options={{ headerShown: false }}
+          name="vendorOrderDetailsScreen" component={VendorOrderDetailsScreen} options={{ headerShown: false }}
         />
 
         {/* ==== Market ==== */}

@@ -71,6 +71,8 @@ const initialState: IProfileState = {
         { "key": "White", "value": "White" },
         { "key": "Brown", "value": "Brown" },
     ],
+
+    showEditEmail: false,
     acceptMarketing: false,
     isLoading: false,
     loadingMessage: "",
@@ -99,6 +101,9 @@ const profileSlice = createSlice({
         setSelectedCountry: (state: IProfileState, action: PayloadAction<string>) => {
             state.selectedCountry = action.payload;
         },
+        setShowEditEmail: (state: IProfileState, action: PayloadAction<boolean>) => {
+            state.showEditEmail = action.payload;
+        },
         setAcceptMarketing: (state: IProfileState, action: PayloadAction<boolean>) => {
             state.acceptMarketing = action.payload;
         },
@@ -119,6 +124,7 @@ export const {
     setShowPhoneCodeModal,
     setShowCountryModal,
     setSelectedCountry,
+    setShowEditEmail,
     setAcceptMarketing,
     setIsLoading,
     setLoadingMessage,

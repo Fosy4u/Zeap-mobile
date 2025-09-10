@@ -1,6 +1,6 @@
 import { createApi, fetchBaseQuery, retry } from "@reduxjs/toolkit/query/react";
 import AuthorizationHeader from "../services/authorizationHeader";
-import baseURL from "../../routes/api/api_route";
+import baseURL from "./api_route";
 
 const rootAPI = createApi({
     reducerPath: "rootAPI",
@@ -34,7 +34,9 @@ const rootAPI = createApi({
         "DeliveryAddresses",
         "PaymentReference",
         "PromoProduct",
+        "DynamicFilterOptions",
         "Orders",
+        "Order",
         "OrderSummary",
         "OrderHistory",
         "DeliveryMethod",
@@ -50,6 +52,7 @@ const rootAPI = createApi({
         "Promotions",
         "Promotion",
         "VendorProductBodyMeasurement",
+        "OrderHistory",
 
         "notifications",
     ],

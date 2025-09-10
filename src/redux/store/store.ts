@@ -13,6 +13,7 @@ import vendorHomeReducer from "../../modules/vendor/home/slices/vendorHome_slice
 import vendorGeneralReducer from "../../modules/vendor/general/slices/general_slice";
 import paymentReducer from "../../modules/vendor/payments/slices/payment_slice";
 import vendorProductReducer from "../../modules/vendor/products/slices/vendorProductState_slice";
+import vendorOrderReducer from "../../modules/vendor/orders/slices/orderState_slice"
 import settingsReducer from "../../modules/settings/slices/settingsState_slice";
 import notificationsReducer from "../../modules/notifications/slices/notifications_slice";
 import rootAPI from "../api/rootAPI.ts";
@@ -43,6 +44,7 @@ const appStore = configureStore({
         notificationsState: notificationsReducer,
         paymentState: paymentReducer,
         vendorProductState: vendorProductReducer,
+        vendorOrderState: vendorOrderReducer,
 
         [rootAPI.reducerPath]: rootAPI.reducer,
     },

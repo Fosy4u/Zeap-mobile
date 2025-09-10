@@ -6,6 +6,7 @@ import { Heart, Star1 } from 'iconsax-react-native';
 import FormatWords from '../../../utils/formatWords';
 import FastImage from 'react-native-fast-image';
 import { Text } from 'react-native';
+import formatCurrency from '../../../utils/formatCurrency';
 
 interface IProductCardItemProps {
   product: IProduct;
@@ -13,26 +14,25 @@ interface IProductCardItemProps {
   orientation: "Horizontal" | "Vertical";
 }
 
-const ProductCardComponent = (props: IProductCardItemProps) => {
+const ProductCardComponent: React.FC<IProductCardItemProps> = (props) => {
      const { product, handleOnPress, orientation } = props;
     return (
         <TouchableOpacity
             onPress={ handleOnPress }
-            className={`h-auto mr-4 p-3 rounded-2xl overflow-hidden bg-[#F8F9FE] ${ orientation === "Horizontal" ? "w-[340px] flex-row justify-start" : "w-[170px]" }`}
+            className={`mr-4 p-3 rounded-2xl overflow-hidden bg-[#F8F9FE] ${ orientation === "Horizontal" ? "h-auto w-[340px] flex-row justify-start" : "h-[300px] w-[170px]" }`}
             >
-            <View className={`relative p-2 flex rounded-xl bg-white ${ orientation === "Horizontal" ? "h-[150px] w-[130px] mr-4 justify-center" : "items-center" }`}>
+            <View className={`relative p-2 flex rounded-xl bg-white ${ orientation === "Horizontal" ? "h-[150px] w-[130px] mr-4 justify-center" : "h-[160px] items-center" }`}>
                 <FastImage
                     source={{
                         uri: product?.colors?.[0]?.images?.[0]?.link!,
                         priority: FastImage.priority.normal
                     }}
-                    // defaultSource={ require("../../../../../assets/images/app_logo.png") }
                     defaultSource={ require("../../../../assets/images/app_logo.png") }
                     resizeMode={ FastImage.resizeMode.cover }
-                    className="h-[120px] w-[100px] rounded-lg"
+                    className={`w-[115px] rounded-lg ${ orientation === "Horizontal" ? "h-[130px]" : "h-[145px]" }`}
                     fallback
                 />
-                <View className="h-[35px] w-[35px] absolute top-2 right-2 flex items-center justify-center rounded-xl bg-gray-200">
+                <View className="h-[35px] w-[35px] absolute top-1.5 right-1.5 flex items-center justify-center rounded-xl bg-gray-200">
                     <Heart color="gray" />
                 </View>
             </View>
@@ -46,7 +46,11 @@ const ProductCardComponent = (props: IProductCardItemProps) => {
                         <Text>4.3</Text>
                     </View>
                 </View>
-                <Text className="mt-2.5 text-base font-medium text-gray-900">₦{ product.variations[0].price.toLocaleString() }</Text>
+
+                <View className="flex-row items-center">
+                    <Text className="mt-2.5 text-base font-medium text-gray-900">{ product.variations![0].discount ? formatCurrency(product?.variations![0].discount || "0", product?.variations![0].currency || "NGN", true) : formatCurrency(product?.variations![0].price || "0", product?.variations![0].currency || "NGN", true) }</Text>
+                    <Text className="mt-2.5 ml-3 text-sm font-medium text-gray-400 line-through">{ product.variations![0].discount && formatCurrency(product?.variations![0].price || "0",  product?.variations![0].currency || "NGN", true) }</Text>
+                </View>
             </View>
         </TouchableOpacity>
     );
