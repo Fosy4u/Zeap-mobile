@@ -1,6 +1,6 @@
 import rootAPI from "../../../redux/api/rootAPI.ts";
 import { getToken } from "../../../redux/services/authorizationHeader.ts";
-import { forgotPasswordRoute, loginUserRoute, mergeUserDataRoute, registerUserRoute } from "../../../routes/api/api_route.ts";
+import { forgotPasswordRoute, loginUserRoute, mergeUserDataRoute, registerUserRoute } from "../../../redux/api/api_route.ts";
 import { IUser } from "../../profile/models/profileState_model";
 
 /**

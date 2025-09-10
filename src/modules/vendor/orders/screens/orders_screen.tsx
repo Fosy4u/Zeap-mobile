@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   Image,
   SafeAreaView,
@@ -13,105 +13,28 @@ import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import RootNavigationStackModel from '../../../../routes/model/routes_model.ts';
 import {BottomSheetModalProvider} from '@gorhom/bottom-sheet';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
-import {ArrowRotateRight, TickSquare, Truck} from 'iconsax-react-native';
-import { useDispatch } from 'react-redux';
+import {ArrowRotateRight, Icon, TickSquare, Truck} from 'iconsax-react-native';
+import { useDispatch, useSelector } from 'react-redux';
 import { setShowOrderFilterBottomSheet } from '../../home/slices/vendorHome_slice.tsx';
+import useOrderHook from '../hooks/order_hook.ts';
+import { RootState } from '../../../../redux/store/store.ts';
+import formatCurrency from '../../../../utils/formatCurrency.ts';
+import formatDate from '../../../../utils/formatDate.ts';
+import FastImage from 'react-native-fast-image';
+import { setOrder } from '../slices/orderState_slice.ts';
 
 const OrdersScreen = () => {
-
+  const { orders } = useSelector((state: RootState) => state.vendorOrderState);
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
   const dispatch = useDispatch();
+  // console.log("ORDERS::: ", orders);
+  
+  const { status, handleGetOrders, handleGetOrderHistory } = useOrderHook();
 
-  const payments = [
-    {
-      id: 1,
-      orderId: '62500',
-      productImage: require('../../../../../assets/images/home/sweat_shirt.png'),
-      productName: 'Men’s Long Sleeves Polo',
-      date: '2025/01/01',
-      status: 'Processing',
-      orderBy: 'Otor John Stephen',
-      time: '06:04am',
-      amount: 1000,
-    },
-    {
-      id: 2,
-      orderId: '62501',
-      productImage: require('../../../../../assets/images/home/sweat_shirt.png'),
-      productName: 'Men’s Long sleeves polo',
-      date: '2025/01/02',
-      status: 'Confirmed',
-      orderBy: 'Jane Doe',
-      time: '08:15am',
-      amount: 2500,
-    },
-    {
-      id: 3,
-      orderId: '62502',
-      productImage: require('../../../../../assets/images/home/sweat_shirt.png'),
-      productName: 'Men’s Long sleeves polo',
-      date: '2025/01/03',
-      status: 'Shipped',
-      orderBy: 'Sam Wilson',
-      time: '10:30am',
-      amount: 1800,
-    },
-    {
-      id: 4,
-      orderId: '62503',
-      productImage: require('../../../../../assets/images/home/sweat_shirt.png'),
-      productName: 'Men’s Long sleeves polo',
-      date: '2025/01/04',
-      status: 'Delivered',
-      orderBy: 'John Doe',
-      time: '01:20pm',
-      amount: 3000,
-    },
-    {
-      id: 5,
-      orderId: '62504',
-      productImage: require('../../../../../assets/images/home/short_sleeve_shirt.png'),
-      productName: 'Men’s short sleeves shirt',
-      date: '2025/01/04',
-      status: 'Delivered',
-      orderBy: 'John Doe',
-      time: '01:20pm',
-      amount: 3000,
-    },
-  ];
+  useEffect(() => {
+    handleGetOrders();
+  }, []);
 
-  const renderStatus = (status: string) => {
-    switch (status) {
-      case 'Processing':
-        return (
-          <View className="p-2 bg-orange/10 border border-orange flex flex-row items-center justify-center rounded-lg">
-            <ArrowRotateRight size={14} className="text-orange mr-1" />
-            <Text className="text-orange text-xs">Processing</Text>
-          </View>
-        );
-      case 'Confirmed':
-        return (
-          <View className="p-2 bg-[#E3ECFF] flex border border-[#9EBDF8] flex-row items-center justify-center rounded-lg">
-            <TickSquare size={14} className="text-[#3461B9] mr-1" />
-            <Text className="text-[#3461B9] text-xs">Confirmed</Text>
-          </View>
-        );
-      case 'Shipped':
-        return (
-          <View className="p-2 bg-orange/10 border border-orange flex flex-row items-center justify-center rounded-lg">
-            <Truck size={14} className="text-orange mr-1" />
-            <Text className="text-orange text-xs">Shipped</Text>
-          </View>
-        );
-      case 'Delivered':
-        return (
-          <View className="p-2 bg-lightGreen/70 flex border border-[#369460] flex-row items-center justify-center rounded-lg">
-            <TickSquare size={14} className="text-[#369460] mr-1" />
-            <Text className="text-[#369460] text-xs">Delivered</Text>
-          </View>
-        );
-    }
-  };
 
   return (
     <GestureHandlerRootView>
@@ -139,56 +62,60 @@ const OrdersScreen = () => {
           {/* ORDER CARD */}
           <ScrollView className="p-5">
             <View className="gap-2 mb-32">
-              {payments.length > 0 ? (
-                payments.map(payment => (
+              { orders.map(order => (
                   <TouchableOpacity
-                    key={payment.id}
-                    onPress={() =>
-                      navigation.navigate('orderRequestDetailsScreen', {
-                        orderId: payment.orderId,
-                        order: payment,
+                    key={order._id}
+                    onPress={() => {
+                      dispatch(setOrder(order!));
+                      handleGetOrderHistory(order._id!);
+                      navigation.navigate('vendorOrderDetailsScreen', {
+                        orderId: order.orderId!,
                       })
-                    }>
+                    } }>
                     <View
-                      key={payment.id}
                       className="mb-1 px-3.5 py-4 border border-gray-200 rounded-xl bg-lightGray">
-                      <View className="flex-row justify-between">
-                        <Text className="text-base text-gray-700 font-semibold">
-                          Order# {payment.orderId}
-                        </Text>
-                        <View>{renderStatus(payment.status)}</View>
-                      </View>
                       <View className="flex-row items-center justify-between">
-                        <View className="flex-row items-center">
-                          <Image
-                            source={payment.productImage}
-                            resizeMode="contain"
-                            className="h-[60px] w-[40px] rounded-xl"
-                          />
-                          <View className="ml-2.5">
-                            <Text className="text-base">
-                              {payment.productName}
-                            </Text>
-                            <Text className="text-base font-bold">
-                              ₦{payment.amount}
-                            </Text>
-                          </View>
+                        <View className="flex-row items-center gap-x-2">
+                          <Text className="font-montserratRegular text-gray-700">Order#:</Text>
+                          <Text className="font-montserratSemiBold text-baseGreen">{order.orderId}</Text>
+                        </View>
+                        
+                        { (() => {
+                          const statusName = order.status!.name!.charAt(0).toUpperCase() + order.status!.name!.slice(1);
+                          const Icon = status[statusName].icon;
+        
+                          return (
+                            <View className={`p-2 ${status[statusName].bgColor} flex border ${status[statusName].borderColor} flex-row items-center justify-center rounded-lg`}>
+                                <Icon size={14} className={`${status[statusName].textColor} mr-1`} />
+                              <Text className={`${status[statusName].textColor} text-xs`}>{statusName}</Text>
+                            </View>
+                          );
+                        })() }
+                      </View>
+                      <View className="flex-row items-center">
+                        <FastImage
+                          source={{uri: order.images![0].link!}}
+                          defaultSource={require('../../../../../assets/images/app_logo.png')}
+                          resizeMode="contain"
+                          className="h-[70px] w-[50px] rounded-xl"
+                        />
+                        <View className="ml-2.5 flex-1 ">
+                          <Text className="font-montserratMedium text-baseGreen leading-4 flex-shrink flex-wrap">
+                            {order.product?.title!}
+                          </Text>
+                          <Text className="font-montserratSemiBold text-baseGreen">
+                            {order.amount!.length > 0 ? formatCurrency(order.amount![0].value!, order.amount![0].currency) : "₦0.0"}
+                          </Text>
                         </View>
                       </View>
-                      <View className="mt-2">
-                        <Text className="text-xs font-semibold">
-                          By: {payment.orderBy} - {payment.date} -{' '}
-                          {payment.time}
-                        </Text>
+                      <View className="mt-2 flex-row items-center gap-x-2">
+                        <Text className="font-montserratRegular text-gray-700">Order date:</Text>
+                        <Text className="font-montserratMedium text-sm text-gray-800">{ formatDate(order.createdAt!.toString(), false) }</Text>
                       </View>
                     </View>
                   </TouchableOpacity>
                 ))
-              ) : (
-                <Text className="text-base text-gray-500">
-                  No payments found
-                </Text>
-              )}
+              }
             </View>
           </ScrollView>
         </SafeAreaView>

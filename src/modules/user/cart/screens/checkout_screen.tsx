@@ -9,25 +9,27 @@ import useAddressHook from '../../address/hooks/address_hook.ts';
 import { Controller } from 'react-hook-form';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../../../redux/store/store.ts';
-import { setSaveAddressForNextTime, setShowEditEmail } from '../../address/slices/address_slice.ts';
+import { setSaveAddressForNextTime } from '../../address/slices/address_slice.ts';
 import AppLoader from '../../../general/components/appLoader.tsx';
 import useEditAccountDetailsHook from '../../../profile/hooks/editAccountDetails_hook.ts';
-import { setAcceptMarketing } from '../../../profile/slices/profileState_slice.ts';
+import { setAcceptMarketing, setShowEditEmail } from '../../../profile/slices/profileState_slice.ts';
 import useCartHook from '../hooks/cart_hook.ts';
 import formatCurrency from '../../../../utils/formatCurrency.ts';
 import countries from "../../../../utils/deliveryCountries.json";
 import { SelectList } from 'react-native-dropdown-select-list';
 
 const CheckoutScreen = () => {
-  const { orderSummary, selectedDeliveryFee, deliveryDates, isLoading: isCartLoading, loadingMessage: cartLoadingMessage } = useSelector((state: RootState) => state.cartState);
-  const { showEditEmail, selectedAddress, saveAddressForNextTime, isLoading: isAddressLoading, loadingMessage: addressLoadingMessage } = useSelector((state: RootState) => state.addressState);
+  const { orderSummary, selectedDeliveryFee, isLoading: isCartLoading, loadingMessage: cartLoadingMessage } = useSelector((state: RootState) => state.cartState);
+  const { selectedAddress, saveAddressForNextTime, isLoading: isAddressLoading, loadingMessage: addressLoadingMessage } = useSelector((state: RootState) => state.addressState);
   const { cart } = useSelector((state: RootState) => state.cartState);
-  const { userData, acceptMarketing, isLoading: isProfileLoading } = useSelector((state: RootState) => state.profileState );
+  const { userData, acceptMarketing, showEditEmail, isLoading: isProfileLoading } = useSelector((state: RootState) => state.profileState );
+  const [isLoggedInUser, setIsLoggedInUser] = React.useState<boolean>(true);
+
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
   const dispatch = useDispatch();
   const isLoading = isCartLoading || isAddressLoading || isProfileLoading;
   const loadingMessage = cartLoadingMessage || addressLoadingMessage;
-  // console.log("ORDER SUMMERY::: ", deliveryDates);
+  // console.log("USER DATA::: ", userData);
   
   const {
     handleGetDeliveryMethod,
@@ -43,7 +45,7 @@ const CheckoutScreen = () => {
 
   const {
       control, errors,
-      handleSubmit: addressHandleSubmit, handleGetDeliveryAddresses,
+      handleSubmit: addressHandleSubmit, onSubmit: deliveryAddressOnSubmit, handleGetDeliveryAddresses,
   } = useAddressHook();
 
   useEffect(() => {
@@ -84,60 +86,7 @@ const CheckoutScreen = () => {
               </TouchableOpacity>
             </View>
 
-            { (userData.email === "") ? (
-              <View>
-                <Text aria-label="Email" nativeID="email" className="mt-5 font-montserratMedium">Email</Text>
-                <View className="h-auto w-full mt-1.5 px-3 py-1 border border-gray-300 rounded-xl bg-gray-100">
-                  <Controller
-                    control={ editAccountDetailsControl }
-                    name="email"
-                    rules={{ required: true }}
-                    render={ ({ field: { onChange, onBlur, value } }) => (
-                      <TextInput
-                        aria-label="Email"
-                        aria-labelledby="email"
-                        keyboardType="default"
-                        placeholder="Enter your email"
-                        placeholderTextColor="#9ca3af"
-                        className="text-base"
-                        onBlur={ onBlur }
-                        onChangeText={ onChange }
-                        value={ value }
-                      />
-                    ) }
-                  />
-                  { editAccountDetailsErrors.email && (<Text className="text-red-500 text-xs">{editAccountDetailsErrors.email.message}</Text>) }
-                </View>
-
-                <View className="mt-5 flex-row items-center">
-                  <CheckBox
-                    value={ acceptMarketing }
-                    onValueChange={ (newValue) => dispatch(setAcceptMarketing(newValue)) }
-                    tintColors={{ true: "#133522", false: "#151518" }}
-                  />
-                  <Text className="ml-2 font-montserratMedium text-sm">I would like to receive news and offers from Zeap.</Text>
-                </View>
-
-                <View className="flex-row items-center gap-x-4">
-                  <TouchableOpacity
-                    onPress={ () => dispatch(setShowEditEmail(false)) }
-                    className="h-[55px] w-auto mt-5 flex-1 flex-row items-center justify-center rounded-xl bg-lightGreen"
-                  >
-                    <Text className="text-lg text-baseGreen">Cancel</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity 
-                    onPress={editAccountDetailsHandleSubmit(editAccountDetailsOnSubmit)}
-                    disabled={isProfileLoading}
-                    className="h-[55px] w-auto mt-5 flex-1 flex-row items-center justify-center rounded-xl bg-baseGreen"
-                  >
-                    <Text className="text-lg text-white mr-2">{ isProfileLoading ? "Please wait..." : "Submit" }</Text>
-                    { isProfileLoading ? null : <ArrowRight className="text-white" /> }
-                  </TouchableOpacity>
-                </View>                
-              </View>
-            ) : (
-              (showEditEmail) ? (
+            { (showEditEmail) ? (
                 <View>
                   <Text aria-label="Email" nativeID="email" className="mt-5 font-montserratMedium">Email</Text>
                   <View className="h-auto w-full mt-1.5 px-3 py-1 border border-gray-300 rounded-xl bg-gray-100">
@@ -194,8 +143,7 @@ const CheckoutScreen = () => {
                   <Sms size={ 16 } variant="Bold" className="mr-2 text-baseGreen" />
                   <Text className="font-montserratMedium">{ userData.email }</Text>
                 </View>
-              )
-            ) }
+              ) }
             
           </View>
 
@@ -384,16 +332,23 @@ const CheckoutScreen = () => {
                     { errors.phoneNumber && (<Text className="text-red-500 text-xs">{errors.phoneNumber.message}</Text>) }
                 </View>
 
+                
                 <View className="mt-5 flex-row items-center">
                     <CheckBox
                       value={ saveAddressForNextTime }
-                      disabled={ userData.isGuest }
-                      onValueChange={ (newValue) => dispatch(setSaveAddressForNextTime(newValue)) }
+                      disabled={ userData && userData.email === null && userData.email === "" }
+                      onValueChange={ (newValue) => {
+                        if (userData && (userData.email !== null || userData.email !== "")) {
+                          dispatch(setSaveAddressForNextTime(newValue))
+                        } else {
+                          setIsLoggedInUser(false);
+                        }
+                      }}
                       tintColors={{ true: "#133522", false: "#151518" }}
                     />
                     <Text className="ml-2 font-montserratMedium text-base">Save my address for next time.</Text>
                 </View>
-                <Text className="mt-1 ml-1 font-montserratMedium text-xs text-gray-400">{ userData.isGuest && "You need to be logged in to save your address for next time." }</Text>
+                <Text className="mt-1 ml-1 font-montserratMedium text-xs text-gray-400">{ !isLoggedInUser && "You need to be logged in to save your address for next time." }</Text>
               </View>
             </View>
           )}
@@ -460,7 +415,10 @@ const CheckoutScreen = () => {
 
           <TouchableOpacity 
             onPress={ () => {
-              addressHandleSubmit(handleProceedToPayment)();
+              addressHandleSubmit((data) => handleProceedToPayment(data))();
+              if (saveAddressForNextTime) {
+                addressHandleSubmit(deliveryAddressOnSubmit)(); 
+              }
             } }
             className="h-[55px] w-auto mt-7 flex flex-row items-center justify-center rounded-xl bg-baseGreen"
           >

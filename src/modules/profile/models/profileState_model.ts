@@ -12,6 +12,7 @@ interface IProfileState {
     shoeSizeOptions: IDropdownOptions[];
     bestOutfitOptions: IDropdownOptions[];
     bestColorOptions: IDropdownOptions[];
+    showEditEmail: boolean;
     acceptMarketing: boolean;
     isLoading: boolean;
     loadingMessage: string;
@@ -20,32 +21,44 @@ interface IProfileState {
 
 interface IUser {
     _id?:                 string;
+    __v?:                 number;
     userId?:              string;
-    uid?:                 string;
-    shopEnabled?:         boolean;
     signInCount?:         number;
     firstName?:           string;
     lastName?:            string;
+    displayName?:         string;
     disabled?:            boolean;
     isAdmin?:             boolean;
+    isGuest?:             string;
     isVendor?:            boolean;
-    isGuest?:             boolean;
     superAdmin?:          boolean;
-    acceptMarketing?:     boolean;
     email?:               string;
-    emailVerified?:       boolean;
     createdBy?:           string;
-    social?:              ISocial;
+    emailVerified?:       boolean;
+    uid?:                 string;
+    shopEnabled?:         boolean;
+    shopId?:              string;
+    address?:             string;
+    region?:              string;
+    country?:             string;
     phoneNumber?:         string;
+    role?:                string;
+    prefferedCurrency?:   string;
     phoneNumberVerified?: boolean;
     points?:              number;
-    prefferedCurrency?:   string;
+    acceptMarketing?:     boolean;
+    isBlogAuthor?:        boolean;
     updatedAt?:           Date;
     createdAt?:           Date;
-    __v?:                 number;
+    imageUrl?:            ImageURL;
+    social?:              Social;
 };
 
-interface ISocial {
+interface ImageURL {
+    link?: string;
+    name?: string;
+}
+interface Social {
     _id: string;
 }
 

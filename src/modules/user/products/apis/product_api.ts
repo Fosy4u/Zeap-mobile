@@ -1,84 +1,56 @@
+import { addProductToCartRoute, dynamicFiltersRoute, liveProductsRoute, newestProductsRoute, popularProductsRoute, productPromotionRoute, promoProductRoute, recentlyViewedProductsRoute, recommendedProductsRoute, searchProductsRoute, sizeGuideRoute } from "../../../../redux/api/api_route.ts";
 import rootAPI from "../../../../redux/api/rootAPI.ts";
 import ICart from "../../cart/models/cart_model";
+import IDynamicFilter from "../models/dynamicFilter_model.ts";
 import IProductDetails from "../models/productDetails_model";
-import IProductQueryParams from "../models/productFilter_model";
+import IProductFilterQueryParams from "../models/productFilterQueryParams_model.ts";
 import IProduct from "../models/product_model";
 import IPromoProduct from "../models/promotion_model.ts";
+
+// Helper function to remove undefined values
+const removeUndefined = (obj: Record<string, any>) => {
+    return Object.fromEntries(
+        Object.entries(obj).filter(([_, value]) => 
+            value !== undefined && 
+            value !== null && 
+            value !== '' &&
+            !(Array.isArray(value) && value.length === 0)
+        )
+    );
+};
 
 const productAPI = rootAPI.injectEndpoints({
     overrideExisting: true,
     endpoints: (builder) => ({
-        // Get All Live Products
-        getAllLiveProducts: builder.query<IProduct[], IProductQueryParams>({
-            query: ({ shopId, productType, accessoryType, price, sizes, title, colors, brand, design, gender, ageGroup, ageRange, style, main, sleeveLength, fastening, fit, occasion, productId, limit, pageNumber }) => ({
-                url: "/products/live",
-                method: "GET",
-                params: {
-                    shopId, productType, accessoryType, price, sizes, title, colors, brand, design, gender, ageGroup, ageRange, style, main, sleeveLength, fastening, fit, occasion, productId, limit, pageNumber
-                },
-            }),
-            providesTags: ["Products"],
-            transformResponse: (response: { data: {  products: IProduct[] } }) => {
-                return response.data.products;
+
+        // Get Filtered Products
+        getFilteredProducts: builder.query<{ products: IProduct[], dynamicFilters: IDynamicFilter[] }, {queryParams: IProductFilterQueryParams, screenTitle: string}>({
+            query: ({queryParams, screenTitle}) => {
+                console.log("QUERY PARAMS::: ", queryParams);
+                console.log("FINAL PARAMS::: ", removeUndefined(queryParams));
+                
+                // Determine URL based on screenTitle
+                const url = (screenTitle === "Newest Products")
+                ? newestProductsRoute
+                : (screenTitle === "Popular Products")
+                ? popularProductsRoute
+                : (screenTitle === "Recommended Products")
+                ? recommendedProductsRoute
+                : (screenTitle === "Search Products")
+                ? searchProductsRoute
+                : (screenTitle === "Recently Viewed")
+                ? recentlyViewedProductsRoute
+                : liveProductsRoute; // Default to all live products
+
+                return ({
+                    url,
+                    method: "GET",
+                    params: removeUndefined(queryParams),
+                })
             },
-        }),
-
-        // Get Newest Arrivals
-        getNewestArrivals: builder.query<IProduct[], IProductQueryParams>({
-            query: ({ shopId, productType, accessoryType, price, sizes, title, colors, brand, design, gender, ageGroup, ageRange, style, main, sleeveLength, fastening, fit, occasion, productId, limit, pageNumber }) => ({
-                url: "/products/live/newest",
-                method: "GET",
-                params: {
-                    shopId, productType, accessoryType, price, sizes, title, colors, brand, design, gender, ageGroup, ageRange, style, main, sleeveLength, fastening, fit, occasion, productId, limit, pageNumber
-                },
-            }),
             providesTags: ["Products"],
-            transformResponse: (response: { data: { products: IProduct[] } }) => {
-                return response.data.products;
-            }
-        }),
-
-        // Search Products
-        searchProduct: builder.query<IProduct[], { title: string, limit: number, pageNumber: number }>({
-            query: ({  title, limit, pageNumber }) => ({
-                url: "/products/live",
-                method: "GET",
-                params: { title, limit, pageNumber },
-            }),
-            providesTags: ["Products"],
-            transformResponse: (response: { data: { products: IProduct[] } }, meta) => {
-                return response.data.products;
-            }
-        }),
-
-        // Get Products By Categories
-        getProductsByCategories: builder.query<{ products: IProduct[], totalCount: number }, IProductQueryParams>({
-            query: ({ shopId, productType, accessoryType, price, sizes, title, colors, brand, design, gender, ageGroup, ageRange, style, main, sleeveLength, fastening, fit, occasion, productId, limit, pageNumber }) => ({
-                url: "/products/live",
-                method: "GET",
-                params: {
-                    shopId, productType, accessoryType, price, sizes, title, colors, brand, design, gender, ageGroup, ageRange, style, main, sleeveLength, fastening, fit, occasion, productId, limit, pageNumber
-                },
-            }),
-            providesTags: ["Products"],
-            transformResponse: (response: { data: { products: IProduct[], totalCount: number } }) => {
-                return {
-                    products: response.data.products,
-                    totalCount: response.data.totalCount,
-                };
-            }
-        }),
-
-        // Get Popular Products
-        getPopularProducts: builder.query<IProduct[], IProductQueryParams>({
-            query: ({ limit, pageNumber }) => ({
-                url: "/products/live/mostPopular",
-                method: "GET",
-                params: { limit, pageNumber }
-            }),
-            providesTags: ["Products"],
-            transformResponse: (response: { data: { products: IProduct[] } }) => {
-                return response.data.products;
+            transformResponse: (response: { data: { products: IProduct[], dynamicFilters: IDynamicFilter[] } }) => {
+                return response.data;
             }
         }),
 
@@ -98,7 +70,7 @@ const productAPI = rootAPI.injectEndpoints({
         // Add product to cart.
         addProductToCart: builder.mutation<ICart, any>({
             query: (cartRequestData) => ({
-                url: "/basket/product/add",
+                url: addProductToCartRoute,
                 method: "POST",
                 body: cartRequestData,
             }),
@@ -111,7 +83,7 @@ const productAPI = rootAPI.injectEndpoints({
         // Get promo products
         getPromoProducts: builder.query<IPromoProduct[], void>({
             query: () => ({
-                url: "/promos/live",
+                url: promoProductRoute,
                 method: "GET",
             }),
             providesTags: ["PromoProduct"],
@@ -123,7 +95,7 @@ const productAPI = rootAPI.injectEndpoints({
         // Get product's promotion
         getProductPromotion: builder.query<IPromoProduct, string>({
             query: (productID) => ({
-                url: "/product/promo",
+                url: productPromotionRoute,
                 method: "GET",
                 params: {
                     productId: productID,
@@ -135,34 +107,10 @@ const productAPI = rootAPI.injectEndpoints({
             }
         }),
 
-        // Get Recently Viewed Products
-        getRecentlyViewedProducts: builder.query<IProduct[], void>({
-            query: () => ({
-                url: "/products/recentViews",
-                method: "GET",
-            }),
-            providesTags: ["Products"],
-            transformResponse: (response: { data: IProduct[] }) => {
-                return response.data;
-            }
-        }),
-
-        // Get Recommeded Products
-        getRecommendedProducts: builder.query<IProduct[], void>({
-            query: () => ({
-                url: "/products/live/recommended",
-                method: "GET",
-            }),
-            providesTags: ["Products"],
-            transformResponse: (response: { data: IProduct[] }) => {
-                return response.data;
-            }
-        }),
-
         // Get size guide
         getSizeGuide: builder.query<any, void>({
             query: () => ({
-                url: "/bodyMeasurementGuide/readyMade",
+                url: sizeGuideRoute,
                 method: "GET",
             }),
             providesTags: ["SizeGuide"],
@@ -170,21 +118,28 @@ const productAPI = rootAPI.injectEndpoints({
                 return response.data;
             }
         }),
+
+        // Get Dynamic Filter Options
+        getDynamicFilterOptions: builder.query<IDynamicFilter[], void>({
+            query: () => ({
+                url: dynamicFiltersRoute,
+                method: "GET",
+            }),
+            providesTags: ["DynamicFilterOptions"],
+            transformResponse: (response: { data: IDynamicFilter[] }) => {
+                return response.data;
+            },
+        }),
     }),
 });
 
 export const {
-    useLazyGetAllLiveProductsQuery,
-    useLazyGetNewestArrivalsQuery,
-    useLazySearchProductQuery,
-    useLazyGetProductsByCategoriesQuery,
-    useLazyGetPopularProductsQuery,
+    useLazyGetFilteredProductsQuery,
     useLazyGetProductByProductIDQuery,
     useAddProductToCartMutation,
     useLazyGetPromoProductsQuery,
     useLazyGetProductPromotionQuery,
-    useLazyGetRecentlyViewedProductsQuery,
-    useLazyGetRecommendedProductsQuery,
-    useLazyGetSizeGuideQuery
+    useLazyGetSizeGuideQuery,
+    useLazyGetDynamicFilterOptionsQuery,
 } = productAPI;
 export default productAPI;

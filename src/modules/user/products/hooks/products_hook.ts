@@ -3,7 +3,7 @@ import { IColor, IImage, IVariation } from "../models/productDetails_model";
 import { RootState } from "../../../../redux/store/store";
 import { IColorEnum } from "../../../general/models/productOptions_model";
 import { useEffect, useState } from "react";
-import { useLazyGetProductByProductIDQuery, useLazyGetProductPromotionQuery, useAddProductToCartMutation, useLazyGetSizeGuideQuery, useLazyGetRecentlyViewedProductsQuery, useLazyGetRecommendedProductsQuery } from "../apis/product_api";
+import { useLazyGetProductByProductIDQuery, useLazyGetProductPromotionQuery, useAddProductToCartMutation, useLazyGetSizeGuideQuery } from "../apis/product_api";
 import { setFeaturedPrice, setIsLoading, setLoadingMessage, setProduct, setProductPromotion, setReviewAndRating, setRecentlyViewedProducts, setRecommendedProducts, setSelectedColor, setSelectedSize, setSizeGuide } from "../slices/product_slice";
 import handleError from "../../../general/hooks/errorHandler_hook";
 import { useLazyGetProductReviewsQuery } from "../../../general/apis/review_api";
@@ -47,8 +47,6 @@ const useProductsHook = () => {
     const [getProductPromotion] = useLazyGetProductPromotionQuery();
     const [getProductReviews] = useLazyGetProductReviewsQuery();
     const [addProductToCart] = useAddProductToCartMutation();
-    const [getRecentlyViewedProducts, { isLoading: recentlyViewedProductsLoading }] = useLazyGetRecentlyViewedProductsQuery();
-    const [getRecommendedProducts, { isLoading: recommendedProductsLoading }] = useLazyGetRecommendedProductsQuery();
     const [getSizeGuide] = useLazyGetSizeGuideQuery();
 
     // Handle get product by product ID
@@ -205,36 +203,14 @@ const useProductsHook = () => {
                     bodyMeasurements: []
                 };
             }
-            
-            // console.log("REQUEST DATA::: ", requestData);
+            console.log("REQUEST DATA::: ", requestData);
+
             const addProductResponse =  await addProductToCart(requestData).unwrap();
-            // console.log("ADD PRODUCT RESPONSE::: ", addProductResponse);
+            console.log("ADD PRODUCT RESPONSE::: ", addProductResponse);
 
             if (addProductResponse) {
-                dispatch(setIsLoading(false));
-                dispatch(setLoadingMessage(""));
-                
                 // Navigate to cart screen
-                navigation.navigate("cartScreen");
-            }
-        } catch (error) {
-            handleError(error);
-        }
-    };
-
-    // Handle get recently viewed products
-    const handleGetRecentlyViewedProducts = async () => {
-        dispatch(setLoadingMessage("Fetching recently viewed products..."));
-        dispatch(setIsLoading(true));
-
-        try {
-            const recentlyViewedProductsResponse = await getRecentlyViewedProducts().unwrap();
-            // console.log("RECENTLY VIEWED PRODUCTS RESPONSE::: ", recentlyViewedProductsResponse);
-
-            if (recentlyViewedProductsResponse) {
-                dispatch(setRecentlyViewedProducts(recentlyViewedProductsResponse));
-                dispatch(setIsLoading(false));
-                dispatch(setLoadingMessage(""));
+                navigation.navigate("homeScreen", { screen: "Cart" });
             }
         } catch (error) {
             handleError(error);
@@ -243,28 +219,6 @@ const useProductsHook = () => {
             dispatch(setLoadingMessage(""));
         }
     };
-
-    // Handle get recommended products
-    const handleGetRecommendedProducts = async () => {
-        dispatch(setLoadingMessage("Fetching recommended products..."));
-        dispatch(setIsLoading(true));
-
-        try {
-            const recommendedProductsResponse = await getRecommendedProducts().unwrap();
-            // console.log("RECOMMENDED PRODUCTS RESPONSE::: ", recommendedProductsResponse);
-
-            if (recommendedProductsResponse) {
-                dispatch(setRecommendedProducts(recommendedProductsResponse));
-                dispatch(setIsLoading(false));
-                dispatch(setLoadingMessage(""));
-            }
-        } catch (error) {
-            handleError(error);
-        } finally {
-            dispatch(setIsLoading(false));
-            dispatch(setLoadingMessage(""));
-        }
-    }
 
     // Handle get the readyMade product size guide
     const handleGetSizeGuide = async () => {
@@ -314,9 +268,6 @@ const useProductsHook = () => {
         handleColorSelection,
         handleGetProductByProductID,
         handleAddProductToCart,
-
-        handleGetRecentlyViewedProducts, recentlyViewedProductsLoading,
-        handleGetRecommendedProducts, recommendedProductsLoading,
     };
 };
 

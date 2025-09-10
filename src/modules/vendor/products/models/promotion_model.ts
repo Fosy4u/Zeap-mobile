@@ -36,7 +36,7 @@ interface IScreenImageURL {
 
 // Apply Promotion Payload
 interface IPromotionPayload {
-    discountPercentage: number;
+    discountPercentage?: number;
     productId: string;
     promoId: string;
 };

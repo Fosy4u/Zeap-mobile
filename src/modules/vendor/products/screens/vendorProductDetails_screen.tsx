@@ -24,7 +24,7 @@ interface IProps {
 }
 
 const VendorProductDetailsScreen: React.FC<IProps> = ({ route }) => {
-    const { product, productPromotion, selectedTab, tabs } = useSelector((state: RootState) => state.vendorProductState);
+    const { product, productPromotion, reviewAndRating, selectedTab, tabs } = useSelector((state: RootState) => state.vendorProductState);
     const { isLoading, loadingMessage } = useSelector((state: RootState) => state.generalState);
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const dispatch = useDispatch();
@@ -37,9 +37,9 @@ const VendorProductDetailsScreen: React.FC<IProps> = ({ route }) => {
         handleGetProductByProductID,
         showDeleteProductWarningModal, setShowDeleteProductWarningModal,
         handleDeleteProduct,
-        reviewData,
         featuredColors,
         handleFormatDate,
+        handleTornOffPromo,
     } = useProductHook();
     // const isLoading = isLoadingReviews || isLoadingDeleteProduct;
     
@@ -71,20 +71,20 @@ const VendorProductDetailsScreen: React.FC<IProps> = ({ route }) => {
                     <View className="h-auto w-full flex-row items-center justify-start space-x-3">
                         <Text className="px-[8px] py-1.5 font-montserratMedium text-xs rounded-md self-start bg-white">{product?.categories?.productGroup?.split("-").join(" ")}</Text>
                         <View className={`px-3 py-1 flex items-center justify-center rounded-md border backdrop-blur-lg ${
-                                product.status === "live" 
+                                product?.status === "live" 
                                 ? "border-green-300 bg-green-50" 
-                                : product.status === "draft"
+                                : product?.status === "draft"
                                 ? "border-blue-300 bg-blue-50"
-                                : product.status === "under review"
+                                : product?.status === "under review"
                                 ? "border-orange/30 bg-orange/10"
                                 : "border-red-300 bg-red-50"
                             }`}>
                             <Text className={`font-montserratMedium text-xs ${
-                                    product.status === "live" 
+                                    product?.status === "live" 
                                     ? "text-green-600" 
-                                    : product.status === "draft"
+                                    : product?.status === "draft"
                                     ? "text-blue-600"
-                                    : product.status === "under review"
+                                    : product?.status === "under review"
                                     ? "text-orange-800"
                                     : "text-red-600"
                                 }`}>
@@ -98,9 +98,9 @@ const VendorProductDetailsScreen: React.FC<IProps> = ({ route }) => {
                 <View className="mt-2">
                     <View className="h-auto flex-row items-end space-x-3">
                         <Text className="font-montserratSemiBold text-xl text-baseGreen">
-                            ₦{ productPromotion?.discount?.fixedPercentage! ? product?.variations?.[0].discount?.toLocaleString() : product?.variations?.[0].price!.toLocaleString() }
+                            ₦{ (productPromotion?.discount?.fixedPercentage!) ? product?.variations?.[0].discount?.toLocaleString() : product?.variations?.[0].price!.toLocaleString() }
                         </Text>
-                        <Text className={`font-montserratNormal text-sm text-gray-400 line-through ${ productPromotion?.discount?.fixedPercentage! ? "flex" : "hidden" }`}>
+                        <Text className={`font-montserratNormal text-sm text-gray-400 line-through ${ (productPromotion?.discount?.fixedPercentage!) ? "flex" : "hidden" }`}>
                             ₦{ product?.variations?.[0].price!.toLocaleString() }
                         </Text>
                     </View>
@@ -108,9 +108,9 @@ const VendorProductDetailsScreen: React.FC<IProps> = ({ route }) => {
                         <View className="flex-row items-center">
                             <Star1 color="#E4A01C" size={18} variant="Bold" className="mr-0.5" />
                             <Text className="font-montserratMedium text-blue-600">
-                                { reviewData?.averageRating! ? reviewData?.averageRating!.toFixed(1) : 0.0 }
+                                { reviewAndRating?.averageRating! ? reviewAndRating?.averageRating!.toFixed(1) : 0.0 }
                             </Text>
-                            <Text className="ml-1 font-montserratMedium text-xs text-black">({ reviewData?.reviews?.length! } { reviewData?.reviews?.length! > 1 ? "reviews" : "review" })</Text>
+                            <Text className="ml-1 font-montserratMedium text-xs text-black">({ reviewAndRating?.reviews?.length! } { reviewAndRating?.reviews?.length! > 1 ? "reviews" : "review" })</Text>
                         </View>
 
                         <View className="flex-row items-center">
@@ -192,7 +192,7 @@ const VendorProductDetailsScreen: React.FC<IProps> = ({ route }) => {
                         <Text className="font-montserratSemiBold text-[16px] text-gray-700">Available Sizes</Text>
 
                         <View className="h-auto w-full mt-2 flex-row items-center flex-wrap gap-x-3">
-                            { product.sizes?.map((eachSize: string) => (
+                            { product?.sizes?.map((eachSize: string) => (
                                 <View key={ eachSize } className="px-4 py-2 border border-gray-300 rounded-xl">
                                     <Text className="font-montserratMedium">{ eachSize }</Text>
                                 </View>
@@ -224,6 +224,65 @@ const VendorProductDetailsScreen: React.FC<IProps> = ({ route }) => {
 
                 <View className="h-[1.5px] w-full mt-5 bg-gray-200" />
 
+                {/*==== Product Promo ====*/}
+                <Text className="mt-7 font-montserratSemiBold text-[16px] text-gray-700">Promo</Text>
+                { Object.entries(productPromotion).length > 0 ? (
+                    <View className="h-auto w-full mt-2 px-3 pt-4 pb-4 border border-gray-200 rounded-xl bg-lightGray">
+                        <View className="h-auto w-full flex-row items-center justify-between">
+                            <View>
+                                <Text className="font-montserratSemiBold text-base text-gray-700">{  productPromotion?.title! }</Text>
+                                <Text className="font-montserratMedium text-sm text-gray-700">Discount: { productPromotion?.discount?.fixedPercentage! ? productPromotion?.discount?.fixedPercentage! : 0 }%</Text>
+                            </View>
+
+                            <View className={`p-2 flex items-center justify-center rounded-lg border backdrop-blur-lg ${
+                                productPromotion?.status === "live" 
+                                ? "border-green-300 bg-green-50" 
+                                : productPromotion?.status === "draft"
+                                ? "border-blue-300 bg-blue-50"
+                                : productPromotion?.status === "under review"
+                                ? "border-orange/30 bg-orange/10"
+                                : "border-red-300 bg-red-50"
+                            }`}>
+                                <Text className={`font-montserratMedium text-xs ${
+                                    productPromotion?.status === "live" 
+                                    ? "text-green-600" 
+                                    : productPromotion?.status === "draft"
+                                    ? "text-blue-600"
+                                    : productPromotion?.status === "under review"
+                                    ? "text-orange-800"
+                                    : "text-red-600"
+                                }`}>
+                                    {
+                                        (productPromotion?.status)
+                                        ? productPromotion.status.charAt(0).toUpperCase() + productPromotion.status.slice(1)
+                                        : ""
+                                    }
+                                </Text>
+                            </View>
+                        </View>
+
+                        <TouchableOpacity
+                            onPress={ () => handleTornOffPromo(productPromotion?.promoId!) }
+                            className="mt-4 py-4 rounded-lg border border-red-200/70 backdrop-blur-lg bg-red-50"
+                        >
+                            <Text className="font-montserratMedium text-red-800 text-center">Torn Off Promo</Text> 
+                        </TouchableOpacity>
+                    </View>
+                ) : (
+                    <View className="h-auto w-full mt-2 px-3 py-4 flex-row items-center justify-between border border-gray-200 rounded-xl bg-lightGray">
+                        <Text className="font-montserratSemiBold text-base text-gray-700">No promotion</Text>
+
+                        <TouchableOpacity
+                            onPress={ () => navigation.navigate("promoScreen") }
+                            className="px-4 py-2.5 rounded-lg backdrop-blur-lg bg-baseGreen"
+                        >
+                            <Text className="font-montserratMedium text-center text-white">Add Promo</Text> 
+                        </TouchableOpacity>
+                    </View>
+                )}
+
+                <View className="h-[1.5px] w-full mt-7 bg-gray-200" />
+
                 {/*==== Tab View ====*/}
                 <View className="h-auto w-full mt-10 px-0.5">
                     <View className="h-auto w-full flex-row justify-between">
@@ -238,7 +297,7 @@ const VendorProductDetailsScreen: React.FC<IProps> = ({ route }) => {
                 { (selectedTab === "Description") ? (
                     <VendorProductDescriptionComponent product={ product! } />
                 ) : (selectedTab === "Reviews") ? (
-                    <ReviewComponent reviews={ reviewData?.reviews! } productID={ product!.productId! } loadingMessage={ loadingMessage } />
+                    <ReviewComponent reviewAndRating={ reviewAndRating! } productID={ product!.productId! } loadingMessage={ loadingMessage } />
                 ) : (
                     <VendorProductTimelineComponent timelines={ product!.timeLine! } handleFormatDate={ handleFormatDate } />
                 ) }
@@ -253,38 +312,28 @@ const VendorProductDetailsScreen: React.FC<IProps> = ({ route }) => {
                             dispatch(setProductMode("Draft"));
                             dispatch(setSelectedStep(1));
                             navigation.navigate(
-                                product.productType === "bespokeCloth" ? "addBespokeClothesScreen" :
-                                product.productType === "readyMadeCloth" ? "addReadyMadeClothesScreen" :
-                                product.productType === "bespokeShoe" ? "addBespokeShoesScreen" :
-                                product.productType === "readyMadeShoe" ? "addReadyMadeShoesScreen" :
+                                product?.productType === "bespokeCloth" ? "addBespokeClothesScreen" :
+                                product?.productType === "readyMadeCloth" ? "addReadyMadeClothesScreen" :
+                                product?.productType === "bespokeShoe" ? "addBespokeShoesScreen" :
+                                product?.productType === "readyMadeShoe" ? "addReadyMadeShoesScreen" :
                                 "addAccessoriesScreen"
                             );
                         } }
-                        className="h-[55px] mt-5 flex-1 flex-row items-center justify-center rounded-xl bg-blue-100"
+                        className="h-[55px] mt-5 flex-1 flex-row items-center justify-center gap-x-2 rounded-xl bg-blue-100"
                     >
                         <Edit2 className="text-blue-800" variant="Bold" />
-                        <View className="w-[5px]" />
                         <Text className="font-montserratMedium text-blue-800">Edit Product</Text>
                     </TouchableOpacity>
                     <View className="w-[20px]" />
 
                     <TouchableOpacity
                         onPress={ () => setShowDeleteProductWarningModal(true) }
-                        className="h-[55px] mt-5 flex-1 flex-row items-center justify-center rounded-xl bg-red-100"
+                        className="h-[55px] mt-5 flex-1 flex-row items-center justify-center gap-x-2 rounded-xl bg-red-100"
                     >
                         <Trash className="text-red-700" variant="Bold" />
-                        <View className="w-[5px]" />
                         <Text className="font-montserratMedium text-red-800">Delete Product</Text>
                     </TouchableOpacity>
                 </View>
-
-                <TouchableOpacity
-                    onPress={ () => navigation.navigate("promoScreen") }
-                    className="h-[55px] mt-5 flex-1 flex-row items-center justify-center rounded-xl bg-yellow-50"
-                >
-                    <View className="w-[5px]" />
-                    <Text className="font-montserratMedium text-amber-600">Add Promo</Text>
-                </TouchableOpacity>
 
                 <View className="h-10" />
 

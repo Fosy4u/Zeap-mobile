@@ -5,6 +5,7 @@ import IProductDetails from "./productDetails_model";
 import IPromoProduct from "./promotion_model";
 import IReview from "../../../general/models/review_model";
 import IReviewAndRating from "../../../general/models/review_model";
+import IDynamicFilter from "./dynamicFilter_model";
 
 interface IProductState {
     productID: string;
@@ -17,7 +18,8 @@ interface IProductState {
     accessories: IProduct[];
     bags: IProduct[];
     popularProducts: IProduct[];
-    newestArrivals: IProduct[];
+    newestPrpducts: IProduct[];
+    currentPage: number;
     selectedCategory: ICategory;
     promoProducts: IPromoProduct[];
     productPromotion: IPromoProduct;
@@ -34,14 +36,20 @@ interface IProductState {
     selectedQuantity: number;
     searchPhrases: string[];
     filteredSearchPhrases: string[];
-    searchWord: string;
+    searchPhrase: string;
     showSizedGuideBottomSheet: boolean;
 
     reviewAndRating: IReviewAndRating;
-
     sizeGuide: any;
+    dynamicFilterOptions: IDynamicFilter[];
 
     isLoading: boolean;
+    promoProductsIsLoading: boolean;
+    popularProductsIsLoading: boolean;
+    newestProductsIsLoading: boolean;
+    recentlyViewedProductsIsLoading: boolean;
+    recommendedProductsIsLoading: boolean;
+    wishListProductsIsLoading: boolean;
     loadingMessage: string;
 };
 

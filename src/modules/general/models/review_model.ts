@@ -1,5 +1,4 @@
 interface IReviewAndRating {
-    [x: string]: Key | null | undefined;
     reviews?:       IReview[];
     averageRating?: number;
     imageMatch?:    ImageMatch;

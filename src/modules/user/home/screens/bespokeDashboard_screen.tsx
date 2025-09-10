@@ -98,7 +98,7 @@ const BespokeDashboardScreen = () => {
 
                 {/*==== Tailored To Perfection Section ====*/}
                 <View className="h-auto w-full mt-5 py-10 px-5 bg-lightGold rounded-md">
-                    <Text className="font-montserratBold text-baseGreen text-3xl text-center">BESPOKE</Text>
+                    <Text className="font-montserratBold text-baseGreen text-3xl text-center">Bespoke</Text>
                     <Text className="font-montserratMedium text-baseGreen text-xs text-center">Tailored To Perfection</Text>
 
                     <Text className="mt-5 font-montserratMedium text-baseGreen text-xs text-center">
@@ -119,7 +119,7 @@ const BespokeDashboardScreen = () => {
                     />
                     <View className="h-full w-full absolute inset-0 bg-black/50 rounded-md" />
                     <View className="absolute top-0 bottom-0 left-0 right-0 flex items-center justify-center">
-                        <Text className="mt-24 font-montserratBold text-white text-xl">BESPOKE FOR REAL MEN</Text>
+                        <Text className="mt-24 font-montserratBold text-white text-xl">Bespoke For Real Men</Text>
                         <Text className="text-xs text-white italic">Men With Class</Text>
 
                         {/*==== Explore Button ====*/}
@@ -145,7 +145,7 @@ const BespokeDashboardScreen = () => {
                         }}
                     />
 
-                    <Text className="mt-5 font-montserratBold text-baseGreen text-xl text-center">GUARANTEE RETURN</Text>
+                    <Text className="mt-5 font-montserratBold text-baseGreen text-xl text-center">Guarantee Return</Text>
                     <Text className="mt-2 px-5 font-montserratMedium text-baseGreen text-xs text-center">
                         "We guarantee return and cash back if tailor fails to deliver."
                     </Text>
@@ -173,7 +173,7 @@ const BespokeDashboardScreen = () => {
                     />
                     <View className="h-full w-full absolute inset-0 bg-black/50 rounded-md" />
                     <View className="absolute top-0 bottom-0 left-0 right-0 flex items-center justify-center">
-                        <Text className="mt-24 font-montserratBold text-white text-xl">BESPOKE FOR WOMEN</Text>
+                        <Text className="mt-24 font-montserratBold text-white text-xl">Bespoke For Women</Text>
                         <Text className="text-xs text-white italic">Women With Style</Text>
 
                         {/*==== Explore Button ====*/}
@@ -192,7 +192,7 @@ const BespokeDashboardScreen = () => {
 
                 {/*==== Bespoke For Occasions Section ====*/}
                 <View className="h-[400px] w-full mt-7">
-                    <Text className="font-montserratBold text-baseGreen text-xl">BESPOKE FOR WOMEN</Text>
+                    <Text className="font-montserratBold text-baseGreen text-xl">Bespoke For Women</Text>
                     <Text className="text-xs text-baseGreen italic">Tailored for Every Special Moment</Text>
 
                     <ScrollView
@@ -225,7 +225,7 @@ const BespokeDashboardScreen = () => {
                     />
                     <View className="h-full w-full absolute inset-0 bg-black/50 rounded-md" />
                     <View className="absolute top-0 bottom-0 left-0 right-0 flex items-center justify-center">
-                        <Text className="mt-24 font-montserratBold text-white text-xl">BESPOKE SHOES</Text>
+                        <Text className="mt-24 font-montserratBold text-white text-xl">Bespoke Shoes</Text>
                         <Text className="text-xs text-white italic text-center">{"Custom-made shoes tailored to your specific \nneeds and preferences"}</Text>
 
                         {/*==== Explore Button ====*/}
@@ -241,11 +241,11 @@ const BespokeDashboardScreen = () => {
                     </View>
                 </View>
 
-                {/*==== Popular Items Section ====*/}
+                {/*==== Bespoke Latest Section ====*/}
                 <View className="mt-6">
                     <View className="flex-row justify-between items-center">
-                    <Text className="font-medium text-base text-baseGreen">Popular items</Text>
-                    <TouchableOpacity onPress={ () => navigation.navigate("productListScreen", { screenTitle: "Popular Products" }) }>
+                    <Text className="font-medium text-base text-baseGreen">Bespoke Latest</Text>
+                    <TouchableOpacity onPress={ () => navigation.navigate("productListScreen", { screenTitle: "Bespoke Latest" }) }>
                         <Text className="text-sm text-baseGreen">See all</Text>
                     </TouchableOpacity>
                     </View>
