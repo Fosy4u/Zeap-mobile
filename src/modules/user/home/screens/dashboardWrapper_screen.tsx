@@ -1,66 +1,37 @@
-import React, { useEffect, useState } from "react";
-import { Image, Text, View, Pressable, SafeAreaView, StatusBar, ScrollView, TextInput, TouchableOpacity, useWindowDimensions, Linking, Modal } from "react-native";
+import React, { useEffect } from "react";
+import { Image, Text, View, Pressable, SafeAreaView, StatusBar, ScrollView, TextInput, TouchableOpacity, Modal } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useNavigation } from "@react-navigation/native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { Heart, Notification, SearchNormal1, Star1, Menu, ArrowRight } from "iconsax-react-native";
+import { Notification, SearchNormal1, Menu, ArrowRight } from "iconsax-react-native";
 import { useDispatch, useSelector } from "react-redux";
 
 import { RootState } from "../../../../redux/store/store";
 import RootNavigationStackModel from "../../../../routes/model/routes_model";
-import useGeneralHook from "../../../general/hooks/general_hook";
-import useHomeHook from "../hooks/home_hook";
-import IProduct from "../../products/models/product_model";
-import FastImage from "react-native-fast-image";
-import FormatWords from "../../../../utils/formatWords";
 import MainDashboardScreen from "./mainDashboard_screen";
 import { setIsMobileMenuOpen, setSelectedDashboard } from "../slices/dashboardWrapper_slice";
 import BespokeDashboardScreen from "./bespokeDashboard_screen";
 import ReadyMadeDashboardScreen from './readyMadeDashboard_screen.tsx';
+import AccessoriesDashboardScreen from "./accessoriesDashboard_screen.tsx";
+import useGeneralHook from "../../../general/hooks/general_hook.ts";
+import useFilterAndSearchHook from "../../products/hooks/filterAndSearch_hook.ts";
 
 const DashboardWrapperScreen = () => {
   const { dashboards, selectedDashboard, isMobileMenuOpen } = useSelector((state: RootState) => state.dashboardWrapperState);
   const { userData } = useSelector((state: RootState) => state.profileState);
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
   const dispatch = useDispatch();
-  // console.log("PROMO PRODUCTS::: ", promoProducts);
-
-
-  const {
-    handleGetAllLiveProducts,
-    handleGetPopularProducts,
-    handleGetNewestArrivals,
-    handleGetFemaleClothing,
-    handleGetMaleClothing,
-    handleGetShoes,
-    handleGetAccessories,
-    handleGetBags,
-    handleGetPromoProducts,
-  } = useHomeHook();
-  const { handleGetProductOptions } = useGeneralHook();
-
-  useEffect(() => {
-    const fetchAllData = async () => {
-      const fetchFunctions = [
-        handleGetProductOptions,
-        handleGetPromoProducts,
-        handleGetPopularProducts,
-        handleGetNewestArrivals,
-        handleGetAllLiveProducts,
-        handleGetFemaleClothing,
-        handleGetMaleClothing,
-        handleGetShoes,
-        handleGetAccessories,
-        handleGetBags,
-      ];
-
-      await Promise.all(fetchFunctions.map(fn => fn()));
-    };
-
-    (async () => {
-      await fetchAllData();
-    })();
-  }, []);
+  
+    const { handleGetProductOptions } = useGeneralHook();
+    const { handleGetPromoProducts, handleGetFilteredProducts, handleGetPopularProducts, handleGetNewestProducts } = useFilterAndSearchHook();
+  
+    useEffect(() => {
+      handleGetProductOptions();
+      handleGetPromoProducts();
+      handleGetFilteredProducts({screenTitle: "All Products"});
+      handleGetPopularProducts();
+      handleGetNewestProducts();
+    }, []);
 
 
   return (
@@ -193,7 +164,7 @@ const DashboardWrapperScreen = () => {
                   </View>
                 ) : (
                   <View>
-                    <Text>ACCESSORIES DASHBOARD</Text>
+                    <AccessoriesDashboardScreen />
                   </View>
                 ) }
               </View>
@@ -205,53 +176,3 @@ const DashboardWrapperScreen = () => {
 };
 
 export default DashboardWrapperScreen;
-
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Product Card Item
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-interface IProductCardItemProps {
-  product: IProduct;
-  handleOnPress: () => void;
-  orrientation: "Horizontal" | "Vertical";
-}
-
-const ProductCardItem = (props: IProductCardItemProps) => {
-  const { product, handleOnPress, orrientation } = props;
-
-  return (
-    <TouchableOpacity
-      onPress={ handleOnPress }
-      className={`h-auto mr-4 p-3 rounded-2xl overflow-hidden bg-[#F8F9FE] ${ orrientation === "Horizontal" ? "w-[340px] flex-row justify-start" : "w-[170px]" }`}
-    >
-      <View className={`relative p-2 flex rounded-xl bg-white ${ orrientation === "Horizontal" ? "h-[150px] w-[130px] mr-4 justify-center" : "items-center" }`}>
-        <FastImage
-          source={{
-              uri: product?.colors?.[0]?.images?.[0]?.link!,
-              priority: FastImage.priority.normal
-          }}
-          defaultSource={ require("../../../../../assets/images/app_logo.png") }
-          resizeMode={ FastImage.resizeMode.cover }
-          className="h-[120px] w-[100px] rounded-lg"
-          fallback
-        />
-        <View className="h-[35px] w-[35px] absolute top-2 right-2 flex items-center justify-center rounded-xl bg-gray-200">
-          <Heart color="gray" />
-        </View>
-      </View>
-      <View className={`mt-3 ${ orrientation === "Horizontal" ? "w-[160px]" : "" }`}>
-        <Text className={`text-gray-800 ${ orrientation === "Horizontal" ? "text-base" : "text-sm" }`}>{ FormatWords.truncateWords(product.title, 30) }</Text>
-        <View className="mt-1.5 flex-row items-center justify-between">
-          <Text className="px-2.5 py-1 text-xs rounded-lg bg-lightGreen">{ product.categories.productGroup.split("-").join(" ") }</Text>
-
-          <View className="flex-row">
-            <Star1 color="#E4A01C" size={18} variant="Bold" className="mr-0.5" />
-            <Text>4.3</Text>
-          </View>
-        </View>
-        <Text className="mt-2.5 text-base font-medium text-gray-900">₦{ product.variations[0].price.toLocaleString() }</Text>
-      </View>
-    </TouchableOpacity>
-  );
-};

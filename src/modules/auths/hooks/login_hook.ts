@@ -53,6 +53,7 @@ const useLoginHook = () => {
             const responseData = await signInWithEmailAndPassword(authInstance, data.email, data.password);
             const authUser = responseData.user;
             
+            
             const uid = authUser.uid;
             const token = await authUser.getIdToken();
 
@@ -63,6 +64,7 @@ const useLoginHook = () => {
                 await storeToken(token);
 
                 const userData = await getUserById(authUser.uid).unwrap();
+                console.log("USER DATA::: ", userData);
                 
                 if (userData) {
                     // Save userData to secure storage

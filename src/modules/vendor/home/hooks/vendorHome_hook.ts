@@ -2,7 +2,7 @@ import { useDispatch } from "react-redux";
 import { useLazyGetShopQuery } from "../../general/apis/general_api";
 import { setShop } from "../../general/slices/general_slice";
 import { useLazyGetAnalyticsQuery } from "../apis/home_api";
-import { setAnalytics, setOverviews } from "../slices/vendorHome_slice";
+import { setAnalytics, setOverviews, setSalesCountPieData, setSalesRevenuePieData } from "../slices/vendorHome_slice";
 
 
 /**
@@ -43,33 +43,68 @@ const useVendorHomeHook = () => {
                     count: analytics.productSold!
                 },
                 {
-                    name: "Orders placed",
+                    name: "Placed orders",
                     count: analytics.ordersCountByStatus?.placed!
                 },
                 {
-                    name: "Orders confirmed",
+                    name: "Confirmed orders",
                     count: analytics.ordersCountByStatus?.confirmed!
                 },
                 {
-                    name: "Orders processing",
+                    name: "Processing orders",
                     count: analytics.ordersCountByStatus?.processing!
                 },
                 {
-                    name: "Orders dispatched",
+                    name: "Ready orders",
+                    count: analytics.ordersCountByStatus?.ready!
+                },
+                {
+                    name: "Dispatched orders",
                     count: analytics.ordersCountByStatus?.dispatched!
                 },
                 {
-                    name: "Orders delivered",
+                    name: "Delivered orders",
                     count: analytics.ordersCountByStatus?.delivered!
                 },
                 {
-                    name: "Orders cancelled",
+                    name: "Cancelled orders",
                     count: analytics.ordersCountByStatus?.cancelled!
                 },
             ];
+
+            const salesCount = [
+                {
+                    value: analytics.productGroupsCount?.["Ready-Made"]!,
+                    title: "Ready made",
+                    color: "#133522",
+                },
+                {
+                    value: analytics.productGroupsCount?.Bespoke!,
+                    title: "Bespoke",
+                    color: "#D5B07B",
+                },
+            ];
+
+            const salesRevenue = [
+                {
+                    value: analytics.shopRevenuesByPaymentStatus?.paid?.value!,
+                    title: "Paid", 
+                    currency: analytics.shopRevenuesByPaymentStatus?.paid?.currency!,
+                    color: "#225F3D",
+                },
+                {
+                    value: analytics.shopRevenuesByPaymentStatus?.pending?.value!,
+                    title: "Pending",
+                    currency: analytics.shopRevenuesByPaymentStatus?.pending?.currency!,
+                    color: "#819656",
+                },
+            ]
+            
             // Dispatch to redux store 
             dispatch(setAnalytics(analytics));
             dispatch(setOverviews(overviews));
+            dispatch(setSalesCountPieData(salesCount));
+            dispatch(setSalesRevenuePieData(salesRevenue));
         } catch (error) {
             console.log("ERRORING::: ", error);
         };

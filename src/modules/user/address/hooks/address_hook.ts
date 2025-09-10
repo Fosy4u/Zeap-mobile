@@ -11,6 +11,7 @@ import { setDeliveryAddresses, setIsLoading, setLoadingMessage, setSelectedAddre
 import handleError from "../../../general/hooks/errorHandler_hook";
 import IAddress from "../models/address_model";
 import { useEffect } from "react";
+import useCartHook from "../../cart/hooks/cart_hook";
 
 
 const useAddressHook = () => {
@@ -19,6 +20,8 @@ const useAddressHook = () => {
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const dispatch = useDispatch();
     // console.log("USER DATA::: ", userData);
+
+  const { handleProceedToPayment } = useCartHook();
 
     const [addDeliveryAddress] = useAddDeliveryAddressMutation();
     const [getDeliveryAddresses] = useLazyGetDeliveryAddressesQuery();
@@ -43,30 +46,25 @@ const useAddressHook = () => {
     const onSubmit: SubmitHandler<IAddressFormFieldsSchema> = async (data) => {
         dispatch(setLoadingMessage("Saving delivery address..."));
         dispatch(setIsLoading(true));
-
-        //  If user is not a guest, add delivery address else navigate the payment screen and pass the form data to the payment screen
-        if (userData.isGuest) {
-            // navigation.navigate("userPaymentScreen", { data });
-        } else {
-            try {
-                const addDeliveryAddressResponse = await addDeliveryAddress(data).unwrap();
-                console.log("RESPONSE DATA::: ", addDeliveryAddressResponse);
-
-                if (addDeliveryAddressResponse) {
-                    dispatch(setSelectedAddress(addDeliveryAddressResponse));
-                    dispatch(setShowNewDeliveryAddressForm(false));
-
-                    // Get back the delivery addresses
-                    await handleGetDeliveryAddresses();
-                }
-            } catch (error) {
-                handleError(error);
-            } finally {
-                dispatch(setIsLoading(false));
-                dispatch(setLoadingMessage(""));
-            }
-        }
+        // console.log("FORM DATA::: ", data);
         
+        try {
+            const addDeliveryAddressResponse = await addDeliveryAddress(data).unwrap();
+            console.log("RESPONSE DATA::: ", addDeliveryAddressResponse);
+
+            if (addDeliveryAddressResponse) {
+                dispatch(setSelectedAddress(addDeliveryAddressResponse));
+                dispatch(setShowNewDeliveryAddressForm(false));
+
+                // Get back the delivery addresses
+                await handleGetDeliveryAddresses();
+            }
+        } catch (error) {
+            handleError(error);
+        } finally {
+            dispatch(setIsLoading(false));
+            dispatch(setLoadingMessage(""));
+        }
     };
 
     // Handle update address form fiels.

@@ -131,7 +131,7 @@ const useStepTwoHook = () => {
 
     // Handle update default values
     const handleUpdateDefaultValues = () => {
-        if (!product.categories) return;
+        if (!product || !product.categories) return;
 
         // Format main categories
         const mainData = product.categories?.main!;

@@ -8,17 +8,16 @@ import { BottomSheetModalProvider, TouchableOpacity } from '@gorhom/bottom-sheet
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import RootNavigationStackModel from '../../../../routes/model/routes_model.ts';
-import { Controller } from 'react-hook-form';
-import useSearchHook from '../hooks/search_hook.ts';
-import { setSearchWord } from '../slices/product_slice.ts';
-import AppLoader from '../../../general/components/appLoader.tsx';
+import useFilterAndSearchHook from '../hooks/filterAndSearch_hook.ts';
+import { setSearchPhrase } from '../slices/product_slice.ts';
 
 
 const SearchItemScreen = () => {
-  const { filteredSearchPhrases, searchWord } = useSelector((state: RootState) => state.productState);
+  const { filteredSearchPhrases, searchPhrase } = useSelector((state: RootState) => state.productState);
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
   const dispatch = useDispatch<AppDispatch>();
 
+  const { handleSubmit } = useFilterAndSearchHook();
 
   return (
     <GestureHandlerRootView>
@@ -51,13 +50,13 @@ const SearchItemScreen = () => {
                   placeholderTextColor="#9ca3af"
                   className="h-auto px-3 py-3 flex-row flex-1 items-center justify-between border border-gray-300 rounded-xl bg-gray-100"
                   onChangeText={(value) => {
-                    dispatch(setSearchWord(value));
+                    dispatch(setSearchPhrase(value));
                   }}
-                  value={ searchWord }
+                  value={ searchPhrase }
               />
 
               <TouchableOpacity onPress={ () => {
-                navigation.navigate("searchResultsScreen");
+                handleSubmit("Search Products");
               } }>
                 <View className="h-[55px] w-[55px] ml-3 flex items-center justify-center rounded-xl bg-gold">
                   <SearchNormal1 className="text-baseGreen" />
@@ -100,10 +99,6 @@ const SearchItemScreen = () => {
             </ScrollView>
           </View>
           
-          {/*{ (isLoading) && (
-            // Render app loader
-            <AppLoader />
-          ) }*/}
         </SafeAreaView>
       </BottomSheetModalProvider>
     </GestureHandlerRootView>

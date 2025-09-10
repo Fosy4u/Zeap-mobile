@@ -6,6 +6,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../../../redux/store/store";
 import { useState } from "react";
 import IPaymentReferenceParams from "../models/paymentReferenceParams_model";
+import handleError from "../../../general/hooks/errorHandler_hook";
 
 const useUserPaymentHook = () => {
     const { userData } = useSelector((state: RootState) => state.profileState );
@@ -23,14 +24,15 @@ const useUserPaymentHook = () => {
         setLoadingMessage("Getting payment reference...");
         setIsLoading(true);
         setPaymentReference(null); 
-        console.log("REQUEST PARAMS::: ", requestParams);
+        // console.log("REQUEST PARAMS::: ", requestParams);
         
         try {
             const paymentReferenceResponse = await getPaymentReference(requestParams).unwrap();
             setPaymentReference(paymentReferenceResponse);
-            console.log("PAYMENT REFERENCE RESPONSE::: ", paymentReferenceResponse);
+            // console.log("PAYMENT REFERENCE RESPONSE::: ", paymentReferenceResponse);
         } catch (error) {
             setPaymentReference(null);
+            handleError(error);
             console.log("ERROR::: ", error);
         } finally {
             setIsLoading(false);
@@ -42,7 +44,7 @@ const useUserPaymentHook = () => {
     const handlePaymentSuccess = async (reference: string) => {
         setLoadingMessage("Verifying payment...");
         setIsLoading(true);
-        console.log("PAYMENT REFERENCE::: ", reference);
+        // console.log("PAYMENT REFERENCE::: ", reference);
 
         // Verify payment
         try {

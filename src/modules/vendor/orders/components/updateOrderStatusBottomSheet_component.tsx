@@ -12,31 +12,27 @@ import {Add, ArrowRight} from 'iconsax-react-native';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import RootNavigationStackModel from '../../../../routes/model/routes_model.ts';
+import FormatWords from '../../../../utils/formatWords.ts';
+import useOrderHook from '../hooks/order_hook.ts';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../../redux/store/store.ts';
+import AppLoader from '../../../general/components/appLoader.tsx';
+import { INextStatus } from '../models/orderHistory_model.ts';
 
-interface IProps {
-  handleShowUpdateOrderBottomSheet: (value: boolean) => void;
-}
+interface IStatus {
+  id: string;
+  label: string;
+};
 
-const UpdateOrderStatusBottomSheetComponent: React.FC<IProps> = ({
-  handleShowUpdateOrderBottomSheet,
-}) => {
-  const navigation =
-    useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
-  const screenHeight = Dimensions.get('window').height;
-  const modalHeight = screenHeight / 1.4;
-  const slideAnimation = useRef<Animatable.View>(null);
-
-  // State to manage checkbox selection
-  const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
-
-  // Toggle checkbox selection
-  const toggleCheckbox = (status: string) => {
-    if (selectedStatus.includes(status)) {
-      setSelectedStatus(selectedStatus.filter(item => item !== status));
-    } else {
-      setSelectedStatus([...selectedStatus, status]);
-    }
-  };
+const UpdateOrderStatusBottomSheetComponent = () => {
+  const { orderHistory } = useSelector((state: RootState) => state.vendorOrderState);
+  const { isLoading, loadingMessage } = useSelector((state: RootState) => state.generalState);
+  const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
+  
+  const {
+    selectedStatus, setSelectedStatus, handleUpdateOrderStatus,
+    modalHeight, slideAnimation, handleCloseUpdateOrderBottomSheet
+  } = useOrderHook();
 
   useEffect(() => {
     if (slideAnimation.current) {
@@ -49,24 +45,6 @@ const UpdateOrderStatusBottomSheetComponent: React.FC<IProps> = ({
       );
     }
   }, [modalHeight]);
-
-  const handleCloseUpdateOrderBottomSheet = () => {
-    if (slideAnimation.current) {
-      slideAnimation.current
-        .animate(
-          {
-            0: {translateY: 0, opacity: 1},
-            1: {translateY: modalHeight, opacity: 0},
-          },
-          500,
-        )
-        .then(() => {
-          handleShowUpdateOrderBottomSheet(false);
-        });
-    } else {
-      handleShowUpdateOrderBottomSheet(false);
-    }
-  };
 
   return (
     <SafeAreaView className="h-full w-full absolute bg-black/70">
@@ -105,68 +83,75 @@ const UpdateOrderStatusBottomSheetComponent: React.FC<IProps> = ({
             </Text>
 
             {/* Checkboxes with Status */}
-            {[
-              {
-                id: '1',
-                status: 'Order Processing',
-              },
-              {
-                id: '2',
-                status: 'Order Confirmed',
-              },
-              {
-                id: '3',
-                status: 'Order Pending',
-              },
-              {
-                id: '4',
-                status: 'Order Shipped',
-              },
-              {
-                id: '5',
-                status: 'Order Dispatched',
-              },
-              {
-                id: '6',
-                status: 'Order Delivered',
-              },
-            ].map(item => (
-              <TouchableOpacity
-                key={item.id}
-                onPress={() => toggleCheckbox(item.status)}
+            {orderHistory.statusHistory?.map(status => (
+              <View
+                key={status.name!}
                 className="flex-row items-center mt-5">
                 <View
-                  className={`h-5 w-5 rounded-md border-2 ${
-                    selectedStatus.includes(item.status)
-                      ? 'bg-[#369460] border-[#369460]'
-                      : 'border-baseGreen'
-                  } flex items-center justify-center`}>
-                  {/* Always show the checkmark */}
-                  <Text
-                    className={`text-xs ${
-                      selectedStatus.includes(item.status)
-                        ? 'text-white'
-                        : 'text-baseGreen'
-                    }`}>
-                    ✓
-                  </Text>
+                  className="h-6 w-6 flex items-center justify-center rounded-md border-2 border-[#369460] bg-[#369460]">
+                  <Text className="text-sm text-white">✓</Text>
                 </View>
                 <View className="ml-3">
-                  <Text className="text-gray-600">{item.status}</Text>
+                  <Text className="font-montserratMedium text-base text-baseGreen">{FormatWords.capitalizeWords(status.value!)}</Text>
                 </View>
-              </TouchableOpacity>
+              </View>
             ))}
+
+            <TouchableOpacity
+              onPress={() => {
+                if (Object.keys(selectedStatus).length === 0) {
+                  setSelectedStatus(orderHistory.nextStatus!);
+                } else {
+                  setSelectedStatus({} as INextStatus);
+                }
+              }}
+              className="flex-row items-center mt-5"
+            >
+              <View
+                className={`h-6 w-6 flex items-center justify-center rounded-md border-2 ${
+                  Object.keys(selectedStatus).length > 0
+                    ? 'bg-[#369460] border-[#369460]'
+                    : 'border-gray-400'
+                }`}
+              >
+                {Object.keys(selectedStatus).length > 0 && (
+                  <Text className="text-sm text-white">✓</Text>
+                )}
+              </View>
+              <View className="ml-3">
+                <Text className="font-montserratMedium text-base text-baseGreen">
+                  {FormatWords.capitalizeWords(orderHistory.nextStatus?.value ?? '')}
+                </Text>
+              </View>
+            </TouchableOpacity>
 
             {/* Update Button */}
             <TouchableOpacity
-              onPress={() => {}}
-              className="h-[55px] w-auto mt-7 flex flex-row items-center justify-center rounded-xl bg-baseGreen">
-              <Text className="text-lg text-white mr-2">Update</Text>
-              <ArrowRight className="text-white" />
+              disabled={Object.keys(selectedStatus).length === 0}
+              onPress={() => handleUpdateOrderStatus(selectedStatus.value!)}
+              className={`h-[55px] w-auto mt-10 flex flex-row items-center justify-center rounded-xl 
+                ${Object.keys(selectedStatus).length === 0 ? 'bg-gray-300' : 'bg-baseGreen'}`}
+            >
+              <Text
+                className={`text-lg mr-2 ${
+                  Object.keys(selectedStatus).length === 0 ? 'text-gray-500' : 'text-white'
+                }`}
+              >
+                Update
+              </Text>
+              <ArrowRight
+                className={`${
+                  Object.keys(selectedStatus).length === 0 ? 'text-gray-500' : 'text-white'
+                }`}
+              />
             </TouchableOpacity>
           </ScrollView>
         </View>
       </Animatable.View>
+
+        { isLoading &&
+          <AppLoader loadingAdditionalMessage={ loadingMessage } />
+        }
     </SafeAreaView>
   );
 };
