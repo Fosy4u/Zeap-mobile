@@ -8,7 +8,6 @@ interface IAddressState {
     saveAddressForNextTime: boolean;
     selectedCountry: string;
 
-    showEditEmail: boolean;
     showNewDeliveryAddressForm: boolean;
 
     isLoading: boolean;

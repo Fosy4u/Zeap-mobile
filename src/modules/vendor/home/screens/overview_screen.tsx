@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../../../../redux/store/store';
 import { ArrowRight, Calendar } from 'iconsax-react-native';
 import { PieChart } from 'react-native-gifted-charts';
+import formatCurrency from '../../../../utils/formatCurrency';
 
 const OverviewScreen = () => {
     const { overviews, salesCountPieData, salesRevenuePieData } = useSelector((state: RootState) => state.vendorHomeState);
@@ -70,11 +71,12 @@ const OverviewScreen = () => {
                                 textColor="black"
                                 centerLabelComponent={() => (
                                     <View>
-                                        <Text className="font-medium text-xl text-center">{ totalCount }</Text>
+                                        <Text className="font-medium text-baseGreen text-xl text-center">{ totalCount }</Text>
                                         <Text className="text-xs text-center">Total Sales</Text>
                                     </View>
                                 )}
                                 radius={120}
+                                innerRadius={60}
                                 // onPress={ (item: any) => setFocusedItem(item) }
                             />
                         )}
@@ -97,7 +99,7 @@ const OverviewScreen = () => {
                                 className="mt-2 flex-row items-center"
                             >
                                 <View className="h-4 w-4  mr-1 rounded-[4px]" style={ { backgroundColor: eachData.color } } />
-                                <Text className="text-xs">{ eachData.title } = ₦{ eachData.value.toLocaleString() }</Text>
+                                <Text className="text-xs">{ eachData.title } = { formatCurrency(eachData.value, eachData.currency!) }</Text>
                             </View>
                         ))}
                     </View>
@@ -111,11 +113,12 @@ const OverviewScreen = () => {
                                 textColor="black"
                                 centerLabelComponent={() => (
                                     <View>
-                                        <Text className="font-medium text-xl text-center">₦{ totalRevenue.toLocaleString() }</Text>
+                                        <Text className="font-medium text-baseGreen text-xl text-center">{ formatCurrency(totalRevenue, salesRevenuePieData[0].currency!) }</Text>
                                         <Text className="text-xs text-center">Revenue</Text>
                                     </View>
                                 )}
                                 radius={120}
+                                innerRadius={70}
                                 // onPress={ (item: any) => setFocusedItem(item) }
                             />
                         )}

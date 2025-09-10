@@ -34,7 +34,7 @@ const productAPI = rootAPI.injectEndpoints({
         }),
 
         // Delete a product
-        deleteProduct: builder.mutation<any, { productIds: string[]; }>({
+        deleteProduct: builder.mutation<string, { productIds: string[]; }>({
             query: (productIds) => ({
                 url: "/product/delete",
                 method: "PUT",
@@ -74,13 +74,26 @@ const productAPI = rootAPI.injectEndpoints({
         }),
 
         // Apply promotion
-        applyPromotion: builder.mutation<any, IPromotionPayload>({
+        applyPromotion: builder.mutation<string, IPromotionPayload>({
             query: (requestData) => ({
                 url: "/promo/join",
                 method: "PUT",
                 body: requestData,
             }),
-            invalidatesTags: ["Products", "Product"],
+            invalidatesTags: ["Promotion", "Products", "Product"],
+            transformResponse: (response: { message: string }) => {
+                return response.message;
+            }
+        }),
+
+        // Turn off promotion
+        turnOffPromotion: builder.mutation<string, IPromotionPayload>({
+            query: (requestData) => ({
+                url: "/promo/leave",
+                method: "PUT",
+                body: requestData,
+            }),
+            invalidatesTags: ["Promotion", "Products", "Product"],
             transformResponse: (response: { message: string }) => {
                 return response.message;
             }
@@ -95,4 +108,5 @@ export const {
     useLazyGetAvailablePromosQuery,
     useLazyGetProductPromotionQuery,
     useApplyPromotionMutation,
+    useTurnOffPromotionMutation,
 } = productAPI;

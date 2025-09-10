@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
-import { Text, TouchableOpacity, View, TextInput, ScrollView } from "react-native";
-import IStepTwoBespokeShoeProps from '../../models/stepTwoBespokeShoeProps_model';
+import React from 'react';
+import { Text, TouchableOpacity, View, ScrollView } from "react-native";
+import IStepTwoShoeProductProps from '../../models/stepTwoShoeProductProps_model';
 import CheckBox from '@react-native-community/checkbox';
 import { ArrowUp2, ArrowDown2 } from 'iconsax-react-native';
 
-const StepTwoComponent: React.FC<IStepTwoBespokeShoeProps> = ({ manageState }) => {
+const StepTwoComponent: React.FC<IStepTwoShoeProductProps> = ({ manageState }) => {
 
     const {
         styleOptions, genderOptions, ageGroupOptions, ageRangeOptions, brandOptions,

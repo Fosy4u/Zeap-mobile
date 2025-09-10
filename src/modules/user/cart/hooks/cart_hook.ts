@@ -197,8 +197,8 @@ const useCartHook = () => {
             method: selectedDeliveryFee?.method || "standard",
         };
         console.log("REQUEST PARAMS::: ", requestParams);
-
-        navigation.navigate("userPaymentScreen", { data: requestParams });
+        
+        navigation.navigate("userPaymentScreen", { requestData: requestParams });
     };
 
     return {

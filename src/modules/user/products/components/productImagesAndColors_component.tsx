@@ -12,6 +12,7 @@ import { IColorEnum } from '../../../general/models/productOptions_model';
 import ShimmerPlaceholder from 'react-native-shimmer-placeholder';
 import LinearGradient from 'react-native-linear-gradient';
 import FastImage from 'react-native-fast-image';
+import formatCurrency from '../../../../utils/formatCurrency';
 
 interface IProps {
   defaultFeaturedImageAndThumbnails: IColor;
@@ -36,7 +37,7 @@ const ProductImagesAndColorsComponent: React.FC<IProps> = (props) => {
     handleAddProductToCart,
   } = props;
 
-  const { product, reviewAndRating, productPromotion, selectedColor, selectedSize, selectedQuantity, isLoading } = useSelector((state: RootState) => state.productState);
+  const { product, reviewAndRating, productPromotion, selectedColor, selectedSize, isLoading } = useSelector((state: RootState) => state.productState);
   const [visible, setVisible] = useState(false);
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
   const dispatch = useDispatch();
@@ -56,7 +57,7 @@ const ProductImagesAndColorsComponent: React.FC<IProps> = (props) => {
     <View className="">
       { (product?.productType === "readyMadeCloth" || product?.productType === "readyMadeShoe" || product?.productType === "accessory") ? (
         <View>
-          {/*==== Product Type and Status ====*/}
+          {/*==== Product Type, Status & Title ====*/}
           <View className="h-auto w-full px-5">
             <View className="h-auto w-full flex-row items-center justify-start space-x-3">
               <Text className="px-[8px] py-1.5 font-montserratMedium text-xs rounded-md self-start bg-white">{product?.categories?.productGroup?.split("-").join(" ")}</Text>
@@ -85,7 +86,7 @@ const ProductImagesAndColorsComponent: React.FC<IProps> = (props) => {
             <Text className="mt-2 font-montserratMedium text-[23px] text-baseGreen">{ product?.title! }</Text>    
           </View>
 
-          {/*==== Product Stocks Count ====*/}
+          {/*==== Product Review, Stocks, Sold & Discount Count ====*/}
           <View className="mt-2 px-5">
             <View className="mt-2.5 flex-row items-center space-x-3">
               <View className="flex-row items-center">
@@ -159,17 +160,18 @@ const ProductImagesAndColorsComponent: React.FC<IProps> = (props) => {
                   resizeMode={ FastImage.resizeMode.cover }
                   className="h-[73px] w-[73px] rounded-2xl"
                 />
-                {/* <Image
-                  source={
-                    defaultFeaturedImageAndThumbnails?.images![index]?.link!
-                    ? { uri: defaultFeaturedImageAndThumbnails?.images![index]?.link! }
-                    : require("../../../../../assets/images/app_logo.png")
-                  }
-                  resizeMode="cover"
-                  className="h-[73px] w-[73px] rounded-2xl"
-                /> */}
               </TouchableOpacity>
             ))) }
+          </View>
+
+          {/*==== Product Price ====*/}
+          <View className="h-auto w-full mt-5 px-5 flex-row items-center justify-between">
+            <View className="h-auto w-auto flex items-start justify-center">
+              <View className="flex-row items-center">
+                    <Text className="mt-2.5 text-2xl font-medium text-gray-900">{ product.variations![0].discount ? formatCurrency(product?.variations![0].discount || "0", product?.variations![0].currency || "NGN", true) : formatCurrency(product?.variations![0].price || "0", product?.variations![0].currency || "NGN", true) }</Text>
+                    <Text className="mt-2.5 ml-3 text-lg font-medium text-gray-400 line-through">{ product.variations![0].discount && formatCurrency(product?.variations![0].price || "0",  product?.variations![0].currency || "NGN", true) }</Text>
+                </View>
+            </View>
           </View>
 
           {/*==== Available Colours ====*/}
@@ -210,9 +212,6 @@ const ProductImagesAndColorsComponent: React.FC<IProps> = (props) => {
                 { product.sizes!.map((eachSize) => {
                   // Check if size exists in variations
                   const isSizeAvailable = product.variations?.some((variation) => variation.size === eachSize);
-
-                  // const availableVariation = product?.variations?.find((variation) => variation?.colorValue === selectedColor?.name!);
-                  // const isSizeAvailable = availableVariation?.size === eachSize;
 
                   return (
                     <TouchableOpacity
@@ -335,7 +334,7 @@ const ProductImagesAndColorsComponent: React.FC<IProps> = (props) => {
           </View>
 
           {/*==== Thumbnails ====*/}
-          <View className="mt-3 px-5 flex-row items-center justify-start flex-wrap gap-x-2">
+          <View className="mt-3 px-5 flex-row items-center justify-start flex-wrap gap-2">
             { defaultFeaturedImageAndThumbnails && (defaultFeaturedImageAndThumbnails?.images?.map((eachImage, index) => (
               <TouchableOpacity  key={ eachImage._id } 
                 onPress={ () => setFeaturedImage(eachImage)}

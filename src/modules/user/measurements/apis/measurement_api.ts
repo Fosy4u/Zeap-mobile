@@ -1,5 +1,5 @@
 import rootAPI from "../../../../redux/api/rootAPI.ts";
-import { allBodyMeasurementTemplateRoute, bodyMeasurementEnumsRoute, bodyMeasurementGuideRoute, requiredMeasurementFormFieldsRoute, singleBodyMeasurementTemplateRoute } from "../../../../routes/api/api_route.ts";
+import { allBodyMeasurementTemplateRoute, bodyMeasurementEnumsRoute, bodyMeasurementGuideRoute, requiredMeasurementFormFieldsRoute, singleBodyMeasurementTemplateRoute } from "../../../../redux/api/api_route.ts";
 import IBodyMeasurement from "../models/bodyMeasurement_model.ts";
 import IBodyMeasurementEnumerations from "../models/bodyMeasurementEnumeration_model.ts";
 import IBodyMeasurementGuide from "../models/bodyMeasurementGuide_model.ts";

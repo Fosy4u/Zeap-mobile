@@ -35,6 +35,7 @@ interface ICategories {
     fit?:          string[];
     style?:        string[];
     gender?:       string[];
+    type?:       string;
     brand?:        string;
     design?:       string[];
     occasion?:     string[];

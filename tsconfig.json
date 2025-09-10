@@ -5,8 +5,14 @@
     "strict": true,
     "noEmit": true,
     "esModuleInterop": true,
+    "types": ["nativewind/types"],
     // "typeRoots": ["./types"],
   },
-  "include": ["@env.d.ts", "**/*.ts", "**/*.tsx"],
+  "include": [
+    "@env.d.ts",
+    "nativewind.d.ts",
+    "**/*.ts",
+    "**/*.tsx"
+  ],
   "extends": "@react-native/typescript-config/tsconfig.json"
 }

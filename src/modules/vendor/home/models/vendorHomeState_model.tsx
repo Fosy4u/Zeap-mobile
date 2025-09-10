@@ -32,6 +32,7 @@ interface IPieData {
     value: number;
     color: string;
     title: string;
+    currency?: string;
 };
 
 export type { IPieData, IOverview };

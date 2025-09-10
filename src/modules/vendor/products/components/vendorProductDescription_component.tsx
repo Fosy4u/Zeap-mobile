@@ -1,6 +1,7 @@
 import React from 'react'
-import { View, Text } from 'react-native'
+import { View, Text, useWindowDimensions } from 'react-native'
 import IVendorProductDetails from '../models/vendorProductDetails_model';
+import HTMLView from 'react-native-htmlview';
 
 interface IProps {
   product: IVendorProductDetails;
@@ -9,7 +10,14 @@ interface IProps {
 const VendorProductDescriptionComponent: React.FC<IProps> = ({ product }) => {
   return (
     <View className="mt-4">
-      <Text className="leading-6">{ product?.description! }</Text>
+      <HTMLView
+        value={product?.description || "<p>No description available</p>"}
+        stylesheet={{
+          p: { color: "#374151", fontSize: 12 }, // text-gray-700, text-xs
+          h1: { fontSize: 14, fontWeight: "bold" },
+          a: { color: "#10B981", textDecorationLine: "underline" }, // green-500
+        }}
+      />
 
       <View className="mt-1">
         <View className="h-auto w-full flex-row items-start justify-between">
