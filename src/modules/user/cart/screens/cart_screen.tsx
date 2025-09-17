@@ -184,7 +184,12 @@ const CartScreen = () => {
 
           {/*==== Similar Items Section ====*/}
           <View className="mt-10 mb-10">
-            <Text className="font-medium text-base text-baseGreen">Similar items</Text>
+            <View className="flex-row justify-between items-center">
+              <Text className="font-medium text-base text-baseGreen">Similar items</Text>
+              <TouchableOpacity onPress={ () => navigation.navigate("productListScreen", { screenTitle: "Similar Products" }) }>
+                <Text className="text-sm text-baseGreen">See all</Text>
+              </TouchableOpacity>
+            </View>
 
             <ScrollView
               horizontal

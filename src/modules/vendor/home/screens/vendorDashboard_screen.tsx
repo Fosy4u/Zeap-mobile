@@ -19,7 +19,7 @@ const VendorDashboardScreen = () => {
   const { productIsLoading } = useSelector((state: RootState) => state.vendorProductState);
   const { analytics, overviews, weeklySalesChartData } = useSelector((state: RootState) => state.vendorHomeState);
   const { products, vendorProductReviews } = useSelector((state: RootState) => state.vendorProductState);
-  const { payments } = useSelector((state: RootState) => state.paymentState);
+  const { payments } = useSelector((state: RootState) => state.vendorPaymentState);
   const { shop } = useSelector((state: RootState) => state.vendorGeneralState);
   const { userData } = useSelector((state: RootState) => state.profileState);
   const [productIndex, setProductIndex] = useState<number | null>(null);

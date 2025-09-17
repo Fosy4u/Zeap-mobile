@@ -9,7 +9,7 @@ import PendingPaymentComponent from '../components/pendingPayment_component';
 import AppHeaderComp from '../../general/components/appHeader_comp';
 
 const PaymentScreen = () => {
-    const { selectedTab, tabs } = useSelector((state: RootState) => state.paymentState);
+    const { selectedTab, tabs } = useSelector((state: RootState) => state.vendorPaymentState);
     const dispatch = useDispatch();
 
     return (
