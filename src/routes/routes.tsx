@@ -38,7 +38,7 @@ import AddProductScreen from "../modules/vendor/products/screens/addProduct_scre
 import AddReadyMadeClothesScreen from "../modules/vendor/products/screens/addReadyMadeClothes_screen.tsx";
 import SearchItemScreen from '../modules/user/products/screens/searchItem_screen.tsx';
 import SearchResultsScreen from '../modules/user/products/screens/searchResults_screen.tsx';
-import UserPaymentScreen from '../modules/user/payment/screens/userPayment_screen.tsx';
+import PaystackPaymentScreen from '../modules/user/payment/screens/paystackPayment_screen.tsx';
 import UserNotificationsScreen from '../modules/notifications/screens/notifications_screen.tsx';
 import VendorOrderDetailsScreen from '../modules/vendor/orders/screens/orderDetails_screen.tsx';
 import OrdersScreen from '../modules/vendor/orders/screens/orders_screen.tsx';
@@ -131,7 +131,7 @@ const AppRoutes = () => {
         <Stack.Screen name="addressScreen" component={AddressScreen} options={{ headerShown: false }} />
 
         {/*==== User Payment ====*/}
-        <Stack.Screen name="userPaymentScreen" component={UserPaymentScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="paystackPaymentScreen" component={PaystackPaymentScreen} options={{ headerShown: false }} />
         {/* <Stack.Screen name="paymentMethodScreen" component={ PaymentMethodScreen } options={{ headerShown: false }} /> */}
 
         {/* ==== Profile ==== */}

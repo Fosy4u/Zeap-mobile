@@ -41,7 +41,7 @@ type RootNavigationStackModel = {
     checkoutScreen: undefined;
     deliveryMethodScreen: undefined;
     
-    userPaymentScreen: { requestData: IPaymentReferenceParams } | undefined;
+    paystackPaymentScreen: undefined;
     // paymentMethodScreen: undefined;
 
     profileSetupScreen: undefined;
