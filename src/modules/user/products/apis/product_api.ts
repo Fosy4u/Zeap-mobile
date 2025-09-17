@@ -26,8 +26,6 @@ const productAPI = rootAPI.injectEndpoints({
         // Get Filtered Products
         getFilteredProducts: builder.query<{ products: IProduct[], dynamicFilters: IDynamicFilter[] }, {queryParams: IProductFilterQueryParams, screenTitle: string}>({
             query: ({queryParams, screenTitle}) => {
-                console.log("QUERY PARAMS::: ", queryParams);
-                console.log("FINAL PARAMS::: ", removeUndefined(queryParams));
                 
                 // Determine URL based on screenTitle
                 const url = (screenTitle === "Newest Products")

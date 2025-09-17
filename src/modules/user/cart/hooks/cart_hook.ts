@@ -27,7 +27,7 @@ const useCartHook = () => {
     // Handle get carts
     const handleGetCarts = async () => {
         try {
-            dispatch(setLoadingMessage("Getting your cart..."));
+            dispatch(setLoadingMessage("Fetching cart items..."));
             dispatch(setIsLoading(true));
 
             const cartsResponse = await getCart().unwrap();
@@ -114,7 +114,7 @@ const useCartHook = () => {
 
     // Handle get order summary
     const handleGetOderSummary = async () => {
-        dispatch(setLoadingMessage("Getting order summary..."));
+        dispatch(setLoadingMessage("Fetching order summary..."));
         dispatch(setIsLoading(true));
 
         const requestParams = {
@@ -183,24 +183,6 @@ const useCartHook = () => {
         }
     };
 
-    // Handle proceed to payment
-    const handleProceedToPayment = (formData: any) => {
-        
-        const requestParams = {
-            firstName: formData.firstName,
-            lastName: formData.lastName,
-            email: userData.email!,
-            address: formData.address,
-            region: formData.region,
-            country: formData.country,
-            phoneNumber: formData.phoneNumber,
-            method: selectedDeliveryFee?.method || "standard",
-        };
-        console.log("REQUEST PARAMS::: ", requestParams);
-        
-        navigation.navigate("userPaymentScreen", { requestData: requestParams });
-    };
-
     return {
         handleGetCarts,
         handleIncreamentProductQuantity,
@@ -210,7 +192,6 @@ const useCartHook = () => {
         handleGetOderSummary,
         handleGetDeliveryDate,
         getItemDeliveryPeriod,
-        handleProceedToPayment,
     };
 };
 

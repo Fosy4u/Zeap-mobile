@@ -6,7 +6,7 @@ import { ArrowDown } from 'iconsax-react-native';
 
 
 const AllPaymentsComponent = () => {
-    const { payments } = useSelector((state: RootState) => state.paymentState);
+    const { payments } = useSelector((state: RootState) => state.vendorPaymentState);
     
     return (
         <View>
