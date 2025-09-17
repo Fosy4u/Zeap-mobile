@@ -7,11 +7,12 @@ import addressReducer from "../../modules/user/address/slices/address_slice";
 import profileReducer from "../../modules/profile/slices/profileState_slice";
 import generalReducer from "../../modules/general/slices/general_slice";
 import cartReducer from "../../modules/user/cart/slices/cart_slice";
+import paymentReducer from "../../modules/user/payment/slices/payment_slice";
 import orderReducer from "../../modules/user/orders/slices/order_slice";
 import pointAndVoucherReducer from "../../modules/user/pointAndVoucher/slices/pointAndVoucher_slice";
 import vendorHomeReducer from "../../modules/vendor/home/slices/vendorHome_slice";
 import vendorGeneralReducer from "../../modules/vendor/general/slices/general_slice";
-import paymentReducer from "../../modules/vendor/payments/slices/payment_slice";
+import vendorPaymentReducer from "../../modules/vendor/payments/slices/payment_slice";
 import vendorProductReducer from "../../modules/vendor/products/slices/vendorProductState_slice";
 import vendorOrderReducer from "../../modules/vendor/orders/slices/orderState_slice"
 import settingsReducer from "../../modules/settings/slices/settingsState_slice";
@@ -34,6 +35,7 @@ const appStore = configureStore({
         measurementState: measurementReducer,
         addressState: addressReducer,
         cartState: cartReducer,
+        paymentState: paymentReducer,
         orderState: orderReducer,
         pointAndVoucherState: pointAndVoucherReducer,
         reviewAndRatingState: reviewAndRatingReducer,
@@ -42,7 +44,7 @@ const appStore = configureStore({
         vendorHomeState: vendorHomeReducer,
         vendorGeneralState: vendorGeneralReducer,
         notificationsState: notificationsReducer,
-        paymentState: paymentReducer,
+        vendorPaymentState: vendorPaymentReducer,
         vendorProductState: vendorProductReducer,
         vendorOrderState: vendorOrderReducer,
 

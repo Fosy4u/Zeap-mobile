@@ -5,7 +5,7 @@ import { RootState } from '../../../../redux/store/store';
 import { ArrowDown } from 'iconsax-react-native';
 
 const ReceivedPaymentComponent = () => {
-  const { payments } = useSelector((state: RootState) => state.paymentState);
+  const { payments } = useSelector((state: RootState) => state.vendorPaymentState);
   const receivedPayments = payments.filter((payment) => payment.status === "Success");
   
   return (

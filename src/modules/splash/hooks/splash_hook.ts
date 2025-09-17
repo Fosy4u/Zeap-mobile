@@ -112,7 +112,7 @@ const useSplashHook = (props: any) => {
                         const isAnonymousUser = user.isAnonymous;
                         
                         if (isAnonymousUser) {
-                            dispatch(setLoadingMessage("Registering as a guest..."));
+                            dispatch(setLoadingMessage("Zipping through aisles just for you…"));
                             dispatch(setIsLoading(true));
 
                             // Save guest UID to secure storage
@@ -160,7 +160,7 @@ const useSplashHook = (props: any) => {
                         }
                     }
                 } else {
-                    dispatch(setLoadingMessage("Registering as a guest..."));
+                    dispatch(setLoadingMessage("Zipping through aisles just for you…"));
                     dispatch(setIsLoading(true));
 
                     // If user is "null", proceed with anonymous login

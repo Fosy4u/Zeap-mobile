@@ -5,7 +5,7 @@ import { RootState } from '../../../../redux/store/store';
 import { ArrowDown } from 'iconsax-react-native';
 
 const PendingPaymentComponent = () => {
-  const { payments } = useSelector((state: RootState) => state.paymentState);
+  const { payments } = useSelector((state: RootState) => state.vendorPaymentState);
   const pendingPayments = payments.filter((payment) => payment.status === "Pending");
   
   return (
