@@ -1,5 +1,5 @@
 import rootAPI from "../../../../redux/api/rootAPI.ts";
-import IPaymentReference from "../models/paymentReference_model";
+import IPaymentReference from "../models/paymentReference_model.ts";
 import IPaymentReferenceParams from "../models/paymentReferenceParams_model.ts";
 
 

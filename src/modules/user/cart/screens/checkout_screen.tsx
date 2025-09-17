@@ -17,6 +17,7 @@ import useCartHook from '../hooks/cart_hook.ts';
 import formatCurrency from '../../../../utils/formatCurrency.ts';
 import countries from "../../../../utils/deliveryCountries.json";
 import { SelectList } from 'react-native-dropdown-select-list';
+import usePaymentHook from '../../payment/hooks/payment_hook.ts';
 
 const CheckoutScreen = () => {
   const { orderSummary, selectedDeliveryFee, isLoading: isCartLoading, loadingMessage: cartLoadingMessage } = useSelector((state: RootState) => state.cartState);
@@ -31,11 +32,8 @@ const CheckoutScreen = () => {
   const loadingMessage = cartLoadingMessage || addressLoadingMessage;
   // console.log("USER DATA::: ", userData);
   
-  const {
-    handleGetDeliveryMethod,
-    handleGetOderSummary,
-    handleProceedToPayment,
-  } = useCartHook();
+  const { handleGetDeliveryMethod, handleGetOderSummary } = useCartHook();
+  const { handleProceedToPayment } = usePaymentHook();
   const { 
     control: editAccountDetailsControl,
     handleSubmit: editAccountDetailsHandleSubmit,
