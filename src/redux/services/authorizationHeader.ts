@@ -17,7 +17,7 @@ const AuthorizationHeader = async (headers: Headers): Promise<Headers> => {
         if (currentUser) {
             // Get fresh token from Firebase
             token = await currentUser.getIdToken();
-            // console.log("R÷EFRESHED TOKEN::: ", token);
+            // console.log("REFRESHED TOKEN::: ", token);
             
             // Store the token
             await storeToken(token);
