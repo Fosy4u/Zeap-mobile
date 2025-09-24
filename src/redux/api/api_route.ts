@@ -12,6 +12,7 @@ const mergeUserDataRoute = "/user/guest/login/password/merge";
 const forgotPasswordRoute = "";
 
 //  Notification Routes
+const registerFCMToken = "/notification/pushToken/register";
 const getNotificationsRoute = "/notification/inbox";
 const markNotificationAsReadRoute = "/notifications/markAsRead";
 const deleteNotificationRoute = "/notification/inbox/delete";
@@ -78,6 +79,7 @@ export {
     forgotPasswordRoute,
     
     // Notification Routes exports
+    registerFCMToken,
     getNotificationsRoute,
     markNotificationAsReadRoute,
     deleteNotificationRoute,
