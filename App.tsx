@@ -4,6 +4,7 @@ import { StripeProvider } from '@stripe/stripe-react-native';
 // Import Screens
 import AppRoutes from './src/routes/routes';
 import { configureReanimatedLogger, ReanimatedLogLevel } from 'react-native-reanimated';
+import useFCMNotificationHook from './src/modules/notifications/hooks/fcm_hook';
 
 configureReanimatedLogger({
   level: ReanimatedLogLevel.warn,
@@ -11,6 +12,10 @@ configureReanimatedLogger({
 });
 
 const App = (): React.JSX.Element => {
+
+  // Call the FCM hook
+  useFCMNotificationHook();
+  
   return (
     // Use StripeProvider here to wrap your app
     <StripeProvider
