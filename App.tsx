@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { StripeProvider } from '@stripe/stripe-react-native';
 
 // Import Screens
 import AppRoutes from './src/routes/routes';
 import { configureReanimatedLogger, ReanimatedLogLevel } from 'react-native-reanimated';
+import useFCMNotificationHook from './src/modules/notifications/hooks/fcm_hook';
 
 configureReanimatedLogger({
   level: ReanimatedLogLevel.warn,
@@ -11,13 +12,13 @@ configureReanimatedLogger({
 });
 
 const App = (): React.JSX.Element => {
+
+  // Call the FCM hook
+  useFCMNotificationHook();
+
   return (
     // Use StripeProvider here to wrap your app
-    <StripeProvider
-      publishableKey={ process.env.REACT_APP_STRIPE_PUBLIC_KEY! }
-      // merchantIdentifier='merchant.com.yourapp' // required for Apple Pay
-      // urlScheme='your-url-scheme' // required for 3D Secure and bank redirects
-    >
+    <StripeProvider publishableKey={ process.env.REACT_APP_STRIPE_PUBLIC_KEY! }>
       <AppRoutes />
     </StripeProvider>
     
