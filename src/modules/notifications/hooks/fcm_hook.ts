@@ -1,160 +1,108 @@
-import messaging, { FirebaseMessagingTypes } from "@react-native-firebase/messaging";
+// fcm_hook.ts
+import { AuthorizationStatus, getMessaging, getToken, onTokenRefresh, requestPermission } from "@react-native-firebase/messaging";
 import { useEffect } from "react";
-import { Alert } from "react-native";
 import { useRegisterFCMTokenMutation } from "../apis/notification_api";
 import handleError from "../../general/hooks/errorHandler_hook";
+import { PermissionsAndroid, Platform } from "react-native";
+
 const useFCMNotificationHook = () => {
-
     const [registerFCMToken] = useRegisterFCMTokenMutation();
+    const messagingInstance = getMessaging();
 
-    //  Request user permission (STEP 1)
+    // Request user permission (STEP 1)
     const handleRequestUserPermission = async () => {
-        const authStatus = await messaging().requestPermission();
-        const enabled = (authStatus ===  messaging.AuthorizationStatus.AUTHORIZED) || (authStatus === messaging.AuthorizationStatus.PROVISIONAL);
+        try {
+            let enabled = false
+            if (Platform.OS === 'ios') {
+                const authStatus = await requestPermission(messagingInstance);
+                enabled =
+                    authStatus === AuthorizationStatus.AUTHORIZED ||
+                    authStatus === AuthorizationStatus.PROVISIONAL
+            } else {
+                const check = await PermissionsAndroid.request(
+                    PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
+                    {
+                        title: "Enable Notification",
+                        message: "Get notified about order updates, special offers, and important account information. You can change this anytime in settings.",
+                        buttonPositive: "Enable",
+                        buttonNegative: "Not Now",
+                    },
+                )
 
-        if (enabled) {
-            console.log("NOTIFICATION AUTHORIZATION STATUS::: ", authStatus);
-            await handleGetFCMToken();
+                enabled = check !== PermissionsAndroid.RESULTS.DENIED
+            }
+
+            if (enabled) {
+                await handleGetFCMToken();
+            }
+            
+        } catch (error) {
+            handleError(error);
         }
     };
 
-    //  Get Firebase Cloud Messaging (FCM) token    (STEP 2)
+    // Get Firebase Cloud Messaging (FCM) token (STEP 2)
     const handleGetFCMToken = async () => {
         try {
-            const fcmToken = await messaging().getToken();
-            console.log("FCM TOKEN::: ", fcmToken); 
+            const fcmToken = await getToken(messagingInstance);
+            console.log("FCM TOKEN::: ", fcmToken);
 
             if (fcmToken) {
                 await handleRegisterFCMTokenWithAPI(fcmToken);
             }
         } catch (error) {
-            console.log("FCM TOKEN ERROR::: ", error);
+            console.log("ERROR GETTING FCM TOKEN::: ", error);
         }
     };
 
-    //  Handle Firebase Cloud Messaging (FCM) token refresh    (STEP 3)
-    const handleRefreshFCMToken = () => {
-        return messaging().onTokenRefresh(async (newToken) => {
-            handleRegisterFCMTokenWithAPI(newToken)
-        });
-    };
-
-    //  Send the FCM token to the backend to save it for future notifications   (STEP 4)
-    const handleRegisterFCMTokenWithAPI =  async(token: string) => {
+    // Send the FCM token to the backend to save it for future notifications (STEP 3)
+    const handleRegisterFCMTokenWithAPI = async (token: string) => {
         const requestData = {
-            pushToken: token
+            pushToken: token,
         };
-        console.log("FCM TOKEN::: ", token);
-        
+        // console.log("FCM TOKEN REGISTER API CALL::: ", token);
 
         try {
             const tokenResponse = await registerFCMToken(requestData);
-            // console.log("TOKEN REGISTER RESPONSE::: ", JSON.stringify(tokenResponse));
-        } catch (error) {
-            handleError(error);
-        }
-    };
-
-    // Handle notifications when the app is opened from quit state or background
-    const handleBackgroundNotifications = async () => {
-        try {
-            // Check if app was opened by a notification (from quit state)
-            const initialNotification = await messaging().getInitialNotification();
-            if (initialNotification) {
-                console.log("INITIAL NOTIFICATION::: ", initialNotification);
-                // Handle the initial notification here
-                // You can navigate to specific screen or perform actions based on notification data
-            }
-
-            // Handle notifications when app is opened from background state
-            const unsubscribe = messaging().onNotificationOpenedApp(remoteMessage => {
-                console.log('Notification caused app to open from background:', remoteMessage);
-                // Handle the notification here
-                // You can navigate to specific screen or perform actions based on notification data
-            });
-
-            return unsubscribe;
-        } catch (error) {
-            handleError(error);
-        }
-    };
-    // Handle background notifications (when app is in background but not killed)
-    const handleRegisterBackgroundHandler = () => {
-        // Note: setBackgroundMessageHandler should be called at the top level, not inside useEffect
-        // It's better to call this in index.js before the app is registered
-        messaging().setBackgroundMessageHandler(async (remoteMessage) => {
-            console.log("MESSAGE HANDLED IN THE BACKGROUND::: ", JSON.stringify(remoteMessage));
-            // Don't use Alert here as it won't work in background
-            // Instead, handle the message silently or show a local notification
-        });
-    };
-
-
-    //  Handle foreground notifications
-    const onForegroundMessage = () => {
-        const unsubscribe = messaging().onMessage(async (remoteMessage) => {
-            console.log("RECEIVED FOREGROUND MESSAGE:: ", JSON.stringify(remoteMessage));
+            // console.log("API TOKEN RESPONSE::: ", JSON.stringify(tokenResponse));
             
-            // Show custom in-app notification or alert
-            Alert.alert(
-                remoteMessage.notification?.title || "New Notification",
-                remoteMessage.notification?.body || "You have a new message",
-                [
-                    {
-                        text: "OK",
-                        onPress: () => {
-                            // Handle notification tap if needed
-                            console.log("Foreground notification acknowledged");
-                        }
-                    }
-                ]
-            );
-        });
-        return unsubscribe;
+        } catch (error) {
+            handleError(error);
+        }
     };
+
+    const handleNotificationOpen = async () => {
+        // Check if app was opened from a notification
+        const initialNotification = await messagingInstance.getInitialNotification();
+        if (initialNotification) {
+            // handleNavigation(initialNotification.data);
+            console.log("INITIAL NOTIFICATION DATA::: ", initialNotification);
+            
+        }
+
+        // Handle notification open when app is in background
+        messagingInstance.onNotificationOpenedApp(remoteMessage => {
+            if (remoteMessage) {
+                // handleNavigation(remoteMessage.data);
+                console.log("REMOTE MESSAGE DTA::: ", remoteMessage);
+                
+            }
+        });
+    };
+
+
+    // Listen for token refresh and update backend
+    const unsubscribe = onTokenRefresh(messagingInstance, async (newToken) => {
+        console.log("FCM TOKEN REFRESH::: ", newToken);
+        await handleRegisterFCMTokenWithAPI(newToken);
+    });
 
     useEffect(() => {
-        let unsubscribers: Array<() => void> = [];
-
-        const initializeNotifications = async () => {
-            // Initialize all notification handlers
-            await handleRequestUserPermission();
-            
-            // Handle background/quit state notifications
-            const backgroundUnsubscriber = await handleBackgroundNotifications();
-            if (backgroundUnsubscriber) {
-                unsubscribers.push(backgroundUnsubscriber);
-            }
-
-            // Handle foreground notifications
-            const foregroundUnsubscriber = onForegroundMessage();
-            unsubscribers.push(foregroundUnsubscriber);
-
-            // Handle token refresh
-            const tokenRefreshUnsubscriber = handleRefreshFCMToken();
-            unsubscribers.push(tokenRefreshUnsubscriber);
-
-            // Register background handler (should ideally be in index.js)
-            handleRegisterBackgroundHandler();
-        };
-
-        initializeNotifications();
-
-        // Cleanup all subscriptions on unmount
-        return () => {
-            unsubscribers.forEach(unsubscriber => {
-                if (typeof unsubscriber === 'function') {
-                    unsubscriber();
-                }
-            });
-        };
+        handleRequestUserPermission();
+        handleNotificationOpen();
+        // unsubscribe();
+        // return unsubscribe; 
     }, []);
-
-    return {
-        onForegroundMessage,
-        handleGetFCMToken,
-        handleRequestUserPermission,
-    }
 };
 
 export default useFCMNotificationHook;
