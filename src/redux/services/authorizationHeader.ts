@@ -1,4 +1,4 @@
-import { getAuth } from '@react-native-firebase/auth';
+import { getAuth, getIdToken } from '@react-native-firebase/auth';
 import EncryptedStorage from 'react-native-encrypted-storage';
 
 const TOKEN_KEY = 'auth_token';
@@ -8,16 +8,14 @@ const TOKEN_KEY = 'auth_token';
  */
 const AuthorizationHeader = async (headers: Headers): Promise<Headers> => {
     try {
-        const auth = getAuth();
-        const currentUser = auth.currentUser;
+        const currentUser = getAuth().currentUser; // ✅ 2.  modular auth instance
 
         // Get token from current user or stored token
         let token: string;
-        
         if (currentUser) {
             // Get fresh token from Firebase
-            token = await currentUser.getIdToken();
-            // console.log("R÷EFRESHED TOKEN::: ", token);
+            token = await getIdToken(currentUser, true); // ✅ 3.  modular auth instance
+            // console.log("REFRESHED TOKEN::: ", token);
             
             // Store the token
             await storeToken(token);
@@ -64,7 +62,7 @@ const getToken = async (): Promise<string | null> => {
 };
 
 /**
- * Clear stored token
+ * Clear stored authentication token
  */
 const clearToken = async (): Promise<void> => {
     try {
@@ -74,9 +72,5 @@ const clearToken = async (): Promise<void> => {
     }
 };
 
-export {
-    storeToken,
-    getToken,
-    clearToken
-};
+export { storeToken, getToken, clearToken };
 export default AuthorizationHeader;
