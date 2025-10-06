@@ -2,7 +2,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { useDispatch } from "react-redux";
 import { ILoginUser, loginUserSchema } from "../validations/auths_validation";
-import { getAuth, signInWithEmailAndPassword } from "@react-native-firebase/auth";
+import { getAuth, signInWithEmailAndPassword, getIdToken } from "@react-native-firebase/auth";
 import { useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -36,7 +36,7 @@ const useLoginHook = () => {
      * Get the Firebase Auth instance.
      * @returns The Auth instance
      */
-    const authInstance = getAuth();
+    const authInstance = getAuth(); // ✅ Modular API
 
     const { control, handleSubmit, formState: { errors } } = useForm<ILoginUser>({
         defaultValues: {
@@ -55,7 +55,7 @@ const useLoginHook = () => {
             
             
             const uid = authUser.uid;
-            const token = await authUser.getIdToken();
+            const token = await getIdToken(authUser, true); // ✅ Modular getIdToken
 
             if (uid) {
                 // Save user data to secure storage

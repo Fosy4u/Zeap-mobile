@@ -7,7 +7,7 @@ import { useLazyGetUserByIdQuery, useRegisterGuestUserMutation } from "../../aut
 import { useDispatch } from "react-redux";
 import { setUserData } from "../../profile/slices/profileState_slice";
 import { setIsLoading, setLoadingMessage } from "../../general/slices/general_slice";
-import { withTiming, withDelay, withSequence } from 'react-native-reanimated';
+import { withTiming, withDelay, withSequence, runOnJS } from 'react-native-reanimated';
 import EncryptedStorage from 'react-native-encrypted-storage';
 import { storeToken } from "../../../redux/services/authorizationHeader";
 import handleError from "../../general/hooks/errorHandler_hook";
@@ -198,8 +198,11 @@ const useSplashHook = (props: any) => {
         if (animationStarted && currentIndex >= 0 && currentIndex < counters.length) {
             slideAnim.value = withSequence(
                 withTiming(0, { duration: 200 }),
-                withTiming(20, { duration: 0 }, () => {
-                    setCurrentIndex((prevIndex: number) => prevIndex + 1);
+                withTiming(20, { duration: 0 }, (finished) => {
+                    // Wrap the state update in runOnJS
+                    if (finished) {
+                        runOnJS(setCurrentIndex)(currentIndex + 1);
+                    }
                 })
             );
         } else if (currentIndex >= counters.length) {
