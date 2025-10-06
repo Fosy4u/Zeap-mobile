@@ -5,6 +5,7 @@
     "strict": true,
     "noEmit": true,
     "esModuleInterop": true,
+    "resolveJsonModule": true,
     "types": ["nativewind/types"],
     // "typeRoots": ["./types"],
   },
