@@ -67,7 +67,6 @@ const useFCMNotificationHook = () => {
         try {
             const tokenResponse = await registerFCMToken(requestData);
             // console.log("API TOKEN RESPONSE::: ", JSON.stringify(tokenResponse));
-            
         } catch (error) {
             handleError(error);
         }
