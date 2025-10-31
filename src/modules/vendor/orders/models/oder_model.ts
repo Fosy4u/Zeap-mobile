@@ -5,49 +5,57 @@ interface IOrder {
     orderId?:                      string;
     itemNo?:                       number;
     shop?:                         string;
-    user?:                         User;
-    product?:                      Product;
+    user?:                         IUser;
+    product?:                      IProduct;
     quantity?:                     number;
     sku?:                          string;
     size?:                         string;
     color?:                        string;
     images?:                       Image[];
     bodyMeasurements?:             any[];
-    status?:                       Status;
-    amount?:                       Amount[];
-    expectedVendorCompletionDate?: ExpectedDate;
-    expectedDeliveryDate?:         ExpectedDate;
+    status?:                       IStatus;
+    amount?:                       IAmount[];
+    expectedVendorCompletionDate?: IExpectedDate;
+    expectedDeliveryDate?:         IExpectedDate;
     deliveryMethod?:               string;
-    shopRevenue?:                  ShopRevenue;
-    cancel?:                       Cancel;
+    shopRevenue?:                  IShopRevenue;
+    cancel?:                       ICancel;
     updatedAt?:                    Date;
     createdAt?:                    Date;
+    confirmedAt?:                  string;
+    deliveryCompany?:              IDeliveryCompany;
+    deliveryDate?:                 string;
+    deliveryTrackingLink?:         string;
+    deliveryTrackingNumber?:       string;
     __v?:                          number;
-}
+};
 
-interface Amount {
+interface IAmount {
     currency?: string;
     value?:    number;
     _id?:      string;
-}
+};
 
-interface Cancel {
+interface ICancel {
     isCancelled?: boolean;
-}
+};
 
-interface ExpectedDate {
+interface IDeliveryCompany {
+};
+
+interface IExpectedDate {
     min?: string;
     max?: string;
-}
+};
 
 interface Image {
     link?:      string;
     name?:      string;
     _id?:       string;
     isDefault?: boolean;
-}
+};
 
-interface Product {
+interface IProduct {
     _id?:                 string;
     productId?:           string;
     productType?:         string;
@@ -56,35 +64,35 @@ interface Product {
     title?:               string;
     subTitle?:            string;
     status?:              string;
-    autoPriceAdjustment?: AutoPriceAdjustment;
+    autoPriceAdjustment?: IAutoPriceAdjustment;
     currentStep?:         number;
-    categories?:          Categories;
+    categories?:          ICategories;
     description?:         string;
     sizes?:               string[];
-    postedBy?:            By;
+    postedBy?:            string;
     shop?:                string;
-    timeLine?:            TimeLine[];
+    timeLine?:            ITimeLine[];
     rejectionReasons?:    any[];
-    colors?:              Color[];
-    variations?:          Variation[];
+    colors?:              IColor[];
+    variations?:          IVariation[];
     updatedAt?:           Date;
     createdAt?:           Date;
     __v?:                 number;
     sizeStandard?:        string;
     isBespoke?:           boolean;
     isReadyMade?:         boolean;
-    promo?:               Promo;
-}
+    promo?:               IPromo;
+};
 
-interface AutoPriceAdjustment {
+interface IAutoPriceAdjustment {
     isAdjustable?:         boolean;
     adjustmentPercentage?: number;
-}
+};
 
-interface Categories {
+interface ICategories {
     style?:        string[];
     gender?:       string[];
-    age?:          Age;
+    age?:          IAge;
     brand?:        string;
     design?:       string[];
     occasion?:     string[];
@@ -94,65 +102,59 @@ interface Categories {
     main?:         string[];
     productGroup?: string;
     fit?:          any[];
-}
+};
 
-export interface Age {
+export interface IAge {
     ageGroup?: string;
-}
+};
 
-export interface Color {
+export interface IColor {
     value?:  string;
     images?: Image[];
     _id?:    string;
-}
+};
 
-export enum By {
-    The670D7978289931E87A9B8C64 = "670d7978289931e87a9b8c64",
-    The670D7A2C289931E87A9B8C72 = "670d7a2c289931e87a9b8c72",
-    The679Bfacbed88C89Bf0C4B196 = "679bfacbed88c89bf0c4b196",
-}
-
-export interface Promo {
+export interface IPromo {
     promoId?:            string;
     discountPercentage?: number;
 }
 
-export interface TimeLine {
+export interface ITimeLine {
     date?:        string;
     description?: string;
-    actionBy?:    By;
+    actionBy?:    string;
     _id?:         string;
 }
 
-export interface Variation {
+export interface IVariation {
     sku?:        string;
     price?:      number;
     discount?:   number;
     colorValue?: string;
     size?:       string;
     quantity?:   number;
-    bespoke?:    Bespoke;
+    bespoke?:    IBespoke;
     _id?:        string;
 }
 
-export interface Bespoke {
+export interface IBespoke {
     isBespoke?:       boolean;
     availableColors?: any[];
 }
 
-export interface ShopRevenue {
+export interface IShopRevenue {
     currency?: string;
     value?:    number;
     status?:   string;
     paidAt?:   null;
 }
 
-export interface Status {
+export interface IStatus {
     name?:  string;
     value?: string;
 }
 
-export interface User {
+export interface IUser {
     _id?:                 string;
     userId?:              string;
     signInCount?:         number;
@@ -193,5 +195,5 @@ interface Social {
     _id?:       string;
 }
 
-export type { Product, Categories, Amount, AutoPriceAdjustment, Image, Cancel, Social, ImageURL, ExpectedDate };
+export type { IProduct, ICategories, IAmount, IAutoPriceAdjustment, ICancel, IExpectedDate };
 export default IOrder;

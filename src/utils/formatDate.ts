@@ -4,7 +4,12 @@
  * @param isCompact - If true, returns date in "dd/MM/yyyy" format
  * @returns Formatted date string
  */
-const formatDate = (dateString: string, isCompact: boolean = false): string => {
+
+type IDateInput = string | number | Date;
+
+const formatDate = (dateString: IDateInput, isCompact: boolean = false): string => {
+    if (!dateString && dateString !== 0) return "";
+    
     const date = new Date(dateString);
 
     if (isCompact) {

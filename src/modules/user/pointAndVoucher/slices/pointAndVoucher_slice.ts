@@ -33,7 +33,6 @@ const initialState: IPointAndVoucherState = {
         __v: 0
     },
     selectedVoucherType: "Active",
-    showVoucherDetailBottomSheet: false,
 
     isLoading: false,
     loadingMessage: "",
@@ -62,9 +61,6 @@ const pointAndVoucherState = createSlice({
         setSelectedVoucherType: (state: IPointAndVoucherState, action: PayloadAction<string>) => {
             state.selectedVoucherType = action.payload;
         },
-        setShowVoucherDetailBottomSheet: (state: IPointAndVoucherState, action: PayloadAction<boolean>) => {
-            state.showVoucherDetailBottomSheet = action.payload;
-        },
         setIsLoading: (state: IPointAndVoucherState, action: PayloadAction<boolean>) => {
             state.isLoading = action.payload;
         },
@@ -82,7 +78,6 @@ export const {
     setInactiveVouchers,
     setSelectedVoucher,
     setSelectedVoucherType,
-    setShowVoucherDetailBottomSheet,
     setIsLoading,
     setLoadingMessage
 } = actions;

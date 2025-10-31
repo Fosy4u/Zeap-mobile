@@ -1,9 +1,11 @@
 // fcm_hook.ts
-import { AuthorizationStatus, getMessaging, getToken, onTokenRefresh, requestPermission } from "@react-native-firebase/messaging";
+import messaging, { AuthorizationStatus, getMessaging, getToken, onMessage, onTokenRefresh, requestPermission } from "@react-native-firebase/messaging";
 import { useEffect } from "react";
 import { useRegisterFCMTokenMutation } from "../apis/notification_api";
 import handleError from "../../general/hooks/errorHandler_hook";
 import { PermissionsAndroid, Platform } from "react-native";
+import PushNotification from "react-native-push-notification";
+import navigate from "../../../routes/pushNavigation";
 
 const useFCMNotificationHook = () => {
     const [registerFCMToken] = useRegisterFCMTokenMutation();
@@ -45,7 +47,7 @@ const useFCMNotificationHook = () => {
     const handleGetFCMToken = async () => {
         try {
             const fcmToken = await getToken(messagingInstance);
-            console.log("FCM TOKEN::: ", fcmToken);
+            // console.log("FCM TOKEN::: ", fcmToken);
 
             if (fcmToken) {
                 await handleRegisterFCMTokenWithAPI(fcmToken);
@@ -71,37 +73,94 @@ const useFCMNotificationHook = () => {
         }
     };
 
+    const handleNotificationNavigation = (data: any) => {
+        console.log("NAVIGATION DATA::: ", data);
+        
+        if (data?.notificationType === "order" && data?.orderId) {
+            console.log("NAVIGATION DATA::: ", data);
+            const userRole = data.roleType;
+            console.log("USER ROLE::: ", userRole);
+
+            if (userRole === "buyer") {
+                navigate("orderDetailsScreen", {
+                    from: "Notification Screen",
+                    orderId: data.orderId,
+                    itemNumber: data.itemNo ? parseInt(data.itemNo, 10) : undefined,
+                });
+            } else if (userRole === "vendor") {
+                navigate("vendorOrderDetailsScreen", {
+                    screen: "Orders",
+                    from: "Notification Screen",
+                    orderId: data.productOrder_id,
+                    itemNumber: data.itemNo ? parseInt(data.itemNo, 10) : undefined,
+                });
+            }
+            // navigate("ordersScreen");
+        } else if (data?.notificationType === "voucher" && data?.code) {
+            navigate("pointAndVoucherScreen", {
+                from: "Notification Screen",
+                code: data.code,
+            });
+        } else if (data?.notificationType === "shop" && data?.shopId) {
+            navigate("vendorHomeScreen", {
+                screen: "Dashboard",
+                shopId: data.shopId,
+            });
+        } else if (data?.notificationType === "payments" && data?.reference) {
+            navigate("paymentScreen");
+        }
+    };
+
     const handleNotificationOpen = async () => {
-        // Check if app was opened from a notification
-        const initialNotification = await messagingInstance.getInitialNotification();
+        // Case 1: When app is opened from a notification
+        const initialNotification = await messaging().getInitialNotification();
         if (initialNotification) {
-            // handleNavigation(initialNotification.data);
-            console.log("INITIAL NOTIFICATION DATA::: ", initialNotification);
-            
+            handleNotificationNavigation(initialNotification.data);
         }
 
-        // Handle notification open when app is in background
-        messagingInstance.onNotificationOpenedApp(remoteMessage => {
+        // Case 2: Handle notification when app is in background
+        messaging().onNotificationOpenedApp(remoteMessage => {
             if (remoteMessage) {
-                // handleNavigation(remoteMessage.data);
-                console.log("REMOTE MESSAGE DTA::: ", remoteMessage);
-                
+                handleNotificationNavigation(remoteMessage.data);
             }
         });
     };
 
-
-    // Listen for token refresh and update backend
-    const unsubscribe = onTokenRefresh(messagingInstance, async (newToken) => {
-        console.log("FCM TOKEN REFRESH::: ", newToken);
-        await handleRegisterFCMTokenWithAPI(newToken);
-    });
-
     useEffect(() => {
+        // request permission and handle initial open
         handleRequestUserPermission();
         handleNotificationOpen();
-        // unsubscribe();
-        // return unsubscribe; 
+
+        // Listen for foreground messages and show local notification
+        const unsubscribeOnMessage = onMessage(messagingInstance, async remoteMessage => {
+            // console.log("REMOTE NOTIFICATION::: ", remoteMessage);
+
+            // Try to get image URL from notification payload
+            const imageUrl =
+                ((remoteMessage.notification as any)?.android?.imageUrl as string | undefined) ||
+                ((remoteMessage.notification as any)?.imageUrl as string | undefined) ||
+                (remoteMessage.data?.image as string | undefined);
+            
+            // Show a local notification
+            PushNotification.localNotification({
+                channelId: "default-channel-id",
+                title: remoteMessage.notification?.title || "New Notification",
+                message: remoteMessage.notification?.body || "You have a new message.",
+                bigPictureUrl: imageUrl, // Android: show image in notification drawer
+                largeIconUrl: imageUrl,
+                userInfo: remoteMessage.data
+            })
+        })
+
+        // Listen for token refresh and update backend
+        const unsubscribeTokenRefresh = onTokenRefresh(messagingInstance, async (newToken) => {
+            await handleRegisterFCMTokenWithAPI(newToken);
+        });
+
+        return () => {
+            unsubscribeOnMessage();
+            unsubscribeTokenRefresh();
+        };
     }, []);
 };
 

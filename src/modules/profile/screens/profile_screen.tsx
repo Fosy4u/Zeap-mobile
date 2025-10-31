@@ -104,9 +104,14 @@ const ProfileScreen = () => {
                 icon={ <Ruler color="gray" /> }
               />
 
-              {/* Vouchers */}
+              {/* Points & Vouchers */}
               <CardItems
-                handleOnPress={ () => navigation.navigate("pointAndVoucherScreen") }
+                handleOnPress={ () => {
+                  navigation.navigate("pointAndVoucherScreen", {
+                    from: "Profile Screen",
+                    code: ""
+                  });
+                } }
                 title="Points & Vouchers"
                 icon={ <Ticket color="gray" /> }
               />
