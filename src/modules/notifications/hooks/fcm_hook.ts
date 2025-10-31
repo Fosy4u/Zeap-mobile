@@ -65,7 +65,6 @@ const useFCMNotificationHook = () => {
         try {
             const tokenResponse = await registerFCMToken(requestData);
             // console.log("API TOKEN RESPONSE::: ", JSON.stringify(tokenResponse));
-            
         } catch (error) {
             handleError(error);
         }
@@ -77,7 +76,6 @@ const useFCMNotificationHook = () => {
         if (initialNotification) {
             // handleNavigation(initialNotification.data);
             console.log("INITIAL NOTIFICATION DATA::: ", initialNotification);
-            
         }
 
         // Handle notification open when app is in background
@@ -85,7 +83,6 @@ const useFCMNotificationHook = () => {
             if (remoteMessage) {
                 // handleNavigation(remoteMessage.data);
                 console.log("REMOTE MESSAGE DTA::: ", remoteMessage);
-                
             }
         });
     };
