@@ -76,11 +76,18 @@ interface IVariation {
     size?:       string;
     sku?:        string;
     _id?:        string;
+    bespoke?:    IBespoke;
 }
 
 interface IPromo {
-  promoId: string
-  discountPercentage: number
+  promoId: string;
+  discountPercentage: number;
+  adminControlledDiscount: boolean;
+}
+
+interface IBespoke {
+    isBespoke: boolean;
+    availableColors: any[];
 }
 
 
