@@ -50,7 +50,7 @@ const ProductListCard: React.FC<IProps> = (props) => {
                 </Text>
                 <View className="mt-3 flex-row items-center justify-between">
                     <Text className="px-2.5 py-1 text-xs rounded-lg bg-lightGreen">
-                        {product.categories.productGroup.split('-').join(' ')}
+                        {/* {product.categories.productGroup.split('-').join(' ')} */}
                     </Text>
 
                     <View className="flex-row">
