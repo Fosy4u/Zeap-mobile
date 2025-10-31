@@ -1,17 +1,17 @@
-interface IOrder {
+interface IOrderDetails {
     _id?:                          string;
-    order?:                        string;
+    order?:                        IOrder;
     disabled?:                     boolean;
     orderId?:                      string;
     itemNo?:                       number;
-    shop?:                         string;
+    shop?:                         IShop;
     user?:                         IUser;
     product?:                      IProduct;
     quantity?:                     number;
     sku?:                          string;
     size?:                         string;
     color?:                        string;
-    images?:                       Image[];
+    images?:                       IImage[];
     bodyMeasurements?:             any[];
     status?:                       IStatus;
     amount?:                       IAmount[];
@@ -27,6 +27,7 @@ interface IOrder {
     deliveryDate?:                 string;
     deliveryTrackingLink?:         string;
     deliveryTrackingNumber?:       string;
+    deliveryDetails?:              IDeliveryDetails;
     __v?:                          number;
 };
 
@@ -43,17 +44,41 @@ interface ICancel {
 interface IDeliveryCompany {
 };
 
+interface IDeliveryDetails {
+    address?:     string;
+    region?:      string;
+    country?:     string;
+    phoneNumber?: string;
+    firstName?:   string;
+    lastName?:    string;
+    _id?:         string;
+};
+
 interface IExpectedDate {
     min?: string;
     max?: string;
 };
 
-interface Image {
+interface IImage {
     link?:      string;
     name?:      string;
     _id?:       string;
     isDefault?: boolean;
 };
+
+interface IOrder {
+    _id?:             string;
+    orderId?:         string;
+    disabled?:        boolean;
+    user?:            string;
+    productOrders?:   string[];
+    payment?:         string;
+    deliveryDetails?: IDeliveryDetails;
+    updatedAt?:       Date;
+    createdAt?:       Date;
+    __v?:             number;
+};
+
 
 interface IProduct {
     _id?:                 string;
@@ -77,11 +102,11 @@ interface IProduct {
     variations?:          IVariation[];
     updatedAt?:           Date;
     createdAt?:           Date;
-    __v?:                 number;
     sizeStandard?:        string;
     isBespoke?:           boolean;
     isReadyMade?:         boolean;
     promo?:               IPromo;
+    __v?:                 number;
 };
 
 interface IAutoPriceAdjustment {
@@ -104,29 +129,29 @@ interface ICategories {
     fit?:          any[];
 };
 
-export interface IAge {
+interface IAge {
     ageGroup?: string;
 };
 
-export interface IColor {
+interface IColor {
     value?:  string;
-    images?: Image[];
+    images?: IImage[];
     _id?:    string;
 };
 
-export interface IPromo {
+interface IPromo {
     promoId?:            string;
     discountPercentage?: number;
-}
+};
 
-export interface ITimeLine {
+interface ITimeLine {
     date?:        string;
     description?: string;
     actionBy?:    string;
     _id?:         string;
-}
+};
 
-export interface IVariation {
+interface IVariation {
     sku?:        string;
     price?:      number;
     discount?:   number;
@@ -135,65 +160,78 @@ export interface IVariation {
     quantity?:   number;
     bespoke?:    IBespoke;
     _id?:        string;
-}
+};
 
-export interface IBespoke {
+interface IBespoke {
     isBespoke?:       boolean;
     availableColors?: any[];
-}
+};
 
-export interface IShopRevenue {
+interface IShop {
+    _id?:         string;
+    shopId?:      string;
+    user?:        string;
+    userId?:      string;
+    shopName?:    string;
+    isTailor?:    boolean;
+    isShoeMaker?: boolean;
+    disabled?:    boolean;
+    currency?:    ICurrency;
+    updatedAt?:   Date;
+    createdAt?:   Date;
+    status?:      string;
+    __v?:         number;
+};
+
+interface ICurrency {
+    name?:   string;
+    symbol?: string;
+    _id?:    string;
+};
+
+interface IShopRevenue {
     currency?: string;
     value?:    number;
     status?:   string;
-    paidAt?:   null;
-}
+    paidAt?:   string;
+};
 
-export interface IStatus {
+interface IStatus {
     name?:  string;
     value?: string;
-}
+};
 
-export interface IUser {
+interface IUser {
     _id?:                 string;
     userId?:              string;
+    uid?:                 string;
+    shopEnabled?:         boolean;
     signInCount?:         number;
     firstName?:           string;
     lastName?:            string;
-    displayName?:         string;
     disabled?:            boolean;
     isAdmin?:             boolean;
     superAdmin?:          boolean;
     email?:               string;
+    createdBy?:           string;
+    social?:              ISocial;
     emailVerified?:       boolean;
+    phoneNumberVerified?: boolean;
+    isVendor?:            boolean;
+    points?:              number;
     updatedAt?:           Date;
     createdAt?:           Date;
-    __v?:                 number;
-    uid?:                 string;
-    shopEnabled?:         boolean;
-    shopId?:              string;
-    address?:             string;
-    region?:              string;
-    country?:             string;
     phoneNumber?:         string;
-    role?:                string;
-    imageUrl?:            ImageURL;
     prefferedCurrency?:   string;
-    phoneNumberVerified?: boolean;
-    acceptMarketing?:     boolean;
-    isBlogAuthor?:        boolean;
-    social?:              Social;
-}
+    shopId?:              null;
+    isGuest?:             boolean;
+    initialPointGiven?:   boolean;
+    welcomeEmailSent?:    boolean;
+    __v?:                 number;
+};
 
-interface ImageURL {
-    link?: string;
-    name?: string;
-}
+interface ISocial {
+    _id?: string;
+};
 
-interface Social {
-    instagram?: string;
-    _id?:       string;
-}
-
-export type { IProduct, ICategories, IAmount, IAutoPriceAdjustment, ICancel, IExpectedDate };
-export default IOrder;
+export default IOrderDetails;

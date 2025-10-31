@@ -1,5 +1,5 @@
 import rootAPI from "../../../../redux/api/rootAPI";
-import { convertPointsRoute, getActiveVouchersRoute, getInactiveVouchersRoute, getPointsRoute } from "../../../../redux/api/api_route";
+import { convertPointsRoute, getActiveVouchersRoute, getInactiveVouchersRoute, getPointsRoute, getVoucherByCodeRoute } from "../../../../redux/api/api_route";
 import IPoint from "../models/point_model";
 import IVoucher from "../models/voucher_model";
 
@@ -43,6 +43,19 @@ const pointAndVoucherAPI = rootAPI.injectEndpoints({
             },
         }),
 
+        // Get Voucher by code
+        getVoucherByCode: builder.query<IVoucher, { code: string }>({
+            query: ({ code }) => ({
+                url: getVoucherByCodeRoute,
+                method: "GET",
+                params: { code },
+            }),
+            providesTags: ["Vouchers"],
+            transformResponse: (response: { data: IVoucher }) => {
+                return response.data;
+            },
+        }),
+
         // Convert points to vouchers
         convertPoints: builder.mutation<IVoucher, { points: number }>({
             query: ({ points }) => ({
@@ -63,6 +76,7 @@ export const {
     useLazyGetPointsQuery,
     useLazyGetActiveVouchersQuery,
     useLazyGetInactiveVouchersQuery,
+    useLazyGetVoucherByCodeQuery,
     useConvertPointsMutation,
 } = pointAndVoucherAPI;
 

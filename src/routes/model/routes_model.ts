@@ -16,75 +16,79 @@ type RootNavigationStackModel = {
   signUpScreen: undefined;
   loginInfoScreen: undefined;
 
-    // USERS
-    // homeScreen: undefined;
-    homeScreen: {
-        screen?: "Cart" | "Dashboard" | "Saved" | "Profile";
-      };
+  // USERS
+  // homeScreen: undefined;
+  homeScreen: {
+    screen?: "Dashboard" | "Cart" | "Saved" | "Profile";
+  };
 
-    inviteFriendScreen: undefined;
+  inviteFriendScreen: undefined;
 
-    allCategoryScreen: undefined;
-    productListScreen: { screenTitle: string } | undefined;
-    productDetailScreen: { productID: string } | undefined;
-    measurementScreen: undefined;
-    reviewListScreen: {
-      reviewAndRating: IReviewAndRating,
-      reviewIndicators: IReviewIndicator[],
-      productID: string
-    };
+  allCategoryScreen: undefined;
+  productListScreen: { screenTitle: string } | undefined;
+  productDetailScreen: undefined;
+  measurementScreen: undefined;
+  reviewListScreen: {
+    reviewAndRating: IReviewAndRating,
+    reviewIndicators: IReviewIndicator[],
+    productID: string
+  };
 
-    // Address Routes
-    addressScreen: undefined;
-    editDeliveryAddressScreen: undefined;
+  // Address Routes
+  addressScreen: undefined;
+  editDeliveryAddressScreen: undefined;
 
-    checkoutScreen: undefined;
-    deliveryMethodScreen: undefined;
-    
-    paystackPaymentScreen: undefined;
-    // paymentMethodScreen: undefined;
+  checkoutScreen: undefined;
+  deliveryMethodScreen: undefined;
+  
+  paystackPaymentScreen: undefined;
+  // paymentMethodScreen: undefined;
 
-    profileSetupScreen: undefined;
-    personalInformationScreen: undefined;
-    editAccountDetailsScreen: undefined;
-    searchItemScreen: undefined;
-    searchResultsScreen: undefined;
-    userNotificationsScreen: undefined;
-    userDashboardScreen: undefined;
+  profileSetupScreen: undefined;
+  personalInformationScreen: undefined;
+  editAccountDetailsScreen: undefined;
+  searchItemScreen: undefined;
+  searchResultsScreen: undefined;
+  userNotificationsScreen: undefined;
+  userDashboardScreen: undefined;
 
-    // Point & Voucher
-    pointAndVoucherScreen: undefined;
+  // Point & Voucher
+  pointAndVoucherScreen: {
+    from: string,
+    code?: string,
+  } | undefined;
 
-    // Review & Rating
-    reviewAndRatingScreen: undefined;
-    rateAndReviewScreen: { productData: any } | undefined;
+  // Review & Rating
+  reviewAndRatingScreen: undefined;
+  rateAndReviewScreen: { productData: any } | undefined;
 
-    // Settings
-    settingsScreen: undefined;
-    languageSettingsScreen: undefined;
-    currencySettingsScreen: undefined;
-    notificationSettingsScreen: undefined;
-    securitySettingsScreen: undefined;
-    changePasswordSettingsScreen: undefined;
+  // Settings
+  settingsScreen: undefined;
+  languageSettingsScreen: undefined;
+  currencySettingsScreen: undefined;
+  notificationSettingsScreen: undefined;
+  securitySettingsScreen: undefined;
+  changePasswordSettingsScreen: undefined;
 
-    // Order Routes
-    ordersScreen: undefined;
-    orderDetailsScreen: undefined;
+  // Order Routes
+  ordersScreen: undefined;
+  orderDetailsScreen: {
+    from: string,
+    orderId: string,
+    itemNumber?: string | undefined,
+  } | undefined;
 
-    
-
-    // VENDORS
-    vendorHomeScreen: {
-      screen?: "Dashboard" | "Cart" | "Saved" | "Profile";
-    };
-    vendorDashboardScreen: undefined;
-    marketScreen: undefined;
-    shopSetupScreen: undefined;
-    vendorNotificationsScreen: undefined;
-    overviewScreen: undefined;
-    promoScreen: undefined;
-    promotionScreen: undefined;
-    paymentScreen: undefined;
+  // VENDORS
+  vendorHomeScreen: {
+    screen?: "Dashboard" | "Products" | "Orders" | "Profile" | "Market";
+    shopId?: string;
+  };
+  shopSetupScreen: undefined;
+  vendorNotificationsScreen: undefined;
+  overviewScreen: undefined;
+  promoScreen: undefined;
+  promotionScreen: undefined;
+  paymentScreen: undefined;
 
   vendorProductsScreen: undefined;
   vendorProductDetailsScreen: {productID: string} | undefined;
@@ -98,8 +102,10 @@ type RootNavigationStackModel = {
   orderRequestsScreen: undefined;
   OrdersScreen: {screenTitle: string} | undefined;
   vendorOrderDetailsScreen: {
-    orderId: string;
-  };
+    from: string,
+    orderId: string,
+    itemNumber?: string | undefined,
+  } | undefined;
 };
 
 export default RootNavigationStackModel;

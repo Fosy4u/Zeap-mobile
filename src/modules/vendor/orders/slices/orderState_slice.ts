@@ -2,10 +2,11 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import IOrderState from "../models/orderState_model";
 import IOrder from "../models/oder_model";
 import IOrderHistory from "../models/orderHistory_model";
+import IOrderDetails from "../models/orderDetails_model";
 
 const initialState: IOrderState = {
     orders: [],
-    order: {},
+    order: {} as IOrderDetails,
     orderHistory: {},
     showUpdateOrderBottomSheet: false,
     loadingMessage: "",
@@ -19,7 +20,7 @@ const orderSlice = createSlice({
         setOrders: (state: IOrderState, action: PayloadAction<IOrder[]>) => {
             state.orders = action.payload;
         },
-        setOrder: (state: IOrderState, action: PayloadAction<IOrder>) => {
+        setOrder: (state: IOrderState, action: PayloadAction<IOrderDetails>) => {
             state.order = action.payload;
         },
         setOrderHistory: (state: IOrderState, action: PayloadAction<IOrderHistory>) => {

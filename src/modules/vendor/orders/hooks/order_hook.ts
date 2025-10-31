@@ -1,8 +1,8 @@
 import { useDispatch, useSelector } from "react-redux";
-import { useLazyGetOrderHistoryQuery, useLazyGetOrdersQuery, useUpdateOrderStatusMutation } from "../apis/order_api";
-import { setOrder, setOrderHistory, setOrders, setShowUpdateOrderBottomSheet } from "../slices/orderState_slice";
+import { useLazyGetOrderDetailsQuery, useLazyGetOrderHistoryQuery, useLazyGetOrdersQuery, useUpdateOrderStatusMutation } from "../apis/order_api";
+import { setIsLoading, setLoadingMessage, setOrder, setOrderHistory, setOrders, setShowUpdateOrderBottomSheet } from "../slices/orderState_slice";
 import handleError from "../../../general/hooks/errorHandler_hook";
-import { setIsLoading, setLoadingMessage } from "../../../general/slices/general_slice";
+import { setIsLoading as generalSetIsLoading, setLoadingMessage as generalSetLoadingMessage } from "../../../general/slices/general_slice";
 import { ArrowRotateRight, TickSquare, Truck, TruckFast } from "iconsax-react-native";
 import { useEffect, useRef, useState } from "react";
 import { RootState } from "../../../../redux/store/store";
@@ -10,6 +10,7 @@ import IOrderUpdate from "../models/orderUpdate_model";
 import { Dimensions } from "react-native";
 import * as Animatable from 'react-native-animatable';
 import { INextStatus } from "../models/orderHistory_model";
+import { getVendorOrderDetailsRoute } from "../../../../redux/api/api_route";
 
 interface IStatus {
     [key: string]: {
@@ -67,6 +68,7 @@ const useOrderHook = () => {
     };
 
     const [getOrders] = useLazyGetOrdersQuery();
+    const [getOrderDetails] = useLazyGetOrderDetailsQuery();
     const [updateOrderStatus] = useUpdateOrderStatusMutation();
     const [getOrderHistory] = useLazyGetOrderHistoryQuery();
 
@@ -90,8 +92,8 @@ const useOrderHook = () => {
 
     // Handle get all orders
     const handleGetOrders = async () => {
-        dispatch(setLoadingMessage("Fetching orders..."));
-        dispatch(setIsLoading(true));
+        dispatch(generalSetLoadingMessage("Fetching orders..."));
+        dispatch(generalSetIsLoading(true));
 
         try {
             const orderResponse = await getOrders().unwrap();
@@ -101,6 +103,27 @@ const useOrderHook = () => {
                 ? dispatch(setOrders(orderResponse))
                 : dispatch(setOrders([]));
             
+        } catch (error) {
+            handleError(error);
+        } finally {
+            dispatch(generalSetIsLoading(false));
+            dispatch(generalSetLoadingMessage(""));
+        };
+    };
+
+    // Handle get order details
+    const handleGetOrderDetails = async (orderID: string) => {
+        dispatch(setLoadingMessage("Fetching order details..."));
+        dispatch(setIsLoading(true));
+
+        try {
+            const orderDetailsResponse = await getOrderDetails({orderID}).unwrap();
+            // console.log("RESPONSE::: ", orderDetailsResponse);
+
+            if (orderDetailsResponse) {
+                dispatch(setOrder(orderDetailsResponse));
+            }
+
         } catch (error) {
             handleError(error);
         } finally {
@@ -117,14 +140,13 @@ const useOrderHook = () => {
         const queryParams = {
             productOrder_id,
         };
-        // console.log("QUERY PARAMS::: ", queryParams);
+        console.log("QUERY PARAMS::: ", queryParams);
 
         try {
             const orderHistoryResponse = await getOrderHistory(queryParams).unwrap();
             console.log("RESPONSE::: ", orderHistoryResponse);
 
             (orderHistoryResponse) && dispatch(setOrderHistory(orderHistoryResponse));
-            
         } catch (error) {
             handleError(error);
         } finally {
@@ -142,11 +164,11 @@ const useOrderHook = () => {
             status: status,
             productOrder_id: order._id!,
         };
-        console.log("REQUEST PAYLOAD::: ", requestPayload);
+        // console.log("REQUEST PAYLOAD::: ", requestPayload);
 
         try {
             const orderResponse = await updateOrderStatus(requestPayload).unwrap();
-            console.log("RESPONSE::: ", orderResponse);
+            // console.log("RESPONSE::: ", orderResponse);
 
             (orderResponse) && (
                 dispatch(setOrder(orderResponse)),
@@ -167,10 +189,12 @@ const useOrderHook = () => {
     return {
         status,
         handleGetOrders,
+        handleGetOrderDetails,
         handleGetOrderHistory,
         selectedStatus, setSelectedStatus, handleUpdateOrderStatus,
         modalHeight, slideAnimation, handleCloseUpdateOrderBottomSheet,
     };
 };
 
+export type { IStatus };
 export default useOrderHook;

@@ -1,5 +1,5 @@
 import React, {useCallback, useEffect, useMemo, useRef} from 'react';
-import { Animated, Image, SafeAreaView, StatusBar, Text, TextInput, View, FlatList, TouchableOpacity } from 'react-native';
+import { Image, SafeAreaView, StatusBar, Text, TextInput, View, FlatList, TouchableOpacity } from 'react-native';
 import {ArrowLeft, ArrowRight, SearchNormal1} from 'iconsax-react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {RootState} from '../../../../redux/store/store.ts';
@@ -11,9 +11,9 @@ import RootNavigationStackModel from '../../../../routes/model/routes_model.ts';
 import DynamicFilterBottomSheetComponent from '../components/dynamicFilterBottomSheet_component.tsx';
 import ProductListCard from '../components/productListCard_component';
 import useFilterAndSearchHook from '../hooks/filterAndSearch_hook.ts';
-import EmptyListComponent from '../components/emptyList_component.tsx';
 import AppLoader from '../../../general/components/appLoader.tsx';
 import { setSearchPhrase } from '../slices/product_slice.ts';
+import EmptyListComponent from '../../../general/components/emptyList_component.tsx';
 
 interface IProps {
   route: RouteProp<RootNavigationStackModel, 'productListScreen'>;
@@ -22,7 +22,7 @@ interface IProps {
 const ProductListScreen: React.FC<IProps> = ({ route }) => {
   const { searchPhrase, dynamicFilterOptions, allProducts, isLoading, loadingMessage } = useSelector((state: RootState) => state.productState);
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
-  const { screenTitle } = route.params || {};
+  const screenTitle: string = route.params?.screenTitle ?? "";
   const dispatch = useDispatch();
 
   // Import Hooks
@@ -94,7 +94,7 @@ const ProductListScreen: React.FC<IProps> = ({ route }) => {
             keyExtractor={(_, index) => `${index}-item.productId`}
             showsVerticalScrollIndicator={false}
             className="h-auto w-full mt-3"
-            ListEmptyComponent={<EmptyListComponent screenTitle={screenTitle} />}
+            ListEmptyComponent={<EmptyListComponent message={screenTitle + " product yet."} />}
             contentContainerStyle={{ flexGrow: 1 }}
           />
 

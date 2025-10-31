@@ -13,7 +13,7 @@ import { setProductID } from '../../products/slices/product_slice';
 import useGeneralHook from '../../../general/hooks/general_hook';
 import formatCurrency from '../../../../utils/formatCurrency';
 import ProductCardComponent from '../../../general/components/productCard_component.tsx';
-import EmptyListComponent from '../../products/components/emptyList_component.tsx';
+import EmptyListComponent from '../../../general/components/emptyList_component';
 
 
 const CartScreen = () => {

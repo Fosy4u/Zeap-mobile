@@ -1,22 +1,36 @@
-import { ImageSourcePropType } from "react-native";
-
-interface IPaymentState {
-    payments: IPayment[];
-    tabs: string[];
-    selectedTab: string;
-};
-
 interface IPayment {
-    id: string;
-    title: string;
-    description: string;
-    date: string;
-    status: string;
-    amount: number;
-    productName: string;
-    productImage: ImageSourcePropType | undefined,
-
+    productOrder_id?:  string;
+    purchaseDate?:     Date;
+    buyerPaid?:        BuyerPaid;
+    shopRevenue?:      ShopRevenue;
+    purchasedProduct?: PurchasedProduct;
 };
 
-export type { IPayment };
-export default IPaymentState;
+interface BuyerPaid {
+    currency?: string;
+    value?:    number;
+    _id?:      string;
+};
+
+interface PurchasedProduct {
+    title?:       string;
+    productId?:   string;
+    productType?: string;
+    sku?:         string;
+    images?:      Image[];
+};
+
+interface Image {
+    link?: string;
+    name?: string;
+    _id?:  string;
+};
+
+interface ShopRevenue {
+    currency?: string;
+    value?:    number;
+    status?:   string;
+    paidAt?:   null;
+};
+
+export default IPayment;

@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import {Image, SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View} from "react-native";
-import {Add, ArrowLeft, ArrowRight, Edit2, Star1} from "iconsax-react-native";
+import {Add, ArrowLeft, ArrowRight, Edit2} from "iconsax-react-native";
 import {useNavigation} from "@react-navigation/native";
 import {NativeStackNavigationProp} from "@react-navigation/native-stack";
 import RootNavigationStackModel from "../../../../routes/model/routes_model.ts";
@@ -13,7 +13,7 @@ import FastImage from 'react-native-fast-image';
 import { RootState } from '../../../../redux/store/store.ts';
 import { setProduct, setProductMode, setSelectedStep } from '../slices/vendorProductState_slice.ts';
 import IVendorProductDetails from '../models/vendorProductDetails_model.ts';
-import formatCurrency from '../../../../utils/formatCurrency.ts';
+
 
 
 const VendorProductsScreen = () => {

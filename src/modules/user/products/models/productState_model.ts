@@ -65,7 +65,7 @@ interface ICategory {
     name: string;
     totalCount: number;
     color: string[];
-    image: string;
+    image: ImageSourcePropType;
 };
 
 export type { ICategory };
