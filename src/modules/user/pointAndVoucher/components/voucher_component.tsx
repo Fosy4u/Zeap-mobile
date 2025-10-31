@@ -4,11 +4,15 @@ import React from 'react'
 import { ArrowLeft } from 'iconsax-react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../../../redux/store/store';
-import { setSelectedVoucher, setSelectedVoucherType, setShowVoucherDetailBottomSheet } from '../slices/pointAndVoucher_slice';
+import { setSelectedVoucher, setSelectedVoucherType } from '../slices/pointAndVoucher_slice';
 import formatCurrency from '../../../../utils/formatCurrency';
 import formatDate from '../../../../utils/formatDate';
 
-const VoucherComponent = () => {
+type VoucherComponentProps = {
+  setShowBottomSheetModal: (value: boolean) => void;
+}
+
+const VoucherComponent: React.FC<VoucherComponentProps> = ({ setShowBottomSheetModal }) => {
     // component 
   const { activeVouchers, inactiveVouchers, selectedVoucherType } = useSelector((state: RootState) => state.pointAndVoucherState);
   const dispatch = useDispatch();
@@ -33,7 +37,7 @@ const VoucherComponent = () => {
         <View key={ index } className="mt-6 px-4 flex-row items-end">
           {/* Left colored bar */}
           <ImageBackground
-            source={!item.isUsed ? require('../../../../../assets/images/voucher_left_active_background.png') : require('../../../../../assets/images/voucher_left_inactive_background.png')}
+            source={selectedVoucherType === "Active" ? require('../../../../../assets/images/voucher_left_active_background.png') : require('../../../../../assets/images/voucher_left_inactive_background.png')}
             resizeMode="contain"
             className="h-[155px] w-[100px] rounded-l-2xl overflow-hidden"
           />
@@ -52,7 +56,7 @@ const VoucherComponent = () => {
             <TouchableOpacity
                 onPress={ () => {
                   dispatch(setSelectedVoucher(item));
-                  dispatch(setShowVoucherDetailBottomSheet(true));
+                  setShowBottomSheetModal(true);
                 } }
                 className="mt-3 flex-row items-center"
             >

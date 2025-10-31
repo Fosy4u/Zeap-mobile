@@ -8,9 +8,9 @@ import { useState } from "react";
 import handleError from "../../../general/hooks/errorHandler_hook";
 import { useStripe } from "@stripe/stripe-react-native";
 import { setPaymentReference } from "../slices/payment_slice";
+import IPaymentReference from "../models/paymentReference_model";
 
 const usePaymentHook = () => {
-    const { paymentReference } = useSelector((state: RootState) => state.paymentState);
     const { userData } = useSelector((state: RootState) => state.profileState );
     const { selectedDeliveryFee } = useSelector((state: RootState) => state.cartState);
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
@@ -50,13 +50,13 @@ const usePaymentHook = () => {
                 
                 // Check payment currency
                 const paymentCurrency = paymentReferenceResponse?.currency || "NGN";
+                console.log("PAYMENT CURRENCY::: ", paymentCurrency);
 
                 if (paymentCurrency === "NGN") {
-                    // TODO Show Paystack bottomsheet
                     navigation.navigate("paystackPaymentScreen");
                 } else {
-                    // Call "handleStripePatement"
-                    handleStripePatement();
+                    // Pass the freshly fetched client secret to avoid relying on selector update timing
+                    await handleStripePayment(paymentReferenceResponse, paymentReferenceResponse?.stripeClientSecret);
                 }
             }
         } catch (error) {
@@ -69,9 +69,10 @@ const usePaymentHook = () => {
     };
 
     // Handle Stripe payment
-    const handleStripePatement = async () => {
-        // Initialize the payment sheet
-        const stripeClientSecret = paymentReference?.stripeClientSecret!;
+    const handleStripePayment = async (paymentReference?: IPaymentReference, clientSecret?: string) => {
+        // Initialize the payment sheet. Prefer the provided clientSecret (fresh), otherwise fallback to selector.
+        const stripeClientSecret = clientSecret ?? paymentReference?.stripeClientSecret!;
+        console.log("STRIPE CLIENT SECRET::: ", stripeClientSecret);
         const { error: paymentSheetError } = await initPaymentSheet({
             paymentIntentClientSecret: stripeClientSecret,
             merchantDisplayName: "Zeaper",
@@ -103,7 +104,7 @@ const usePaymentHook = () => {
     const handlePaymentSuccess = async (reference: string) => {
         setLoadingMessage("Verifying payment...");
         setIsLoading(true);
-        // console.log("PAYMENT REFERENCE::: ", reference);
+        console.log("PAYMENT REFERENCE::: ", reference);
 
         // Verify payment
         try {

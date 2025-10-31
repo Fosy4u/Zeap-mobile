@@ -2,10 +2,12 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import IOrder from "../models/order_model";
 import IOrderState from "../models/orderState_model";
 import IOrderHistory from "../models/orderHistory_model";
+import IOrderDetails, { IStatus } from "../models/orderDetails_model";
 
 
 const initialState: IOrderState = {
-    orderDetails: {} as IOrder,
+    orderID: "",
+    orderDetails: {} as IOrderDetails,
     orders: [],
     filteredOrders: [],
     orderHistory: {
@@ -21,7 +23,7 @@ const initialState: IOrderState = {
             value: ""
         }
     },
-    showStatusHistory: false,
+    selectedOrderStatus: {} as IStatus,
     isLoading: false,
     loadingMessage: "",
 };
@@ -30,7 +32,10 @@ const orderSlice = createSlice({
     name: "orderState",
     initialState,
     reducers: {
-        setOrderDetails: (state: IOrderState, action: PayloadAction<IOrder>) => {
+        setOrderID: (state: IOrderState, action: PayloadAction<string>) => {
+            state.orderID = action.payload;
+        },
+        setOrderDetails: (state: IOrderState, action: PayloadAction<IOrderDetails>) => {
             state.orderDetails = action.payload;
         },
         setOrders: (state: IOrderState, action: PayloadAction<IOrder[]>) => {
@@ -42,8 +47,8 @@ const orderSlice = createSlice({
         setOrderHistory: (state: IOrderState, action: PayloadAction<IOrderHistory>) => {
             state.orderHistory = action.payload;
         },
-        setShowStatusHistory: (state: IOrderState, action: PayloadAction<boolean>) => {
-            state.showStatusHistory = action.payload;
+        setSelectedOrderStatus: (state: IOrderState, action: PayloadAction<IStatus>) => {
+            state.selectedOrderStatus = action.payload;
         },
         setIsLoading: (state: IOrderState, action: PayloadAction<boolean>) => {
             state.isLoading = action.payload;
@@ -55,11 +60,12 @@ const orderSlice = createSlice({
 });
 
 export const {
+    setOrderID,
     setOrderDetails,
     setOrders,
     setFilteredOrders,
     setOrderHistory,
-    setShowStatusHistory,
+    setSelectedOrderStatus,
     setIsLoading,
     setLoadingMessage,
 } = orderSlice.actions;

@@ -71,7 +71,7 @@ const SizeGuideBottomSheet = () => {
                     >
                         <Image
                             className="h-[30px] w-[30px]"
-                        source={ require("../../../../../assets/images/close.png") }
+                            source={ require("../../../../../assets/images/close.png") }
                         />
                     </TouchableOpacity>
                 </View>

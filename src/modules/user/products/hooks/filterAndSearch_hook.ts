@@ -26,16 +26,22 @@ const useFilterAndSearchHook = () => {
         setSelectedFilters((prev) => {
             const current = prev[filterName] || [];
             const isSelected = current.includes(optionValue);
+            console.log("FILE NAME::: ", filterName);
+            console.log("OPTION VALUE::: ", optionValue);
 
             // Filter logic: if item is selected, remove it; if not, add it
             const updated = isSelected
                 ? current.filter((value: string | number) => value !== optionValue)
                 : [...current, optionValue];
 
-            return {
+
+            const selectedFilter = {
                 ...prev,
                 [filterName]: updated
             };
+            console.log("SELECTED FILTER::: ", selectedFilter);
+
+            return selectedFilter;
         });
     };
 
@@ -60,17 +66,17 @@ const useFilterAndSearchHook = () => {
     };
 
     // Handle get filtered products
-    const handleGetFilteredProducts = async({ screenTitle = "Products", setShowBottomSheetModal }: { screenTitle: string; setShowBottomSheetModal?: (value: boolean) => void }) => {
+    const handleGetFilteredProducts = async({ screenTitle, setShowBottomSheetModal }: { screenTitle: string; setShowBottomSheetModal?: (value: boolean) => void }) => {
         dispatch(setLoadingMessage(`Getting ${screenTitle.toLowerCase()}...`));
         dispatch(setIsLoading(true));
-
+        
         // Format selected filters to match API expected params
         const formattedFilters: Record<string, (string | number)> = {};
         Object.keys(selectedFilters).forEach((eachKey) => {
-            // Convert first letter to lowercase e.g., "product Type" to "product Type"
+            // Convert first letter to lowercase e.g., "Product Type" to "product Type"
             let formattedKey = eachKey.charAt(0).toLowerCase() + eachKey.slice(1);
 
-            // Remove spaces from key names
+            // Remove spaces from key names e.g., "product Type" to "productType"
             formattedKey = formattedKey.replace(/\s+/g, '');
 
             // Join array values as comma-separated string
@@ -80,7 +86,7 @@ const useFilterAndSearchHook = () => {
 
         const queryParams = {
             ...formattedFilters,
-            limit: 20,
+            limit: 5,
             pageNumber: 1
         };
         console.log("REQUEST DATA::: ", queryParams);
