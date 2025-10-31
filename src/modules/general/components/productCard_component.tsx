@@ -15,7 +15,8 @@ interface IProductCardItemProps {
 }
 
 const ProductCardComponent: React.FC<IProductCardItemProps> = (props) => {
-     const { product, handleOnPress, orientation } = props;
+    const { product, handleOnPress, orientation } = props;
+
     return (
         <TouchableOpacity
             onPress={ handleOnPress }
@@ -39,7 +40,9 @@ const ProductCardComponent: React.FC<IProductCardItemProps> = (props) => {
             <View className={`mt-3 ${ orientation === "Horizontal" ? "w-[160px]" : "" }`}>
                 <Text className={`text-gray-800 ${ orientation === "Horizontal" ? "text-base" : "text-sm" }`}>{ FormatWords.truncateWords(product.title, 30) }</Text>
                 <View className="mt-1.5 flex-row items-center justify-between">
-                    <Text className="px-2.5 py-1 text-xs rounded-lg bg-lightGreen">{ product.categories.productGroup.split("-").join(" ") }</Text>
+                    <Text className="px-2.5 py-1 text-xs rounded-lg bg-lightGreen">
+                        {/* { product.categories.productGroup.split("-").join(" ") } */}
+                    </Text>
 
                     <View className="flex-row">
                         <Star1 color="#E4A01C" size={18} variant="Bold" className="mr-0.5" />
