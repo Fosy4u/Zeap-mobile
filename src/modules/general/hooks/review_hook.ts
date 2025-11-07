@@ -11,8 +11,8 @@ import IReviewIndicator from "../models/reviewIndicator_model";
 import IReviewAndRating from "../models/review_model";
 import { setReviewAndRating } from "../../vendor/products/slices/vendorProductState_slice";
 
-const useReviewHook = () => {
-    const { product, reviewAndRating} = useSelector((state: RootState) => state.vendorProductState);
+const useReviewHook = (productId?: string) => {
+    const { reviewAndRating} = useSelector((state: RootState) => state.vendorProductState);
     const { userData } = useSelector((state: RootState) => state.profileState);
     const dispatch = useDispatch();
 
@@ -46,14 +46,14 @@ const useReviewHook = () => {
         dispatch(setIsLoading(true));
 
         const requestData = {
-            productId: product?.productId!,
+            productId: productId,
             displayName: `${userData.firstName} ${userData.lastName}`,
             title: data.title,
             rating: data.rating,
             imageMatch: true,
             review: data.review,
         }
-        // console.log("REQUEST DATA::: ", requestData);
+        console.log("REQUEST DATA::: ", requestData);
 
         try {
             const reviewResponse = await createReview(requestData).unwrap();

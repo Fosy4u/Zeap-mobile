@@ -19,6 +19,8 @@ const ProductListCard: React.FC<IProps> = (props) => {
     const { product } = props;
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const dispatch = useDispatch<AppDispatch>();
+    // console.log("PRODUCT LIST ITEM::: ", product);
+    
 
     return (
         <TouchableOpacity
@@ -45,15 +47,15 @@ const ProductListCard: React.FC<IProps> = (props) => {
             </View>
 
             <View className="w-[160px] mt-3">
-                <Text className="font-montserratMedium text-sm text-gray-800">
+                <Text className="font-montserratMedium text-base text-gray-800">
                     {product.title}
                 </Text>
                 <View className="mt-3 flex-row items-center justify-between">
                     <Text className="px-2.5 py-1 text-xs rounded-lg bg-lightGreen">
-                        {/* {product.categories.productGroup.split('-').join(' ')} */}
+                        { product.categories?.productGroup?.split("-").join(" ") || "N/A" }
                     </Text>
 
-                    <View className="flex-row">
+                    {/* <View className="flex-row">
                         <Star1
                             color="#E4A01C"
                             size={18}
@@ -61,7 +63,7 @@ const ProductListCard: React.FC<IProps> = (props) => {
                             className="mr-0.5"
                         />
                         <Text>4.3</Text>
-                    </View>
+                    </View> */}
                 </View>
                 <View className="flex-row items-center">
                     <Text className="mt-2.5 text-base font-medium text-gray-900">{ product.variations![0].discount ? formatCurrency(product?.variations![0].discount || "0", product?.variations![0].currency || "NGN", true) : formatCurrency(product?.variations![0].price || "0", product?.variations![0].currency || "NGN", true) }</Text>

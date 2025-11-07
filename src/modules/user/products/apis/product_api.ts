@@ -1,4 +1,4 @@
-import { addProductToCartRoute, dynamicFiltersRoute, liveProductsRoute, newestProductsRoute, popularProductsRoute, productPromotionRoute, promoProductRoute, recentlyViewedProductsRoute, recommendedProductsRoute, searchProductsRoute, sizeGuideRoute } from "../../../../redux/api/api_route.ts";
+import { addProductToCartRoute, dynamicFiltersRoute, filterProductsRoute, productPromotionRoute, promoProductRoute, recentlyViewedProductsRoute, sizeGuideRoute } from "../../../../redux/api/api_route.ts";
 import rootAPI from "../../../../redux/api/rootAPI.ts";
 import ICart from "../../cart/models/cart_model";
 import IDynamicFilter from "../models/dynamicFilter_model.ts";
@@ -24,21 +24,22 @@ const productAPI = rootAPI.injectEndpoints({
     endpoints: (builder) => ({
 
         // Get Filtered Products
-        getFilteredProducts: builder.query<{ products: IProduct[], dynamicFilters: IDynamicFilter[] }, {queryParams: IProductFilterQueryParams, screenTitle: string}>({
+        getFilteredProducts: builder.query<IProduct[], {queryParams: IProductFilterQueryParams, screenTitle: string}>({
             query: ({queryParams, screenTitle}) => {
+                // console.log("QUERY SCREEN TITLE::: ", screenTitle);
                 
                 // Determine URL based on screenTitle
                 const url = (screenTitle === "Newest Products")
-                ? newestProductsRoute
+                ? `${filterProductsRoute}/newest`
                 : (screenTitle === "Popular Products")
-                ? popularProductsRoute
+                ? `${filterProductsRoute}/mostPopular`
                 : (screenTitle === "Recommended Products")
-                ? recommendedProductsRoute
+                ? `${filterProductsRoute}/recommended`
                 : (screenTitle === "Search Products")
-                ? searchProductsRoute
+                ? `${filterProductsRoute}/searchProducts`
                 : (screenTitle === "Recently Viewed")
                 ? recentlyViewedProductsRoute
-                : liveProductsRoute; // Default to all live products
+                : filterProductsRoute; // Default to all products
 
                 return ({
                     url,
@@ -47,8 +48,8 @@ const productAPI = rootAPI.injectEndpoints({
                 })
             },
             providesTags: ["Products"],
-            transformResponse: (response: { data: { products: IProduct[], dynamicFilters: IDynamicFilter[] } }) => {
-                return response.data;
+            transformResponse: (response: { data: { products: IProduct[]} }) => {
+                return response.data.products;
             }
         }),
 
@@ -118,14 +119,19 @@ const productAPI = rootAPI.injectEndpoints({
         }),
 
         // Get Dynamic Filter Options
-        getDynamicFilterOptions: builder.query<IDynamicFilter[], void>({
-            query: () => ({
-                url: dynamicFiltersRoute,
-                method: "GET",
-            }),
+        getDynamicFilterOptions: builder.query<IDynamicFilter[], {queryParams: any}>({
+            query: ({queryParams}) => {
+                console.log("DYNAMIC FILTER QUERY::: ", queryParams);
+
+                return ({
+                    url: dynamicFiltersRoute,
+                    method: "GET",
+                    params: removeUndefined(queryParams),
+                });
+            },
             providesTags: ["DynamicFilterOptions"],
-            transformResponse: (response: { data: IDynamicFilter[] }) => {
-                return response.data;
+            transformResponse: (response: { data: { dynamicFilters: IDynamicFilter[] } }) => {
+                return response.data.dynamicFilters;
             },
         }),
     }),
