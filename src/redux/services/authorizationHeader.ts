@@ -15,7 +15,7 @@ const AuthorizationHeader = async (headers: Headers): Promise<Headers> => {
         if (currentUser) {
             // Get fresh token from Firebase
             token = await getIdToken(currentUser, true); // ✅ 3.  modular auth instance
-            console.log("REFRESHED TOKEN::: ", token);
+            // console.log("REFRESHED TOKEN::: ", token);
             
             // Store the token
             await storeToken(token);

@@ -11,6 +11,7 @@ import useReviewHook from '../hooks/review_hook';
 import IReviewAndRating from '../models/review_model';
 import RatingCardComponent from './ratingCard_component';
 import formatDate from '../../../utils/formatDate';
+import { timeAgo } from '../../../utils/formatTime';
 
 interface IProps {
   reviewAndRating: IReviewAndRating;
@@ -25,7 +26,7 @@ const ReviewComponent: React.FC<IProps> = ({ reviewAndRating, productID, loading
   const {
     onSubmit, handleSubmit, isLoadingAddReview, control, errors,
     reviewIndicators
-  } = useReviewHook();
+  } = useReviewHook(productID);
   const { handleReviewLike, handleReviewDislike } = useVendorProductHook();
 
 
@@ -55,7 +56,7 @@ const ReviewComponent: React.FC<IProps> = ({ reviewAndRating, productID, loading
                   <Text className="font-medium">{ review.displayName! }</Text>
                   <View className="mt-1.5 flex-row items-center">
                     <Text>Posted: </Text>
-                    <Text>{ review.updatedAt ? formatDate(review.updatedAt!.toString()) : '' }</Text>
+                    <Text>{ review.updatedAt ? timeAgo(review.updatedAt!.toString()) : '' }</Text>
                   </View>
                 </View>
               </View>
@@ -222,4 +223,3 @@ const ReviewComponent: React.FC<IProps> = ({ reviewAndRating, productID, loading
 }
 
 export default ReviewComponent;
-

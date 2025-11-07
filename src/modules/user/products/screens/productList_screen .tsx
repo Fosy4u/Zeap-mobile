@@ -26,7 +26,7 @@ const ProductListScreen: React.FC<IProps> = ({ route }) => {
   const dispatch = useDispatch();
 
   // Import Hooks
-  const { selectedFilters, toggleCheckboxOption, handleSubmit, handleGetFilteredProducts, handlePrevAndNextPagination } = useFilterAndSearchHook();
+  const { selectedFilters, toggleCheckboxOption, handleSubmit, handleGetFilteredProducts, handleGetDynamicFilterOptions, handlePrevAndNextPagination, clearAllFilters } = useFilterAndSearchHook();
 
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const snapPoints = useMemo(() => ['100%'], []);
@@ -41,7 +41,23 @@ const ProductListScreen: React.FC<IProps> = ({ route }) => {
 
   useEffect(() => {
     handleGetFilteredProducts({ screenTitle: screenTitle || "Products", setShowBottomSheetModal });
+    handleGetDynamicFilterOptions({});
   }, [selectedFilters]);
+
+  useEffect(() => {
+    if (screenTitle === "Shoes") {
+      toggleCheckboxOption("Main", "Footwear");
+    }
+    if (screenTitle === "Female Clothings") {
+      toggleCheckboxOption("Main", "Female");
+    }
+    if (screenTitle === "Male Clothings") {
+      toggleCheckboxOption("Main", "Male");
+    }
+    if (screenTitle === "Accessories" || screenTitle === "Bags") {
+      toggleCheckboxOption("Main", "Accessories");
+    }
+  }, [screenTitle]);
 
   return (
     <GestureHandlerRootView>
@@ -125,6 +141,7 @@ const ProductListScreen: React.FC<IProps> = ({ route }) => {
             setShowBottomSheetModal={setShowBottomSheetModal}
             selectedFilters={selectedFilters}
             toggleCheckboxOption={toggleCheckboxOption}
+            clearAllFilters={clearAllFilters}
             dynamicFilterOptions={dynamicFilterOptions}
             isloading={isLoading}
             loadingMessage={loadingMessage}

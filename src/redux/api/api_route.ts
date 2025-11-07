@@ -31,17 +31,13 @@ const bodyMeasurementEnumsRoute = "/bodyMeasurementEnums";
 const bodyMeasurementGuideRoute = "/bodyMeasurementGuide/bespoke";
 
 // Product Routes
-const liveProductsRoute = "/products/live";
-const newestProductsRoute = "/products/live/newest";
-const popularProductsRoute = "/products/live/mostPopular";
-const recommendedProductsRoute = "/products/live/recommended";
-const searchProductsRoute = "/products/live/searchProducts";
+const filterProductsRoute = "/products/live";
 const addProductToCartRoute = "/basket/product/add";
 const promoProductRoute = "/promos/live";
 const productPromotionRoute = "/product/promo";
 const recentlyViewedProductsRoute = "/products/recentViews";
 const sizeGuideRoute = "/bodyMeasurementGuide/readyMade";
-const dynamicFiltersRoute = "/products/dynamicFilters";
+const dynamicFiltersRoute = "/products/list/dynamicFilters";
 
 // Order 
 const getOrdersRoute = "/orders/authUser/buyer";
@@ -111,16 +107,12 @@ export {
     bodyMeasurementGuideRoute,
 
     // Product Routes exports
-    liveProductsRoute,
-    newestProductsRoute,
-    popularProductsRoute,
+    filterProductsRoute,
     addProductToCartRoute,
     promoProductRoute,
     productPromotionRoute,
-    recommendedProductsRoute,
     recentlyViewedProductsRoute,
     sizeGuideRoute,
-    searchProductsRoute,
     dynamicFiltersRoute,
 
     // Order Routes exports

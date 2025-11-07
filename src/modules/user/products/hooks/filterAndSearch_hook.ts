@@ -46,13 +46,12 @@ const useFilterAndSearchHook = () => {
     };
 
     // Handle get dynamic filter options
-    const handleGetDynamicFilterOptions = async () => {
+    const handleGetDynamicFilterOptions = async (queryParams: any) => {
         dispatch(setLoadingMessage("Getting filter options..."));
         dispatch(setIsLoading(true));
         
         try {
-            const dynamicFilterOptions = await getDynamicFilterOptions().unwrap();
-            // console.log("DYNAMIC FILTER OPTIONS::: ", dynamicFilterOptions);
+            const dynamicFilterOptions = await getDynamicFilterOptions({queryParams}).unwrap();
 
             if (dynamicFilterOptions) {
                 dispatch(setDynamicFilterOptions(dynamicFilterOptions));
@@ -79,29 +78,51 @@ const useFilterAndSearchHook = () => {
             // Remove spaces from key names e.g., "product Type" to "productType"
             formattedKey = formattedKey.replace(/\s+/g, '');
 
-            // Join array values as comma-separated string
+            // Join array values as comma-separated string, transform Product Type to camel case
             const values = selectedFilters[eachKey];
-            formattedFilters[formattedKey] = Array.isArray(values) ? values.join(',') : values;
+            let joinedValues: string | number;
+            if (formattedKey === 'productType' && Array.isArray(values)) {
+                joinedValues = values.map(val => {
+                    const strVal = val as string;
+                    return strVal.split(' ').map((word, index) =>
+                        index === 0 ? word.toLowerCase() : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+                    ).join('');
+                }).join(',');
+            } else {
+                joinedValues = Array.isArray(values) ? values.join(',') : values;
+            }
+            formattedFilters[formattedKey] = joinedValues;
         });
+
+        // Add specific filter for All the categories screenTitle
+        if (screenTitle === "Shoes") {
+            formattedFilters.main = "Footwear";
+        }
+        if (screenTitle === "Female Clothings") {
+            formattedFilters.main = "Female"
+        }
+        if (screenTitle === "Male Clothings") {
+            formattedFilters.main = "Male"
+        }
+        if (screenTitle === "Accessories" || screenTitle === "Bags") {
+            formattedFilters.main = "Accessories"
+        }
 
         const queryParams = {
             ...formattedFilters,
-            limit: 5,
+            limit: 20,
             pageNumber: 1
         };
         console.log("REQUEST DATA::: ", queryParams);
 
         try {
-        const data = await getFilteredProducts({queryParams, screenTitle }).unwrap();
-            // console.log("FILTERED PRODUCTS::: ", data.products);
-            // console.log("FILTERED DYNAMIC OPTIONS::: ", data.dynamicFilters);
+            const productResponse = await getFilteredProducts({queryParams, screenTitle }).unwrap();
+            // console.log("FILTERED PRODUCTS::: ", productResponse);
 
-            if (data) {
-                const products = data.products;
-                const dynamicFilters = data.dynamicFilters;
+            if (productResponse) {
+                dispatch(setAllProducts(productResponse));
+                await handleGetDynamicFilterOptions({...formattedFilters});
 
-                dispatch(setAllProducts(products));
-                dispatch(setDynamicFilterOptions(dynamicFilters));
                 if (setShowBottomSheetModal) {
                     setShowBottomSheetModal(false);
                 }
@@ -109,7 +130,6 @@ const useFilterAndSearchHook = () => {
         } catch (error) {
             handleError(error);
             console.log("ERROR (FILTERED PRODUCTS)::: ", error);
-            
         } finally {
             dispatch(setIsLoading(false));
             dispatch(setLoadingMessage(""));
@@ -137,7 +157,7 @@ const useFilterAndSearchHook = () => {
     };
 
     // Get popular products
-    const handleGetPopularProducts = async () => {
+    const handleGetPopularProducts = async (screenTitle: string) => {
         dispatch(setLoadingMessage("Getting popular products..."));
         dispatch(setPopularPeoductsIsLoading(true));
 
@@ -145,14 +165,14 @@ const useFilterAndSearchHook = () => {
             limit: 20,
             pageNumber: 1
         };
+        // "Popular Products"
         
         try {
-            const data = await getFilteredProducts({queryParams, screenTitle: "Popular Products"}).unwrap();
-            // console.log("POPULAR PRODUCTS::: ", data.products);
+            const productResponse = await getFilteredProducts({queryParams, screenTitle}).unwrap();
+            // console.log("POPULAR PRODUCTS::: ", productResponse);
 
-            if (data) {
-                const products = data.products;
-                dispatch(setPopularProducts(products));
+            if (productResponse) {
+                dispatch(setPopularProducts(productResponse));
             }
         } catch (error) {
             handleError(error);
@@ -163,7 +183,7 @@ const useFilterAndSearchHook = () => {
     };
 
     // Get newest products
-    const handleGetNewestProducts = async () => {
+    const handleGetNewestProducts = async (screenTitle: string) => {
         dispatch(setLoadingMessage("Getting newest products..."));
         dispatch(setNewestProductsIsLoading(true));
 
@@ -171,14 +191,14 @@ const useFilterAndSearchHook = () => {
             limit: 20,
             pageNumber: 1
         };
+        // "Newest Products"
         
         try {
-            const data = await getFilteredProducts({queryParams, screenTitle: "Newest Products"}).unwrap();
-            // console.log("NEWEST PRODUCTS::: ", data.products);
+            const productResponse = await getFilteredProducts({queryParams, screenTitle}).unwrap();
+            // console.log("NEWEST PRODUCTS::: ", productResponse);
 
-            if (data) {
-                const products = data.products;
-                dispatch(setNewestProducts(products));
+            if (productResponse) {
+                dispatch(setNewestProducts(productResponse));
             }
         } catch (error) {
             handleError(error);
@@ -189,17 +209,22 @@ const useFilterAndSearchHook = () => {
     };
 
     // Get recently viewed products
-    const handleGetRecentlyViewedProducts = async () => {
+    const handleGetRecentlyViewedProducts = async (screenTitle: string) => {
         dispatch(setLoadingMessage("Getting recently viewed products..."));
         dispatch(setRecentlyViewedProductsIsLoading(true));
         
-        try {
-            const data = await getFilteredProducts({queryParams: { limit: 20, pageNumber: 1 }, screenTitle: "Recently Viewed"}).unwrap();
-            // console.log("RECENTLY VIEWED PRODUCTS::: ", data.products);
+        const queryParams = {
+            limit: 20,
+            pageNumber: 1
+        };
+        // "Recently Viewed"
 
-            if (data) {
-                const products = data.products;
-                dispatch(setRecentlyViewedProducts(products));
+        try {
+            const productResponse = await getFilteredProducts({queryParams, screenTitle}).unwrap();
+            // console.log("RECENTLY VIEWED PRODUCTS::: ", productResponse);
+
+            if (productResponse) {
+                dispatch(setRecentlyViewedProducts(productResponse));
             }
         } catch (error) {
             handleError(error);
@@ -210,17 +235,22 @@ const useFilterAndSearchHook = () => {
     };
 
     // Get recommended products
-    const handleGetRecommendedProducts = async () => {
+    const handleGetRecommendedProducts = async (screenTitle: string) => {
         dispatch(setLoadingMessage("Getting recommended products..."));
         dispatch(setRecommendedProductsIsLoading(true));
+
+        const queryParams = {
+            limit: 20,
+            pageNumber: 1
+        };
+        // "Recommended Products"
         
         try {
-            const data = await getFilteredProducts({queryParams: { limit: 20, pageNumber: 1 }, screenTitle: "Recommended Products"}).unwrap();
-            // console.log("RECOMMENDED PRODUCTS::: ", data.products);
+            const productResponse = await getFilteredProducts({queryParams, screenTitle}).unwrap();
+            // console.log("RECOMMENDED PRODUCTS::: ", productResponse);
 
-            if (data) {
-                const products = data.products;
-                dispatch(setRecommendedProducts(products));
+            if (productResponse) {
+                dispatch(setRecommendedProducts(productResponse));
             }
         } catch (error) {
             handleError(error);
@@ -243,16 +273,12 @@ const useFilterAndSearchHook = () => {
         console.log("REQUEST DATA::: ", queryParams);
 
         try {
-            const data = await getFilteredProducts({queryParams, screenTitle}).unwrap();
-            // console.log("FILTERED PRODUCTS::: ", data.products);
-            // console.log("FILTERED DYNAMIC OPTIONS::: ", data.dynamicFilters);
+            const productResponse = await getFilteredProducts({queryParams, screenTitle}).unwrap();
+            // console.log("FILTERED PRODUCTS::: ", productResponse);
 
-            if (data) {
-                const products = data.products;
-                const dynamicFilters = data.dynamicFilters;
-
-                dispatch(setAllProducts(products));
-                dispatch(setDynamicFilterOptions(dynamicFilters));
+            if (productResponse) {
+                dispatch(setAllProducts(productResponse));
+                await handleGetDynamicFilterOptions({search: searchPhrase});
             }
         } catch (error) {
             handleError(error);
@@ -286,21 +312,26 @@ const useFilterAndSearchHook = () => {
         // console.log("QUERY PARAMS::: ", queryParams);
         
         try {
-            const data = await getFilteredProducts({queryParams, screenTitle}).unwrap();
-            if (data) {
-                const products = data.products;
-                dispatch(setAllProducts(products));
+            const productResponse = await getFilteredProducts({queryParams, screenTitle}).unwrap();
+            
+            if (productResponse) {
+                dispatch(setAllProducts(productResponse));
             }
         } catch (error) {
             handleError(error);
         }
     };
 
+    // Clear all filters
+    const clearAllFilters = () => {
+        setSelectedFilters({});
+        navigation.setParams({screenTitle: 'All Products'});
+    };
 
     return {
         selectedFilters, toggleCheckboxOption, handleGetDynamicFilterOptions,
         handleSubmit, handleGetFilteredProducts, handleGetPromoProducts, handleGetPopularProducts, handleGetNewestProducts,
-        handleGetRecentlyViewedProducts, handleGetRecommendedProducts, handlePrevAndNextPagination,
+        handleGetRecentlyViewedProducts, handleGetRecommendedProducts, handlePrevAndNextPagination, clearAllFilters,
     };
 };
 
