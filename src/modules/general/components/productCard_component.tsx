@@ -16,6 +16,7 @@ interface IProductCardItemProps {
 
 const ProductCardComponent: React.FC<IProductCardItemProps> = (props) => {
     const { product, handleOnPress, orientation } = props;
+    
 
     return (
         <TouchableOpacity
@@ -41,13 +42,13 @@ const ProductCardComponent: React.FC<IProductCardItemProps> = (props) => {
                 <Text className={`text-gray-800 ${ orientation === "Horizontal" ? "text-base" : "text-sm" }`}>{ FormatWords.truncateWords(product.title, 30) }</Text>
                 <View className="mt-1.5 flex-row items-center justify-between">
                     <Text className="px-2.5 py-1 text-xs rounded-lg bg-lightGreen">
-                        {/* { product.categories.productGroup.split("-").join(" ") } */}
+                        { product.categories?.productGroup?.split("-").join(" ") || "N/A" }
                     </Text>
 
-                    <View className="flex-row">
+                    {/* <View className="flex-row">
                         <Star1 color="#E4A01C" size={18} variant="Bold" className="mr-0.5" />
                         <Text>4.3</Text>
-                    </View>
+                    </View> */}
                 </View>
 
                 <View className="flex-row items-center">

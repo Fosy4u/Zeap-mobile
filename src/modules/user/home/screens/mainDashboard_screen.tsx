@@ -122,7 +122,7 @@ const MainDashboardScreen = () => {
                               uri: selectedCategory.image,
                               priority: FastImage.priority.normal
                             }
-                          : selectedCategory.image
+                          : selectedCategory.image as any
                       }
                       resizeMode={ FastImage.resizeMode.contain }
                       className="h-[380px] w-full absolute bottom-0 -right-4"
