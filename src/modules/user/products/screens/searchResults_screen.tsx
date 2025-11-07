@@ -11,7 +11,7 @@ import RootNavigationStackModel from '../../../../routes/model/routes_model.ts';
 import AppLoader from '../../../general/components/appLoader.tsx';
 import useFilterAndSearchHook from '../hooks/filterAndSearch_hook.ts';
 import ProductListCard from '../components/productListCard_component.tsx';
-import EmptyListComponent from '../components/emptyList_component.tsx';
+import EmptyListComponent from '../../../general/components/emptyList_component';
 
 
 const SearchResultsScreen = () => {
@@ -67,7 +67,7 @@ const SearchResultsScreen = () => {
             keyExtractor={(item, index) => `${index}-item.productId`}
             showsVerticalScrollIndicator={false}
             className="h-auto w-full"
-            ListEmptyComponent={<EmptyListComponent screenTitle="search result" />}
+            ListEmptyComponent={<EmptyListComponent message="search result" />}
             contentContainerStyle={{ flexGrow: 1 }}
           />
 

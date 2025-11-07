@@ -122,10 +122,10 @@ const MainDashboardScreen = () => {
                               uri: selectedCategory.image,
                               priority: FastImage.priority.normal
                             }
-                          : selectedCategory.image
+                          : selectedCategory.image as any
                       }
-                      resizeMode={ FastImage.resizeMode.cover }
-                      className="h-[370px] w-full absolute bottom-0 -right-4"
+                      resizeMode={ FastImage.resizeMode.contain }
+                      className="h-[380px] w-full absolute bottom-0 -right-4"
                     />
                     <TouchableOpacity
                       onPress={ () => navigation.navigate("productListScreen", { screenTitle: selectedCategory.name }) }

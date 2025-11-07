@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { View, Text, FlatList, RefreshControl, SafeAreaView, StatusBar, TouchableOpacity, Animated, TextInput, Image } from 'react-native';
 import AppLoader from '../../../general/components/appLoader';
 import AuthCheck from '../../../auths/components/authCheck';
-import { SearchNormal1 } from 'iconsax-react-native';
+import { ArrowLeft, SearchNormal1 } from 'iconsax-react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import RootNavigationStackModel from '../../../../routes/model/routes_model';
@@ -13,10 +13,11 @@ import OrderCardComponent from '../components/orderCard_component';
 import { useSelector } from 'react-redux';
 import useOrderHook from '../hooks/order_hook';
 import { RootState } from '../../../../redux/store/store';
-import AppHeaderComp from '../../../vendor/general/components/appHeader_comp';
+import LinearGradient from 'react-native-linear-gradient';
+import EmptyListComponent from '../../../general/components/emptyList_component';
 
 const OrdersScreen: React.FC = () => {   
-    const { filteredOrders, isLoading } = useSelector((state: RootState) => state.orderState);    
+    const { filteredOrders, isLoading, loadingMessage } = useSelector((state: RootState) => state.orderState);    
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
 
     const { handleGetOrders } = useOrderHook();
@@ -78,7 +79,7 @@ const OrdersScreen: React.FC = () => {
 
 
     if (isLoading) {
-        return <AppLoader loadingAdditionalMessage="Fetching orders..." />;
+        return <AppLoader loadingAdditionalMessage={ loadingMessage } />;
     }
 
     return (
@@ -91,7 +92,33 @@ const OrdersScreen: React.FC = () => {
                     />
 
                     {/* ==== Header ==== */}
-                    <AppHeaderComp title="My Orders" />
+                    <View className="h-auto w-full pt-5 px-5">
+                        <View className="h-auto w-full flex-row items-center justify-between">
+                            <TouchableOpacity
+                                onPress={ () => navigation.navigate("homeScreen", { screen: "Profile"}) }
+                                className="h-[40px] w-[40px] flex items-center justify-center rounded-full bg-baseGreen"
+                            >
+                                <ArrowLeft color="white" size={24} />
+                            </TouchableOpacity>
+        
+                            <Text className="font-montserratSemiBold text-xl text-baseGreen">My Orders</Text>
+        
+                            <View className="h-[40px] w-[40px]" />
+                        </View>
+                        
+                        <LinearGradient
+                            colors={[
+                                "rgba(229, 231, 235, 0)",
+                                "#e5e7eb",
+                                "#9ca3af",
+                                "#e5e7eb",
+                                "rgba(229, 231, 235, 0)"
+                            ]}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                            className="h-[1px] w-full mt-3 rounded"
+                        />
+                    </View>
 
                     {/*==== Search Box ====*/}
                     <View className="h-auto w-full mt-5 px-5 flex-row items-center justify-center">
@@ -140,6 +167,11 @@ const OrdersScreen: React.FC = () => {
                                     <OrderCardComponent order={item} />
                                 </View>
                             )}
+                            ListEmptyComponent={() => (
+                            <View className="px-5 flex-1 items-center py-8">
+                                <EmptyListComponent message="ordered products yet." />
+                            </View>
+                            )}
                             showsVerticalScrollIndicator={false}
                             refreshControl={
                                 <RefreshControl
@@ -149,8 +181,8 @@ const OrdersScreen: React.FC = () => {
                             }
                         />
                     ) : (
-                        <View className="px-5 flex-1 items-center justify-center py-8">
-                            <Text className="text-gray-500 text-lg">No orders found</Text>
+                        <View className="px-5 flex-1 items-center py-8">
+                            <EmptyListComponent message="orderered products yet." />
                         </View>
                     ) }
 

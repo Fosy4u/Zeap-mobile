@@ -9,7 +9,6 @@ interface IPointAndVoucherState {
     inactiveVouchers: IVoucher[];
     selectedVoucher: IVoucher;
     selectedVoucherType: string;
-    showVoucherDetailBottomSheet: boolean;
     isLoading: boolean;
     loadingMessage: string;
 };

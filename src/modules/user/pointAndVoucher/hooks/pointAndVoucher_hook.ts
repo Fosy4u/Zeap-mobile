@@ -1,6 +1,6 @@
 import { useDispatch } from "react-redux";
-import { setActiveVouchers, setInactiveVouchers, setIsLoading, setLoadingMessage, setPoints, setSelectedTab } from "../slices/pointAndVoucher_slice";
-import { useConvertPointsMutation, useLazyGetActiveVouchersQuery, useLazyGetInactiveVouchersQuery, useLazyGetPointsQuery } from "../apis/pointAndVoucher_api";
+import { setActiveVouchers, setInactiveVouchers, setIsLoading, setLoadingMessage, setPoints, setSelectedTab, setSelectedVoucher } from "../slices/pointAndVoucher_slice";
+import { useConvertPointsMutation, useLazyGetActiveVouchersQuery, useLazyGetInactiveVouchersQuery, useLazyGetPointsQuery, useLazyGetVoucherByCodeQuery } from "../apis/pointAndVoucher_api";
 import handleError from "../../../general/hooks/errorHandler_hook";
 
 const usePointAndVoucherHook = () => {
@@ -9,6 +9,7 @@ const usePointAndVoucherHook = () => {
     const [getPoints] = useLazyGetPointsQuery();
     const [getActiveVouchers] = useLazyGetActiveVouchersQuery();
     const [getInactiveVouchers] = useLazyGetInactiveVouchersQuery();
+    const [getVoucherByCode] = useLazyGetVoucherByCodeQuery();
     const [convertPoints] = useConvertPointsMutation();
 
     // Handle Get Points
@@ -38,7 +39,7 @@ const usePointAndVoucherHook = () => {
 
         try {
             const vouchersResponse = await getActiveVouchers().unwrap();
-            // console.log("VOUCHERS RESPONSE", vouchersResponse);
+            // console.log("ACTIVE VOUCHERS RESPONSE", vouchersResponse);
             
             if (vouchersResponse) {
                 // Assuming you have a setActiveVouchers action to handle the response
@@ -59,11 +60,32 @@ const usePointAndVoucherHook = () => {
 
         try {
             const vouchersResponse = await getInactiveVouchers().unwrap();
-            // console.log("VOUCHERS RESPONSE", vouchersResponse);
+            // console.log("INACTIVE VOUCHERS RESPONSE", vouchersResponse);
             
             if (vouchersResponse) {
                 // Assuming you have a setInactiveVouchers action to handle the response
                 dispatch(setInactiveVouchers(vouchersResponse));
+            }
+        } catch (error) {
+            handleError(error);
+        } finally {
+            dispatch(setIsLoading(false));
+            dispatch(setLoadingMessage(""));
+        }
+    };
+
+    // Handle Get Voucher by Code
+    const handleGetVoucherByCode = async (code: string, setShowBottomSheetModal: (value: boolean) => void) => {
+        dispatch(setLoadingMessage("Getting voucher by code..."));
+        dispatch(setIsLoading(true));
+
+        try {
+            const voucherResponse = await getVoucherByCode({ code }).unwrap();
+            console.log("VOUCHER RESPONSE", voucherResponse);
+
+            if (voucherResponse) {
+                dispatch(setSelectedVoucher(voucherResponse));
+                setShowBottomSheetModal(true);
             }
         } catch (error) {
             handleError(error);
@@ -87,7 +109,7 @@ const usePointAndVoucherHook = () => {
 
         try {
             const vouchersResponse = await convertPoints({points}).unwrap();
-            console.log("VOUCHERS RESPONSE", vouchersResponse);
+            // console.log("VOUCHER RESPONSE", vouchersResponse);
             
             if (vouchersResponse) {
                 handleGetActiveVouchers();
@@ -106,6 +128,7 @@ const usePointAndVoucherHook = () => {
         handleGetPoints,
         handleGetActiveVouchers,
         handleGetInactiveVouchers,
+        handleGetVoucherByCode,
         handleConvertPoints,
     };
 };
