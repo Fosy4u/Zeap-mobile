@@ -1,15 +1,17 @@
-import { useLazyGetOrderHistoryQuery, useLazyGetOrdersQuery } from "../apis/order_api";
+import { useLazyGetOrderDetailsQuery, useLazyGetOrderHistoryQuery, useLazyGetOrdersQuery } from "../apis/order_api";
 import { useDispatch, useSelector } from "react-redux";
-import { setFilteredOrders, setIsLoading, setLoadingMessage, setOrderHistory, setOrders } from "../slices/order_slice";
+import { setFilteredOrders, setIsLoading, setLoadingMessage, setOrderDetails, setOrderHistory, setOrders } from "../slices/order_slice";
 import handleError from "../../../general/hooks/errorHandler_hook";
 import { RootState } from "../../../../redux/store/store";
-import IOrder from "../models/order_model";
+import { useState } from "react";
 
 const useOrderHook = () => {
-    const { orderDetails } = useSelector((state: RootState) => state.orderState);
+    const { orders } = useSelector((state: RootState) => state.orderState);
     const dispatch = useDispatch();
+    const [historyIsLoading, setHistoryIsLoading] = useState(false);
 
     const [getOrders] = useLazyGetOrdersQuery();
+    const [getOrderDetails] = useLazyGetOrderDetailsQuery();
     const [getOrderHistory] = useLazyGetOrderHistoryQuery();
 
     // Handle get orders
@@ -57,34 +59,49 @@ const useOrderHook = () => {
         }
     }
 
-    // Handle get order history
-    const handleGetOrderHistory = async () => {
-        dispatch(setLoadingMessage("Fetching order history..."));
+    // Handle get order details (accept optional orderId to allow calling before Redux orderID updates)
+    const handleGetOrderDetails = async (orderID: string) => {
+        dispatch(setLoadingMessage("Fetching order details..."));
         dispatch(setIsLoading(true));
 
-        const productOrder_id = orderDetails.productOrders[0]._id;
-
         try {
-            const orderHistoryResponse = await getOrderHistory({ productOrder_id }).unwrap();
+            const orderDetails = await getOrderDetails({ orderId: orderID }).unwrap();
+            // console.log("ORDER DETAILS RESPONSE::: ", order);
+            
+            if (orderDetails) {
+                dispatch(setOrderDetails(orderDetails));
+            }
+        } catch (error) {
+            handleError(error);
+        } finally {
+            dispatch(setIsLoading(false));
+            dispatch(setLoadingMessage(""));
+        }
+    };
+
+    // Handle get order history
+    const handleGetOrderHistory = async (productOrderID: string) => {
+        setHistoryIsLoading(true);
+    
+        try {
+            const orderHistoryResponse = await getOrderHistory({ productOrder_id: productOrderID }).unwrap();
             // console.log("ORDER HISTORY RESPONSE::: ", orderHistoryResponse);
             
             if (orderHistoryResponse) {
                 dispatch(setOrderHistory(orderHistoryResponse));
-
-                dispatch(setIsLoading(false));
-                dispatch(setLoadingMessage(""));
             }
         } catch (error) {
             handleError(error);
-            dispatch(setIsLoading(false));
-            dispatch(setLoadingMessage(""));
+        } finally {
+            setHistoryIsLoading(false);
         }
     }
 
     return {
         handleGetOrders,
         filterOrdersByStatus,
-        handleGetOrderHistory,
+        handleGetOrderDetails,
+        handleGetOrderHistory, historyIsLoading,
     };
 }; 
 

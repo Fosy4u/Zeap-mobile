@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef } from 'react'
 import { SafeAreaView, StatusBar, Text, TouchableOpacity, View } from 'react-native'
 import AppHeaderComp from '../../../vendor/general/components/appHeader_comp';
 import { useDispatch, useSelector } from 'react-redux';
@@ -11,14 +11,47 @@ import VoucherDetailBottomSheetComponent from '../components/voucherDetailBottom
 import { BottomSheetModal, BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import AppLoader from '../../../general/components/appLoader';
+import { RouteProp } from '@react-navigation/native';
+import RootNavigationStackModel from '../../../../routes/model/routes_model';
 
-const PointAndVoucherScreen = () => {
-    const { tabs, selectedTab, points, showVoucherDetailBottomSheet, loadingMessage, isLoading } = useSelector((state: RootState) => state.pointAndVoucherState);
+interface IProps {
+    route: RouteProp<RootNavigationStackModel, "pointAndVoucherScreen">;
+};
+
+const PointAndVoucherScreen: React.FC<IProps> = ({ route }) => {
+    const { tabs, selectedTab, points, loadingMessage, isLoading } = useSelector((state: RootState) => state.pointAndVoucherState);
     const dispatch = useDispatch();
+    const from = route.params?.from;
+    const code = route.params?.code;
 
-    const { handleGetPoints, handleGetActiveVouchers, handleGetInactiveVouchers } = usePointAndVoucherHook();
+    // Call Point and Voucher Hook
+    const { handleGetPoints, handleGetActiveVouchers, handleGetInactiveVouchers, handleGetVoucherByCode } = usePointAndVoucherHook();
 
-    React.useEffect(() => {
+    const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+    const snapPoints = useMemo(() => ['60%', '70%'], []);
+
+    const setShowBottomSheetModal = useCallback((value: boolean) => {
+        if (value) {
+            bottomSheetModalRef.current?.present();
+        } else {
+            bottomSheetModalRef.current?.close();
+        }
+    }, []);
+
+    useEffect(() => {
+
+        // Fetch according to where we came from
+        if (from === "Notification Screen") {
+            dispatch(setSelectedTab("Vouchers"));
+            if (code && code !== "") {
+                handleGetVoucherByCode(code, setShowBottomSheetModal);
+            }
+        } else {
+            dispatch(setSelectedTab("Points"));
+        }
+    }, []);
+
+    useEffect(() => {
         handleGetPoints();
         handleGetActiveVouchers();
         handleGetInactiveVouchers();
@@ -53,13 +86,19 @@ const PointAndVoucherScreen = () => {
                         { (selectedTab === "Points") ? (
                             <PointsComponent points={ points } />
                         ) : (
-                            <VoucherComponent />
+                            <VoucherComponent setShowBottomSheetModal={ setShowBottomSheetModal } />
                         ) }
                     </View>
 
-                    { showVoucherDetailBottomSheet && (
+                    {/* { showVoucherDetailBottomSheet && (
                         <VoucherDetailBottomSheetComponent />
-                    )}
+                    )} */}
+
+                    <VoucherDetailBottomSheetComponent
+                        bottomSheetModalRef={ bottomSheetModalRef }
+                        snapPoints={ snapPoints }
+                        setShowBottomSheetModal={ setShowBottomSheetModal }
+                    />
 
                     {(isLoading) && <AppLoader loadingAdditionalMessage={loadingMessage} />}
                 </SafeAreaView>

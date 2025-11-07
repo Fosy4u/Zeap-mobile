@@ -29,8 +29,8 @@ const DashboardWrapperScreen = () => {
       handleGetProductOptions();
       handleGetPromoProducts();
       handleGetFilteredProducts({screenTitle: "All Products"});
-      handleGetPopularProducts();
-      handleGetNewestProducts();
+      handleGetPopularProducts("Popular Products");
+      handleGetNewestProducts("Newest Products");
     }, []);
 
 

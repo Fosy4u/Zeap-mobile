@@ -36,7 +36,9 @@ const AllCategoryScreen = () => {
         <ScrollView showsVerticalScrollIndicator={false} className="mt-3">
           { categories.map((category) => (
             <TouchableOpacity key={ category.id }
-              onPress={ () => navigation.navigate("productListScreen", { screenTitle: category.name }) }>
+              onPress={ () => {
+                navigation.navigate("productListScreen", { screenTitle: category.name });
+              } }>
               <View className="h-[105px] w-full relative mt-10 p-5 flex justify-center rounded-2xl border"
                 style={{
                   backgroundColor: category.color[0],
@@ -45,7 +47,7 @@ const AllCategoryScreen = () => {
               >
                 <View>
                   <Text className="h-auto w-[125px] text-[22px] text-gray-800">{ category.name }</Text>
-                  <Text className="text-xs text-gray-600">{ category.totalCount } items</Text>
+                  {/* <Text className="text-xs text-gray-600">{ category.totalCount } items</Text> */}
                 </View>
 
                 <Image

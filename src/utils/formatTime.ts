@@ -3,8 +3,21 @@
  * @param dateString - The date string to format
  * @returns A formatted relative time string
  */
-const timeAgo = (dateString: string): string => {
-    const date = new Date(dateString);
+type DateInput = string | number | Date;
+
+const timeAgo = (dateInput: DateInput): string => {
+    if (!dateInput && dateInput !== 0) return "";
+
+    let date: Date;
+    if (typeof dateInput === 'number') {
+        date = new Date(dateInput);
+    } else if (dateInput instanceof Date) {
+        date = dateInput;
+    } else {
+        date = new Date(dateInput);
+    }
+
+    if (isNaN(date.getTime())) return "";
     const now = new Date();
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 

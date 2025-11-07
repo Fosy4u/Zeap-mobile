@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Dimensions, Image, Pressable, SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View } from "react-native"
+import { Dimensions, FlatList, Image, Pressable, SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View } from "react-native"
 import { useSelector } from "react-redux";
 import { RootState } from "../../../../redux/store/store";
-import { Add, ArrowDown, ArrowRight, ArrowUp, Calendar, Edit2, Notification, Star1 } from "iconsax-react-native";
+import { Add, ArrowDown, ArrowRight, ArrowUp, Calendar, Edit2, Notification } from "iconsax-react-native";
 import { useNavigation } from "@react-navigation/native";
 import ShimmerPlaceHolder from 'react-native-shimmer-placeholder';
 import LinearGradient from "react-native-linear-gradient";
@@ -13,12 +13,17 @@ import useVendorHomeHook from "../hooks/vendorHome_hook";
 import useGeneralHook from "../../../general/hooks/general_hook";
 import FastImage from "react-native-fast-image";
 import useVendorProductHook from "../../products/hooks/vendorProduct_hook";
+import useVendorPaymentHook from "../../payments/hooks/payment_hook";
+import formatCurrency from "../../../../utils/formatCurrency";
+import formatDate from "../../../../utils/formatDate";
+import EmptyListComponent from "../../../general/components/emptyList_component";
 
 
 const VendorDashboardScreen = () => {
   const { productIsLoading } = useSelector((state: RootState) => state.vendorProductState);
+  const { isLoading: paymentIsLoading } = useSelector((state: RootState) => state.vendorPaymentState);
   const { analytics, overviews, weeklySalesChartData } = useSelector((state: RootState) => state.vendorHomeState);
-  const { products, vendorProductReviews } = useSelector((state: RootState) => state.vendorProductState);
+  const { products } = useSelector((state: RootState) => state.vendorProductState);
   const { payments } = useSelector((state: RootState) => state.vendorPaymentState);
   const { shop } = useSelector((state: RootState) => state.vendorGeneralState);
   const { userData } = useSelector((state: RootState) => state.profileState);
@@ -30,6 +35,7 @@ const VendorDashboardScreen = () => {
   const { handleGetShop, handleGeVendortAnalytics } = useVendorHomeHook();
   const { generateRandomInteger, handleGetProductOptions } = useGeneralHook();
   const { handleGetProductReviews } = useVendorProductHook();
+  const { handleGetVendorPayments } = useVendorPaymentHook();
 
   useEffect(() => {
     (async () => {
@@ -46,13 +52,17 @@ const VendorDashboardScreen = () => {
 
   useEffect(() => {
     handleGetProductReviews(product?.productId!);
-  }, [product, vendorProductReviews])
+  }, [product])
 
   useEffect(() => {
     if (products?.length) {
       setProductIndex(generateRandomInteger(products.length - 1));
     }
   }, [products]);
+
+  useEffect(() => {
+      handleGetVendorPayments("7601605");
+  }, []);
 
   return (
     <SafeAreaView className="h-full w-screen flex-1 pb-[1px] bg-gray-50">
@@ -180,26 +190,46 @@ const VendorDashboardScreen = () => {
           {/* ==== Recent Payment ==== */}
           <View className="h-auto w-full mt-5 p-3 border border-gray-200 rounded-xl bg-lightGray">
             <View className="mb-3 flex-row items-center justify-between">
-              <Text className="font-normal text-base text-baseGreen">Recent Payment</Text>   
-              <TouchableOpacity onPress={ () => navigation.navigate("paymentScreen") }>
-                <Text className="text-sm text-baseGreen">View all</Text>
-              </TouchableOpacity>
+              <Text className="font-normal text-base text-baseGreen">Recent Payment</Text>
+              <TouchableOpacity 
+                  onPress={ () => navigation.navigate("paymentScreen") }
+                  className="px-3 py-2 flex flex-row items-center justify-center rounded-lg bg-gold"
+                >
+                  <Text className="text-sm text-baseGreen mr-2">View All</Text>
+                  <ArrowRight size={ 18 } className="text-baseGreen" /> 
+                </TouchableOpacity>
             </View>
 
-            { payments.map((payment) => (
-              <View key={ payment.id } className="my-3 flex-row items-center">
-                <View className={`h-9 w-9 mr-3 ${ payment.status == "Success" ? "bg-lightGreen/70" : "bg-orange/10" } flex items-center justify-center rounded-full`}>
-                  { (payment.status === "Success")
-                    ? <ArrowDown color="green" size={ 20 } className="rotate-[30deg]" />
-                    : <Text className="text-2xl text-orange">!</Text>
-                  }
-                </View>
-                <View>
-                  <Text className="text-base">₦{ payment.amount }</Text>
-                  <Text className="text-xs">{ payment.productName }  -  { payment.date }</Text>
-                </View>
-              </View>
-            )) }
+            <FlatList
+              data={payments}
+              keyExtractor={(item) => item.productOrder_id!}
+              showsVerticalScrollIndicator={ false }
+              ListEmptyComponent={<EmptyListComponent message={"payments at the moment."} />}
+              renderItem={({ item: payment }) => (!paymentIsLoading) ? (
+                  <View key={ payment.productOrder_id } className="py-3 flex-row items-center border-t border-gray-200">
+                    <View className={`h-[55px] w-[55px] mr-3 ${ payment.shopRevenue!.status == "success" ? "bg-lightGreen/70" : "bg-orange/10" } flex items-center justify-center rounded-full`}>
+                      { (payment.shopRevenue!.status === "success")
+                        ? <ArrowDown color="green" size={ 20 } className="rotate-[30deg]" />
+                        : <Text className="text-3xl text-orange">!</Text>
+                      }
+                    </View>
+                    <View>
+                      <Text className="text-sm">{ payment.purchasedProduct!.title }</Text>
+                      <Text className="font-montserratSemiBold text-base">{ formatCurrency(payment.shopRevenue!.value!, payment.shopRevenue!.currency!) }</Text>
+                      <Text className="text-xs">{ formatDate(payment.purchaseDate!, true) }</Text>
+                    </View>
+                  </View>
+              ) : (
+                <ShimmerPlaceHolder
+                  // visible={!productIsLoading}
+                  LinearGradient={LinearGradient}
+                  shimmerColors={['#ebebeb', '#fefefe', '#ebebeb']}
+                  height={80}
+                  width={Dimensions.get('window').width - 40}
+                  shimmerStyle={{ borderRadius: 16, marginTop: 20 }}
+                />
+              )}
+            />
           </View>
 
           {/* ==== Product List ==== */}
@@ -218,58 +248,51 @@ const VendorDashboardScreen = () => {
 
               <TouchableOpacity onPress={ () => navigation.navigate("vendorProductDetailsScreen", { productID: product?.productId! }) }>
                 <View className="relative mt-2 flex items-center justify-center">
-                {!productIsLoading && product?.colors?.[0]?.images?.[0]?.link ? (
-                  <FastImage
-                    source={{
-                      uri: product.colors[0].images[0].link,
-                      priority: FastImage.priority.normal
-                    }}
-                    defaultSource={require("../../../../../assets/images/app_logo.png")}
-                    resizeMode={FastImage.resizeMode.cover}
-                    className="h-[300px] w-[180px] rounded-lg"
-                    style={{ aspectRatio: 0.7 }}
-                    fallback
-                  />
-                ) : (
-                  <ShimmerPlaceHolder
-                    LinearGradient={LinearGradient}
-                    shimmerColors={['#ebebeb', '#fefefe', '#ebebeb']}
-                    height={250}
-                    width={Dimensions.get('window').width - 40}
-                  />
-                )}
+                  {!productIsLoading && product?.colors?.[0]?.images?.[0]?.link ? (
+                    <FastImage
+                      source={{
+                        uri: product.colors[0].images[0].link,
+                        priority: FastImage.priority.normal
+                      }}
+                      defaultSource={require("../../../../../assets/images/app_logo.png")}
+                      resizeMode={FastImage.resizeMode.cover}
+                      className="h-[300px] w-[180px] rounded-lg"
+                      style={{ aspectRatio: 0.7 }}
+                      fallback
+                    />
+                  ) : (
+                    <ShimmerPlaceHolder
+                      LinearGradient={LinearGradient}
+                      shimmerColors={['#ebebeb', '#fefefe', '#ebebeb']}
+                      height={250}
+                      width={Dimensions.get('window').width - 40}
+                    />
+                  )}
 
                   <View className="absolute top-5 left-2 right-2 flex-row justify-between">
-                    {/* <View className="w-[110px] px-2 py-1 rounded-lg border border-white/60 backdrop-blur-lg bg-white/50">
-                      <View className="flex-row items-center">
-                        <Star1 color="#E4A01C" size={14} variant="Bold" className="mr-1" />
-                        <Text className="text-xs">{ `${vendorProductReviews?.averageRating! ? vendorProductReviews?.averageRating!.toFixed(1) : 0.0}` }</Text>
-                      </View>
-                      <Text className="text-[11px]">{vendorProductReviews ? `${vendorProductReviews?.reviews?.length} ${ vendorProductReviews?.reviews?.length! > 1 ? "reviews" : "review" }` : "0 review"}</Text>
-                    </View> */}
                     <View />
 
                     <View className="flex-row items-center gap-2">
                       <View className={`p-2 flex items-center justify-center rounded-lg border backdrop-blur-lg ${
+                        product?.status === "live" 
+                        ? "border-green-300 bg-green-50" 
+                        : product?.status === "draft"
+                        ? "border-blue-300 bg-blue-50"
+                        : product?.status === "under review"
+                        ? "border-orange/30 bg-orange/10"
+                        : "border-red-300 bg-red-50"
+                      }`}>
+                        <Text className={`font-montserratMedium text-xs ${
                           product?.status === "live" 
-                          ? "border-green-300 bg-green-50" 
+                          ? "text-green-600" 
                           : product?.status === "draft"
-                          ? "border-blue-300 bg-blue-50"
+                          ? "text-blue-600"
                           : product?.status === "under review"
-                          ? "border-orange/30 bg-orange/10"
-                          : "border-red-300 bg-red-50"
+                          ? "text-orange-800"
+                          : "text-red-600"
                         }`}>
-                          <Text className={`font-montserratMedium text-xs ${
-                            product?.status === "live" 
-                            ? "text-green-600" 
-                            : product?.status === "draft"
-                            ? "text-blue-600"
-                            : product?.status === "under review"
-                            ? "text-orange-800"
-                            : "text-red-600"
-                          }`}>
-                            { product && product.status.charAt(0).toUpperCase() + product.status.slice(1) }
-                          </Text>
+                          { product && product.status!.charAt(0).toUpperCase() + product.status!.slice(1) }
+                        </Text>
                       </View>
                     </View>
                   </View>

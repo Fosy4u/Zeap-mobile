@@ -1,26 +1,26 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Image } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import IOrder from '../models/order_model';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import RootNavigationStackModel from '../../../../routes/model/routes_model';
-import FastImage from 'react-native-fast-image';
-import { setOrderDetails } from '../slices/order_slice';
-import { useDispatch } from 'react-redux';
 import { timeAgo } from '../../../../utils/formatTime';
+
 interface IProps {
     order: IOrder;
 }
 
 const OrderCardComponent: React.FC<IProps> = ({ order }) => {
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
-    const dispatch = useDispatch();
+    // console.log("ORDER DATA::: ", order);
 
     return (
         <TouchableOpacity
             onPress={ () => {
-                dispatch(setOrderDetails(order));
-                navigation.navigate("orderDetailsScreen");
+                navigation.navigate("orderDetailsScreen", {
+                    from: "Orders Screen",
+                    orderId: order.orderId
+                });
             } }
         >
             <View className="h-auto w-full mt-4 x-5 p-4 rounded-xl border border-gray-200 bg-[#F8F9FE]">

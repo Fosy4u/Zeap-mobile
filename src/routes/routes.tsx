@@ -61,12 +61,13 @@ import UserDashboardScreen from '../modules/profile/screens/userDashboard_screen
 import PointAndVoucherScreen from '../modules/user/pointAndVoucher/screens/pointAndVoucher_screen.tsx';
 import ReviewAndRatingScreen from '../modules/user/raviewAndRating/screens/reviewAndRating_screen.tsx';
 import RateAndReviewScreen from '../modules/user/raviewAndRating/screens/rateAndReview_screen.tsx';
+import { navigationRef } from './pushNavigation.ts';
 
 const Stack = createNativeStackNavigator<RootNavigationStackModel>();
 
 const AppRoutes = () => {
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       <Stack.Navigator initialRouteName="splashScreen">
         {/* ==== Splash & Onboarding ==== */}
         <Stack.Screen
@@ -170,9 +171,9 @@ const AppRoutes = () => {
         <Stack.Screen
           name="vendorHomeScreen" component={VendorHomeScreen} options={{ headerShown: false }}
         />
-        <Stack.Screen
+        {/* <Stack.Screen
           name="vendorDashboardScreen" component={VendorDashboardScreen} options={{ headerShown: false }}
-        />
+        /> */}
 
         {/* ==== Products ==== */}
         <Stack.Screen
@@ -209,9 +210,9 @@ const AppRoutes = () => {
         />
 
         {/* ==== Market ==== */}
-        <Stack.Screen
+        {/* <Stack.Screen
           name="marketScreen" component={MarketScreen}  options={{ headerShown: false }}
-        />
+        /> */}
         <Stack.Screen
           name="shopSetupScreen" component={ShopSetupScreen} options={{ headerShown: false }}
         />
