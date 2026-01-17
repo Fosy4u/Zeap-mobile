@@ -1,0 +1,225 @@
+import React, { useEffect, useState } from 'react';
+import { ArrowRight, Dislike, Edit2, Like1, Star1 } from 'iconsax-react-native';
+import { View, Text, Image, ScrollView, TextInput, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import RootNavigationStackModel from '../../../routes/model/routes_model';
+import useVendorProductHook from '../../vendor/products/hooks/vendorProduct_hook';
+import { Controller, set } from 'react-hook-form';
+import AppLoader from './appLoader';
+import useReviewHook from '../hooks/review_hook';
+import IReviewAndRating from '../models/review_model';
+import RatingCardComponent from './ratingCard_component';
+import formatDate from '../../../utils/formatDate';
+import { timeAgo } from '../../../utils/formatTime';
+
+interface IProps {
+  reviewAndRating: IReviewAndRating;
+  productID: string;
+  loadingMessage: string;
+};
+
+const ReviewComponent: React.FC<IProps> = ({ reviewAndRating, productID, loadingMessage }) => {
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
+
+  const {
+    onSubmit, handleSubmit, isLoadingAddReview, control, errors,
+    reviewIndicators
+  } = useReviewHook(productID);
+  const { handleReviewLike, handleReviewDislike } = useVendorProductHook();
+
+
+  return (
+    <ScrollView className="h-auto">
+      <View className="mt-2 px-2 pb-4 bg-lightGray">
+
+        {/* ==== Rating card ==== */}
+        <RatingCardComponent reviewAndRating={ reviewAndRating } reviewIndicators={ reviewIndicators } />
+
+        { (reviewAndRating.reviews && reviewAndRating.reviews.length !== 0)
+        ? reviewAndRating.reviews.slice(0, 3).map((review) => (
+          <View key={ review._id } className="mt-2 px-2 py-3 rounded-md border-b border-gray-300">
+            <View className="h-auto w-full flex-row items-start justify-between">
+              <View className="flex-row items-center justify-start">
+                <Image
+                  className="h-[45px] w-[45px] mr-3 rounded-full"
+                  resizeMode="cover"
+                  source={
+                    review.user!.imageUrl!?.link!
+                    ? { uri: review.user!.imageUrl!?.link! }
+                    : require("../../../../assets/images/app_logo.png")
+                  }
+                />
+
+                <View>
+                  <Text className="font-medium">{ review.displayName! }</Text>
+                  <View className="mt-1.5 flex-row items-center">
+                    <Text>Posted: </Text>
+                    <Text>{ review.updatedAt ? timeAgo(review.updatedAt!.toString()) : '' }</Text>
+                  </View>
+                </View>
+              </View>
+
+              <View className="mb-1 flex-row">
+                <Star1 color="#E4A01C" size={16} variant="Bold" className="mr-0.5" />
+                <Text className="text-xs">{ review.rating! }</Text>
+              </View>
+            </View>
+
+            <Text className="h-auto w-full mt-2 text-xs">{ review.review! }</Text>
+
+            <View className="mt-2 flex-row items-center">
+              <View className="mr-10 flex-row items-center">
+                <TouchableOpacity onPress={ () => handleReviewLike({ _id: review._id! }) }>
+                  <Like1 size={16} variant="Bold" className="mr-1.5 text-blue-800" />
+                </TouchableOpacity>
+                <Text className="text-xs">{ review.likes!.value! } Likes</Text>
+              </View>
+              <View className="flex-row items-center">
+                <TouchableOpacity onPress={ () => handleReviewDislike({ _id: review._id! }) }>
+                  <Dislike size={16} variant="Bold" className="mr-1.5 text-red-800" />
+                </TouchableOpacity>
+                <Text className="text-xs">{ review.dislikes!.value! } Dislikes</Text>
+              </View>
+            </View>
+          </View>
+        ))
+        : (
+          <View className="h-auto w-full p-2">
+            <View className="h-auto w-full items-center p-10 bg-gray-200 rounded-md">
+              <View className="h-auto w-full flex-row items-center justify-center">
+                { Array(5).fill(0).map((_, index) => (
+                  <Star1 key={ index } color="#C0C0C0" size={12} variant="Bold" className="mr-0.5" />
+                ))}
+              </View>
+              <Text className="mt-2 font-semibold text-lg text-baseGreen">No review yet</Text>
+              <Text>Be the first to write a review.</Text>
+            </View>
+          </View>
+        ) }
+
+        { (reviewAndRating.reviews) && (
+          <TouchableOpacity
+            onPress={ () => productID && navigation.navigate("reviewListScreen", {
+              reviewAndRating,
+              reviewIndicators,
+              productID
+            }) }
+            className="h-[55px] w-full mx-auto mt-5 flex-row items-center justify-center rounded-xl bg-lightGreen"
+          >
+            <Text className="text-base text-baseGreen mr-2">View More Reviews</Text>
+            <ArrowRight size={20} className="text-baseGreen" />
+          </TouchableOpacity>
+        ) }
+
+        { !showReviewForm && (
+          <TouchableOpacity
+            onPress={ () => setShowReviewForm(true) }
+            className="h-[55px] w-[80%] mx-auto mt-5 flex-row items-center justify-center rounded-xl bg-baseGreen"
+          >
+            <Text className="text-lg text-white mr-2">Write a review</Text>
+            <Edit2 size={20} className="text-white" />
+          </TouchableOpacity>
+        ) }
+
+        {/* ==== Form ==== */}
+        { (showReviewForm) && (
+          <View className="mt-8">
+            <View className="flex-row justify-between">
+              <Text className="font-medium text-lg text-baseGreen text-center">Review</Text>
+
+              <TouchableOpacity
+                onPress={ () => setShowReviewForm(false) }
+                className="px-4 py-2 rounded-lg bg-lightGreen">
+                <Text className="text-baseGreen">Close</Text>
+              </TouchableOpacity>
+            </View>
+            <Text aria-label="Title" nativeID="title" className="mt-3">Title<Text className="text-red-600">*</Text></Text>
+            <View className="h-auto w-full mt-1.5 px-3 py-1 border border-gray-300 rounded-xl bg-gray-100">
+              <Controller
+                control={ control }
+                name="title"
+                render={ ({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    aria-label="Title"
+                    aria-labelledby="title"
+                    keyboardType="default"
+                    placeholder="Enter title"
+                    placeholderTextColor="#9ca3af"
+                    className="text-base"
+                    onBlur={ onBlur }
+                    onChangeText={ onChange }
+                    value={ value }
+                  />
+                ) }
+              />
+              { errors.title && (<Text className="text-red-500 text-xs">{errors.title.message}</Text>) }
+            </View>
+
+            <Text aria-label="Rating" nativeID="rating" className="mt-5">Rating<Text className="text-red-600">*</Text></Text>
+            <View className="h-auto w-full mt-1.5 px-3 py-1 border border-gray-300 rounded-xl bg-gray-100">
+              <Controller
+                control={ control }
+                name="rating"
+                render={ ({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    aria-label="Rating"
+                    aria-labelledby="rating"
+                    keyboardType="decimal-pad"
+                    placeholder="Enter rating"
+                    placeholderTextColor="#9ca3af"
+                    className="text-base"
+                    onBlur={ onBlur }
+                    onChangeText={ onChange }
+                    value={ value.toString() }
+                  />
+                ) }
+              />
+              { errors.rating && (<Text className="text-red-500 text-xs">{errors.rating.message}</Text>) }
+            </View>
+
+            <Text aria-label="Review" nativeID="review" className="mt-5">Leave a review<Text className="text-red-600">*</Text></Text>
+            <View className="h-auto w-full mt-1.5 p-1 border border-gray-300 rounded-xl bg-gray-100">
+              <Controller
+                control={ control }
+                name="review"
+                render={ ({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    aria-label="Review"
+                    aria-labelledby="review"
+                    keyboardType="default"
+                    placeholder="Enter review"
+                    placeholderTextColor="#9ca3af"
+                    multiline={ true }
+                    textAlignVertical="top"
+                    className="h-[80px] px-2 py-1.5 text-base bg-slate-100"
+                    onBlur={ onBlur }
+                    onChangeText={ onChange }
+                    value={ value }
+                  />
+                ) }
+              />
+              { errors.review && (<Text className="text-red-500 text-xs">{errors.review.message}</Text>) }
+            </View>
+
+            <TouchableOpacity
+              onPress={ handleSubmit(onSubmit) }
+              className="h-[55px] w-auto mt-4 flex flex-row items-center justify-center rounded-xl bg-lightGreen"
+            >
+              <Text className="text-base text-baseGreen mr-2">{ isLoadingAddReview ? "Please wait..." : "Send Review" }</Text>
+              { isLoadingAddReview ? null : <ArrowRight className="text-baseGreen" /> }
+            </TouchableOpacity>
+          </View>
+        ) }
+
+      </View>
+
+      { isLoadingAddReview && 
+        <AppLoader loadingAdditionalMessage={ loadingMessage } />
+      }
+    </ScrollView>
+  )
+}
+
+export default ReviewComponent;
