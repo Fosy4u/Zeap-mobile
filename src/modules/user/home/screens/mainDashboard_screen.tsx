@@ -124,8 +124,8 @@ const MainDashboardScreen = () => {
                             }
                           : selectedCategory.image as any
                       }
-                      resizeMode={ FastImage.resizeMode.contain }
-                      className="h-[380px] w-full absolute bottom-0 -right-4"
+                      resizeMode={ FastImage.resizeMode.cover }
+                      className="h-[400px] w-full absolute bottom-0 -right-4"
                     />
                     <TouchableOpacity
                       onPress={ () => navigation.navigate("productListScreen", { screenTitle: selectedCategory.name }) }
@@ -178,6 +178,22 @@ const MainDashboardScreen = () => {
                     ) }
                   </ScrollView>  
                 </View>
+
+                {/*==== Signup Section ====*/}
+                <View className="mt-6 px-5 pt-5 pb-10 rounded-2xl bg-lightGreen">
+                  <Text className="font-semibold text-base leading-tight text-gray-800">Guarantee return and cash back if tailor fails to deliver</Text>
+                  <View className="mt-5 flex-row items-center justify-start">
+                    <TouchableOpacity onPress={ () => navigation.navigate("inviteFriendScreen") }
+                      className="px-4 py-2 rounded-lg bg-gold">
+                      <Text className="text-baseGreen text-sm font-medium">Browse our Bespoke Collection</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <Image
+                    source={require("../../../../../assets/images/home/invite_tree.png")}
+                    className="absolute bottom-0 right-0"
+                    resizeMode="contain"
+                  />
+                </View>
                 
                 {/*==== Newest Arrivals Section ====*/}
                 <View className="mt-6">
@@ -221,17 +237,17 @@ const MainDashboardScreen = () => {
                   </ScrollView>
                 </View>
 
-                {/*==== Invite a Friend Section ====*/}
+                {/*==== Signup Section ====*/}
                 <View className="mt-6 px-5 pt-5 pb-14 rounded-2xl bg-lightGreen">
-                  <Text className="text-lg leading-tight text-gray-800">Invite a friend and earn delivery points</Text>
+                  <Text className="font-semibold text-base leading-tight text-gray-800">Sign up and earn 500 points</Text>
                   <View className="mt-2 flex-row items-center justify-start">
                     <View className="mr-4">
-                      <Text className="text-sm text-gray-600">Redeem points and</Text>
+                      <Text className="text-sm text-gray-600">Sign up now</Text>
                       <Text className="text-sm text-gray-600">get free coupons</Text>
                     </View>
                     <TouchableOpacity onPress={ () => navigation.navigate("inviteFriendScreen") }
                       className="px-4 py-2 rounded-lg bg-baseGreen">
-                      <Text className="text-white text-sm font-medium">Invite</Text>
+                      <Text className="text-white text-sm font-medium">Sign Up</Text>
                     </TouchableOpacity>
                   </View>
                   <Image

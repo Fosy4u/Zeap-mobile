@@ -97,7 +97,7 @@ const useHomeHook = (): any => {
     // Handle Open WhatsApp
     const handleOpenWhatsApp = async () => {
         try {
-          const url = 'https://wa.me/447375387114';
+          const url = 'https://wa.me/447518465207';
           await Linking.openURL(url);
         } catch (error) {
           console.error("Error opening WhatsApp:", error);
