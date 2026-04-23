@@ -2,12 +2,13 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { useDispatch } from "react-redux";
 import { ILoginUser, loginUserSchema } from "../validations/auths_validation";
-import { getAuth, signInWithEmailAndPassword, getIdToken } from "@react-native-firebase/auth";
+import { getAuth, signInWithEmailAndPassword, signInWithCredential, getIdToken, GoogleAuthProvider } from "@react-native-firebase/auth";
 import { useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import RootNavigationStackModel from "../../../routes/model/routes_model";
 import { setUserData } from "../../profile/slices/profileState_slice";
+import { setIsLoading as setGlobalIsLoading, setLoadingMessage } from "../../general/slices/general_slice";
 import { useLazyGetUserByIdQuery, useMergeUserDataMutation } from "../apis/auths_api";
 import { GoogleSignin, statusCodes } from "@react-native-google-signin/google-signin";
 import handleError from "../../general/hooks/errorHandler_hook";
@@ -29,6 +30,7 @@ const useLoginHook = () => {
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const dispatch = useDispatch();
     const [isLoading, setIsLoading] = useState(false);
+    const [isGoogleLoading, setIsGoogleLoading] = useState(false);
     const [getUserById] = useLazyGetUserByIdQuery();
     const [mergeUserData] = useMergeUserDataMutation();
 
@@ -58,8 +60,8 @@ const useLoginHook = () => {
             const token = await getIdToken(authUser, true); // ✅ Modular getIdToken
 
             if (uid) {
-                // Save user data to secure storage
-                await EncryptedStorage.setItem(STORAGE_KEYS.FIREBASE_USER, JSON.stringify(authUser));
+                const firebaseUserData = { uid: authUser.uid, email: authUser.email, displayName: authUser.displayName, photoURL: authUser.photoURL };
+                await EncryptedStorage.setItem(STORAGE_KEYS.FIREBASE_USER, JSON.stringify(firebaseUserData));
                 await EncryptedStorage.setItem(STORAGE_KEYS.USER_ID, JSON.stringify(uid));
                 await storeToken(token);
 
@@ -122,30 +124,82 @@ const useLoginHook = () => {
 
     /**
      * Handle Google Sign-In
-     * @returns The authenticated user data
      */
     const handleGoogleSignIn = async () => {
-        setIsLoading(true);
+        setIsGoogleLoading(true);
+        dispatch(setLoadingMessage("Signing in with Google..."));
+        dispatch(setGlobalIsLoading(true));
 
         try {
             await GoogleSignin.hasPlayServices();
-            const userInfo = await GoogleSignin.signIn();
-            const token = await GoogleSignin.getTokens();
-            
-        } catch (error: any) {
-            if (error.code === statusCodes.SIGN_IN_CANCELLED) {
-                // Handle sign in cancelled silently
-            } else if (error.code === statusCodes.IN_PROGRESS) {
-                // Handle sign in in progress silently
-            } else {
-                // Handle other errors silently
+            await GoogleSignin.signIn();
+            const { idToken } = await GoogleSignin.getTokens();
+
+            if (!idToken) throw new Error("Failed to retrieve Google ID token.");
+
+            const googleCredential = GoogleAuthProvider.credential(idToken);
+            const { user: authUser } = await signInWithCredential(authInstance, googleCredential);
+
+            const uid = authUser.uid;
+            const token = await getIdToken(authUser, true);
+
+            const firebaseUserData = { uid: authUser.uid, email: authUser.email, displayName: authUser.displayName, photoURL: authUser.photoURL };
+            await EncryptedStorage.setItem(STORAGE_KEYS.FIREBASE_USER, JSON.stringify(firebaseUserData));
+            await EncryptedStorage.setItem(STORAGE_KEYS.USER_ID, JSON.stringify(uid));
+            await storeToken(token);
+
+            const userData = await getUserById(uid).unwrap();
+
+            if (userData) {
+                await EncryptedStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(userData));
+
+                const guestUID = await EncryptedStorage.getItem(STORAGE_KEYS.GUEST_UID);
+                const parsedGuestUID = guestUID ? JSON.parse(guestUID) : null;
+
+                if (parsedGuestUID) {
+                    const mergedUserData = await mergeUserData({ guestUid: parsedGuestUID }).unwrap();
+
+                    if (mergedUserData) {
+                        await EncryptedStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(mergedUserData));
+                        await Promise.all([
+                            clearToken(),
+                            EncryptedStorage.removeItem(STORAGE_KEYS.FIREBASE_USER),
+                            EncryptedStorage.removeItem(STORAGE_KEYS.USER_ID),
+                            EncryptedStorage.removeItem(STORAGE_KEYS.GUEST_UID)
+                        ]);
+                        dispatch(setUserData(mergedUserData));
+
+                        const isVendor = mergedUserData.isVendor;
+                        if (isVendor) {
+                            navigation.navigate("vendorHomeScreen", { screen: "Dashboard" });
+                        } else {
+                            navigation.navigate("homeScreen", { screen: "Dashboard" });
+                        }
+                    }
+                } else {
+                    dispatch(setUserData(userData));
+
+                    const isVendor = userData.isVendor;
+                    if (isVendor) {
+                        navigation.navigate("vendorHomeScreen", { screen: "Dashboard" });
+                    } else {
+                        navigation.navigate("homeScreen", { screen: "Dashboard" });
+                    }
+                }
             }
-            throw error;
+        } catch (error: any) {
+            if (error.code !== statusCodes.SIGN_IN_CANCELLED && error.code !== statusCodes.IN_PROGRESS) {
+                handleError(error);
+            }
+        } finally {
+            setIsGoogleLoading(false);
+            dispatch(setGlobalIsLoading(false));
+            dispatch(setLoadingMessage(""));
         }
     };
 
     return {
-        control, handleSubmit, onSubmit, handleGoogleSignIn, errors, isLoading
+        control, handleSubmit, onSubmit, handleGoogleSignIn, errors, isLoading, isGoogleLoading
     };
 };
 

@@ -1,5 +1,5 @@
 // fcm_hook.ts
-import messaging, { AuthorizationStatus, getMessaging, getToken, onMessage, onTokenRefresh, requestPermission } from "@react-native-firebase/messaging";
+import { AuthorizationStatus, getInitialNotification, getMessaging, getToken, onMessage, onNotificationOpenedApp, onTokenRefresh, requestPermission } from "@react-native-firebase/messaging";
 import { useEffect } from "react";
 import { useRegisterFCMTokenMutation } from "../apis/notification_api";
 import handleError from "../../general/hooks/errorHandler_hook";
@@ -111,14 +111,14 @@ const useFCMNotificationHook = () => {
     };
 
     const handleNotificationOpen = async () => {
-        // Case 1: When app is opened from a notification
-        const initialNotification = await messaging().getInitialNotification();
+        // Check if app was opened from a notification
+        const initialNotification = await getInitialNotification(messagingInstance);
         if (initialNotification) {
             handleNotificationNavigation(initialNotification.data);
         }
 
-        // Case 2: Handle notification when app is in background
-        messaging().onNotificationOpenedApp(remoteMessage => {
+        // Handle notification open when app is in background
+        onNotificationOpenedApp(messagingInstance, remoteMessage => {
             if (remoteMessage) {
                 handleNotificationNavigation(remoteMessage.data);
             }

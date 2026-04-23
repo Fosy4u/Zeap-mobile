@@ -16,7 +16,8 @@ const AuthorizationHeader = async (headers: Headers): Promise<Headers> => {
             // Get fresh token from Firebase
             token = await getIdToken(currentUser, true); // ✅ 3.  modular auth instance
             // console.log("REFRESHED TOKEN::: ", token);
-            
+
+
             // Store the token
             await storeToken(token);
         } else {
@@ -31,7 +32,7 @@ const AuthorizationHeader = async (headers: Headers): Promise<Headers> => {
         // Set headers
         headers.set('Authorization', `Bearer ${token}`);
         headers.set('Accept', 'application/json');
-        
+
         return headers;
     } catch (error) {
         throw new Error('Failed to set authorization headers');

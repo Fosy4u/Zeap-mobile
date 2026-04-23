@@ -9,7 +9,6 @@ const rootAPI = createApi({
             baseUrl: baseURL,
             prepareHeaders: async (headers) => AuthorizationHeader(headers),
             credentials: "include",
-            timeout: 20000, // 30 seconds
         }),
         {
             maxRetries: 3,

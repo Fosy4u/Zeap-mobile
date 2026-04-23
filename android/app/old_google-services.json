@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "241723989064",
+    "project_id": "zeap-7de3d",
+    "storage_bucket": "zeap-7de3d.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:241723989064:android:3e36f604db9b7edec50c7d",
+        "android_client_info": {
+          "package_name": "com.zeapapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "241723989064-ekaslh36fm5s7ugvhroc1iod1k30i0f7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBjOpPfp-IftSe3taKDBGpopCiKD0PHYYU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "241723989064-ekaslh36fm5s7ugvhroc1iod1k30i0f7.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "241723989064-op84vg5np5fep24l9rtaa27s46eh8c0n.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.zeap"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
