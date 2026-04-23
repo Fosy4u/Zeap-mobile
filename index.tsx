@@ -1,4 +1,18 @@
 // index.tsx
+
+// Fix AbortController 'this' binding issue in Hermes/React Native.
+// RTK Query detaches the abort() method, losing its prototype context.
+if (global.AbortController) {
+    const Original = global.AbortController as any;
+    class PatchedAbortController extends Original {
+        constructor() {
+            super();
+            this.abort = this.abort.bind(this);
+        }
+    }
+    (global as any).AbortController = PatchedAbortController;
+}
+
 import React from 'react';
 import { AppRegistry } from 'react-native';
 import { Provider } from 'react-redux';

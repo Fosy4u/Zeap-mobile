@@ -10,7 +10,6 @@ import { setIsLoading, setLoadingMessage } from "../../general/slices/general_sl
 import { withTiming, withDelay, withSequence, runOnJS } from 'react-native-reanimated';
 import EncryptedStorage from 'react-native-encrypted-storage';
 import { storeToken } from "../../../redux/services/authorizationHeader";
-import handleError from "../../general/hooks/errorHandler_hook";
 
 const STORAGE_KEYS = {
     FIREBASE_USER: 'fb_user',
@@ -33,30 +32,39 @@ const useSplashHook = (props: any) => {
     const authInstance = getAuth();
 
     const startSplashAnimation = () => {
-        // Start all animations in parallel
         zoomInValue.value = withTiming(0, { duration: 2000 });
         zoomInTwoValue.value = withTiming(80, { duration: 2000 });
         fadeOutValue.value = withDelay(1000, withTiming(1, { duration: 1600 }));
         fadeOutCounterValue.value = withDelay(3500, withTiming(1, { duration: 2000 }));
         slideUpValue.value = withTiming(300, { duration: 2000 });
         slideUpTwoValue.value = withDelay(2000, withTiming(height / 1.5, { duration: 2000 }));
-        
-        // Set animation started after all animations complete
+
         setTimeout(() => {
             setAnimationStarted(true);
-        }, 5500); // Total duration of all animations
+        }, 5500);
     };
 
     const handleCheckForFirstTimer = async () => {
         try {
-            const userData = await EncryptedStorage.getItem(STORAGE_KEYS.USER_DATA);
-            if (userData) {
-                const parsedUserData = JSON.parse(userData);
-                // console.log("PARSED USER DATA::: ", parsedUserData);
-                
-                // Refetch user data by UID
-                await refetchUserData(parsedUserData.uid);
+            const rawUserData = await EncryptedStorage.getItem(STORAGE_KEYS.USER_DATA);
+
+            if (rawUserData) {
+                const parsedUserData = JSON.parse(rawUserData);
+
+                // Navigate immediately with cached data — no API wait
+                dispatch(setUserData(parsedUserData));
+                const isVendor = parsedUserData.isVendor;
+                if (isVendor) {
+                    navigation.navigate("vendorHomeScreen", { screen: "Dashboard" });
+                } else {
+                    navigation.navigate("homeScreen", { screen: "Dashboard" });
+                }
+
+                // Silently refresh user data in the background
+                refreshUserDataSilently(parsedUserData.uid);
             } else {
+                // New user — show animation while auth & API calls run in parallel
+                startSplashAnimation();
                 await checkIsUserLoggedInAnonymously();
             }
         } catch (error) {
@@ -64,33 +72,16 @@ const useSplashHook = (props: any) => {
         }
     };
 
-    // Refetch the logged-in user data by UID
-    const refetchUserData = async (uid: string) => {
-        dispatch(setLoadingMessage("Fetching user data..."));
-        dispatch(setIsLoading(true));
-
+    // Non-blocking background refresh — never blocks navigation
+    const refreshUserDataSilently = async (uid: string) => {
         try {
             const userData = await getUserById(uid).unwrap();
-            // console.log("USER DATA::: ", userData);
-
             if (userData) {
-                // Save user data to secure storage
                 await EncryptedStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(userData));
-
-                // Dispatch to Redux Store
                 dispatch(setUserData(userData));
-                const isVendor = userData.isVendor;
-                if (isVendor) {
-                    navigation.navigate("vendorHomeScreen", { screen: "Dashboard" });
-                } else {
-                    navigation.navigate("homeScreen", { screen: "Dashboard" });
-                }
             }
-        } catch (error) {
-            handleError(error);
-        } finally {
-            dispatch(setIsLoading(false));
-            dispatch(setLoadingMessage(""));
+        } catch {
+            // Silently fail — the user is already on the home screen with cached data
         }
     };
 
@@ -101,34 +92,27 @@ const useSplashHook = (props: any) => {
                 if (user) {
                     const uid = user.uid;
                     const token = await user.getIdToken();
-                    
+
                     if (uid) {
-                        // Save user data to secure storage
                         await EncryptedStorage.setItem(STORAGE_KEYS.FIREBASE_USER, JSON.stringify(user));
                         await EncryptedStorage.setItem(STORAGE_KEYS.USER_ID, JSON.stringify(uid));
                         await storeToken(token);
 
-                        // Check if user is anonymous
                         const isAnonymousUser = user.isAnonymous;
-                        
+
                         if (isAnonymousUser) {
                             dispatch(setLoadingMessage("Zipping through aisles just for you…"));
                             dispatch(setIsLoading(true));
 
-                            // Save guest UID to secure storage
                             await EncryptedStorage.setItem(STORAGE_KEYS.GUEST_UID, JSON.stringify(uid));
 
-                            // Register as a guest user
                             const guestUserData = await registerGuestUser({}).unwrap();
-                            
+
                             if (guestUserData) {
                                 dispatch(setIsLoading(false));
                                 dispatch(setLoadingMessage(""));
 
-                                // Save guest user data
                                 await EncryptedStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(guestUserData));
-
-                                // Dispatch to Redux Store
                                 dispatch(setUserData(guestUserData));
                                 navigation.navigate("homeScreen", { screen: "Dashboard" });
                             }
@@ -136,20 +120,15 @@ const useSplashHook = (props: any) => {
                             dispatch(setLoadingMessage("Fetching auth user..."));
                             dispatch(setIsLoading(true));
 
-                            // Get Auth user data
                             const userData = await getUserById(uid).unwrap();
 
                             if (userData) {
                                 dispatch(setIsLoading(false));
                                 dispatch(setLoadingMessage(""));
 
-                                // Save user data
                                 await EncryptedStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(userData));
-
-                                // Dispatch to Redux Store
                                 dispatch(setUserData(userData));
 
-                                // Check if user is a vendor
                                 const isVendor = userData.isVendor;
                                 if (isVendor) {
                                     navigation.navigate("vendorHomeScreen", { screen: "Dashboard" });
@@ -163,26 +142,20 @@ const useSplashHook = (props: any) => {
                     dispatch(setLoadingMessage("Zipping through aisles just for you…"));
                     dispatch(setIsLoading(true));
 
-                    // If user is "null", proceed with anonymous login
                     const anonymousUserData = await signInAnonymously(authInstance);
 
                     if (anonymousUserData) {
                         const uid = anonymousUserData.user.uid;
 
-                        // Save guest UID to secure storage
                         await EncryptedStorage.setItem(STORAGE_KEYS.GUEST_UID, JSON.stringify(uid));
 
-                        // Register as a guest user
                         const guestUserData = await registerGuestUser({}).unwrap();
-                        
+
                         if (guestUserData) {
                             dispatch(setIsLoading(false));
                             dispatch(setLoadingMessage(""));
-                            
-                            // Save guest user data
+
                             await EncryptedStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(guestUserData));
-                            
-                            // Dispatch to Redux Store
                             dispatch(setUserData(guestUserData));
                             navigation.navigate("homeScreen", { screen: "Dashboard" });
                         }
@@ -199,7 +172,6 @@ const useSplashHook = (props: any) => {
             slideAnim.value = withSequence(
                 withTiming(0, { duration: 200 }),
                 withTiming(20, { duration: 0 }, (finished) => {
-                    // Wrap the state update in runOnJS
                     if (finished) {
                         runOnJS(setCurrentIndex)(currentIndex + 1);
                     }
@@ -213,7 +185,7 @@ const useSplashHook = (props: any) => {
     useEffect(() => {
         handleCheckForFirstTimer();
     }, []);
-    
+
     return {};
 };
 

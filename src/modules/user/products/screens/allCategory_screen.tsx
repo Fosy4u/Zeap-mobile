@@ -1,5 +1,5 @@
 import React from 'react'
-import { Image, SafeAreaView, StatusBar, Text, View } from 'react-native';
+import { Image, SafeAreaView, StatusBar, Text, View, ImageSourcePropType } from 'react-native';
 import { ArrowLeft } from 'iconsax-react-native';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../../redux/store/store';
@@ -51,7 +51,7 @@ const AllCategoryScreen = () => {
                 </View>
 
                 <Image
-                  source={ category.image }
+                  source={ (typeof category.image === 'string' ? { uri: category.image } : category.image) as ImageSourcePropType }
                   resizeMode="contain"
                   className="h-[135px] w-[125px] absolute bottom-0 right-0"
                 />
