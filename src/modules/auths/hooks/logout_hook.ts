@@ -7,6 +7,14 @@ import { useRegisterGuestUserMutation } from "../apis/auths_api";
 import { useDispatch } from "react-redux";
 import { setUserData } from "../../profile/slices/profileState_slice";
 import { setIsLoading, setLoadingMessage } from "../../general/slices/general_slice";
+import { clearToken } from "../../../redux/services/authorizationHeader";
+
+const STORAGE_KEYS = {
+    FIREBASE_USER: 'fb_user',
+    USER_ID: 'user_id',
+    USER_DATA: 'user_data',
+    GUEST_UID: 'guest_uid'
+} as const;
 
 const useLogoutHook = () => {
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
@@ -24,36 +32,40 @@ const useLogoutHook = () => {
 
         try {
             await auth.signOut();
-            await EncryptedStorage.removeItem("fbUser");
-            await EncryptedStorage.removeItem("userID");
-            await EncryptedStorage.removeItem("token");
-            await EncryptedStorage.removeItem("guestUID");
-            await EncryptedStorage.removeItem("userData");
+
+            // Clear all stored auth data using the correct keys
+            await Promise.all([
+                clearToken(),
+                EncryptedStorage.removeItem(STORAGE_KEYS.FIREBASE_USER),
+                EncryptedStorage.removeItem(STORAGE_KEYS.USER_ID),
+                EncryptedStorage.removeItem(STORAGE_KEYS.USER_DATA),
+                EncryptedStorage.removeItem(STORAGE_KEYS.GUEST_UID),
+            ]);
+
             dispatch(setUserData({}));
 
-            // Sign in anonymously
+            // Sign in anonymously to restore guest session
             const anonymousUserData = await signInAnonymously(auth);
-            // console.log("LOGOUT ANONYMOUS USER DATA::: ", anonymousUserData);
 
             if (anonymousUserData) {
                 const uid = anonymousUserData.user.uid;
 
-                // Save guest UID to secure storage
-                await EncryptedStorage.setItem("guestUID", uid);
+                await EncryptedStorage.setItem(STORAGE_KEYS.GUEST_UID, JSON.stringify(uid));
 
-                // Register as a guest user
                 const guestUserData = await registerGuestUser({}).unwrap();
-                // console.log("LOGOUT GUEST USER DATA::: ", guestUserData);
-                
+
                 if (guestUserData) {
-                    // Dispatch to Redux Store
+                    await EncryptedStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(guestUserData));
+
                     dispatch(setIsLoading(false));
                     dispatch(setLoadingMessage(""));
-                    dispatch(setUserData(guestUserData!));
+                    dispatch(setUserData(guestUserData));
                     navigation.navigate("homeScreen", { screen: "Dashboard" });
                 }
             }
         } catch (error) {
+            dispatch(setIsLoading(false));
+            dispatch(setLoadingMessage(""));
             console.log("Error signing out user:::", error);
         }
     };
@@ -64,7 +76,7 @@ const useLogoutHook = () => {
      */
     const removeUserData = async () => {
         try {
-            await EncryptedStorage.removeItem("userData");
+            await EncryptedStorage.removeItem(STORAGE_KEYS.USER_DATA);
         } catch (error) {
             console.log("Error removing user data:::", error);
         }
@@ -75,7 +87,7 @@ const useLogoutHook = () => {
      */
     const removeToken = async () => {
         try {
-            await EncryptedStorage.removeItem("token");
+            await clearToken();
         } catch (error) {
             console.log("Error removing token:::", error);
         }

@@ -39,10 +39,10 @@ const ProductCardComponent: React.FC<IProductCardItemProps> = (props) => {
                 </View>
             </View>
             <View className={`mt-3 ${ orientation === "Horizontal" ? "w-[160px]" : "" }`}>
-                <Text className={`text-gray-800 ${ orientation === "Horizontal" ? "text-base" : "text-sm" }`}>{ FormatWords.truncateWords(product.title, 30) }</Text>
+                <Text className="text-gray-800 text-xs">{ FormatWords.truncateWords(product.title, 30) }</Text>
                 <View className="mt-1.5 flex-row items-center justify-between">
-                    <Text className="px-2.5 py-1 text-xs rounded-lg bg-lightGreen">
-                        { product.categories?.productGroup?.split("-").join(" ") || "N/A" }
+                    <Text className="px-2 py-0.5 text-xs rounded-lg bg-lightGreen">
+                        { product.categories.productGroup.split("-").join(" ") }
                     </Text>
 
                     {/* <View className="flex-row">
@@ -52,8 +52,8 @@ const ProductCardComponent: React.FC<IProductCardItemProps> = (props) => {
                 </View>
 
                 <View className="flex-row items-center">
-                    <Text className="mt-2.5 text-base font-medium text-gray-900">{ product.variations![0].discount ? formatCurrency(product?.variations![0].discount || "0", product?.variations![0].currency || "NGN", true) : formatCurrency(product?.variations![0].price || "0", product?.variations![0].currency || "NGN", true) }</Text>
-                    <Text className="mt-2.5 ml-3 text-sm font-medium text-gray-400 line-through">{ product.variations![0].discount && formatCurrency(product?.variations![0].price || "0",  product?.variations![0].currency || "NGN", true) }</Text>
+                    <Text className="mt-2.5 text-sm font-semibold text-gray-900">{ product.variations![0].discount ? formatCurrency(product?.variations![0].discount || "0", product?.variations![0].currency || "NGN", false) : formatCurrency(product?.variations![0].price || "0", product?.variations![0].currency || "NGN", false) }</Text>
+                    <Text className="mt-2.5 ml-3 text-xs font-medium text-gray-400 line-through">{ product.variations![0].discount && formatCurrency(product?.variations![0].price || "0",  product?.variations![0].currency || "NGN", false) }</Text>
                 </View>
             </View>
         </TouchableOpacity>
