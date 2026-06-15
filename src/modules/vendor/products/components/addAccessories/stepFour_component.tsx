@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React from 'react';
 import {Image, ScrollView, Text, TouchableOpacity, View} from "react-native";
 import {Add, ArrowRight, DocumentUpload} from "iconsax-react-native";
 import FastImage from 'react-native-fast-image';

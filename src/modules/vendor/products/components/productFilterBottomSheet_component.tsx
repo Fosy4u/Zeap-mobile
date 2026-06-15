@@ -14,7 +14,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setShowProductFilterBottomSheet } from '../../home/slices/vendorHome_slice.tsx';
 import useVendorProductHook from '../hooks/vendorProduct_hook.ts';
 import Slider from '@react-native-community/slider';
-import AppLoader from '../../../general/components/appLoader.tsx';
 import { RootState } from '../../../../redux/store/store.ts';
 
 

@@ -38,7 +38,7 @@ const useStepFiveHook = () => {
     
     // Handle get uploaded colors
     const handleGetUploadedColors = () => {
-        if (!product.colors) return;
+        if (!product || !product.colors) return;
 
         const formattedColours: IColorOption[] = product.colors!.map((color: IColor) => ({
             colorName: color?.value || "",
@@ -50,7 +50,7 @@ const useStepFiveHook = () => {
 
     // Handle get uploaded sizes
     const handleGetUploadedSizes = () => {
-        if (!product.sizes) return;
+        if (!product || !product.sizes) return;
         setUploadedSizes(product.sizes!);
     };
     

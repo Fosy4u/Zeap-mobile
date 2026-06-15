@@ -9,7 +9,8 @@ const editAccountDetailsSchema = yup.object().shape({
         .optional(),
     email: yup
         .string()
-        .optional(),
+        .email("Enter a valid email address")
+        .required("Email is required"),
     phoneNumber: yup
         .string()
         .optional(),

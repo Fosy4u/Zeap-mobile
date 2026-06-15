@@ -69,4 +69,4 @@ interface IAddBespokeShoeHook {
     isSubmitting: boolean;
 }
 
-export { IBespokeShoeState, IAddBespokeShoeHook };
+export type { IBespokeShoeState, IAddBespokeShoeHook };

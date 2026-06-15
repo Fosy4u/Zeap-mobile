@@ -4,7 +4,6 @@ import { RootState } from "../../../../../redux/store/store";
 import { stepTwoAddShoesSchema } from "../../validations/addProduct_validation";
 import { useUpdateProductMutation } from "../../apis/bespokeProduct_api";
 import { setLoadingMessage, setProduct, setProductIsLoading, setSelectedStep } from "../../slices/vendorProductState_slice";
-import { Alert } from "react-native";
 import { useLazyGetProductByProductIDQuery } from "../../apis/product_api";
 import handleError from "../../../../general/hooks/errorHandler_hook";
 

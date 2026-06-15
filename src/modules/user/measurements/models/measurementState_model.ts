@@ -13,6 +13,7 @@ interface IMeasurementState {
     selectedMeasurementTemplate: IBodyMeasurement;
     requiredMeasurementFormFields: IRequiredMeasurementFormFields;
     bodyMeasurementGuides: IBodyMeasurementGuide[]
+    selectedGender: string;
     loadingMessage: string;
     isLoading: boolean;
 };

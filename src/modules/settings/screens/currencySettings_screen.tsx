@@ -8,11 +8,10 @@ import useEditAccountDetailsHook from '../../profile/hooks/editAccountDetails_ho
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../../redux/store/store';
 import useSettingsHook from '../hooks/settings_hook';
-import AppLoader from '../../general/components/appLoader';
 
 const CurrencySettingsScreen = () => {
-  const { currencies, recommendedCurrency, isLoading: settingsIsLoading, loadingMessage: settingsLoadingMessage } = useSelector((state: RootState) => state.settingsState);
-  const { userData, isLoading: profileIsLoading, loadingMessage: profileLoadingMessage } = useSelector((state: RootState) => state.profileState);
+  const { currencies, recommendedCurrency } = useSelector((state: RootState) => state.settingsState);
+  const { userData } = useSelector((state: RootState) => state.profileState);
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const dispatch = useDispatch();
   // console.log("USER DATA", userData);
@@ -76,10 +75,6 @@ const CurrencySettingsScreen = () => {
         </View>
       </View>
 
-      {/* ==== App Loader ==== */}
-      { (settingsIsLoading || profileIsLoading) && 
-        <AppLoader loadingAdditionalMessage={ settingsLoadingMessage || profileLoadingMessage } />
-      }
     </SafeAreaView>
   );
 };

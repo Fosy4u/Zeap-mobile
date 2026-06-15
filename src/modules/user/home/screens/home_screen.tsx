@@ -1,5 +1,5 @@
 import React from 'react';
-import { SafeAreaView, TouchableOpacity, Text, Linking } from 'react-native';
+import { SafeAreaView, TouchableOpacity } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Whatsapp } from 'iconsax-react-native';
 
@@ -18,13 +18,13 @@ const HomeScreen = () => {
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <Tab.Navigator
-        initialRouteName="Dashboard"
+        initialRouteName="Home"
         tabBar={(props) => <AppBottomBarComponent {...props} />}
         screenOptions={{
           headerShown: false,
         }}
       >
-        <Tab.Screen name="Dashboard" component={ DashboardWrapperScreen } />
+        <Tab.Screen name="Home" component={ DashboardWrapperScreen } />
         <Tab.Screen name="Cart" component={ CartScreen } />
         <Tab.Screen name="Saved" component={ SavedScreen } />
         <Tab.Screen name="Profile" component={ ProfileScreen } />

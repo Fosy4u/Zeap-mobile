@@ -7,8 +7,9 @@ import { RootState } from "../../../../redux/store/store";
 import { useState } from "react";
 import handleError from "../../../general/hooks/errorHandler_hook";
 import { useStripe } from "@stripe/stripe-react-native";
-import { setPaymentReference } from "../slices/payment_slice";
+import { setNewOrderId, setPaymentReference, setShowOrderSuccessModal } from "../slices/payment_slice";
 import IPaymentReference from "../models/paymentReference_model";
+import { setCart } from "../../cart/slices/cart_slice";
 
 const usePaymentHook = () => {
     const { userData } = useSelector((state: RootState) => state.profileState );
@@ -28,7 +29,7 @@ const usePaymentHook = () => {
     const handleProceedToPayment = async (formData: any) => {
         setLoadingMessage("Fetching payment reference...");
         setIsLoading(true);
-        
+
         const requestParams = {
             firstName: formData.firstName,
             lastName: formData.lastName,
@@ -39,30 +40,57 @@ const usePaymentHook = () => {
             phoneNumber: formData.phoneNumber,
             method: selectedDeliveryFee?.method || "standard",
         };
-        // console.log("REQUEST PARAMS::: ", requestParams);
+
+        // Progressive loading messages — the Render-hosted backend can cold
+        // start in 30-60s, so update the message after 10s/25s instead of
+        // leaving the user staring at a static spinner.
+        const slowMessageTimer = setTimeout(() => {
+            setLoadingMessage("Backend is waking up, please hold on…");
+        }, 10000);
+        const verySlowMessageTimer = setTimeout(() => {
+            setLoadingMessage("Still waiting on the server… almost there.");
+        }, 25000);
+
+        // Hard timeout — RTK Query has no built-in request timeout, and the
+        // server-side payment-reference call must not be retried (it creates
+        // a Paystack reference each call). Abort after 45s and surface a
+        // real error rather than appearing to hang indefinitely.
+        let aborted = false;
+        const promise = getPaymentReference(requestParams);
+        const hardTimeout = setTimeout(() => {
+            aborted = true;
+            promise.abort();
+        }, 45000);
 
         try {
-            const paymentReferenceResponse = await getPaymentReference(requestParams).unwrap();
+            const paymentReferenceResponse = await promise.unwrap();
             console.log("PAYMENT REFERENCE RESPONSE::: ", paymentReferenceResponse);
 
             if (paymentReferenceResponse) {
                 dispatch(setPaymentReference(paymentReferenceResponse));
-                
-                // Check payment currency
+
                 const paymentCurrency = paymentReferenceResponse?.currency || "NGN";
                 console.log("PAYMENT CURRENCY::: ", paymentCurrency);
 
                 if (paymentCurrency === "NGN") {
                     navigation.navigate("paystackPaymentScreen");
                 } else {
-                    // Pass the freshly fetched client secret to avoid relying on selector update timing
                     await handleStripePayment(paymentReferenceResponse, paymentReferenceResponse?.stripeClientSecret);
                 }
             }
         } catch (error) {
-            handleError(error);
             console.log("ERROR::: ", error);
+            if (aborted) {
+                handleError(new Error(
+                    "The payment server is taking too long to respond. Please check your connection and try again in a moment.",
+                ));
+            } else {
+                handleError(error);
+            }
         } finally {
+            clearTimeout(slowMessageTimer);
+            clearTimeout(verySlowMessageTimer);
+            clearTimeout(hardTimeout);
             setIsLoading(false);
             setLoadingMessage("");
         }
@@ -112,7 +140,25 @@ const usePaymentHook = () => {
             console.log("VERIFY PAYMENT RESPONSE DATA SUCCESS::: ", verifyPaymentResponse);
 
             if (verifyPaymentResponse!) {
-                navigation.navigate("ordersScreen");
+                // Mirror the backend's cleared basket locally. The backend
+                // returns 404 "Basket not found" when the basket is empty,
+                // so fetching here would just produce a noisy error log/alert.
+                dispatch(setCart({
+                    _id: "",
+                    user: "",
+                    basketId: "",
+                    basketItems: [],
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                }));
+
+                // Surface the order-success modal. Receipt / View Order navigation
+                // is owned by the modal's CTAs so the user controls where they land.
+                const newOrderId = verifyPaymentResponse?.orderId ?? verifyPaymentResponse?.order?.orderId ?? "";
+                if (newOrderId) {
+                    dispatch(setNewOrderId(newOrderId));
+                }
+                dispatch(setShowOrderSuccessModal(true));
             }
         } catch (error) {
             console.log("ERROR::: ", error);

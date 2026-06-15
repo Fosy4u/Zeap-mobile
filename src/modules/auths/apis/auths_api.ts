@@ -1,5 +1,4 @@
 import rootAPI from "../../../redux/api/rootAPI.ts";
-import { getToken } from "../../../redux/services/authorizationHeader.ts";
 import { forgotPasswordRoute, loginUserRoute, mergeUserDataRoute, registerUserRoute } from "../../../redux/api/api_route.ts";
 import { IUser } from "../../profile/models/profileState_model";
 
@@ -15,13 +14,11 @@ const authAPI = rootAPI.injectEndpoints({
             query: (requestData) => ({
                 url: registerUserRoute,
                 method: "PUT",
-                headers: {
-                    "Accept": "application/json",
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${ getToken() }`
-                },
                 body: requestData,
             }),
+            // Authorization is handled by prepareHeaders. A missing/invalid Firebase
+            // user is not a transient failure, so don't retry — it just stalls the UI.
+            extraOptions: { maxRetries: 0 },
             invalidatesTags: ["user"],
             transformResponse: (response: { data: any }) => {
                 return response.data;
@@ -35,6 +32,9 @@ const authAPI = rootAPI.injectEndpoints({
                 method: "GET",
                 params: { uid },
             }),
+            // A 404 here means "no profile yet" (first sign-in) — the caller falls back
+            // to creating the user. Retrying 3× wastes ~30s before the fallback runs.
+            extraOptions: { maxRetries: 0 },
             providesTags: ["user"],
             transformResponse: (response: { data: IUser }) => {
                 return response.data;

@@ -11,9 +11,9 @@ import RootNavigationStackModel from '../../../../routes/model/routes_model.ts';
 import DynamicFilterBottomSheetComponent from '../components/dynamicFilterBottomSheet_component.tsx';
 import ProductListCard from '../components/productListCard_component';
 import useFilterAndSearchHook from '../hooks/filterAndSearch_hook.ts';
-import AppLoader from '../../../general/components/appLoader.tsx';
 import { setSearchPhrase } from '../slices/product_slice.ts';
 import EmptyListComponent from '../../../general/components/emptyList_component.tsx';
+import ProductListSkeletonLoader from '../components/productListSkeletonLoader_component.tsx';
 
 interface IProps {
   route: RouteProp<RootNavigationStackModel, 'productListScreen'>;
@@ -26,7 +26,7 @@ const ProductListScreen: React.FC<IProps> = ({ route }) => {
   const dispatch = useDispatch();
 
   // Import Hooks
-  const { selectedFilters, toggleCheckboxOption, handleSubmit, handleGetFilteredProducts, handleGetDynamicFilterOptions, handlePrevAndNextPagination, clearAllFilters } = useFilterAndSearchHook();
+  const { selectedFilters, selectedFiltersCount, toggleCheckboxOption, preselectCategoryFilters, handleSubmit, handleGetFilteredProducts, handleGetDynamicFilterOptions, handlePrevAndNextPagination, clearAllFilters } = useFilterAndSearchHook();
 
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const snapPoints = useMemo(() => ['100%'], []);
@@ -39,25 +39,28 @@ const ProductListScreen: React.FC<IProps> = ({ route }) => {
     }
   }, []);
 
+  // Load the category/filtered list whenever the category or the user's selected
+  // filters change. The category filter (gender for Female/Male, main for
+  // Shoes/Accessories) is derived from screenTitle inside the hook — we no longer
+  // toggle a checkbox as a side-effect here. That side-effect double-ran (which
+  // cleared the gender filter) and was the reason returning from a product left
+  // the list empty.
   useEffect(() => {
     handleGetFilteredProducts({ screenTitle: screenTitle || "Products", setShowBottomSheetModal });
     handleGetDynamicFilterOptions({});
-  }, [selectedFilters]);
+  }, [screenTitle, selectedFilters]);
 
+  // Once the dynamic filter options arrive for this category, pre-select its
+  // filter (e.g. Gender → Male) so the filter sheet highlights it on open.
+  // Guarded per screenTitle so it seeds exactly once and never fights the
+  // user's own toggles afterwards.
+  const seededTitleRef = useRef<string | null>(null);
   useEffect(() => {
-    if (screenTitle === "Shoes") {
-      toggleCheckboxOption("Main", "Footwear");
-    }
-    if (screenTitle === "Female Clothings") {
-      toggleCheckboxOption("Main", "Female");
-    }
-    if (screenTitle === "Male Clothings") {
-      toggleCheckboxOption("Main", "Male");
-    }
-    if (screenTitle === "Accessories" || screenTitle === "Bags") {
-      toggleCheckboxOption("Main", "Accessories");
-    }
-  }, [screenTitle]);
+    if (!dynamicFilterOptions || dynamicFilterOptions.length === 0) return;
+    if (seededTitleRef.current === screenTitle) return;
+    seededTitleRef.current = screenTitle;
+    preselectCategoryFilters(screenTitle);
+  }, [dynamicFilterOptions, screenTitle]);
 
   return (
     <GestureHandlerRootView>
@@ -94,25 +97,36 @@ const ProductListScreen: React.FC<IProps> = ({ route }) => {
             </View>
 
             <TouchableOpacity onPress={() => setShowBottomSheetModal(true)}>
-              <View className="h-[55px] w-[55px] ml-3  flex items-center justify-center rounded-xl bg-gold">
+              <View className="h-[55px] w-[55px] ml-3 relative flex items-center justify-center rounded-xl bg-gold">
                 <Image
                   source={require('../../../../../assets/images/filter.png')}
                   className="h-[25px] w-[25px]"
                 />
+                { selectedFiltersCount > 0 && (
+                  <View className="absolute -top-1.5 -right-1.5 h-[20px] min-w-[20px] px-1 flex items-center justify-center rounded-full bg-baseGreen border border-white">
+                    <Text className="font-montserratSemiBold text-[10px] text-white">{ selectedFiltersCount }</Text>
+                  </View>
+                ) }
               </View>
             </TouchableOpacity>
           </View>
 
           {/*==== Product List ====*/}
-          <FlatList
-            data={allProducts}
-            renderItem={({ item }) => <ProductListCard product={item} />}
-            keyExtractor={(_, index) => `${index}-item.productId`}
-            showsVerticalScrollIndicator={false}
-            className="h-auto w-full mt-3"
-            ListEmptyComponent={<EmptyListComponent message={screenTitle + " product yet."} />}
-            contentContainerStyle={{ flexGrow: 1 }}
-          />
+          { (isLoading && allProducts.length === 0) ? (
+            <View className="mt-3 flex-1">
+              <ProductListSkeletonLoader />
+            </View>
+          ) : (
+            <FlatList
+              data={allProducts}
+              renderItem={({ item }) => <ProductListCard product={item} />}
+              keyExtractor={(_, index) => `${index}-item.productId`}
+              showsVerticalScrollIndicator={false}
+              className="h-auto w-full mt-3"
+              ListEmptyComponent={<EmptyListComponent message={`No ${(screenTitle || "products").toLowerCase()} found.`} />}
+              contentContainerStyle={{ flexGrow: 1 }}
+            />
+          ) }
 
 
           {/*==== Next and Previous Buttons ====*/}
@@ -147,9 +161,6 @@ const ProductListScreen: React.FC<IProps> = ({ route }) => {
             loadingMessage={loadingMessage}
           />
         </SafeAreaView>
-
-        {/*==== Show app loader ====*/}
-        { isLoading && <AppLoader loadingAdditionalMessage={ loadingMessage } /> }
       </BottomSheetModalProvider>
     </GestureHandlerRootView>
   );

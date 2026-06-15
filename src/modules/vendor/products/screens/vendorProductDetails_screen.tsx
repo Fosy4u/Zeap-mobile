@@ -7,16 +7,16 @@ import {RootState} from "../../../../redux/store/store.ts";
 import {RouteProp, useNavigation} from "@react-navigation/native";
 import RootNavigationStackModel from "../../../../routes/model/routes_model.ts";
 import AppLoader from '../../../general/components/appLoader.tsx';
+import SkeletonBlock from '../../../general/components/skeletonBlock_component.tsx';
 import useProductHook from '../hooks/vendorProduct_hook.ts';
 import FastImage from 'react-native-fast-image';
-import ShimmerPlaceHolder from 'react-native-shimmer-placeholder';
-import LinearGradient from "react-native-linear-gradient";
 import VendorProductDescriptionComponent from '../components/vendorProductDescription_component.tsx';
 import ReviewComponent from '../../../general/components/review_component.tsx';
 import VendorProductTimelineComponent from '../components/vendorProductTimeline_component.tsx';
 import { setProduct, setProductMode, setSelectedStep, setSelectedTab } from '../slices/vendorProductState_slice.ts';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import DeleteProducWarningPopupModal from '../modals/deleteProductWarningPopup_modal.tsx';
+import FormatWords from '../../../../utils/formatWords';
 
 
 interface IProps {
@@ -69,7 +69,7 @@ const VendorProductDetailsScreen: React.FC<IProps> = ({ route }) => {
                 {/*==== Product Name And Price ====*/}
                 <View className="h-auto w-full">
                     <View className="h-auto w-full flex-row items-center justify-start space-x-3">
-                        <Text className="px-[8px] py-1.5 font-montserratMedium text-xs rounded-md self-start bg-white">{product?.categories?.productGroup?.split("-").join(" ")}</Text>
+                        <Text className="px-[8px] py-1.5 font-montserratMedium text-xs rounded-md self-start bg-white">{ FormatWords.productGroupLabel(product?.categories?.productGroup, product?.productType) }</Text>
                         <View className={`px-3 py-1 flex items-center justify-center rounded-md border backdrop-blur-lg ${
                                 product?.status === "live" 
                                 ? "border-green-300 bg-green-50" 
@@ -138,21 +138,20 @@ const VendorProductDetailsScreen: React.FC<IProps> = ({ route }) => {
                                     uri: featuredImage?.link!,
                                     priority: FastImage.priority.normal
                                 }}
-                                defaultSource={ require("../../../../../assets/images/app_logo.png") }
+                                defaultSource={ require("../../../../../assets/images/app_logo_green.png") }
                                 resizeMode={ FastImage.resizeMode.cover }
                                 className="h-[500px] w-full rounded-lg"
                                 style={{ aspectRatio: 0.68 }}
                                 fallback
                             />
                         ) : (
-                            <ShimmerPlaceHolder
-                                // visible={!isLoadingProducts}
-                                LinearGradient={LinearGradient}
-                                shimmerColors={['#ebebeb', '#fefefe', '#ebebeb']}
-                                height={350}
-                                width={Dimensions.get('window').width - 40}
-                                shimmerStyle={{ borderRadius: 16, marginTop: 20 }}
-                            />
+                            <View style={{ marginTop: 20 }}>
+                                <SkeletonBlock
+                                    width={ Dimensions.get('window').width - 40 }
+                                    height={ 350 }
+                                    radius={ 16 }
+                                />
+                            </View>
                         ) } 
                     </View>
                 </View>
@@ -175,7 +174,7 @@ const VendorProductDetailsScreen: React.FC<IProps> = ({ route }) => {
                                         source={
                                             defaultFeaturedImageAndThumbnails?.images![index]?.link!
                                             ? { uri: defaultFeaturedImageAndThumbnails?.images![index]?.link! }
-                                            : require("../../../../../assets/images/app_logo.png")
+                                            : require("../../../../../assets/images/app_logo_green.png")
                                         }
                                         resizeMode="cover"
                                         className="h-[76px] w-[68px] rounded-2xl"

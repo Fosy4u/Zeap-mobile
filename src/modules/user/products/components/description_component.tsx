@@ -2,6 +2,7 @@ import React from 'react'
 import { View, Text, useWindowDimensions } from 'react-native'
 import HTMLView from 'react-native-htmlview';
 import IProductDetails from '../models/productDetails_model'
+import FormatWords from '../../../../utils/formatWords';
 
 interface IProps {
   product: IProductDetails;
@@ -28,10 +29,31 @@ const DescriptionComponent: React.FC<IProps> = ({ product }) => {
           <Text className="w-[65%] font-montserratMedium text-right text-gray-700">{ product?.title! }</Text>
         </View>
 
+        { !!product?.productId && (
+          <View className="h-auto w-full mt-3 flex-row items-center justify-between">
+            <Text>Product ID:</Text>
+            <Text className="font-montserratMedium text-gray-700">{ product?.productId }</Text>
+          </View>
+        ) }
+
         <View className="h-auto w-full mt-3 flex-row items-center justify-between">
           <Text>Group:</Text>
-          <Text className="font-montserratMedium text-gray-700">{ product?.categories?.productGroup! }</Text>
+          <Text className="font-montserratMedium text-gray-700">{ FormatWords.productGroupLabel(product?.categories?.productGroup, product?.productType) }</Text>
         </View>
+
+        { !!product?.categories?.main?.length && (
+          <View className="h-auto w-full mt-3 flex-row items-start justify-between">
+            <Text>Main:</Text>
+            <Text className="w-[65%] font-montserratMedium text-right text-gray-700">{ product.categories.main.join(", ") }</Text>
+          </View>
+        ) }
+
+        { !!product?.categories?.accessoryType && (
+          <View className="h-auto w-full mt-3 flex-row items-center justify-between">
+            <Text>Accessory:</Text>
+            <Text className="font-montserratMedium text-gray-700">{ product.categories.accessoryType }</Text>
+          </View>
+        ) }
 
         <View className="h-auto w-full mt-3 flex-row items-start justify-between">
           <Text>Design:</Text>

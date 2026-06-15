@@ -41,7 +41,7 @@ const initialState: IProfileState = {
     showCountryModal: false,
     heightUnitOptions: [
         { "key": "Inches", "value": "Inches" },
-        { "key": "Centimeter", "value": "Centimeter" },
+        { "key": "Meters", "value": "Meter" },
     ],
     weightUnitOptions: [
         { "key": "Kilogram", "value": "Kilogram" },

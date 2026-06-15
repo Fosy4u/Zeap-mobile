@@ -1,4 +1,3 @@
-import { BottomSheetModalMethods } from "@gorhom/bottom-sheet/lib/typescript/types";
 import IAnalytic from "./analytic_model";
 
 interface IVendorHomeState {

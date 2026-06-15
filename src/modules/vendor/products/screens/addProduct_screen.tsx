@@ -1,12 +1,11 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect} from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {View, Text, TouchableOpacity, ScrollView, StatusBar, SafeAreaView, Image} from 'react-native';
 import AppHeaderComp from "../../general/components/appHeader_comp.tsx";
 import {ArrowRight} from "iconsax-react-native";
 import ProductTypeBottomSheetComponent from "../components/productTypeBottomSheet_component.tsx";
 import useAddBespokeClothesHook from '../hooks/bespokeClothes/addBespokeClothes_hook.ts';
-import ShimmerPlaceHolder from 'react-native-shimmer-placeholder';
-import LinearGradient from 'react-native-linear-gradient';
+import SkeletonBlock from '../../../general/components/skeletonBlock_component';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import RootNavigationStackModel from '../../../../routes/model/routes_model.ts';
@@ -51,9 +50,9 @@ const AddProductScreen = () => {
                                 <View className="mt-3 flex-row items-center justify-between">
                                     <Text className="mt-1 font-montserratMedium text-sm">{
                                         product.productType === "bespokeCloth" ? "Bespoke Clothes" :
-                                        product.productType === "readyMadeCloth" ? "Readymade Clothes" : 
+                                        product.productType === "readyMadeCloth" ? "Ready to Wear Cloth" :
                                         product.productType === "bespokeShoe" ? "Bespoke Shoes" :
-                                        product.productType === "readyMadeShoe" ? "Readymade Shoes" : 
+                                        product.productType === "readyMadeShoe" ? "Ready to Wear Shoe" :
                                         "Accessories"
                                     }</Text>
 
@@ -85,11 +84,9 @@ const AddProductScreen = () => {
                         </View>
                     )
                 ) : (
-                    <ShimmerPlaceHolder
-                        // visible={ isLoadingDraftProducts }
-                        LinearGradient={ LinearGradient }
-                        style={ { height: 100, with: "100%", borderRadius: 10, backgroundColor: "#fbfbfb" } }
-                    />
+                    <View className="mt-3 w-full">
+                        <SkeletonBlock width={ 320 } height={ 100 } radius={ 10 } />
+                    </View>
                 ) }
 
                 <Text className="my-5 font-montserratMedium text-gray-700">OR</Text>

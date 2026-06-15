@@ -1,3 +1,5 @@
+import type { INotificationPayload } from "../utils/notificationNavigation";
+
 interface INotificationDetails {
   _id: string;
   notifications: INotification[];
@@ -9,6 +11,7 @@ interface INotification {
   body: string;
   image?: string;
   createdAt: string;
+  data?: INotificationPayload;
 }
 
 export type { INotification };

@@ -1,7 +1,7 @@
 import { useDispatch, useSelector } from "react-redux";
 import { useDecreamentProductQuantityMutation, useIncreamentProductQuantityMutation, useLazyGetCartQuery, useLazyGetDeliveryDateQuery, useLazyGetDeliveryMethodQuery, useLazyGetOrderSummaryQuery, useRemoveProductFromCartMutation } from "../apis/cart_api";
 import { AppDispatch, RootState } from "../../../../redux/store/store";
-import { setCart, setDeliveryDates, setDeliveryMethod, setIsLoading, setLoadingMessage, setOrderSummary, setSelectedDeliveryFee } from "../slices/cart_slice";
+import { setCart, setDeliveryDates, setDeliveryMethod, setIsCartItemsLoading, setLoadingMessage, setOrderSummary, setSelectedDeliveryFee } from "../slices/cart_slice";
 import handleError from "../../../general/hooks/errorHandler_hook";
 import IDeliveryDate from "../models/deliveryDate_model";
 import { useNavigation } from "@react-navigation/native";
@@ -25,27 +25,46 @@ const useCartHook = () => {
     const [getDeliveryDate] = useLazyGetDeliveryDateQuery()
 ;
     // Handle get carts
+    // Uses its own `isCartItemsLoading` flag (not the shared `isLoading`) so the
+    // cart screen's loader is driven by the cart-items fetch alone, while delivery
+    // details fetch silently in the background and don't hold the UI hostage.
     const handleGetCarts = async () => {
         try {
-            dispatch(setLoadingMessage("Fetching cart items..."));
-            dispatch(setIsLoading(true));
+            dispatch(setLoadingMessage("Loading your cart and delivery details..."));
+            dispatch(setIsCartItemsLoading(true));
 
             const cartsResponse = await getCart().unwrap();
-            
-            if (cartsResponse) {    
+
+            if (cartsResponse) {
                 dispatch(setCart(cartsResponse));
             }
-        } catch (error) {
-            handleError(error);
+        } catch (error: any) {
+            // The backend returns 404 "Basket not found" when the user has no
+            // active basket (e.g. fresh account, or right after an order is
+            // created and the basket is cleared server-side). Treat that as an
+            // empty cart instead of surfacing a noisy error alert.
+            const msg = error?.data?.error || error?.data?.message || error?.message;
+            if (msg === "Basket not found") {
+                dispatch(setCart({
+                    _id: "",
+                    user: "",
+                    basketId: "",
+                    basketItems: [],
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                }));
+            } else {
+                handleError(error);
+            }
         } finally {
-            dispatch(setIsLoading(false));
+            dispatch(setIsCartItemsLoading(false));
             dispatch(setLoadingMessage(""));
         }
     };
     
     const handleIncreamentProductQuantity = async (_id: string) => {
         dispatch(setLoadingMessage("Updating quantity..."));
-        dispatch(setIsLoading(true));
+        dispatch(setIsCartItemsLoading(true));
 
         try {
             await increamentProductQuantity(_id).unwrap();
@@ -53,14 +72,14 @@ const useCartHook = () => {
         } catch (error) {
             handleError(error);
         } finally {
-            dispatch(setIsLoading(false));
+            dispatch(setIsCartItemsLoading(false));
             dispatch(setLoadingMessage(""));
         }
     };
-    
+
     const handleDecreamentProductQuantity = async (_id: string) => {
         dispatch(setLoadingMessage("Updating quantity..."));
-        dispatch(setIsLoading(true));
+        dispatch(setIsCartItemsLoading(true));
 
         try {
             await decreamentProductQuantity(_id).unwrap();
@@ -68,34 +87,32 @@ const useCartHook = () => {
         } catch (error) {
             handleError(error);
         } finally {
-            dispatch(setIsLoading(false));
+            dispatch(setIsCartItemsLoading(false));
             dispatch(setLoadingMessage(""));
         }
     };
 
     const handleRemoveProductFromCart = async (_id: string) => {
         dispatch(setLoadingMessage("Removing item..."));
-        dispatch(setIsLoading(true));
+        dispatch(setIsCartItemsLoading(true));
 
-        try {            
+        try {
             await removeProductFromCart(_id).unwrap();
             await handleGetCarts();
         } catch (error) {
             handleError(error);
         } finally {
-            dispatch(setIsLoading(false));
+            dispatch(setIsCartItemsLoading(false));
             dispatch(setLoadingMessage(""));
         }
     };
 
-    // Handle get delivery method
+    // Handle get delivery method — runs silently in parallel with the cart fetch.
+    // No loading flags so the cart screen's loader is driven only by the cart-items fetch.
     const handleGetDeliveryMethod = async () => {
-        dispatch(setLoadingMessage("Fetching delivery methods..."));
-        dispatch(setIsLoading(true));
-
         const requestParams = {
             country: selectedAddress?.country || "Nigeria",
-        }
+        };
 
         try {
             const getDeliveryMethodResponse = await getDeliveryMethod(requestParams).unwrap();
@@ -106,17 +123,11 @@ const useCartHook = () => {
             }
         } catch (error) {
             handleError(error);
-        } finally {
-            dispatch(setIsLoading(false));
-            dispatch(setLoadingMessage(""));
         }
-    }
+    };
 
-    // Handle get order summary
+    // Handle get order summary — silent background fetch.
     const handleGetOderSummary = async () => {
-        dispatch(setLoadingMessage("Fetching order summary..."));
-        dispatch(setIsLoading(true));
-
         const requestParams = {
             country: selectedAddress?.country || "Nigeria",
             method: selectedDeliveryFee?.method || "standard",
@@ -130,18 +141,12 @@ const useCartHook = () => {
             }
         } catch (error) {
             handleError(error);
-        } finally {
-            dispatch(setIsLoading(false));
-            dispatch(setLoadingMessage(""));
         }
     };
 
 
-    // Handle get delivery date
+    // Handle get delivery date — silent background fetch.
     const handleGetDeliveryDate = async () => {
-        dispatch(setLoadingMessage("Fetching delivery date..."));
-        dispatch(setIsLoading(true));
-
         const requestParams = {
             country: selectedAddress?.country || "Nigeria",
             method: selectedDeliveryFee?.method || "standard",
@@ -155,9 +160,6 @@ const useCartHook = () => {
             }
         } catch (error) {
             handleError(error);
-        } finally {
-            dispatch(setIsLoading(false));
-            dispatch(setLoadingMessage(""));
         }
     };
 

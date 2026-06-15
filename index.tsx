@@ -2,8 +2,8 @@
 
 // Fix AbortController 'this' binding issue in Hermes/React Native.
 // RTK Query detaches the abort() method, losing its prototype context.
-if (global.AbortController) {
-    const Original = global.AbortController as any;
+if ((global as any).AbortController) {
+    const Original = (global as any).AbortController;
     class PatchedAbortController extends Original {
         constructor() {
             super();

@@ -2,16 +2,11 @@ import React, { useEffect } from 'react'
 import { SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View } from 'react-native'
 import AppHeaderComp from '../../general/components/appHeader_comp';
 import useVendorProductHook from '../hooks/vendorProduct_hook';
-import AppLoader from '../../../general/components/appLoader';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../../../redux/store/store';
 import IPromotion from '../models/promotion_model';
 import FastImage from 'react-native-fast-image';
 import { ArrowRight2 } from 'iconsax-react-native';
 
 const PromotionScreen = () => {
-    const { isLoading, loadingMessage } = useSelector((state: RootState) => state.generalState);
-
     const { promotions, handleGetAvailablePromos, selectedPromo, setSelectedPromo, handleApplyPromo, handleFormatDate } = useVendorProductHook();
 
     useEffect(() => {
@@ -63,7 +58,7 @@ const PromotionScreen = () => {
                                             uri: promotion?.smallScreenImageUrl?.link!,
                                             priority: FastImage.priority.normal
                                         }}
-                                        defaultSource={ require("../../../../../assets/images/app_logo.png") }
+                                        defaultSource={ require("../../../../../assets/images/app_logo_green.png") }
                                         resizeMode={ FastImage.resizeMode.cover }
                                         fallback
                                         className="h-[100px] w-[100px] rounded-xl"
@@ -97,10 +92,6 @@ const PromotionScreen = () => {
                     <ArrowRight2 size={20} className="text-white" />
                 </TouchableOpacity>
             </ScrollView>
-
-            { isLoading && 
-                <AppLoader loadingAdditionalMessage={ loadingMessage } />
-            }
         </SafeAreaView>
     )
 }

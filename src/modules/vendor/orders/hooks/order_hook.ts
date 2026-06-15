@@ -4,13 +4,12 @@ import { setIsLoading, setLoadingMessage, setOrder, setOrderHistory, setOrders, 
 import handleError from "../../../general/hooks/errorHandler_hook";
 import { setIsLoading as generalSetIsLoading, setLoadingMessage as generalSetLoadingMessage } from "../../../general/slices/general_slice";
 import { ArrowRotateRight, TickSquare, Truck, TruckFast } from "iconsax-react-native";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { RootState } from "../../../../redux/store/store";
 import IOrderUpdate from "../models/orderUpdate_model";
 import { Dimensions } from "react-native";
 import * as Animatable from 'react-native-animatable';
 import { INextStatus } from "../models/orderHistory_model";
-import { getVendorOrderDetailsRoute } from "../../../../redux/api/api_route";
 
 interface IStatus {
     [key: string]: {

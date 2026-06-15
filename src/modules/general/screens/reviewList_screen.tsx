@@ -1,13 +1,12 @@
 import React from 'react';
 import { RouteProp, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ArrowLeft, Dislike, Like1, Star1 } from 'iconsax-react-native';
+import { Dislike, Like1, Star1 } from 'iconsax-react-native';
 import { Image, SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import RootNavigationStackModel from '../../../routes/model/routes_model';
 import useGeneralHook from '../hooks/general_hook';
-import IReview from '../models/review_model';
-import { formatDate } from '../../../utils/formatDate';
+import formatDate from '../../../utils/formatDate';
 import AppHeaderComp from '../../vendor/general/components/appHeader_comp';
 import RatingCardComponent from '../components/ratingCard_component';
 
@@ -51,7 +50,7 @@ const ReviewListScreen: React.FC<IProps> = ({ route }) => {
                                     source={ 
                                         review.user!.imageUrl!?.link!
                                         ? { uri: review.user!.imageUrl!?.link! }
-                                        : require("../../../../assets/images/app_logo.png")
+                                        : require("../../../../assets/images/app_logo_green.png")
                                     }
                                 />
 

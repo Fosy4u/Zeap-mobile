@@ -11,19 +11,34 @@ import { setShowSuccessModal } from '../slices/authState_slice';
 interface Props {
     bodyText: string;
     screenURL: keyof RootNavigationStackModel;
+    /** Override the action button text (default: `Proceed To <Setup|Login|Shop>`). */
+    buttonLabel?: string;
+    /** Override the proceed action. Receives no args. When provided, the default
+     *  navigate-to-screenURL behavior is bypassed — the caller is responsible
+     *  for dismissing the modal and navigating wherever it wants. */
+    onProceed?: () => void;
 };
 
-const SuccessPopupModal: React.FC<Props> = ({ bodyText, screenURL }) => {
+const SuccessPopupModal: React.FC<Props> = ({ bodyText, screenURL, buttonLabel, onProceed }) => {
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const dispatch = useDispatch();
 
-    const screenName = (screenURL === "profileSetupScreen") 
-        ? ("Setup") : (screenURL === "loginScreen") 
+    const screenName = (screenURL === "profileSetupScreen")
+        ? ("Setup") : (screenURL === "loginScreen")
         ? ("Login") : ("Shop");
-    const url = (screenURL === "profileSetupScreen") 
-    ? ("profileSetupScreen") : (screenURL === "loginScreen") 
+    const url = (screenURL === "profileSetupScreen")
+    ? ("profileSetupScreen") : (screenURL === "loginScreen")
     ? ("loginScreen") : ("shopSetupScreen");
-    
+
+    const handlePress = () => {
+        if (onProceed) {
+            onProceed();
+            return;
+        }
+        dispatch(setShowSuccessModal(false));
+        navigation.navigate(url);
+    };
+
 
     return (
         <SafeAreaView className="h-full w-full absolute inset-0 flex items-center justify-center">
@@ -51,14 +66,11 @@ const SuccessPopupModal: React.FC<Props> = ({ bodyText, screenURL }) => {
                         { bodyText }
                     </Text>
                     
-                    <TouchableOpacity 
-                        onPress={ () => {
-                            dispatch(setShowSuccessModal(false));
-                            navigation.navigate(url);
-                        } }
+                    <TouchableOpacity
+                        onPress={ handlePress }
                         className="h-[50px] w-auto mt-5 px-8 flex flex-row items-center justify-center rounded-xl bg-baseGreen"
                     >
-                        <Text className="text-base text-white mr-2">Proceed To { screenName }</Text>
+                        <Text className="text-base text-white mr-2">{ buttonLabel ?? `Proceed To ${ screenName }` }</Text>
                         <ArrowRight className="text-white" />
                     </TouchableOpacity>
                 </View>

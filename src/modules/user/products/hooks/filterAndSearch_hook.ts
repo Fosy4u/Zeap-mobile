@@ -1,4 +1,5 @@
 
+import { Alert } from "react-native";
 import { useLazyGetDynamicFilterOptionsQuery, useLazyGetFilteredProductsQuery, useLazyGetPromoProductsQuery } from "../apis/product_api";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../../../redux/store/store";
@@ -11,7 +12,7 @@ import handleError from "../../../general/hooks/errorHandler_hook";
 
 
 const useFilterAndSearchHook = () => {
-      const { searchPhrase, currentPage } = useSelector((state: RootState) => state.productState);
+      const { searchPhrase, currentPage, dynamicFilterOptions } = useSelector((state: RootState) => state.productState);
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const dispatch = useDispatch<AppDispatch>();
     const [selectedFilters, setSelectedFilters] = useState<Record<string, (string | number)[]>>({});
@@ -64,21 +65,14 @@ const useFilterAndSearchHook = () => {
         }
     };
 
-    // Handle get filtered products
-    const handleGetFilteredProducts = async({ screenTitle, setShowBottomSheetModal }: { screenTitle: string; setShowBottomSheetModal?: (value: boolean) => void }) => {
-        dispatch(setLoadingMessage(`Getting ${screenTitle.toLowerCase()}...`));
-        dispatch(setIsLoading(true));
-        
-        // Format selected filters to match API expected params
-        const formattedFilters: Record<string, (string | number)> = {};
+    // Format the user-selected dynamic filters into API params (lowercase the
+    // key, strip spaces, camel-case productType values, join arrays as CSV).
+    const buildFormattedFilters = (): Record<string, string | number> => {
+        const formattedFilters: Record<string, string | number> = {};
         Object.keys(selectedFilters).forEach((eachKey) => {
-            // Convert first letter to lowercase e.g., "Product Type" to "product Type"
             let formattedKey = eachKey.charAt(0).toLowerCase() + eachKey.slice(1);
-
-            // Remove spaces from key names e.g., "product Type" to "productType"
             formattedKey = formattedKey.replace(/\s+/g, '');
 
-            // Join array values as comma-separated string, transform Product Type to camel case
             const values = selectedFilters[eachKey];
             let joinedValues: string | number;
             if (formattedKey === 'productType' && Array.isArray(values)) {
@@ -93,31 +87,84 @@ const useFilterAndSearchHook = () => {
             }
             formattedFilters[formattedKey] = joinedValues;
         });
+        return formattedFilters;
+    };
 
-        // Add specific filter for All the categories screenTitle
-        if (screenTitle === "Shoes") {
-            formattedFilters.main = "Footwear";
+    // Map a category screen to its backend filter. Female/Male filter by the
+    // dedicated `gender` param (a product's gender lives in categories.gender —
+    // filtering by `main` matched nothing and leaked the whole catalogue).
+    // Shoes/Accessories are real `main` categories.
+    const categoryFilterFor = (screenTitle: string): Record<string, string> => {
+        switch (screenTitle) {
+            case "Female Clothings":  return { gender: "Female" };
+            case "Male Clothings":    return { gender: "Male" };
+            case "Shoes":             return { main: "Footwear" };
+            case "Accessories":
+            case "Bags":              return { main: "Accessories" };
+            // Bespoke vs ready-to-wear are distinguished by productType, not a
+            // category/gender. Sent as a CSV the backend filters on.
+            case "Bespoke Collection": return { productType: "bespokeCloth,bespokeShoe" };
+            case "Ready to Wear":      return { productType: "readyMadeCloth,readyMadeShoe,accessory" };
+            default:                   return {};
         }
-        if (screenTitle === "Female Clothings") {
-            formattedFilters.main = "Female"
-        }
-        if (screenTitle === "Male Clothings") {
-            formattedFilters.main = "Male"
-        }
-        if (screenTitle === "Accessories" || screenTitle === "Bags") {
-            formattedFilters.main = "Accessories"
-        }
+    };
+
+    // Normalize a dynamic-filter group name to its API param key — mirrors the
+    // transform in buildFormattedFilters (lowercase first char, strip spaces).
+    const toParamKey = (name: string) => (name.charAt(0).toLowerCase() + name.slice(1)).replace(/\s+/g, '');
+
+    // Pre-select the category's filter (e.g. Gender → Male) in the dynamic filter
+    // sheet. Keyed by the REAL backend group name + option value (matched against
+    // the loaded dynamicFilterOptions) so the chip highlights correctly and
+    // buildFormattedFilters still produces the right param. Idempotent per option.
+    const preselectCategoryFilters = (screenTitle: string) => {
+        const desired = categoryFilterFor(screenTitle);
+        if (Object.keys(desired).length === 0) return;
+
+        setSelectedFilters((prev) => {
+            const next = { ...prev };
+            Object.entries(desired).forEach(([paramKey, paramValue]) => {
+                const group = (dynamicFilterOptions || []).find((g: any) => toParamKey(g?.name || "") === paramKey);
+                const options: any[] = Array.isArray(group?.options) ? (group!.options as any[]) : [];
+                const matched = options.find((o) => String(o?.value).toLowerCase() === String(paramValue).toLowerCase());
+                // Only seed a chip when it maps to a REAL filter option (e.g.
+                // Gender → Male). Multi-value category filters (e.g. the bespoke /
+                // ready-to-wear productType CSV) won't match a single option — we
+                // skip those here; the list is still filtered via categoryFilterFor.
+                if (group?.name && matched?.value !== undefined) {
+                    const groupName = group.name;
+                    const optionValue = matched.value as string | number;
+                    if (!Array.isArray(next[groupName]) || !next[groupName].includes(optionValue)) {
+                        next[groupName] = [optionValue];
+                    }
+                }
+            });
+            return next;
+        });
+    };
+
+    // Total number of individually-selected filter options (drives the badge).
+    const selectedFiltersCount = Object.values(selectedFilters).reduce(
+        (sum, values) => sum + (Array.isArray(values) ? values.length : 0), 0,
+    );
+
+    // Handle get filtered products
+    const handleGetFilteredProducts = async({ screenTitle, setShowBottomSheetModal }: { screenTitle: string; setShowBottomSheetModal?: (value: boolean) => void }) => {
+        dispatch(setLoadingMessage(`Getting ${screenTitle.toLowerCase()}...`));
+        dispatch(setIsLoading(true));
+        // Any new filter/category load starts from page 1.
+        dispatch(setCurrentPage(1));
+
+        const formattedFilters = { ...buildFormattedFilters(), ...categoryFilterFor(screenTitle) };
 
         const queryParams = {
             ...formattedFilters,
             limit: 20,
             pageNumber: 1
         };
-        console.log("REQUEST DATA::: ", queryParams);
 
         try {
             const productResponse = await getFilteredProducts({queryParams, screenTitle }).unwrap();
-            // console.log("FILTERED PRODUCTS::: ", productResponse);
 
             if (productResponse) {
                 dispatch(setAllProducts(productResponse));
@@ -291,34 +338,44 @@ const useFilterAndSearchHook = () => {
 
     // Handle prev and next pagination
     const handlePrevAndNextPagination = async({screenTitle, direction}: {screenTitle: string, direction: string}) => {
+        // Already at the first page — nothing before it.
+        if (direction === "Prev" && currentPage <= 1) return;
+
+        const newPageNumber = direction === "Next" ? currentPage + 1 : currentPage - 1;
+
         dispatch(setLoadingMessage(`Fetching ${direction === "Next" ? "next" : "previous"} product page...`));
         dispatch(setIsLoading(true));
-        let newPageNumber = currentPage;
 
-        if (direction === "Next") {
-            newPageNumber += 1;
-        } else if (direction === "Prev" && currentPage > 1) {
-            newPageNumber -= 1;
-        }
-
-        // Update current page in the state
-        dispatch(setCurrentPage(newPageNumber));
-
-        // Fetch products for the new page
+        // Carry the SAME filters + category across pages. Previously this sent
+        // only { limit, pageNumber }, which dropped the gender/category filter so
+        // page 2+ returned the entire catalogue.
         const queryParams = {
+            ...buildFormattedFilters(),
+            ...categoryFilterFor(screenTitle),
             limit: 20,
             pageNumber: newPageNumber,
         };
-        // console.log("QUERY PARAMS::: ", queryParams);
-        
+
         try {
             const productResponse = await getFilteredProducts({queryParams, screenTitle}).unwrap();
-            
+
+            // End-of-list guard: an empty Next means there's no further page.
+            // Keep the current list/page instead of blanking the screen with a
+            // misleading "no product" empty state.
+            if (direction === "Next" && (!productResponse || productResponse.length === 0)) {
+                Alert.alert("End of list", "You've reached the last page of products.");
+                return;
+            }
+
+            dispatch(setCurrentPage(newPageNumber));
             if (productResponse) {
                 dispatch(setAllProducts(productResponse));
             }
         } catch (error) {
             handleError(error);
+        } finally {
+            dispatch(setIsLoading(false));
+            dispatch(setLoadingMessage(""));
         }
     };
 
@@ -329,7 +386,7 @@ const useFilterAndSearchHook = () => {
     };
 
     return {
-        selectedFilters, toggleCheckboxOption, handleGetDynamicFilterOptions,
+        selectedFilters, selectedFiltersCount, toggleCheckboxOption, preselectCategoryFilters, handleGetDynamicFilterOptions,
         handleSubmit, handleGetFilteredProducts, handleGetPromoProducts, handleGetPopularProducts, handleGetNewestProducts,
         handleGetRecentlyViewedProducts, handleGetRecommendedProducts, handlePrevAndNextPagination, clearAllFilters,
     };

@@ -1,7 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import IGeneralStateModel from "../models/generalState_model";
 import {IAccessories, IClothes, IShoes} from "../models/productOptions_model";
-import { setProduct } from "../../user/products/slices/product_slice";
 
 const initialState: IGeneralStateModel = {
     productTypes: [],
