@@ -90,7 +90,7 @@ const VendorProductsScreen = () => {
                                                     uri: product?.colors?.[0]?.images?.[0]?.link!,
                                                     priority: FastImage.priority.normal
                                                 }}
-                                                defaultSource={ require("../../../../../assets/images/app_logo.png") }
+                                                defaultSource={ require("../../../../../assets/images/app_logo_green.png") }
                                                 resizeMode={ FastImage.resizeMode.cover }
                                                 className="h-[270px] w-[180px] rounded-lg"
                                                 fallback

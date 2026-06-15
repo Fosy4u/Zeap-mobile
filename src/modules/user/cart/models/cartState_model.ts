@@ -11,6 +11,7 @@ interface ICartState {
     orderSummary:   IOrderSummary; // Assuming order summary is an object, you can define a more specific type if needed
     deliveryDates: IDeliveryDate[];
     isLoading:      boolean;
+    isCartItemsLoading: boolean;
     loadingMessage: string;
 };
 

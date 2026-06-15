@@ -1,20 +1,19 @@
 import React, { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../redux/store/store';
-import { View, Text, SafeAreaView, StatusBar, TouchableOpacity, ScrollView, Image } from 'react-native';
+import { View, Text, SafeAreaView, StatusBar, TouchableOpacity, ScrollView } from 'react-native';
 import { ArrowRight2, Headphone, Like1, Logout, Element3, Notification, Profile, Receipt21, Ruler, Setting2, Ticket } from 'iconsax-react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import useLogoutHook from '../../auths/hooks/logout_hook';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import RootNavigationStackModel from '../../../routes/model/routes_model';
-import AppLoader from '../../general/components/appLoader';
 import useAddressHook from '../../user/address/hooks/address_hook';
+import UserAvatar from '../../general/components/userAvatar_component';
 
 
 const ProfileScreen = () => {
   const { userData } = useSelector((state: RootState) => state.profileState );
-  const { isLoading, loadingMessage } = useSelector((state: RootState) => state.generalState);
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
   
   const { signOutUser } = useLogoutHook();
@@ -58,10 +57,15 @@ const ProfileScreen = () => {
 
             {/*==== Profile Image ====*/}
             <View className="h-auto w-full py-7 flex-1 items-center rounded-2xl bg-[#F8F9FE]">
-              <Image
-                className="h-[80px] w-[80px] rounded-full"
-                resizeMode="cover"
-                source={require("../../../../assets/images/home/profile_image.png")}
+              <UserAvatar
+                photoURL={(userData as any).photoURL}
+                firstName={userData.firstName}
+                lastName={userData.lastName}
+                displayName={(userData as any).displayName}
+                email={userData.email}
+                isGuest={!!userData.isGuest}
+                seed={userData.uid || userData.email}
+                size={80}
               />
               <Text className="mt-3 text-xl text-baseGreen">{ userData.firstName }</Text>
               <Text className="text-sm text-baseGreen">{ userData.email }</Text>
@@ -149,9 +153,6 @@ const ProfileScreen = () => {
         </ScrollView>
       </SafeAreaView>
 
-      { isLoading && 
-        <AppLoader loadingAdditionalMessage={ loadingMessage } />
-      }
     </GestureHandlerRootView>
   )
 }

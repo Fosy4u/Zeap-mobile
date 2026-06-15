@@ -11,17 +11,25 @@ import { setDeliveryAddresses, setIsLoading, setLoadingMessage, setSelectedAddre
 import handleError from "../../../general/hooks/errorHandler_hook";
 import IAddress from "../models/address_model";
 import { useEffect } from "react";
-import useCartHook from "../../cart/hooks/cart_hook";
 
+
+// Map the user's preferred currency to a delivery-country key.
+// Matches the keys in src/utils/deliveryCountries.json.
+const getDefaultCountryForCurrency = (currency?: string): string => {
+    switch (currency) {
+        case "USD": return "USA";
+        case "GBP": return "UK";
+        case "CAD": return "Canada";
+        case "NGN":
+        default:    return "Nigeria";
+    }
+};
 
 const useAddressHook = () => {
     const { selectedAddress } = useSelector((state: RootState) => state.addressState);
     const { userData } = useSelector((state: RootState) => state.profileState );
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const dispatch = useDispatch();
-    // console.log("USER DATA::: ", userData);
-
-  const { handleProceedToPayment } = useCartHook();
 
     const [addDeliveryAddress] = useAddDeliveryAddressMutation();
     const [getDeliveryAddresses] = useLazyGetDeliveryAddressesQuery();
@@ -29,17 +37,30 @@ const useAddressHook = () => {
     const [setAsDefaultAddress] = useSetAsDefaultAddressMutation();
     const [deleteAddress] = useDeleteAddressMutation();
 
-    const { control, handleSubmit, formState: { errors }, getValues, reset } = useForm<IAddressFormFieldsSchema>({
+    const { control, handleSubmit, formState: { errors }, getValues, reset, setValue } = useForm<IAddressFormFieldsSchema>({
         defaultValues: {
-            firstName: "",
-            lastName: "",
+            firstName: selectedAddress?.firstName || "",
+            lastName: selectedAddress?.lastName || "",
             address: selectedAddress?.address! || "",
             region: selectedAddress?.region! || "",
-            country: selectedAddress?.country! || "",
+            country: selectedAddress?.country || getDefaultCountryForCurrency(userData?.prefferedCurrency),
+            postCode: selectedAddress?.postCode || "",
             phoneNumber: selectedAddress?.phoneNumber! || ""
         },
         resolver: yupResolver(addressFormFieldsSchema)
     });
+
+    // Apply the currency-derived country default once userData hydrates after first render.
+    // Skip if the user already has a selected address (their stored country wins) or has
+    // typed something in the field manually.
+    useEffect(() => {
+        if (selectedAddress?.country) return;
+        const current = getValues("country");
+        if (current) return;
+        if (userData?.prefferedCurrency) {
+            setValue("country", getDefaultCountryForCurrency(userData.prefferedCurrency));
+        }
+    }, [userData?.prefferedCurrency]);
 
     
 
@@ -72,11 +93,12 @@ const useAddressHook = () => {
         if (selectedAddress && Object.entries(selectedAddress).length > 0) {
             // Reset the address form fields with the selected address values.
             reset({
-                firstName: "",
-                lastName: "",
+                firstName: selectedAddress?.firstName || "",
+                lastName: selectedAddress?.lastName || "",
                 address: selectedAddress?.address! || "",
                 region: selectedAddress?.region! || "",
-                country: selectedAddress?.country! || "",
+                country: selectedAddress?.country || getDefaultCountryForCurrency(userData?.prefferedCurrency),
+                postCode: selectedAddress?.postCode || "",
                 phoneNumber: selectedAddress?.phoneNumber! || ""
             });
         }
@@ -92,14 +114,20 @@ const useAddressHook = () => {
             const deliveryAddressesResponse = await getDeliveryAddresses({ user_id }).unwrap();
 
             if (deliveryAddressesResponse) {
-                // Check which address that is the default and set it as the selected address else set the first address as the selected address
-                const defaultAddress = deliveryAddressesResponse.find((address: IAddress) => address.isDefault);
-                if (defaultAddress) {
-                    dispatch(setSelectedAddress(defaultAddress));
-                } else {
-                    dispatch(setSelectedAddress(deliveryAddressesResponse[0]));
-                }
                 dispatch(setDeliveryAddresses(deliveryAddressesResponse));
+
+                // Only set a selected address if the response actually contains one.
+                // Previously `deliveryAddressesResponse[0]` returned undefined for users
+                // with no saved addresses, which then crashed the checkout screen at
+                // `Object.entries(selectedAddress)`.
+                if (deliveryAddressesResponse.length > 0) {
+                    const defaultAddress = deliveryAddressesResponse.find((address: IAddress) => address.isDefault);
+                    dispatch(setSelectedAddress(defaultAddress ?? deliveryAddressesResponse[0]));
+                } else {
+                    // Reset to the empty-object shape from the slice's initial state so
+                    // downstream `Object.keys(selectedAddress).length > 0` checks behave.
+                    dispatch(setSelectedAddress({} as IAddress));
+                }
             }
         } catch (error) {
             handleError(error);
@@ -170,13 +198,10 @@ const useAddressHook = () => {
       handleUpdateAddressFormFields();
     }, [selectedAddress, reset]);
 
-    useEffect(() => {
-        handleGetDeliveryAddresses();
-    }, []);
-    
+
 
     return {
-        control, handleSubmit, onSubmit, errors, getValues,
+        control, handleSubmit, onSubmit, errors, getValues, setValue,
         handleGetDeliveryAddresses,
         deliveryAddress, handleGetDeliveryAddress,
         handleSetAsDefaultAddress,

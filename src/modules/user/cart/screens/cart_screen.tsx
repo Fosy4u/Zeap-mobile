@@ -1,11 +1,12 @@
 import { useDispatch, useSelector } from 'react-redux';
-import { View, Text, SafeAreaView, StatusBar, TouchableOpacity, Image, ScrollView, ToastAndroid } from 'react-native'
-import React, { useCallback } from 'react'
+import { View, Text, SafeAreaView, StatusBar, TouchableOpacity, Image, ScrollView, ToastAndroid, RefreshControl, ActivityIndicator } from 'react-native'
+import React, { useCallback, useState } from 'react'
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ArrowRight, Notification, Trash } from 'iconsax-react-native';
 import { RootState } from '../../../../redux/store/store';
 import AppLoader from '../../../general/components/appLoader';
 import useCartHook from '../hooks/cart_hook';
+import useAddressHook from '../../address/hooks/address_hook';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import RootNavigationStackModel from '../../../../routes/model/routes_model';
@@ -14,16 +15,30 @@ import useGeneralHook from '../../../general/hooks/general_hook';
 import formatCurrency from '../../../../utils/formatCurrency';
 import ProductCardComponent from '../../../general/components/productCard_component.tsx';
 import EmptyListComponent from '../../../general/components/emptyList_component';
+import CartSkeletonLoader from '../components/cartSkeletonLoader_component.tsx';
 
 
 const CartScreen = () => {
-  const { cart, isLoading: isCartLoading, loadingMessage: cartLoadingMessage } = useSelector((state: RootState) => state.cartState);
-  const { isLoading: isAddressLoading, loadingMessage: addressLoadingMessage } = useSelector((state: RootState) => state.addressState);
+  const { cart } = useSelector((state: RootState) => state.cartState);
   const { popularProducts } = useSelector((state: RootState) => state.productState);
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
   const dispatch = useDispatch();
-  const isLoading = isCartLoading || isAddressLoading;
-  const loadingMessage = cartLoadingMessage || addressLoadingMessage;
+
+  // Track whether the initial cart fetch has settled at least once. Until it has,
+  // we suppress the empty-cart UI so the user never sees a flash of "empty" before
+  // their real cart loads.
+  const [hasInitialCartFetched, setHasInitialCartFetched] = useState(false);
+  const [isPullRefreshing, setIsPullRefreshing] = useState(false);
+  // Local flag that drives the loader the instant "Checkout Now" is tapped, so the
+  // user gets immediate feedback instead of waiting through the checkout screen's
+  // (synchronous) mount cost. Reset on every focus return.
+  const [isOpeningCheckout, setIsOpeningCheckout] = useState(false);
+  // The basketItem._id currently being removed — drives a per-item spinner on
+  // its bin button so the delete gives immediate feedback.
+  const [removingId, setRemovingId] = useState<string | null>(null);
+  // The basketItem._id + direction of an in-flight quantity change — drives a
+  // spinner on the tapped +/- button and disables both for that row.
+  const [qtyBusy, setQtyBusy] = useState<{ id: string; type: "inc" | "dec" } | null>(null);
 
   const {
     handleGetCarts,
@@ -31,16 +46,52 @@ const CartScreen = () => {
     handleDecreamentProductQuantity,
     handleRemoveProductFromCart,
     handleGetDeliveryDate,
+    handleGetDeliveryMethod,
+    handleGetOderSummary,
     getItemDeliveryPeriod,
   } = useCartHook();
+  const { handleGetDeliveryAddresses } = useAddressHook();
   const { getColorCode } = useGeneralHook();
+
+  // Fire all data fetches in parallel on focus. Cart items drive the loader;
+  // the rest run silently in the background so the cart UI is unblocked the
+  // moment cart items arrive.
+  const fetchAllCartData = useCallback(async () => {
+    const cartItemsFetch = handleGetCarts().finally(() => setHasInitialCartFetched(true));
+    handleGetDeliveryDate();
+    handleGetDeliveryMethod();
+    handleGetOderSummary();
+    handleGetDeliveryAddresses();
+    await cartItemsFetch;
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
-      handleGetCarts();
-      handleGetDeliveryDate();
+      // Clear the opening-checkout flag when we return to cart (e.g. user pressed
+      // back from checkout). Without this, the loader would still be on screen.
+      setIsOpeningCheckout(false);
+      fetchAllCartData();
     }, [])
   );
+
+  // Show the loader instantly on tap, then yield one animation frame so React
+  // paints the loader *before* the JS thread gets blocked mounting CheckoutScreen
+  // (which sets up two heavy hooks: useAddressHook + useEditAccountDetailsHook).
+  const handleOpenCheckout = useCallback(() => {
+    setIsOpeningCheckout(true);
+    requestAnimationFrame(() => {
+      navigation.navigate("checkoutScreen");
+    });
+  }, [navigation]);
+
+  const onPullToRefresh = useCallback(async () => {
+    setIsPullRefreshing(true);
+    try {
+      await fetchAllCartData();
+    } finally {
+      setIsPullRefreshing(false);
+    }
+  }, [fetchAllCartData]);
 
   return (
     <GestureHandlerRootView>
@@ -64,9 +115,25 @@ const CartScreen = () => {
         </View>
 
         {/*==== Cart List ====*/}
-        <ScrollView showsVerticalScrollIndicator={ false }
-          className="h-auto w-full">
-          { (cart?.basketItems && cart.basketItems.length > 0)
+        <ScrollView
+          showsVerticalScrollIndicator={ false }
+          className="h-auto w-full"
+          refreshControl={
+            <RefreshControl
+              refreshing={ isPullRefreshing }
+              onRefresh={ onPullToRefresh }
+              colors={ ["#133522"] }
+              tintColor="#133522"
+            />
+          }
+        >
+          { (!hasInitialCartFetched && (!cart?.basketItems || cart.basketItems.length === 0))
+          ? (
+            // Initial fetch hasn't settled — show the skeleton instead of flashing
+            // "no items" before the user's real cart loads.
+            <CartSkeletonLoader />
+          )
+          : (cart?.basketItems && cart.basketItems.length > 0)
           ? (
             <View>
               { cart?.basketItems?.map((basketItem) => {
@@ -80,7 +147,7 @@ const CartScreen = () => {
                         source={
                           basketItem?.image!
                           ? { uri: basketItem?.image! }
-                          : require("../../../../../assets/images/app_logo.png")
+                          : require("../../../../../assets/images/app_logo_green.png")
                         }
                       />
                       <View className="h-auto flex-1 ml-3">
@@ -103,33 +170,63 @@ const CartScreen = () => {
                         <View className="h-auto flex-1 mt-2 flex-row items-center justify-between">
                           <View className="flex-row items-center gap-x-4">
                             <TouchableOpacity
-                             className="h-[30px] w-[30px] p-0 pb-2 justify-center items-center border border-gray-400 rounded-lg"
+                             className={ `h-[30px] w-[30px] p-0 justify-center items-center border border-gray-400 rounded-lg ${ qtyBusy?.id === basketItem._id && qtyBusy?.type === "dec" ? "" : "pb-2" }` }
+                              disabled={ qtyBusy?.id === basketItem._id }
                               onPress={ async () => {
                                 // If the quantity is 1, show a toast message
                                 if (basketItem?.quantity === 1) {
                                     ToastAndroid.show("You cannot decrement the quantity below 1", ToastAndroid.SHORT);
                                     return;
                                 }
-                                await handleDecreamentProductQuantity(basketItem._id!);
+                                setQtyBusy({ id: basketItem._id!, type: "dec" });
+                                try {
+                                  await handleDecreamentProductQuantity(basketItem._id!);
+                                } finally {
+                                  setQtyBusy(null);
+                                }
                               }}
                             >
-                              <Text className="text-2xl leading-7">&minus;</Text>
+                              { qtyBusy?.id === basketItem._id && qtyBusy?.type === "dec"
+                                ? <ActivityIndicator size="small" color="#133522" />
+                                : <Text className="text-2xl leading-7">&minus;</Text> }
                             </TouchableOpacity>
 
                             <Text className="font-montserratMedium text-lg">{ basketItem.quantity! }</Text>
 
                             <TouchableOpacity
                               className="h-[30px] w-[30px] justify-center items-center border border-gray-400 rounded-lg"
-                              onPress={ () => handleIncreamentProductQuantity(basketItem._id!) }
+                              disabled={ qtyBusy?.id === basketItem._id }
+                              onPress={ async () => {
+                                setQtyBusy({ id: basketItem._id!, type: "inc" });
+                                try {
+                                  await handleIncreamentProductQuantity(basketItem._id!);
+                                } finally {
+                                  setQtyBusy(null);
+                                }
+                              } }
                             >
-                              <Text className="text-xl leading-6">&#43;</Text>
+                              { qtyBusy?.id === basketItem._id && qtyBusy?.type === "inc"
+                                ? <ActivityIndicator size="small" color="#133522" />
+                                : <Text className="text-xl leading-6">&#43;</Text> }
                             </TouchableOpacity>
                           </View>
 
                           <Text className="font-semibold text-lg text-baseGreen">{ formatCurrency(basketItem.actualAmount!, basketItem.currency!) }</Text>
 
-                          <TouchableOpacity onPress={ () => handleRemoveProductFromCart(basketItem._id!) } >
-                            <Trash color="#AA1F1F" size={18} variant="Bold" />
+                          <TouchableOpacity
+                            disabled={ removingId === basketItem._id }
+                            onPress={ async () => {
+                              setRemovingId(basketItem._id!);
+                              try {
+                                await handleRemoveProductFromCart(basketItem._id!);
+                              } finally {
+                                setRemovingId(null);
+                              }
+                            } }
+                          >
+                            { removingId === basketItem._id
+                              ? <ActivityIndicator size="small" color="#AA1F1F" />
+                              : <Trash color="#AA1F1F" size={18} variant="Bold" /> }
                           </TouchableOpacity>
                         </View>
 
@@ -161,14 +258,12 @@ const CartScreen = () => {
 
           { (cart?.basketItems && cart.basketItems.length > 0) && (
             <TouchableOpacity
-              onPress={() => {
-                navigation.navigate("checkoutScreen");
-              }}
-              disabled={ isAddressLoading }
+              onPress={ handleOpenCheckout }
+              disabled={ isOpeningCheckout }
               className="h-[55px] w-auto mt-10 flex flex-row items-center justify-center rounded-xl bg-baseGreen"
             >
-              <Text className="text-lg text-white mr-2">{ isAddressLoading ? "Please wait..." : "Complete Your Order" }</Text>
-              { isAddressLoading ? null : <ArrowRight className="text-white" /> }
+              <Text className="text-lg text-white mr-2">{ isOpeningCheckout ? "Opening checkout..." : "Checkout Now" }</Text>
+              { isOpeningCheckout ? null : <ArrowRight className="text-white" /> }
             </TouchableOpacity>
           ) }
 
@@ -178,42 +273,46 @@ const CartScreen = () => {
             }}
             className="h-[55px] w-auto mt-4 flex flex-row items-center justify-center rounded-xl bg-gold"
           >
-            <Text className="font-medium text-lg text-baseGreen mr-2">Continue Shopping</Text>
+            <Text className="font-medium text-lg text-baseGreen mr-2">{ (cart?.basketItems && cart.basketItems.length > 0) ? "Continue Shopping" : "Start Shopping" }</Text>
             <ArrowRight className="text-baseGreen" />
           </TouchableOpacity>
 
           {/*==== Similar Items Section ====*/}
-          <View className="mt-10 mb-10">
-            <View className="flex-row justify-between items-center">
-              <Text className="font-medium text-base text-baseGreen">Similar items</Text>
-              <TouchableOpacity onPress={ () => navigation.navigate("productListScreen", { screenTitle: "Similar Products" }) }>
-                <Text className="text-sm text-baseGreen">See all</Text>
-              </TouchableOpacity>
-            </View>
+          { popularProducts.length > 0 && (
+            <View className="mt-10 mb-10">
+              <View className="flex-row justify-between items-center">
+                <Text className="font-medium text-base text-baseGreen">Similar items</Text>
+                <TouchableOpacity onPress={ () => navigation.navigate("productListScreen", { screenTitle: "Similar Products" }) }>
+                  <Text className="text-sm text-baseGreen">See all</Text>
+                </TouchableOpacity>
+              </View>
 
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={ false }
-              className="h-auto w-full my-3"
-            >
-              { popularProducts.map((popularProduct) => (
-                <ProductCardComponent
-                  key={ popularProduct.productId }
-                  product={ popularProduct }
-                  handleOnPress={ () => {
-                    dispatch(setProductID(popularProduct.productId));
-                    navigation.navigate("productDetailScreen");
-                  } }
-                  orientation="Vertical"
-                />
-              )) }
-            </ScrollView>
-          </View>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={ false }
+                className="h-auto w-full my-3"
+              >
+                { popularProducts.map((popularProduct) => (
+                  <ProductCardComponent
+                    key={ popularProduct.productId }
+                    product={ popularProduct }
+                    handleOnPress={ () => {
+                      dispatch(setProductID(popularProduct.productId));
+                      navigation.navigate("productDetailScreen");
+                    } }
+                    orientation="Vertical"
+                  />
+                )) }
+              </ScrollView>
+            </View>
+          ) }
 
         </ScrollView>
       </SafeAreaView>
 
-      { (isLoading) && <AppLoader loadingAdditionalMessage={ loadingMessage } /> }
+      { isOpeningCheckout && (
+        <AppLoader loadingAdditionalMessage="Opening checkout..." />
+      ) }
     </GestureHandlerRootView>
   )
 }

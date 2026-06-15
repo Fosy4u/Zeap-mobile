@@ -91,11 +91,11 @@ const useStepFiveHook = () => {
                 currentStep: 5,
             };
             console.log("VARIATIONS DATA: ", variationsData);
-            console.log("PRODUCT VARIATIONS: ", product.variations);
-            
+            console.log("PRODUCT VARIATIONS: ", product?.variations);
+
 
             let addProductVariationResponseData: any
-            if (product.variations && product.variations.length === 0) {
+            if (product?.variations && product.variations.length === 0) {
                 dispatch(setLoadingMessage("Adding product variations..."));
                 addProductVariationResponseData = await addProductVariation(variationsData).unwrap();
             } else {

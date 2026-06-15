@@ -49,7 +49,7 @@ const OrderCardComponent: React.FC<IProps> = ({ order, status }) => {
                 <View className="flex-row items-center">
                     <FastImage
                     source={{ uri: order.images![0].link! }}
-                    defaultSource={require('../../../../../assets/images/app_logo.png')}
+                    defaultSource={require('../../../../../assets/images/app_logo_green.png')}
                     resizeMode="contain"
                     className="h-[70px] w-[50px] rounded-xl"
                     />

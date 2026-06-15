@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { View, Text, FlatList, RefreshControl, SafeAreaView, StatusBar, TouchableOpacity, Animated, TextInput, Image } from 'react-native';
-import AppLoader from '../../../general/components/appLoader';
 import AuthCheck from '../../../auths/components/authCheck';
+import OrdersSkeletonLoader from '../components/ordersSkeletonLoader_component';
 import { ArrowLeft, SearchNormal1 } from 'iconsax-react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -17,7 +17,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import EmptyListComponent from '../../../general/components/emptyList_component';
 
 const OrdersScreen: React.FC = () => {   
-    const { filteredOrders, isLoading, loadingMessage } = useSelector((state: RootState) => state.orderState);    
+    const { filteredOrders, isLoading } = useSelector((state: RootState) => state.orderState);
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
 
     const { handleGetOrders } = useOrderHook();
@@ -76,11 +76,6 @@ const OrdersScreen: React.FC = () => {
     useEffect(() => {
         handleGetOrders();
     }, []);
-
-
-    if (isLoading) {
-        return <AppLoader loadingAdditionalMessage={ loadingMessage } />;
-    }
 
     return (
         <GestureHandlerRootView>
@@ -158,7 +153,9 @@ const OrdersScreen: React.FC = () => {
                         </TouchableOpacity>
                     </View>
                     
-                    { (filteredOrders && filteredOrders.length > 0) ? (
+                    { (isLoading && (!filteredOrders || filteredOrders.length === 0)) ? (
+                        <OrdersSkeletonLoader />
+                    ) : (filteredOrders && filteredOrders.length > 0) ? (
                         <FlatList
                             data={filteredOrders}
                             keyExtractor={(item) => item._id}

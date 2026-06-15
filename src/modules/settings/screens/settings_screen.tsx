@@ -1,7 +1,7 @@
 import React from 'react'
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ArrowLeft, ArrowRight2, Global, Lock, MoneyChange, Moon, Notification, SecuritySafe } from 'iconsax-react-native';
+import { ArrowLeft, ArrowRight2, Global, Lock, MoneyChange, Notification, SecuritySafe } from 'iconsax-react-native';
 import { SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View } from 'react-native';
 import RootNavigationStackModel from '../../../routes/model/routes_model';
 

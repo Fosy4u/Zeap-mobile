@@ -3,7 +3,7 @@
  * @param amount - The amount to format (in Naira)
  * @returns Formatted currency string (e.g., "₦6,400.00")
  */
-const formatCurrency = (amount: number | string, currency: string = "NGN", showDecimal: boolean = true): string => {
+const formatCurrency = (amount: number | string, currency: string = "NGN", showDecimal: boolean = false): string => {
 
     const currencyLocaleMap: Record<string, string> = {
         NGN: "en-NG", // Nigerian Naira → Nigeria

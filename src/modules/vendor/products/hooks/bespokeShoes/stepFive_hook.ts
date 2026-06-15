@@ -98,7 +98,7 @@ const useStepFiveHook = () => {
 
 
             let addProductVariationResponseData: any
-            if (product.variations && product.variations.length === 0) {
+            if (product?.variations && product?.variations.length === 0) {
                 dispatch(setLoadingMessage("Adding product variations..."));
                 addProductVariationResponseData = await addProductVariation(requestData).unwrap();
             } else {

@@ -17,7 +17,7 @@ const WelcomeScreen = () => {
 
       <View className="flex-[0.5] items-center justify-center bg-white">
         <Image
-          source={require("../../../../assets/images/app_logo.png")}
+          source={require("../../../../assets/images/app_logo_green.png")}
           className="h-[80px] w-[80px] mt-14 rounded-2xl"
         />
 
@@ -52,7 +52,7 @@ const WelcomeScreen = () => {
         </TouchableOpacity>
 
         <TouchableOpacity 
-          onPress={ () => navigation.navigate("homeScreen", { screen: "Dashboard" }) }
+          onPress={ () => navigation.navigate("homeScreen", { screen: "Home" }) }
           className="h-[55px] w-full mt-5 flex flex-row items-center justify-center rounded-xl bg-lightGold"
         >
           <Text className="font-medium text-lg text-baseGreen">Continue As Guest</Text>

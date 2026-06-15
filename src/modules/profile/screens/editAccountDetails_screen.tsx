@@ -1,63 +1,65 @@
-import React, { useState } from "react";
+import React from "react";
+import AuthCheck from "../../auths/components/authCheck";
 import { SafeAreaView, ScrollView, StatusBar, Text, TextInput, TouchableOpacity, View } from "react-native";
-import { useDispatch, useSelector } from "react-redux";
 import { ArrowDown2, ArrowLeft, ArrowRight } from "iconsax-react-native";
-import { RootState } from "../../../redux/store/store";
 import { SelectList } from "react-native-dropdown-select-list";
-import SuccessPopupModal from "../../auths/modals/successPopup_modal";
-
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import RootNavigationStackModel from "../../../routes/model/routes_model";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import useEditAccountDetailsHook from "../hooks/editAccountDetails_hook";
 import { Controller } from "react-hook-form";
+
+import RootNavigationStackModel from "../../../routes/model/routes_model";
+import useEditAccountDetailsHook from "../hooks/editAccountDetails_hook";
 import CountriesPhoneCodeModal from "../modals/countriesPhoneCode_modal";
-import { setShowCountryModal, setShowPhoneCodeModal } from "../slices/profileState_slice";
+import SuccessPopupModal from "../../auths/modals/successPopup_modal";
+import AppLoader from "../../general/components/appLoader";
 
 
 const EditAccountDetailsScreen = () => {
-    const {
-        selectedPhoneCode, selectedCountry, showPhoneCodeModal, showCountryModal,
-        heightUnitOptions, weightUnitOptions, complexionOptions, 
-        shoeSizeOptions, bestOutfitOptions, bestColorOptions,
-     } = useSelector((state: RootState) => state.profileState);
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
-    const dispatch = useDispatch();
-    const { control, handleSubmit, errors } = useEditAccountDetailsHook();
 
-    
-    const [selected, setSelected] = useState("");
-    const [selectedHeightUnit, setSelectedHeightUnit] = useState("Inches");
-    const [selectedWeightUnit, setSelectedWeightUnit] = useState("Kilogram");
-    const [selectedShoeSize, setSelectedShoeSize] = useState("");
-    const [selectedBestOutfit, setSelectedBestOutfit] = useState("");
-    const [selectedBestColor, setSelectedBestColor] = useState("");
-    const [showSuccessModal, setShowSuccessModal] = useState(false);
-    const [date, setDate] = useState(new Date());
-    const [open, setOpen] = useState(false);
-    const [isSeller, setIsSeller] = useState(true);
+    const {
+        // form
+        control, errors,
 
-    const data = [
-        { key: "Yes", value: "Yes" },
-        { key: "No", value: "No" },
-    ]
+        // redux-derived
+        selectedCountry, selectedPhoneCode, showPhoneCodeModal,
+        heightUnitOptions, weightUnitOptions, complexionOptions,
+        shoeSizeOptions, bestOutfitOptions, bestColorOptions,
+        isLoading, loadingMessage,
+        openPhoneCodeModal,
 
-    const convertDate = (dateString: string): string => {
-        const [month, day, year] = dateString.split("/");
-        return `${day}/${month}/${year}`;
+        // local UI state
+        setSelected,
+        selectedHeightUnit, setSelectedHeightUnit,
+        selectedWeightUnit, setSelectedWeightUnit,
+        setSelectedShoeSize,
+        setSelectedBestOutfit,
+        setSelectedBestColor,
+        showSuccessModal, setShowSuccessModal,
+        selectedStateIso, setSelectedStateIso,
+        setSelectedCity,
+
+        // computed
+        isVendor,
+        countryIso,
+        isCountryChosen,
+        countryOptions,
+        stateOptions,
+        cityOptions,
+
+        // handlers
+        handleProceed,
+        handleCountrySelected,
+    } = useEditAccountDetailsHook();
+
+    // Success-modal "Done" handler — close the modal and go back to the
+    // Personal Information screen so the user lands where they started.
+    const handleSuccessDone = () => {
+        setShowSuccessModal(false);
+        navigation.navigate("personalInformationScreen");
     };
 
-    const handleProceed = (): void => {
-        if (isSeller) {
-            setTimeout(() => {
-                setShowSuccessModal(true);
-            }, 1000);
-        } else {
-            navigation.navigate("loginScreen");
-        }
-    };
-  
 
     return (
         <GestureHandlerRootView>
@@ -72,19 +74,15 @@ const EditAccountDetailsScreen = () => {
                 <View className="h-auto w-full py-3 flex-row items-center justify-between">
                     <TouchableOpacity onPress={ () => navigation.pop() }>
                         <View className="h-[40px] w-[40px] flex items-center justify-center rounded-full bg-baseGreen">
-                        <TouchableOpacity onPress={ () => navigation.pop() }>
-                        <View className="h-[40px] w-[40px] flex items-center justify-center rounded-full bg-baseGreen">
                             <ArrowLeft color="white" />
                         </View>
                     </TouchableOpacity>
-                        </View>
-                    </TouchableOpacity>
                     <Text className="font-semibold text-lg text-baseGreen">Edit Account Details</Text>
-                    
+
                     <View className="h-[40px] w-[40px]" />
                 </View>
 
-                <ScrollView 
+                <ScrollView
                     showsVerticalScrollIndicator={false}
                     showsHorizontalScrollIndicator={false}
                     className="h-full w-full pb-2"
@@ -112,10 +110,10 @@ const EditAccountDetailsScreen = () => {
                                     />
                                 ) }
                             />
-                            { errors.firstName! && (<Text className="text-red-500 text-xs">{errors.firstName!.message}</Text>) }
+                            { errors.firstName && (<Text className="text-red-500 text-xs">{errors.firstName.message}</Text>) }
                         </View>
 
-                        <Text aria-label="LastName" nativeID="" className="mt-5">Last name</Text>
+                        <Text aria-label="LastName" nativeID="lastName" className="mt-5">Last name</Text>
                         <View className="h-auto w-full mt-1.5 px-3 py-1 border border-gray-300 rounded-xl bg-gray-100">
                             <Controller
                                 control={control}
@@ -139,7 +137,7 @@ const EditAccountDetailsScreen = () => {
                         <Text aria-label="PhoneNumber" nativeID="phoneNumber" className="mt-5">Phone number</Text>
                         <View className="h-auto w-full mt-1.5 px-3 py-1 flex-row items-center border border-gray-300 rounded-xl bg-gray-100">
                             <TouchableOpacity
-                                onPress={ () => dispatch(setShowPhoneCodeModal(true)) }
+                                onPress={ openPhoneCodeModal }
                                 className="flex-row items-center"
                             >
                                 <Text className="mb-1 text-lg">{ selectedPhoneCode.dial_code }</Text>
@@ -160,70 +158,84 @@ const EditAccountDetailsScreen = () => {
                                         onChangeText={ onChange }
                                         value={ value }
                                     />
-                                ) }      
+                                ) }
                             />
                         </View>
 
-                        {/* <Text aria-label="DateOfBirth" nativeID="dateOfBirth" className="mt-5">Date of birth</Text>
-                        <View className="h-auto w-full mt-1.5 px-3 py-1 flex-row items-center justify-between border border-gray-300 rounded-xl bg-gray-100">
-                        <TouchableOpacity
-                            onPress={ () => setOpen(true) }
-                            className="h-auto w-full flex flex-row items-center justify-between"
-                        >
-                            <TextInput
-                            onFocus={() => setOpen(true)}
-                            value={ convertDate(date.toLocaleDateString()) }
-                            aria-label="DateOfBirth"
-                            aria-labelledby="dateOfBirth"
-                            placeholder="DD/MM/YYYY"
-                            placeholderTextColor="#9ca3af"
-                            className="text-base"
-                            />
-                            <Calendar className="text-gray-400" />
-                        </TouchableOpacity>
-                        <DatePicker
-                            modal
-                            open={ open }
-                            date={ date }
-                            mode="date"
-                            title={"Select date of birth"}
-                            onConfirm={ (date) => {
-                            setDate(date);
-                            setOpen(false);
-                            } }
-                            onCancel={ () => setOpen(false) }
-                        />
-                        </View> */}
-
+                        {/* Country — typeable search via SelectList. Tapping the box turns it
+                            into a search input and brings up the keyboard. Same search/expand
+                            behavior as the State and City pickers below. */}
                         <Text aria-label="Country" nativeID="country" className="mt-5">Country</Text>
-                        <View className="h-auto w-full mt-1.5 px-3 py-4 flex-row items-center justify-between border border-gray-300 rounded-xl bg-gray-100">
-                            <Controller
-                                control={control}
-                                name="country"
-                                render={ () => (
-                                    <TouchableOpacity
-                                        onPress={ () => dispatch(setShowCountryModal(true)) }
-                                        className="w-full flex-row"
-                                    >
-                                        <Text className="flex-1">{ selectedCountry }</Text>
-                                        <ArrowDown2 color="#909090" />
-                                    </TouchableOpacity>
-                                ) }      
-                            />
-                        </View>
-
-                        <Text className="mt-5">Cities</Text>
-                        <View className="h-auto w-full mt-1.5 py-0 flex-row items-center justify-between border border-gray-300 rounded-xl bg-gray-100">
+                        <View className="h-auto w-full mt-1.5 py-0 border border-gray-300 rounded-xl bg-gray-100">
                             <SelectList
-                                setSelected={ setSelected }
-                                data={ data }
+                                key={`country-${selectedPhoneCode?.code || "none"}`}
+                                setSelected={ handleCountrySelected }
+                                data={ countryOptions }
                                 boxStyles={{ height: "auto", width: "100%", paddingHorizontal: 15, paddingVertical: 17, borderColor: "transparent" }}
-                                inputStyles={{ fontSize: 16, color: "#9ca3af" }}
+                                inputStyles={{ flex: 1, fontSize: 16, color: "#9ca3af" }}
                                 dropdownStyles={{ height: "auto", width: "100%", borderColor: "transparent" }}
                                 dropdownItemStyles={{ paddingHorizontal: 15 }}
-                                search={ false }
+                                search={ true }
+                                searchPlaceholder="Search country"
+                                placeholder={ selectedCountry || "Select country" }
                             />
                         </View>
+
+                        {/* State (depends on Country)
+                            NOTE: the wrapper View is intentionally NOT `flex-row`. When
+                            `search={true}` the SelectList's internal search row uses
+                            `flex: 1`, but a `flex-row` parent collapses the SelectList to
+                            its content's intrinsic width — making the search input render
+                            at half the box width. Keeping the wrapper as a block (`w-full`
+                            only) lets the SelectList stretch edge-to-edge. */}
+                        <Text className="mt-5">State</Text>
+                        {isCountryChosen && stateOptions.length > 0 ? (
+                            <View className="h-auto w-full mt-1.5 py-0 border border-gray-300 rounded-xl bg-gray-100">
+                                <SelectList
+                                    key={`state-${countryIso}`}
+                                    setSelected={ setSelectedStateIso }
+                                    data={ stateOptions }
+                                    boxStyles={{ height: "auto", width: "100%", paddingHorizontal: 15, paddingVertical: 17, borderColor: "transparent" }}
+                                    inputStyles={{ flex: 1, fontSize: 16, color: "#9ca3af" }}
+                                    dropdownStyles={{ height: "auto", width: "100%", borderColor: "transparent" }}
+                                    dropdownItemStyles={{ paddingHorizontal: 15 }}
+                                    search={ true }
+                                    searchPlaceholder="Search state"
+                                    placeholder="Select state"
+                                />
+                            </View>
+                        ) : (
+                            <View className="h-auto w-full mt-1.5 px-3 py-4 border border-gray-300 rounded-xl bg-gray-100 opacity-50">
+                                <Text className="text-base text-gray-400">
+                                    { isCountryChosen ? "No states available" : "Select a country first" }
+                                </Text>
+                            </View>
+                        )}
+
+                        {/* City (depends on State) — same `flex-row`-removal rationale as State above. */}
+                        <Text className="mt-5">City</Text>
+                        {selectedStateIso && cityOptions.length > 0 ? (
+                            <View className="h-auto w-full mt-1.5 py-0 border border-gray-300 rounded-xl bg-gray-100">
+                                <SelectList
+                                    key={`city-${countryIso}-${selectedStateIso}`}
+                                    setSelected={ setSelectedCity }
+                                    data={ cityOptions }
+                                    boxStyles={{ height: "auto", width: "100%", paddingHorizontal: 15, paddingVertical: 17, borderColor: "transparent" }}
+                                    inputStyles={{ flex: 1, fontSize: 16, color: "#9ca3af" }}
+                                    dropdownStyles={{ height: "auto", width: "100%", borderColor: "transparent" }}
+                                    dropdownItemStyles={{ paddingHorizontal: 15 }}
+                                    search={ true }
+                                    searchPlaceholder="Search city"
+                                    placeholder="Select city"
+                                />
+                            </View>
+                        ) : (
+                            <View className="h-auto w-full mt-1.5 px-3 py-4 border border-gray-300 rounded-xl bg-gray-100 opacity-50">
+                                <Text className="text-base text-gray-400">
+                                    { selectedStateIso ? "No cities available" : "Select a state first" }
+                                </Text>
+                            </View>
+                        )}
 
                         <Text aria-label="PostalCode" nativeID="postalCode" className="mt-5">Postal code</Text>
                         <View className="h-auto w-full mt-1.5 px-3 py-1 border border-gray-300 rounded-xl bg-gray-100">
@@ -234,7 +246,6 @@ const EditAccountDetailsScreen = () => {
                                 placeholder="Enter postal code"
                                 placeholderTextColor="#9ca3af"
                                 className="text-base"
-                                onChangeText={(value) => null}
                             />
                         </View>
 
@@ -250,7 +261,6 @@ const EditAccountDetailsScreen = () => {
                                 autoComplete="address-line1"
                                 textAlignVertical="top"
                                 className="h-[80px] text-base"
-                                onChangeText={(value) => null}
                             />
                         </View>
 
@@ -276,11 +286,10 @@ const EditAccountDetailsScreen = () => {
                                 placeholder="Enter your height"
                                 placeholderTextColor="#9ca3af"
                                 className="text-base"
-                                onChangeText={(value) => null}
                             />
                         </View>
 
-                        <Text aria-label="Weight" nativeID="height" className="mt-5">Weight { selectedWeightUnit === "Kilogram" ? "(in kilogram)" : "(in pounds)" }</Text>
+                        <Text aria-label="Weight" nativeID="weight" className="mt-5">Weight { selectedWeightUnit === "Kilogram" ? "(in kilogram)" : "(in pounds)" }</Text>
                         <View className="h-auto w-full mt-1.5 px-3 py-1 flex flex-row items-center border border-gray-300 rounded-xl bg-gray-100">
                             <SelectList
                                 setSelected={ setSelectedWeightUnit }
@@ -302,11 +311,10 @@ const EditAccountDetailsScreen = () => {
                                 placeholder="Enter your weight"
                                 placeholderTextColor="#9ca3af"
                                 className="text-base"
-                                onChangeText={(value) => null}
                             />
                         </View>
 
-                        <Text aria-label="Complexions" nativeID="height" className="mt-5">Complexions</Text>
+                        <Text aria-label="Complexions" nativeID="complexions" className="mt-5">Complexions</Text>
                         <View className="h-auto w-full mt-1.5 py-0 flex-row items-center justify-between border border-gray-300 rounded-xl bg-gray-100">
                             <SelectList
                                 setSelected={ setSelected }
@@ -316,11 +324,10 @@ const EditAccountDetailsScreen = () => {
                                 dropdownStyles={{ height: "auto", width: "100%", borderColor: "transparent" }}
                                 dropdownItemStyles={{ paddingHorizontal: 15 }}
                                 search={ false }
-                                // placeholder=""
                             />
                         </View>
 
-                        <Text aria-label="ShoeSize" nativeID="height" className="mt-5">ShoeSize</Text>
+                        <Text aria-label="ShoeSize" nativeID="shoeSize" className="mt-5">ShoeSize</Text>
                         <View className="h-auto w-full mt-1.5 py-0 flex-row items-center justify-between border border-gray-300 rounded-xl bg-gray-100">
                             <SelectList
                                 setSelected={ setSelectedShoeSize }
@@ -330,11 +337,10 @@ const EditAccountDetailsScreen = () => {
                                 dropdownStyles={{ height: "auto", width: "100%", borderColor: "transparent" }}
                                 dropdownItemStyles={{ paddingHorizontal: 15 }}
                                 search={ false }
-                                // placeholder=""
                             />
                         </View>
 
-                        <Text aria-label="BestOutfit" nativeID="height" className="mt-5">Best outfit</Text>
+                        <Text aria-label="BestOutfit" nativeID="bestOutfit" className="mt-5">Best outfit</Text>
                         <View className="h-auto w-full mt-1.5 py-0 flex-row items-center justify-between border border-gray-300 rounded-xl bg-gray-100">
                             <SelectList
                                 setSelected={ setSelectedBestOutfit }
@@ -344,11 +350,10 @@ const EditAccountDetailsScreen = () => {
                                 dropdownStyles={{ height: "auto", width: "100%", borderColor: "transparent" }}
                                 dropdownItemStyles={{ paddingHorizontal: 15 }}
                                 search={ false }
-                                // placeholder=""
                             />
                         </View>
 
-                        <Text aria-label="BestColor" nativeID="height" className="mt-5">Best color</Text>
+                        <Text aria-label="BestColor" nativeID="bestColor" className="mt-5">Best color</Text>
                         <View className="h-auto w-full mt-1.5 py-0 flex-row items-center justify-between border border-gray-300 rounded-xl bg-gray-100">
                             <SelectList
                                 setSelected={ setSelectedBestColor }
@@ -358,15 +363,17 @@ const EditAccountDetailsScreen = () => {
                                 dropdownStyles={{ height: "auto", width: "100%", borderColor: "transparent" }}
                                 dropdownItemStyles={{ paddingHorizontal: 15 }}
                                 search={ false }
-                                // placeholder=""
                             />
                         </View>
 
-                        <TouchableOpacity 
-                            onPress={ () => handleProceed() }
+                        {/* Submit button — label and behavior driven by isVendor (from auth user data):
+                              vendor    → "Proceed"               → save details + navigate to next setup step
+                              non-vendor → "Update Account Details" → save details + show success modal */}
+                        <TouchableOpacity
+                            onPress={ handleProceed }
                             className="h-[55px] w-auto mt-8 flex flex-row items-center justify-center rounded-xl bg-baseGreen"
                         >
-                            <Text className="text-lg text-white mr-2">{ (isSeller) ? "Update Account Details" : "Proceed"}</Text>
+                            <Text className="text-lg text-white mr-2">{ isVendor ? "Proceed" : "Update Account Details" }</Text>
                             <ArrowRight className="text-white" />
                         </TouchableOpacity>
 
@@ -375,22 +382,23 @@ const EditAccountDetailsScreen = () => {
 
             </SafeAreaView>
 
-            { showPhoneCodeModal && <CountriesPhoneCodeModal option="PhoneCodes" /> }  
-              
-            { showCountryModal && <CountriesPhoneCodeModal option="Countries" /> }    
+            { showPhoneCodeModal && <CountriesPhoneCodeModal option="PhoneCodes" /> }
 
             { showSuccessModal &&
                 <SuccessPopupModal
-                    bodyText={ (isSeller) 
-                    ? "You have successfully setup your profile. Kindly proceed to setup your shop." 
-                    : "You have successfully setup your profile. Kindly login into your account"
-                    }
-                    screenURL={ (isSeller) ? "shopSetupScreen" : "loginScreen"}
+                    bodyText="You have successfully updated your account details."
+                    // screenURL kept for type compatibility; the actual destination
+                    // is owned by handleSuccessDone via the onProceed override.
+                    screenURL="loginScreen"
+                    buttonLabel="Done"
+                    onProceed={ handleSuccessDone }
                 />
             }
+
+            { isLoading && <AppLoader loadingAdditionalMessage={ loadingMessage } /> }
         </GestureHandlerRootView>
     );
 };
-  
 
-export default EditAccountDetailsScreen;
+
+export default AuthCheck(EditAccountDetailsScreen);

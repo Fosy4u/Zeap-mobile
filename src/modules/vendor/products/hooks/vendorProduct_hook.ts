@@ -3,12 +3,13 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../../../redux/store/store";
 import { useApplyPromotionMutation, useDeleteProductMutation, useLazyGetAvailablePromosQuery, useLazyGetProductByProductIDQuery, useLazyGetProductPromotionQuery, useLazyGetProductsQuery, useTurnOffPromotionMutation } from "../apis/product_api";
 import IVendorProductQueryParams from "../models/vendorProductFilter_model";
-import { setProduct, setProductPromotion, setProducts, setReviewAndRating } from "../slices/vendorProductState_slice";
+import { setProduct, setProductPromotion, setProducts } from "../slices/vendorProductState_slice";
+import { setProductID } from "../../../user/products/slices/product_slice";
 import { IColor, IImage, IVariation } from "../models/vendorProductDetails_model";
 import { IColorEnum } from "../../../general/models/productOptions_model";
 import { SubmitHandler } from "react-hook-form";
 import { ILikeReview } from "../../../general/validations/review_validation";
-import { useDislikeReviewMutation, useLazyGetProductReviewsQuery, useLikeReviewMutation } from "../../../general/apis/review_api";
+import { useDislikeReviewMutation, useLikeReviewMutation } from "../../../general/apis/review_api";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import RootNavigationStackModel from "../../../../routes/model/routes_model";
@@ -354,7 +355,8 @@ const useVendorProductHook = () => {
                 dispatch(setLoadingMessage(""));
 
                 // Return to the product details screen
-                navigation.navigate("productDetailScreen", { productID: product?.productId! });
+                if (product?.productId) dispatch(setProductID(product.productId));
+                navigation.navigate("productDetailScreen");
             }
         } catch (error) {
             dispatch(setIsLoading(false));

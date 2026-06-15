@@ -5,6 +5,8 @@ import IPaymentReference from "../models/paymentReference_model";
 
 const initialState: IPaymentState = {
     paymentReference: {},
+    showOrderSuccessModal: false,
+    newOrderId: "",
 };
 
 const paymentSlice = createSlice({
@@ -14,6 +16,12 @@ const paymentSlice = createSlice({
         setPaymentReference: (state: IPaymentState, action: PayloadAction<IPaymentReference>) => {
             state.paymentReference = action.payload;
         },
+        setShowOrderSuccessModal: (state: IPaymentState, action: PayloadAction<boolean>) => {
+            state.showOrderSuccessModal = action.payload;
+        },
+        setNewOrderId: (state: IPaymentState, action: PayloadAction<string>) => {
+            state.newOrderId = action.payload;
+        },
     },
 });
 
@@ -21,5 +29,7 @@ const { actions, reducer } = paymentSlice;
 
 export const {
     setPaymentReference,
+    setShowOrderSuccessModal,
+    setNewOrderId,
 } = actions;
 export default reducer

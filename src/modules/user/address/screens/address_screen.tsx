@@ -7,16 +7,15 @@ import { View, Text, TouchableOpacity, SafeAreaView, ScrollView, TextInput, Stat
 import RootNavigationStackModel from '../../../../routes/model/routes_model.ts';
 import { AppDispatch, RootState } from '../../../../redux/store/store.ts';
 import { Controller } from 'react-hook-form';
-import { setSaveAddressForNextTime, setSelectedAddress, setShowNewDeliveryAddressForm } from '../slices/address_slice.ts';
+import { setSelectedAddress, setShowNewDeliveryAddressForm } from '../slices/address_slice.ts';
 import IAddress from '../models/address_model.ts';
 import useAddressHook from '../hooks/address_hook.ts';
-import AppLoader from '../../../general/components/appLoader.tsx';
-import CheckBox from '@react-native-community/checkbox';
 import countries from "../../../../utils/deliveryCountries.json";
 import { SelectList } from 'react-native-dropdown-select-list';
+import AddressSkeletonLoader from '../components/addressSkeletonLoader_component.tsx';
 
 const AddressScreen = () => {
-    const { deliveryAddresses, selectedAddress, isLoading, loadingMessage , showNewDeliveryAddressForm, saveAddressForNextTime } = useSelector((state: RootState) => state.addressState);
+    const { deliveryAddresses, selectedAddress, isLoading, showNewDeliveryAddressForm } = useSelector((state: RootState) => state.addressState);
     const { userData } = useSelector((state: RootState) => state.profileState );
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const dispatch = useDispatch<AppDispatch>();
@@ -24,8 +23,13 @@ const AddressScreen = () => {
     const {
         control, handleSubmit, onSubmit, errors,
         handleSetAsDefaultAddress, handleDeleteAddress,
+        handleGetDeliveryAddresses,
     } = useAddressHook();
-    
+
+    useEffect(() => {
+        handleGetDeliveryAddresses();
+    }, []);
+
     return (
         <SafeAreaView className="h-full w-full flex-1">
             <StatusBar
@@ -51,17 +55,19 @@ const AddressScreen = () => {
                     { (!showNewDeliveryAddressForm) ? (
                         <View className="flex-1 flex-col justify-between">
                             <View>
-                                {deliveryAddresses?.length > 0 ? (
+                                { (isLoading && (!deliveryAddresses || deliveryAddresses.length === 0)) ? (
+                                    <AddressSkeletonLoader />
+                                ) : deliveryAddresses?.length > 0 ? (
                                     deliveryAddresses.map((savedAddress: IAddress) => (
-                                        <TouchableOpacity 
+                                        <TouchableOpacity
                                             onPress={ () => {
                                                 dispatch(setSelectedAddress(savedAddress));
                                             } }
-                                            key={ savedAddress._id! } 
-                                            className={`h-auto w-full mt-4 px-5 py-5 relative border ${ savedAddress._id! === selectedAddress?._id ? "border-[#D5B07B] bg-[#FFFAF2]" : "border-gray-200 bg-[#F8F9FE]" } rounded-xl `}
+                                            key={ savedAddress._id! }
+                                            className={`h-auto w-full mt-4 px-[15px] py-5 relative border ${ savedAddress._id! === selectedAddress?._id ? "border-[#D5B07B] bg-[#FFFAF2]" : "border-gray-200 bg-[#F8F9FE]" } rounded-xl `}
                                         >
                                             <View className="flex-row items-center justify-between">
-                                                <Text className="font-Montserrat font-medium text-base text-gray-700">{ savedAddress.user! }</Text>
+                                                <Text className="flex-1 mr-2 font-Montserrat font-medium text-base text-gray-700" numberOfLines={1}>{ `${savedAddress.firstName ?? ""} ${savedAddress.lastName ?? ""}`.trim() }</Text>
                                                 <View className="flex-row items-center space-x-2">
                                                     <TouchableOpacity
                                                         onPress={ () => {
@@ -299,8 +305,6 @@ const AddressScreen = () => {
                     ) }
                 </View>
             </ScrollView>
-
-            { isLoading && <AppLoader loadingAdditionalMessage={ loadingMessage } /> }
         </SafeAreaView>
     )
 }

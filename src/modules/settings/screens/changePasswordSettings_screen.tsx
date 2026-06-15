@@ -1,7 +1,7 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ArrowLeft, ArrowRight, ArrowRight2, Eye, EyeSlash } from 'iconsax-react-native';
+import { ArrowLeft, ArrowRight, Eye, EyeSlash } from 'iconsax-react-native';
 import { SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View, TextInput } from 'react-native';
 import RootNavigationStackModel from '../../../routes/model/routes_model';
 import useSettingsHook from '../hooks/settings_hook';

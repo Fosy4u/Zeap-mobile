@@ -1,10 +1,15 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Image } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { Heart, Star1 } from 'iconsax-react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useDispatch } from 'react-redux';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import FastImage from 'react-native-fast-image';
 import RootNavigationStackModel from '../../../../routes/model/routes_model';
 import IProduct from '../../products/models/product_model';
+import FormatWords from '../../../../utils/formatWords';
+import { setProductID } from '../../products/slices/product_slice';
+import useWishlistToggle from '../hooks/wishlistToggle_hook';
 
 interface IProps {
     product: IProduct;
@@ -12,31 +17,49 @@ interface IProps {
 
 const SavedProductCard: React.FC<IProps> = ({ product }) => {
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
+    const dispatch = useDispatch();
+    const { isSaved, toggleSave } = useWishlistToggle();
+    const saved = isSaved(product?.productId);
+
+    // Resolve the best image from the wishlist payload — walk the colors
+    // until we find one that actually has an image, then take its first.
+    // The previous lookup hardcoded `colors[0].images[1]`, so products with
+    // a single image (or with the image only on a non-default colour) showed
+    // the fallback logo.
+    const productImage = product?.colors?.find((c) => (c?.images?.length ?? 0) > 0)?.images?.[0]?.link;
 
     return (
         <TouchableOpacity
-            onPress={ () => navigation.navigate("productDetailScreen") }
+            onPress={ () => {
+                dispatch(setProductID(product.productId));
+                navigation.navigate("productDetailScreen");
+            } }
             className="h-auto w-full flex-1 p-3 rounded-2xl overflow-hidden bg-[#F8F9FE]"
         >
-            <View className="h-auto w-full relative py-1 rounded-xl bg-white">
-                <Image
-                    className="h-[100px] w-full rounded-t-2xl"
-                    resizeMode="contain"
-                    source={ 
-                        product.colors[0]?.images[1]?.link
-                        ? { uri: product.colors[0]?.images[1]?.link }
-                        : require("../../../../../assets/images/app_logo.png")
+            <View className="h-[160px] w-full relative rounded-xl overflow-hidden">
+                <FastImage
+                    source={
+                        productImage
+                            ? { uri: productImage, priority: FastImage.priority.normal }
+                            : require("../../../../../assets/images/app_logo_green.png")
                     }
+                    defaultSource={ require("../../../../../assets/images/app_logo_green.png") }
+                    resizeMode={ FastImage.resizeMode.cover }
+                    className="h-full w-full"
                 />
-                <View className="h-[35px] w-[35px] absolute top-1 right-2 flex items-center justify-center rounded-xl bg-gray-200">
-                    <Heart color="gray" />
-                </View>
+                <TouchableOpacity
+                    onPress={ () => toggleSave(product) }
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    className="h-[35px] w-[35px] absolute top-1.5 right-1.5 flex items-center justify-center rounded-xl bg-gray-200"
+                >
+                    <Heart color={ saved ? "#e11d48" : "gray" } variant={ saved ? "Bold" : "Linear" } />
+                </TouchableOpacity>
             </View>
             <View className="mt-3">
                 <Text className="text-sm text-gray-800">{ product.title }</Text>
                 <View className="mt-1.5 flex-row items-center justify-between">
                     <Text className="px-2.5 py-1 text-xs rounded-lg bg-lightGreen">
-                        { product.categories.productGroup.split("-").join(" ") }
+                        { FormatWords.productGroupLabel(product.categories?.productGroup, product?.productType) }
                     </Text>
 
                     <View className="flex-row">
@@ -45,7 +68,7 @@ const SavedProductCard: React.FC<IProps> = ({ product }) => {
                     </View>
                 </View>
                 <Text className="mt-2.5 text-base font-medium text-gray-900">
-                    ₦{ product.variations[0].price.toLocaleString() }
+                    ₦{ product.variations[0]?.price?.toLocaleString() }
                 </Text>
             </View>
         </TouchableOpacity>

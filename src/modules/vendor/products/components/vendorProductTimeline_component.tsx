@@ -2,7 +2,6 @@ import React from 'react';
 import { View, Text } from 'react-native';
 import { ITimeLine } from '../models/vendorProductDetails_model';
 import { Add } from 'iconsax-react-native';
-import TimeAgo from '../../../general/components/timeAgo';
 
 interface IProps {
   timelines: ITimeLine[];

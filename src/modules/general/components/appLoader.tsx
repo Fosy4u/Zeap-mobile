@@ -26,7 +26,7 @@ const AppLoader: React.FC<IProps> = ({ loadingAdditionalMessage }) => {
     return (
         <SafeAreaView className="h-full w-full absolute inset-0 flex-1 items-center justify-center bg-black/90 z-[9999]">
           <Animated.Image
-            source={require("../../../../assets/images/app_icon.png")}
+            source={require("../../../../assets/images/app_icon_green.png")}
             style={[animatedStyle, { height: 60, width: 60 }]}
             resizeMode="cover"
           />

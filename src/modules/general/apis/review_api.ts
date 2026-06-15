@@ -1,6 +1,5 @@
 import rootAPI from "../../../redux/api/rootAPI.ts";
 import IReviewAndRating from "../models/review_model";
-import IReview from "../models/review_model";
 import { ILikeReview, IReviewProduct } from "../validations/review_validation";
 
 // 4.3 ({reviewData?.reviews?.length} { reviewData?.reviews?.length! > 1 ? "reviews" : "review" })
