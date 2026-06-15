@@ -6,35 +6,44 @@ import RootNavigationStackModel from '../../../../routes/model/routes_model.ts';
 import { ArrowDown2, ArrowLeft, ArrowRight, Call, Location, Map, Sms } from 'iconsax-react-native';
 import CheckBox from '@react-native-community/checkbox';
 import useAddressHook from '../../address/hooks/address_hook.ts';
-import { Controller } from 'react-hook-form';
+import { Controller, useWatch } from 'react-hook-form';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../../../redux/store/store.ts';
 import { setSaveAddressForNextTime } from '../../address/slices/address_slice.ts';
 import AppLoader from '../../../general/components/appLoader.tsx';
 import useEditAccountDetailsHook from '../../../profile/hooks/editAccountDetails_hook.ts';
 import { setAcceptMarketing, setShowEditEmail } from '../../../profile/slices/profileState_slice.ts';
-import useCartHook from '../hooks/cart_hook.ts';
 import formatCurrency from '../../../../utils/formatCurrency.ts';
 import countries from "../../../../utils/deliveryCountries.json";
+import countryStates from "../../../../utils/countryAndStates.json";
 import { SelectList } from 'react-native-dropdown-select-list';
 import usePaymentHook from '../../payment/hooks/payment_hook.ts';
+import OrderSuccessPopupModal from '../../payment/modals/orderSuccessPopup_modal.tsx';
 
 const CheckoutScreen = () => {
   const { orderSummary, selectedDeliveryFee, isLoading: isCartLoading, loadingMessage: cartLoadingMessage } = useSelector((state: RootState) => state.cartState);
   const { selectedAddress, saveAddressForNextTime, isLoading: isAddressLoading, loadingMessage: addressLoadingMessage } = useSelector((state: RootState) => state.addressState);
   const { cart } = useSelector((state: RootState) => state.cartState);
   const { userData, acceptMarketing, showEditEmail, isLoading: isProfileLoading } = useSelector((state: RootState) => state.profileState );
-  const [isLoggedInUser, setIsLoggedInUser] = React.useState<boolean>(true);
+  // Guests cannot persist a delivery address — the backend rejects
+  // `/deliveryAddress/create` for guest accounts. Drive the "save address"
+  // option off the normalized `isGuest` flag so it's disabled up front rather
+  // than failing silently after payment.
+  const isGuest = !!userData?.isGuest;
 
+  // Guests have no email on file. They must provide + save a contact email
+  // (persisted via `/user/update`) before the delivery/payment step unlocks.
+  // Once saved, `userData.email` is populated and this flips to false.
+  const guestNeedsEmail = isGuest && !userData?.email;
+
+  const { showOrderSuccessModal } = useSelector((state: RootState) => state.paymentState);
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
   const dispatch = useDispatch();
-  const isLoading = isCartLoading || isAddressLoading || isProfileLoading;
-  const loadingMessage = cartLoadingMessage || addressLoadingMessage;
-  // console.log("USER DATA::: ", userData);
-  
-  const { handleGetDeliveryMethod, handleGetOderSummary } = useCartHook();
-  const { handleProceedToPayment } = usePaymentHook();
-  const { 
+
+  const { handleProceedToPayment, isLoading: isPaymentLoading, loadingMessage: paymentLoadingMessage } = usePaymentHook();
+  const isLoading = isCartLoading || isAddressLoading || isProfileLoading || isPaymentLoading;
+  const loadingMessage = paymentLoadingMessage || cartLoadingMessage || addressLoadingMessage;
+  const {
     control: editAccountDetailsControl,
     handleSubmit: editAccountDetailsHandleSubmit,
     onSubmit: editAccountDetailsOnSubmit,
@@ -42,15 +51,27 @@ const CheckoutScreen = () => {
   } = useEditAccountDetailsHook();
 
   const {
-      control, errors,
-      handleSubmit: addressHandleSubmit, onSubmit: deliveryAddressOnSubmit, handleGetDeliveryAddresses,
+      control, errors, setValue, getValues,
+      handleSubmit: addressHandleSubmit, onSubmit: deliveryAddressOnSubmit,
   } = useAddressHook();
 
+  // Cart-screen pre-fetches delivery addresses, delivery method, and order summary
+  // in parallel — no need to refetch on checkout mount.
+
+  // Drive the State/Region dropdown off the currently-selected country.
+  // `useWatch` only re-renders this slice of the form, not the whole tree.
+  const selectedCountryKey = useWatch({ control, name: "country" }) as string | undefined;
+  const regionOptions = (selectedCountryKey && (countryStates as Record<string, { key: string; value: string }[]>)[selectedCountryKey]) || [];
+
+  // When the country changes, clear `region` if the previously selected value
+  // isn't a valid state for the new country. Preserves saved-address values
+  // that match the new country's list (e.g. Nigeria + Lagos stays intact).
   useEffect(() => {
-    handleGetDeliveryAddresses();
-    handleGetDeliveryMethod();
-    handleGetOderSummary();
-  }, []); 
+    const currentRegion = getValues("region");
+    if (currentRegion && !regionOptions.some(opt => opt.key === currentRegion)) {
+      setValue("region", "");
+    }
+  }, [selectedCountryKey]);
 
   
   return (
@@ -73,18 +94,67 @@ const CheckoutScreen = () => {
       
       <ScrollView showsVerticalScrollIndicator={ false }>
         <View className="pt-[30px] pb-5 px-[20px]">
-          <Text className="font-montserratMedium text-2xl text-gray-700">Kindly provide us your delivery address</Text>          
+          <Text className="font-montserratMedium text-2xl text-gray-700">{ guestNeedsEmail ? "Kindly provide your contact email to continue" : "Kindly provide us your delivery address" }</Text>
 
           {/*==== Contact Information ====*/}
           <View className="h-auto w-full mt-6 px-5 py-5 border border-gray-200 rounded-xl bg-[#F8F9FE]">
             <View className="flex-row items-center justify-between">
               <Text className="font-montserratSemiBold text-base text-gray-700">Contact Information</Text>
-              <TouchableOpacity onPress={ () => dispatch(setShowEditEmail(true)) }>
-                <Text className="font-montserratMedium">Edit</Text>
-              </TouchableOpacity>
+              { !isGuest && (
+                <TouchableOpacity onPress={ () => dispatch(setShowEditEmail(true)) }>
+                  <Text className="font-montserratMedium">Edit</Text>
+                </TouchableOpacity>
+              ) }
             </View>
 
-            { (showEditEmail) ? (
+            { isGuest ? (
+                /* Guests have no email on file. Collect a required contact email +
+                   marketing preference and persist it via `/user/update` (the same
+                   updateUserDetails mutation). Saving populates `userData.email`,
+                   which flips `guestNeedsEmail` false and unlocks the delivery step. */
+                <View>
+                  <Text aria-label="Email" nativeID="email" className="mt-5 font-montserratMedium">Email <Text className="text-red-500">*</Text></Text>
+                  <View className="h-auto w-full mt-1.5 px-3 py-1 border border-gray-300 rounded-xl bg-gray-100">
+                    <Controller
+                      control={ editAccountDetailsControl }
+                      name="email"
+                      render={ ({ field: { onChange, onBlur, value } }) => (
+                        <TextInput
+                          aria-label="Email"
+                          aria-labelledby="email"
+                          keyboardType="email-address"
+                          autoCapitalize="none"
+                          placeholder="Enter your email"
+                          placeholderTextColor="#9ca3af"
+                          className="text-base"
+                          onBlur={ onBlur }
+                          onChangeText={ onChange }
+                          value={ value }
+                        />
+                      ) }
+                    />
+                  </View>
+                  { editAccountDetailsErrors.email && (<Text className="mt-1 text-red-500 text-xs">{ editAccountDetailsErrors.email.message }</Text>) }
+
+                  <View className="mt-5 flex-row items-center">
+                    <CheckBox
+                      value={ acceptMarketing }
+                      onValueChange={ (newValue) => dispatch(setAcceptMarketing(newValue)) }
+                      tintColors={{ true: "#133522", false: "#151518" }}
+                    />
+                    <Text className="ml-2 font-montserratMedium text-sm">Email me news and offers.</Text>
+                  </View>
+
+                  <TouchableOpacity
+                    onPress={ editAccountDetailsHandleSubmit(editAccountDetailsOnSubmit) }
+                    disabled={ isProfileLoading }
+                    className="h-[55px] w-full mt-5 flex-row items-center justify-center rounded-xl bg-baseGreen"
+                  >
+                    <Text className="text-lg text-white mr-2">{ isProfileLoading ? "Please wait..." : (guestNeedsEmail ? "Save & continue to delivery" : "Update email") }</Text>
+                    { isProfileLoading ? null : <ArrowRight className="text-white" /> }
+                  </TouchableOpacity>
+                </View>
+              ) : (showEditEmail) ? (
                 <View>
                   <Text aria-label="Email" nativeID="email" className="mt-5 font-montserratMedium">Email</Text>
                   <View className="h-auto w-full mt-1.5 px-3 py-1 border border-gray-300 rounded-xl bg-gray-100">
@@ -108,7 +178,7 @@ const CheckoutScreen = () => {
                     />
                     { editAccountDetailsErrors.email && (<Text className="text-red-500 text-xs">{editAccountDetailsErrors.email.message}</Text>) }
                   </View>
-  
+
                   <View className="mt-5 flex-row items-center">
                     <CheckBox
                       value={ acceptMarketing }
@@ -117,7 +187,7 @@ const CheckoutScreen = () => {
                     />
                     <Text className="ml-2 font-montserratMedium text-sm">I would like to receive news and offers from Zeap.</Text>
                   </View>
-  
+
                   <View className="flex-row items-center gap-x-4">
                     <TouchableOpacity
                       onPress={ () => dispatch(setShowEditEmail(false)) }
@@ -125,8 +195,8 @@ const CheckoutScreen = () => {
                     >
                       <Text className="text-lg text-baseGreen">Cancel</Text>
                     </TouchableOpacity>
-  
-                    <TouchableOpacity 
+
+                    <TouchableOpacity
                       onPress={editAccountDetailsHandleSubmit(editAccountDetailsOnSubmit)}
                       disabled={isProfileLoading}
                       className="h-[55px] w-auto mt-5 flex-1 flex-row items-center justify-center rounded-xl bg-baseGreen"
@@ -134,7 +204,7 @@ const CheckoutScreen = () => {
                       <Text className="text-lg text-white mr-2">{ isProfileLoading ? "Please wait..." : "Submit" }</Text>
                       { isProfileLoading ? null : <ArrowRight className="text-white" /> }
                     </TouchableOpacity>
-                  </View>                
+                  </View>
                 </View>
               ) : (
                 <View className="mt-5 flex-row items-center space-x-2">
@@ -145,9 +215,13 @@ const CheckoutScreen = () => {
             
           </View>
 
-          {/*==== Selected Address ====*/}
-          { (selectedAddress !== null && Object.entries(selectedAddress).length > 0) && (
-            <View className="h-auto w-full mt-6 px-5 py-5 border border-gray-200 rounded-xl bg-[#F8F9FE]">
+          {/* Delivery, payment, and the order summary stay hidden until a guest
+              has saved a contact email. Logged-in users always see them. */}
+          { !guestNeedsEmail && (
+            <>
+          {/*==== Saved Delivery Address Summary ====*/}
+          { (selectedAddress && Object.keys(selectedAddress).length > 0) && (
+            <View className="h-auto w-full mt-6 px-5 py-5 border border-[#D5B07B] rounded-xl bg-[#FFFAF2]">
               <View className="flex-row items-center justify-between">
                 <Text className="font-montserratSemiBold text-base text-gray-700">Delivery Address</Text>
                 <TouchableOpacity
@@ -156,6 +230,10 @@ const CheckoutScreen = () => {
                 >
                   <Text className="font-Montserrat font-medium text-xs text-white">Change Address</Text>
                 </TouchableOpacity>
+              </View>
+
+              <View className="mt-4 flex-row items-center">
+                <Text className="font-montserratMedium text-base text-gray-700">{ `${selectedAddress.firstName ?? ""} ${selectedAddress.lastName ?? ""}`.trim() }</Text>
               </View>
 
               <View className="mt-4 flex-row items-center">
@@ -172,11 +250,16 @@ const CheckoutScreen = () => {
                 <Map size={ 16 } variant="Bold" className="mr-2 text-baseGreen" />
                 <Text className="font-montserratMedium">{ selectedAddress.region }</Text>
               </View>
-              
-              <View className="h-[1px] w-full mt-4 bg-gray-200" />
+            </View>
+          )}
 
-              <View>
-                <Text aria-label="FirstName" nativeID="firstName" className="mt-5 font-montserratMedium">First Name</Text>
+          {/*==== Delivery Address Form ====*/}
+          <View className="h-auto w-full mt-6 px-5 py-5 border border-gray-200 rounded-xl bg-[#F8F9FE]">
+            <Text className="font-montserratSemiBold text-base text-gray-700">
+              { (selectedAddress && Object.keys(selectedAddress).length > 0) ? "Add New Delivery Address" : "Delivery Address" }
+            </Text>
+            <View>
+                <Text aria-label="FirstName" nativeID="firstName" className="mt-5 font-montserratMedium">First Name <Text className="text-red-500">*</Text></Text>
                 <View className="h-auto w-full mt-1.5 px-3 py-1 border border-gray-300 rounded-xl bg-gray-100">
                     <Controller
                     control={ control }
@@ -245,29 +328,6 @@ const CheckoutScreen = () => {
                     { errors.address && (<Text className="text-red-500 text-xs">{errors.address.message}</Text>) }
                 </View>
 
-                <Text aria-label="Region" nativeID="region" className="mt-5">State/Region</Text>
-                <View className="h-auto w-full mt-1.5 px-3 py-1 border border-gray-300 rounded-xl bg-gray-100">
-                    <Controller
-                    control={ control }
-                    name="region"
-                    rules={{ required: true }}
-                    render={ ({ field: { onChange, onBlur, value } }) => (
-                        <TextInput
-                        aria-label="Region"
-                        aria-labelledby="region"
-                        keyboardType="default"
-                        placeholder="Enter your state/region"
-                        placeholderTextColor="#9ca3af"
-                        className="text-base"
-                        onBlur={ onBlur }
-                        onChangeText={ onChange }
-                        value={ value }
-                        />
-                    ) }
-                    />
-                    { errors.region && (<Text className="text-red-500 text-xs">{errors.region.message}</Text>) }
-                </View>
-
                 <Text aria-label="Country" nativeID="country" className="mt-5 font-montserratMedium">Country</Text>
                 <View className="h-auto w-full mt-1.5 py-0 flex-row items-center justify-between border border-gray-300 rounded-xl bg-gray-100">
                 <Controller
@@ -307,6 +367,70 @@ const CheckoutScreen = () => {
                 />
                 </View>
 
+                <Text aria-label="Region" nativeID="region" className="mt-5 font-montserratMedium">State/Region</Text>
+                <View className="h-auto w-full mt-1.5 py-0 flex-row items-center justify-between border border-gray-300 rounded-xl bg-gray-100">
+                    <Controller
+                        control={ control }
+                        name="region"
+                        rules={{ required: true }}
+                        render={ ({ field: { onChange, value } }) => (
+                            <SelectList
+                                key={ `region-${selectedCountryKey || "none"}` }
+                                setSelected={ (val: any) => onChange(val) }
+                                data={ regionOptions }
+                                defaultOption={ regionOptions.find(opt => opt.key === value) }
+                                arrowicon={ <ArrowDown2 size={18} color="#9ca3af" className="mx-1 mt-1" /> }
+                                boxStyles={{
+                                  height: "auto",
+                                  width: "100%",
+                                  paddingHorizontal: 12,
+                                  paddingVertical: 17,
+                                  borderColor: "transparent"
+                                }}
+                                inputStyles={{ fontSize: 16, color: "#606060" }}
+                                dropdownStyles={{
+                                  height: "auto",
+                                  width: "100%",
+                                  marginTop: -15,
+                                  borderColor: "transparent"
+                                }}
+                                dropdownTextStyles={{ color: "#606060", fontSize: 16 }}
+                                dropdownItemStyles={{
+                                  paddingHorizontal: 15,
+                                  paddingTop: 10,
+                                  paddingBottom: 5
+                                }}
+                                placeholder={ selectedCountryKey ? "Select your state/region" : "Select a country first" }
+                                search={ true }
+                            />
+                        ) }
+                    />
+                </View>
+                { errors.region && (<Text className="mt-1 text-red-500 text-xs">{errors.region.message}</Text>) }
+
+                <Text aria-label="PostCode" nativeID="postCode" className="mt-5 font-montserratMedium">Post Code</Text>
+                <View className="h-auto w-full mt-1.5 px-3 py-1 border border-gray-300 rounded-xl bg-gray-100">
+                    <Controller
+                    control={ control }
+                    name="postCode"
+                    rules={{ required: true }}
+                    render={ ({ field: { onChange, onBlur, value } }) => (
+                        <TextInput
+                        aria-label="PostCode"
+                        aria-labelledby="postCode"
+                        keyboardType="default"
+                        placeholder="Enter your post code"
+                        placeholderTextColor="#9ca3af"
+                        className="text-base"
+                        onBlur={ onBlur }
+                        onChangeText={ onChange }
+                        value={ value }
+                        />
+                    ) }
+                    />
+                    { errors.postCode && (<Text className="text-red-500 text-xs">{errors.postCode.message}</Text>) }
+                </View>
+
                 <Text aria-label="Phone" nativeID="phoneNumber" className="mt-5 font-montserratMedium">Phone</Text>
                 <View className="h-auto w-full mt-1.5 px-3 py-1 border border-gray-300 rounded-xl bg-gray-100">
                     <Controller
@@ -333,36 +457,25 @@ const CheckoutScreen = () => {
                 
                 <View className="mt-5 flex-row items-center">
                     <CheckBox
-                      value={ saveAddressForNextTime }
-                      disabled={ userData && userData.email === null && userData.email === "" }
+                      value={ saveAddressForNextTime && !isGuest }
+                      disabled={ isGuest }
                       onValueChange={ (newValue) => {
-                        if (userData && (userData.email !== null || userData.email !== "")) {
-                          dispatch(setSaveAddressForNextTime(newValue))
-                        } else {
-                          setIsLoggedInUser(false);
+                        if (!isGuest) {
+                          dispatch(setSaveAddressForNextTime(newValue));
                         }
                       }}
                       tintColors={{ true: "#133522", false: "#151518" }}
                     />
-                    <Text className="ml-2 font-montserratMedium text-base">Save my address for next time.</Text>
+                    <Text className={ `ml-2 font-montserratMedium text-base ${ isGuest ? "text-gray-400" : "" }` }>Save my address for next time.</Text>
                 </View>
-                <Text className="mt-1 ml-1 font-montserratMedium text-xs text-gray-400">{ !isLoggedInUser && "You need to be logged in to save your address for next time." }</Text>
+                { isGuest && <Text className="mt-1 ml-1 font-montserratMedium text-xs text-gray-400">You need to be logged in to save your address for next time.</Text> }
               </View>
             </View>
-          )}
 
           {/*==== Delivery Method ====*/}
           <View className="h-auto w-full mt-6 px-5 py-5 border border-gray-200 rounded-xl bg-[#F8F9FE]">
-            <View className="flex-row items-center justify-between">
-              <Text className="font-montserratSemiBold text-base text-gray-700">Delivery Method</Text>
-              <TouchableOpacity
-                onPress={ () => navigation.navigate("deliveryMethodScreen") }
-                className="h-auto w-auto px-3 py-2  bg-baseGreen rounded-lg"
-              >
-                <Text className="font-Montserrat font-medium text-xs text-white">Change Method</Text>
-              </TouchableOpacity>
-            </View>
-  
+            <Text className="font-montserratSemiBold text-base text-gray-700">Delivery Method</Text>
+
             <View className="mt-2">
               <Text className="font-montserratSemiBold">{ selectedDeliveryFee.method!.charAt(0).toUpperCase() + selectedDeliveryFee.method!.slice(1) }</Text>
               <Text className="font-montserratMedium text-sm">{ selectedDeliveryFee.label! }</Text>
@@ -414,21 +527,24 @@ const CheckoutScreen = () => {
           <TouchableOpacity 
             onPress={ () => {
               addressHandleSubmit((data) => handleProceedToPayment(data))();
-              if (saveAddressForNextTime) {
-                addressHandleSubmit(deliveryAddressOnSubmit)(); 
+              if (saveAddressForNextTime && !isGuest) {
+                addressHandleSubmit(deliveryAddressOnSubmit)();
               }
             } }
             className="h-[55px] w-auto mt-7 flex flex-row items-center justify-center rounded-xl bg-baseGreen"
           >
             <Text className="text-lg text-white mr-2">Proceed to Payment</Text>
             <ArrowRight className="text-white" />
-          </TouchableOpacity>      
-        </View>   
+          </TouchableOpacity>
+            </>
+          ) }
+        </View>
       </ScrollView>
 
       {/*==== Loading State ====*/}
       { (isLoading) && <AppLoader loadingAdditionalMessage={ loadingMessage } /> }
-      
+
+      { showOrderSuccessModal && <OrderSuccessPopupModal /> }
     </SafeAreaView>
   )
 }

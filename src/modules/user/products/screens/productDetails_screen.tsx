@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
-import { RouteProp, useNavigation } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ArrowLeft, ArrowRight, Heart, Star1 } from 'iconsax-react-native';
-import { Image, SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View } from 'react-native'
+import { ArrowLeft, ArrowRight } from 'iconsax-react-native';
+import { SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View } from 'react-native'
 import RootNavigationStackModel from '../../../../routes/model/routes_model';
 import DescriptionComponent from '../components/description_component';
 import ReviewComponent from '../../../general/components/review_component';
@@ -10,8 +10,8 @@ import TimelineComponent from '../components/timeline_component';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../../redux/store/store';
 import { setProductID, setSelectedTab } from '../slices/product_slice';
-import AppLoader from '../../../general/components/appLoader';
 import ProductImagesAndColorsComponent from '../components/productImagesAndColors_component';
+import ProductDetailsSkeletonLoader from '../components/productDetailsSkeletonLoader_component';
 import SizeGuideBottomSheet from '../components/sizeGuideBottomSheet_component';
 import useProductsHook from '../hooks/products_hook';
 import FastImage from 'react-native-fast-image';
@@ -21,7 +21,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 
 const ProductDetailScreen = () => {
-  const { product, productID, reviewAndRating, selectedTab, tabs, popularProducts, showSizedGuideBottomSheet, isLoading, loadingMessage } = useSelector((state: RootState) => state.productState);
+  const { product, productID, reviewAndRating, selectedTab, tabs, popularProducts, showSizedGuideBottomSheet, isLoading } = useSelector((state: RootState) => state.productState);
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
   const dispatch = useDispatch<AppDispatch>();
   
@@ -63,17 +63,20 @@ const ProductDetailScreen = () => {
         </View>
 
 
-        {/*==== Top Skewed Light Green Background ====*/}
-        <FastImage
-          source={require("../../../../../assets/images/product_detail_top_background.png")}
-          className="h-[400px] w-full absolute top-0 left-0 z-0"
-          resizeMode={FastImage.resizeMode.stretch}
-        />
-
+        { (isLoading && !product?.productId) ? (
+          <ProductDetailsSkeletonLoader />
+        ) : (
         <ScrollView
           showsVerticalScrollIndicator={ false }
-            className="mt-[30px]"
+            className="mt-[15px]"
         >
+          {/*==== Top Skewed Light Green Background — scrolls with content ====*/}
+          <FastImage
+            source={require("../../../../../assets/images/product_detail_top_background.png")}
+            className="h-[400px] w-full absolute top-0 left-0 z-0"
+            resizeMode={FastImage.resizeMode.stretch}
+          />
+
           {/*==== Product Image And Color Palete ====*/}
           <ProductImagesAndColorsComponent
             defaultFeaturedImageAndThumbnails={ defaultFeaturedImageAndThumbnails }
@@ -98,7 +101,7 @@ const ProductDetailScreen = () => {
               )) }
             </View>
 
-            { (selectedTab === "Description") ? (
+            { (selectedTab === "Details") ? (
               <DescriptionComponent product={ product! } />
             ) : (selectedTab === "Reviews") ? (
               <ReviewComponent reviewAndRating={reviewAndRating!} productID={productID!} loadingMessage={"Getting product reviews..."} />
@@ -154,18 +157,15 @@ const ProductDetailScreen = () => {
                     orientation="Vertical"
                   />
                 )) }
-            </ScrollView> 
+            </ScrollView>
           </View>
         </ScrollView>
-  
+        ) }
+
 
         { showSizedGuideBottomSheet && (
           <SizeGuideBottomSheet />
         ) }
-
-        {isLoading && (
-          <AppLoader loadingAdditionalMessage={loadingMessage} />
-        )}
 
       </SafeAreaView>
     </GestureHandlerRootView>

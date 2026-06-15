@@ -1,4 +1,5 @@
 import React from 'react';
+import AuthCheck from '../../auths/components/authCheck';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Image, SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View } from 'react-native';
@@ -9,10 +10,11 @@ import { Trash } from 'iconsax-react-native';
 import AppHeaderComp from '../../vendor/general/components/appHeader_comp';
 import useNotificationHook from '../hooks/notification_hook';
 import formatDate from '../../../utils/formatDate';
-import AppLoader from '../../general/components/appLoader';
+import handleNotificationNavigation from '../utils/notificationNavigation';
+import NotificationsSkeletonLoader from '../components/notificationsSkeletonLoader_component';
 
 const UserNotificationsScreen = () => {
-    const { notifications, loadingMessage, isLoading } = useSelector((state: RootState) => state.notificationsState);
+    const { notifications, isLoading } = useSelector((state: RootState) => state.notificationsState);
     const { userData } = useSelector((state: RootState) => state.profileState);
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
 
@@ -30,16 +32,17 @@ const UserNotificationsScreen = () => {
             <AppHeaderComp title="Notifications" />
 
             {/*==== Notification List ====*/}
+            { (isLoading && notifications.length === 0) ? (
+                <NotificationsSkeletonLoader />
+            ) : (
             <ScrollView
-                showsVerticalScrollIndicator={false} 
+                showsVerticalScrollIndicator={false}
                 className="h-auto w-full px-5 pt-[20px] flex-1"
             >
                 { notifications.length !== 0
                     ? notifications.map((notification, index) => (
-                        <TouchableOpacity key={ index } 
-                            onPress={ () => {
-                                // navigation.navigate("notificationDetailScreen", { notificationID: notification.id });
-                            } }
+                        <TouchableOpacity key={ index }
+                            onPress={ () => handleNotificationNavigation(notification.data) }
                         >
                             <View className="h-auto w-full mt-4 p-4 rounded-xl border border-gray-200 bg-[#F8F9FE]">
                                 <View className="h-auto w-full flex-row items-start justify-start">
@@ -53,7 +56,7 @@ const UserNotificationsScreen = () => {
                                             ? require("../../../../assets/images/payment_notification.png")
                                             : notification.title.includes("Dispatch") || notification.title.includes("dispatch")
                                             ? require("../../../../assets/images/dispatch_notification.png")
-                                            : require("../../../../assets/images/app_logo.png")
+                                            : require("../../../../assets/images/app_logo_green.png")
                                         }
                                     />
                                     <View className="flex-1 ml-3">
@@ -80,13 +83,9 @@ const UserNotificationsScreen = () => {
                 }
                 <View className="h-10" />
             </ScrollView>
-
-            {/* ==== App Loader ==== */}
-            { isLoading && (
-                <AppLoader loadingAdditionalMessage={ loadingMessage } />
-            )}
+            ) }
         </SafeAreaView>
     );
 };
 
-export default UserNotificationsScreen;
+export default AuthCheck(UserNotificationsScreen);

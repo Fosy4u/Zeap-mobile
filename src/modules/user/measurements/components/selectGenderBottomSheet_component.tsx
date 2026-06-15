@@ -1,48 +1,42 @@
-import React, { useEffect, useRef } from 'react'
+import React from 'react'
 import { Dimensions, Image, SafeAreaView, ScrollView, Text, TouchableOpacity, View } from 'react-native';
-import * as Animatable from 'react-native-animatable';
 import LinearGradient from 'react-native-linear-gradient';
-import { setShowSelectGenderBottomSheet } from '../slices/measurement_slice';
+import { setSelectedGender, setShowAddNewMeasurementBottomSheet, setShowSelectGenderBottomSheet } from '../slices/measurement_slice';
 import { useDispatch } from 'react-redux';
+import useMeasurementHook from '../hooks/measurement_hook';
 
 const SelectGenderBottomSheetComponent = () => {
     const screenHeight = Dimensions.get("window").height;
     const modalHeight = screenHeight / 2.0;
-    const slideAnimation = useRef<Animatable.View>(null);
     const dispatch = useDispatch();
-    
-    useEffect(() => {
-        if (slideAnimation.current) {
-            slideAnimation.current.animate({
-                0: { translateY: modalHeight },
-                1: { translateY: 0 }
-            }, 1000);
-        }
-    }, [modalHeight]);
-    
+    const { handleGetBodyMeasurementGuides, handleGetRequiredMeasurementFormFields } = useMeasurementHook();
+
     const handleCloseAddNewMeasurementBottomSheet = () => {
-        if (slideAnimation.current) {
-            slideAnimation.current.animate({
-                0: { translateY: 0, opacity: 1 },
-                1: { translateY: modalHeight, opacity: 0 }
-            }, 500).then(() => {
-                dispatch(setShowSelectGenderBottomSheet(false));
-            });
-        } else {
-            dispatch(setShowSelectGenderBottomSheet(false));
-        }
+        dispatch(setShowSelectGenderBottomSheet(false));
+    };
+
+    const handleSelectGender = async (gender: "male" | "female") => {
+        // Persist the selected gender so the save-template payload can include
+        // it. The backend rejects the template create call without it.
+        dispatch(setSelectedGender(gender));
+
+        // Close the gender sheet immediately — the fetch hooks set isLoading
+        // so the screen-level AppLoader becomes visible right away while the
+        // guide + form fields are fetched in parallel.
+        dispatch(setShowSelectGenderBottomSheet(false));
+        await Promise.all([
+            handleGetBodyMeasurementGuides(gender),
+            handleGetRequiredMeasurementFormFields(),
+        ]);
+        dispatch(setShowAddNewMeasurementBottomSheet(true));
     };
     
     return (
         <SafeAreaView className="h-full w-full absolute bg-black/40">
 
-           <Animatable.View 
-                ref={slideAnimation}
+           <View
                 className="w-full px-5 pt-7 pb-5 absolute bottom-0 bg-white"
-                style={{ 
-                    height: modalHeight,
-                    transform: [{ translateY: modalHeight }]
-                }}
+                style={{ height: modalHeight }}
             >
                 <View>
                     <View className="h-auto w-full flex-row items-start justify-between">
@@ -73,24 +67,22 @@ const SelectGenderBottomSheetComponent = () => {
 
                 <ScrollView showsVerticalScrollIndicator={ false }>
                     <View className="flex-1 flex-col justify-between">
-                        <TouchableOpacity 
-                            onPress={ () => {
-                            } }
+                        <TouchableOpacity
+                            onPress={ () => handleSelectGender("male") }
                             className="h-[55px] w-auto mt-5 flex flex-row items-center justify-center rounded-xl bg-baseGreen"
                         >
                             <Text className="text-lg text-white mr-2">Add Male Template</Text>
                         </TouchableOpacity>
 
-                        <TouchableOpacity 
-                            onPress={ () => {
-                            } }
+                        <TouchableOpacity
+                            onPress={ () => handleSelectGender("female") }
                             className="h-[55px] w-auto mt-5 flex flex-row items-center justify-center rounded-xl bg-baseGreen"
                         >
                             <Text className="text-lg text-white mr-2">Add Female Template</Text>
                         </TouchableOpacity>
                     </View>
                 </ScrollView>
-            </Animatable.View>
+            </View>
         </SafeAreaView>
     );
 }

@@ -2,7 +2,6 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import ICartState from "../models/cartState_model";
 import ICart from "../models/cart_model";
 import IDeliveryMethod, { DeliveryFee } from "../../address/models/deliveryMethod_model";
-import { set } from "react-hook-form";
 import IOrderSummary from "../models/orderSummary_model";
 import IDeliveryDate from "../models/deliveryDate_model";
 
@@ -38,6 +37,7 @@ const initialState: ICartState = {
     deliveryDates: [],
 
     isLoading: false,
+    isCartItemsLoading: false,
     loadingMessage: "",
 };
 
@@ -66,6 +66,9 @@ export const cartSlice = createSlice({
         setIsLoading: (state: ICartState, action: PayloadAction<boolean>) => {
             state.isLoading = action.payload;
         },
+        setIsCartItemsLoading: (state: ICartState, action: PayloadAction<boolean>) => {
+            state.isCartItemsLoading = action.payload;
+        },
         setLoadingMessage: (state: ICartState, action: PayloadAction<string>) => {
             state.loadingMessage = action.payload;
         }
@@ -82,6 +85,7 @@ export const {
     setOrderSummary,
     setDeliveryDates,
     setIsLoading,
+    setIsCartItemsLoading,
     setLoadingMessage
 } = actions;
 

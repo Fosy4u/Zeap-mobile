@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import IAuthState from "../models/authState_model";
+import IAuthState, { IPendingDestination } from "../models/authState_model";
 
 const initialState : IAuthState= {
     isVendorData: [
@@ -12,6 +12,7 @@ const initialState : IAuthState= {
     rememberMe: false,
     showSuccessModal: false,
     showBottomSheetModal: false,
+    pendingDestination: null,
 };
 
 const authSlice = createSlice({
@@ -33,10 +34,24 @@ const authSlice = createSlice({
         setShowBottomSheetModal: (state: IAuthState, action: PayloadAction<boolean>) => {
             state.showBottomSheetModal = action.payload;
         },
+        setPendingDestination: (state: IAuthState, action: PayloadAction<IPendingDestination>) => {
+            state.pendingDestination = action.payload;
+        },
+        clearPendingDestination: (state: IAuthState) => {
+            state.pendingDestination = null;
+        },
     }
 });
 
 const { actions, reducer } = authSlice;
 
-export const { setShowPassword, setShowConfirmPassword, setRememberMe, setShowSuccessModal, setShowBottomSheetModal } = actions;
+export const {
+    setShowPassword,
+    setShowConfirmPassword,
+    setRememberMe,
+    setShowSuccessModal,
+    setShowBottomSheetModal,
+    setPendingDestination,
+    clearPendingDestination,
+} = actions;
 export default reducer;

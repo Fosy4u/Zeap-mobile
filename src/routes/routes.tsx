@@ -21,9 +21,13 @@ import ProductListScreen from '../modules/user/products/screens/productList_scre
 import InviteFriendScreen from '../modules/user/home/screens/inviteFriend_screen ';
 import ProductDetailScreen from '../modules/user/products/screens/productDetails_screen.tsx';
 import MeasurementScreen from '../modules/user/measurements/screens/measurement_screen.tsx';
+import EditMeasurementTemplateScreen from '../modules/user/measurements/screens/editMeasurementTemplate_screen.tsx';
 import VendorHomeScreen from '../modules/vendor/home/screens/vendorHome_screen';
-import MarketScreen from '../modules/vendor/market/screens/market_screen';
-import VendorDashboardScreen from '../modules/vendor/home/screens/vendorDashboard_screen';
+import VendorOnboardingScreen from '../modules/vendor/general/screens/vendorOnboarding_screen';
+import VendorRegistrationScreen from '../modules/vendor/general/screens/vendorRegistration_screen';
+import VendorWelcomeScreen from '../modules/vendor/general/screens/vendorWelcome_screen';
+import VendorDocumentUploadScreen from '../modules/vendor/general/screens/vendorDocumentUpload_screen';
+import ContactSupportScreen from '../modules/general/screens/contactSupport_screen';
 import VendorNotificationsScreen from '../modules/notifications/screens/notifications_screen';
 import ReviewListScreen from '../modules/general/screens/reviewList_screen.tsx';
 import PersonalInformationScreen from '../modules/profile/screens/personalInformation_screen.tsx';
@@ -49,6 +53,7 @@ import AddAccessoriesScreen from '../modules/vendor/products/screens/addAccessor
 import PromotionScreen from '../modules/vendor/products/screens/promotion_screen.tsx';
 import UserOrdersScreen from '../modules/user/orders/screens/orders_screen';
 import UserOrderDetailsScreen from '../modules/user/orders/screens/orderDetails_screen';
+import ReceiptScreen from '../modules/user/orders/screens/receipt_screen';
 import AddressScreen from '../modules/user/address/screens/address_screen.tsx';
 import CheckoutScreen from '../modules/user/cart/screens/checkout_screen.tsx';
 import SettingsScreen from '../modules/settings/screens/settings_screen.tsx';
@@ -123,6 +128,9 @@ const AppRoutes = () => {
         <Stack.Screen
           name="measurementScreen" component={MeasurementScreen} options={{ headerShown: false }}
         />
+        <Stack.Screen
+          name="editMeasurementTemplateScreen" component={EditMeasurementTemplateScreen} options={{ headerShown: false }}
+        />
 
         {/* ==== Cart Checkout ==== */}
         <Stack.Screen name="checkoutScreen" component={CheckoutScreen} options={{ headerShown: false }} />
@@ -163,6 +171,7 @@ const AppRoutes = () => {
         {/* ==== Orders ==== */}
         <Stack.Screen name="ordersScreen" component={UserOrdersScreen} options={{ headerShown: false }} />
         <Stack.Screen name="orderDetailsScreen" component={UserOrderDetailsScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="receiptScreen" component={ReceiptScreen} options={{ headerShown: false }} />
 
         {/**
          * VENDORS ROUTES
@@ -170,6 +179,21 @@ const AppRoutes = () => {
         {/* ==== Home ==== */}
         <Stack.Screen
           name="vendorHomeScreen" component={VendorHomeScreen} options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="vendorOnboardingScreen" component={VendorOnboardingScreen} options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="vendorRegistrationScreen" component={VendorRegistrationScreen} options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="vendorWelcomeScreen" component={VendorWelcomeScreen} options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="vendorDocumentUploadScreen" component={VendorDocumentUploadScreen} options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="contactSupportScreen" component={ContactSupportScreen} options={{ headerShown: false }}
         />
         {/* <Stack.Screen
           name="vendorDashboardScreen" component={VendorDashboardScreen} options={{ headerShown: false }}

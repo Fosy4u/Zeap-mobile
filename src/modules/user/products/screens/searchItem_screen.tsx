@@ -1,5 +1,5 @@
-import React, {useEffect, useState} from 'react'
-import { Image, SafeAreaView, StatusBar, Text, TextInput, View } from 'react-native';
+import React from 'react'
+import { ActivityIndicator, Image, SafeAreaView, StatusBar, Text, TextInput, View } from 'react-native';
 import { ArrowLeft, SearchNormal1 } from 'iconsax-react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../../redux/store/store.ts';
@@ -8,16 +8,22 @@ import { BottomSheetModalProvider, TouchableOpacity } from '@gorhom/bottom-sheet
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import RootNavigationStackModel from '../../../../routes/model/routes_model.ts';
-import useFilterAndSearchHook from '../hooks/filterAndSearch_hook.ts';
-import { setSearchPhrase } from '../slices/product_slice.ts';
+import useSearchHook from '../hooks/search_hook.ts';
+import { setProductID, setSearchPhrase } from '../slices/product_slice.ts';
+import ProductCardComponent from '../../../general/components/productCard_component.tsx';
+import EmptyListComponent from '../../../general/components/emptyList_component.tsx';
 
 
 const SearchItemScreen = () => {
-  const { filteredSearchPhrases, searchPhrase } = useSelector((state: RootState) => state.productState);
+  const { searchPhrase } = useSelector((state: RootState) => state.productState);
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
   const dispatch = useDispatch<AppDispatch>();
 
-  const { handleSubmit } = useFilterAndSearchHook();
+  // Debounced search via /products/live/searchProducts. Typing fires the
+  // search after a 500ms pause; tapping the search icon triggers it now AND
+  // persists the term to the recent-searches list (max 5, secure storage).
+  const { results, isFetching, isUninitialized, handleSearchNow, recentSearches, removeRecentSearch, selectRecentSearch } = useSearchHook();
+  const hasSearchPhrase = !!searchPhrase?.trim();
 
   return (
     <GestureHandlerRootView>
@@ -55,47 +61,82 @@ const SearchItemScreen = () => {
                   value={ searchPhrase }
               />
 
-              <TouchableOpacity onPress={ () => {
-                handleSubmit("Search Products");
-              } }>
+              <TouchableOpacity onPress={ handleSearchNow }>
                 <View className="h-[55px] w-[55px] ml-3 flex items-center justify-center rounded-xl bg-gold">
                   <SearchNormal1 className="text-baseGreen" />
                 </View>
               </TouchableOpacity>
             </View>
 
-            <View className="bg-blue-300">
-            </View>
-            
-
-            {/*==== Product List ====*/}
+            {/*==== Results / Recent searches ====*/}
             <ScrollView
-              showsVerticalScrollIndicator={false} 
-              className="h-auto w-full mt-2"
-            > 
-              <Text className="font-montserratSemiBold text-base text-baseGreen">Recent searches</Text>
+              showsVerticalScrollIndicator={ false }
+              className="h-auto w-full mt-4"
+              keyboardShouldPersistTaps="handled"
+            >
+              { hasSearchPhrase ? (
+                <View>
+                  <View className="flex-row items-center justify-between">
+                    <Text className="font-montserratSemiBold text-base text-baseGreen">
+                      Results for "{ searchPhrase.trim() }"
+                    </Text>
+                    { isFetching && <ActivityIndicator size="small" color="#133522" /> }
+                  </View>
 
-              {
-                filteredSearchPhrases.map((searchPhrase, index) => (
-                  <TouchableOpacity key={ index }
-                    onPress={ () => null }
-                  >
-                    <View className="h-auto w-full mt-3 flex-row items-center justify-between">
-                      <View className="py-3 flex-row flex-1 items-center justify-start ">
-                        <SearchNormal1 size={18} color="#A8ACB8" className="mr-4" />
-                        <Text className="font-montserratMedium text-base">{ searchPhrase }</Text>
-                      </View>
-
-                      <TouchableOpacity onPress={ () => null }>
-                        <Image
-                          className="h-[22px] w-[22px]"
-                          source={ require("../../../../../assets/images/close.png") }
-                        />
-                      </TouchableOpacity>
+                  { !isFetching && !isUninitialized && results.length === 0 ? (
+                    <View className="mt-6">
+                      <EmptyListComponent message="No matching products yet." />
                     </View>
-                  </TouchableOpacity>
-                ))
-              }
+                  ) : (
+                    <View className="mt-3 flex-row flex-wrap justify-between">
+                      { results.map((product) => (
+                        <View key={ product.productId } className="w-[48%] mb-3">
+                          <ProductCardComponent
+                            product={ product }
+                            orientation="Vertical"
+                            gridItem
+                            handleOnPress={ () => {
+                              dispatch(setProductID(product.productId));
+                              navigation.navigate("productDetailScreen");
+                            } }
+                          />
+                        </View>
+                      )) }
+                    </View>
+                  ) }
+                </View>
+              ) : (
+                <View>
+                  <Text className="font-montserratSemiBold text-base text-baseGreen">Recent searches</Text>
+
+                  { recentSearches.length === 0 ? (
+                    <Text className="mt-3 font-montserratMedium text-sm text-gray-400">No recent searches yet.</Text>
+                  ) : (
+                    recentSearches.map((recentPhrase, index) => (
+                      <TouchableOpacity key={ index }
+                        onPress={ () => selectRecentSearch(recentPhrase) }
+                      >
+                        <View className="h-auto w-full mt-3 flex-row items-center justify-between">
+                          <View className="py-3 flex-row flex-1 items-center justify-start ">
+                            <SearchNormal1 size={18} color="#A8ACB8" className="mr-4" />
+                            <Text className="font-montserratMedium text-base">{ recentPhrase }</Text>
+                          </View>
+
+                          <TouchableOpacity
+                            onPress={ () => removeRecentSearch(recentPhrase) }
+                            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                          >
+                            <Image
+                              className="h-[22px] w-[22px]"
+                              source={ require("../../../../../assets/images/close.png") }
+                            />
+                          </TouchableOpacity>
+                        </View>
+                      </TouchableOpacity>
+                    ))
+                  ) }
+                </View>
+              ) }
             </ScrollView>
           </View>
           

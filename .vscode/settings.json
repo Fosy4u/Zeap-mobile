@@ -1,3 +1,7 @@
 {
-    "java.configuration.updateBuildConfiguration": "interactive"
+    "java.configuration.updateBuildConfiguration": "interactive",
+
+    "diffEditor.wordWrap": "off",
+    "editor.wordWrap": "off",
+    "editor.rulers": [180]
 }

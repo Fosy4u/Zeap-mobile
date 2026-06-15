@@ -1,8 +1,6 @@
 import React from 'react'
 import { Image, SafeAreaView, StatusBar, Text, View } from 'react-native';
 import { ArrowLeft, DocumentCopy } from 'iconsax-react-native';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../../../redux/store/store';
 import { GestureHandlerRootView, ScrollView } from 'react-native-gesture-handler';
 import { BottomSheetModalProvider, TouchableOpacity } from '@gorhom/bottom-sheet';
 import { useNavigation } from '@react-navigation/native';
@@ -11,7 +9,6 @@ import RootNavigationStackModel from '../../../../routes/model/routes_model';
 
 
 const InviteFriendScreen = () => {
-  const { bestDeals } = useSelector((state: RootState) => state.homeState);
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
 
   return (

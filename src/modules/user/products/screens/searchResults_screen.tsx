@@ -8,14 +8,14 @@ import { BottomSheetModalProvider, TouchableOpacity } from '@gorhom/bottom-sheet
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import RootNavigationStackModel from '../../../../routes/model/routes_model.ts';
-import AppLoader from '../../../general/components/appLoader.tsx';
 import useFilterAndSearchHook from '../hooks/filterAndSearch_hook.ts';
 import ProductListCard from '../components/productListCard_component.tsx';
 import EmptyListComponent from '../../../general/components/emptyList_component';
+import ProductListSkeletonLoader from '../components/productListSkeletonLoader_component.tsx';
 
 
 const SearchResultsScreen = () => {
-  const { allProducts, searchPhrase, isLoading, loadingMessage } = useSelector((state: RootState) => state.productState);
+  const { allProducts, isLoading } = useSelector((state: RootState) => state.productState);
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
   // console.log("PRODUCT::: ", products);
   
@@ -60,22 +60,26 @@ const SearchResultsScreen = () => {
 
           
           {/*==== Product List ====*/}
-          <Text className="mt-5 font-montserratMedium">{ allProducts.length } { allProducts.length > 1 ? "items" : "item" } were found</Text>
-          <FlatList
-            data={allProducts}
-            renderItem={({ item }) => <ProductListCard product={item} />}
-            keyExtractor={(item, index) => `${index}-item.productId`}
-            showsVerticalScrollIndicator={false}
-            className="h-auto w-full"
-            ListEmptyComponent={<EmptyListComponent message="search result" />}
-            contentContainerStyle={{ flexGrow: 1 }}
-          />
+          { (isLoading && allProducts.length === 0) ? (
+            <View className="mt-5 flex-1">
+              <ProductListSkeletonLoader />
+            </View>
+          ) : (
+            <>
+              <Text className="mt-5 font-montserratMedium">{ allProducts.length } { allProducts.length > 1 ? "items" : "item" } were found</Text>
+              <FlatList
+                data={allProducts}
+                renderItem={({ item }) => <ProductListCard product={item} />}
+                keyExtractor={(_, index) => `${index}-item.productId`}
+                showsVerticalScrollIndicator={false}
+                className="h-auto w-full"
+                ListEmptyComponent={<EmptyListComponent message="search result" />}
+                contentContainerStyle={{ flexGrow: 1 }}
+              />
+            </>
+          ) }
 
         </SafeAreaView>
-
-        { (isLoading) && (
-            <AppLoader loadingAdditionalMessage={loadingMessage} />
-        ) }
       </BottomSheetModalProvider>
     </GestureHandlerRootView>
   )

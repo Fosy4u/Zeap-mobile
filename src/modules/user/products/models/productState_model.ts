@@ -3,7 +3,6 @@ import IProduct from "./product_model";
 import { IColorEnum } from "../../../general/models/productOptions_model";
 import IProductDetails from "./productDetails_model";
 import IPromoProduct from "./promotion_model";
-import IReview from "../../../general/models/review_model";
 import IReviewAndRating from "../../../general/models/review_model";
 import IDynamicFilter from "./dynamicFilter_model";
 

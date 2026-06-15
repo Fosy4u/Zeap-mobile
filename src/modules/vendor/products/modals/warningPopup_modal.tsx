@@ -1,7 +1,7 @@
-import React, {Dispatch} from 'react'
+import React from 'react'
 import {useNavigation} from '@react-navigation/native';
 import {useDispatch} from 'react-redux';
-import {Image, ImageBackground, SafeAreaView, StatusBar, Text, TouchableOpacity, View} from 'react-native'
+import {ImageBackground, SafeAreaView, StatusBar, Text, TouchableOpacity, View} from 'react-native'
 import {NativeStackNavigationProp} from 'react-native-screens/lib/typescript/native-stack/types';
 import RootNavigationStackModel from "../../../../routes/model/routes_model.ts";
 

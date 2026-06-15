@@ -1,9 +1,8 @@
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useMemo, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../../redux/store/store';
-import { ArrowDown2, ArrowRight, Eye, EyeSlash, InfoCircle } from 'iconsax-react-native';
+import { ArrowRight, Eye, EyeSlash } from 'iconsax-react-native';
 import { Image, SafeAreaView, ScrollView, StatusBar, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { SelectList } from 'react-native-dropdown-select-list';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import RootNavigationStackModel from '../../../routes/model/routes_model';

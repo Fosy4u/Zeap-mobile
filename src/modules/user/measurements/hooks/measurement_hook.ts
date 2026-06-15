@@ -1,7 +1,7 @@
 import { SubmitHandler, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { IRequiredMeasurementFormFieldsSchema, requiredMeasurementFormFieldsSchema } from "../validations/measurement_validation";
-import { useAddBodyMeasurementTemplateMutation, useLazyGetAllSavedMeasurementsQuery, useLazyGetBodyMeasurementGuideQuery, useLazyGetRequiredMeasurementFormFieldsQuery } from "../apis/measurement_api";
+import { useAddBodyMeasurementTemplateMutation, useDeleteBodyMeasurementTemplateMutation, useLazyGetAllSavedMeasurementsQuery, useLazyGetBodyMeasurementGuideQuery, useLazyGetRequiredMeasurementFormFieldsQuery } from "../apis/measurement_api";
 import { RootState } from "../../../../redux/store/store";
 import { useDispatch, useSelector } from "react-redux";
 import { IMeasurementField } from "../models/requiredMeasurementFormField_model";
@@ -9,28 +9,44 @@ import { useAddProductToCartMutation } from "../../products/apis/product_api";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import RootNavigationStackModel from "../../../../routes/model/routes_model";
-import { setAllSavedMeasurements, setBodyMeasurementGuides, setIsLoading, setLoadingMessage, setRequiredMeasurementFormFields, setSelectedCartID } from "../slices/measurement_slice";
-import { IMeasurement } from "../models/bodyMeasurement_model";
+import { setAllSavedMeasurements, setBodyMeasurementGuides, setIsLoading, setLoadingMessage, setRequiredMeasurementFormFields, setSelectedCartID, setSelectedGender, setSelectedMeasurementTemplate, setShowAddNewMeasurementBottomSheet } from "../slices/measurement_slice";
 import handleError from "../../../general/hooks/errorHandler_hook";
+import IBodyMeasurement from "../models/bodyMeasurement_model";
 
 const useMeasurementHook = () => {
-    const { selectedUnit, requiredMeasurementFormFields, saveMeasurementForNextTime, selectedMeasurementTemplate } = useSelector((state: RootState) => state.measurementState);
+    const { requiredMeasurementFormFields, saveMeasurementForNextTime, selectedMeasurementTemplate, selectedGender } = useSelector((state: RootState) => state.measurementState);
     const { product, selectedQuantity, selectedColor } = useSelector((state: RootState) => state.productState);
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const dispatch = useDispatch();
     
     const [addProductToCart] = useAddProductToCartMutation();
     const [addBodyMeasurementTemplate] = useAddBodyMeasurementTemplateMutation();
+    const [deleteBodyMeasurementTemplate] = useDeleteBodyMeasurementTemplateMutation();
     const [getAllSavedMeasurements] = useLazyGetAllSavedMeasurementsQuery();
     const [getRequiredMeasurementFormFields, { isLoading: requiredMeasurementFormFieldsLoading }] = useLazyGetRequiredMeasurementFormFieldsQuery(); 
     const [getBodyMeasurementGuide] = useLazyGetBodyMeasurementGuideQuery();   
     
+    const findSavedFieldValue = (categoryName: string | undefined, fieldName: string): string => {
+        const tpl = selectedMeasurementTemplate?.measurements as any[] | undefined;
+        if (!tpl || tpl.length === 0) return "";
+        const first: any = tpl[0];
+        const isFlat = first?.field !== undefined && first?.measurements === undefined;
+        const target = fieldName.toLowerCase();
+        const pool: any[] = isFlat
+            ? tpl
+            : (tpl.find((g: any) => (g?.name ?? "").toLowerCase() === (categoryName ?? "").toLowerCase())?.measurements
+                ?? tpl.flatMap((g: any) => g?.measurements ?? []));
+        const match = pool.find((m: any) => (m?.field ?? "").toLowerCase() === target);
+        return match?.value !== undefined && match?.value !== null ? String(match.value) : "";
+    };
+
     const { control, handleSubmit, formState: { errors }, getValues } = useForm<IRequiredMeasurementFormFieldsSchema>({
         defaultValues: {
             templateName: selectedMeasurementTemplate.templateName || "",
+            // Only the user-editable field values live in form state. Group
+            // names are stitched back in at submit time from the API source.
             measurements: requiredMeasurementFormFields?.measurements?.map((measurement: IMeasurementField) => ({
-                name: measurement?.name!,
-                fields: measurement?.fields?.map(() => "")
+                fields: measurement?.fields?.map((fieldName) => findSavedFieldValue(measurement?.name, fieldName))
             })) || [],
             instructions: ""
         },
@@ -38,43 +54,35 @@ const useMeasurementHook = () => {
     });
 
     const onSubmitFromMeasurementForm: SubmitHandler<IRequiredMeasurementFormFieldsSchema> = async (data) => {
+        dispatch(setLoadingMessage(saveMeasurementForNextTime ? "Saving measurement template..." : "Adding product to cart..."));
+        dispatch(setIsLoading(true));
 
-        // Transform the measurements into the desired format.
-        const measurements = data.measurements?.map((measurement: IMeasurementField, measurementIndex: number) => {
-            const measurementData = measurement?.fields?.map((value, fieldIndex) => {
-                const fieldNames = requiredMeasurementFormFields.measurements?.[measurementIndex]?.fields || [];
-                return {
-                    field: (fieldNames[fieldIndex] || `Field ${fieldIndex + 1}`).toLowerCase(),
-                    value: Number(value) || 0,
-                };
-            });
+        const measurements = data.measurements?.map((measurement, measurementIndex: number) => {
+            const apiMeasurement = requiredMeasurementFormFields.measurements?.[measurementIndex];
+            const fieldNames = apiMeasurement?.fields || [];
+            const measurementData = measurement?.fields?.map((value, fieldIndex) => ({
+                field: fieldNames[fieldIndex] || `Field ${fieldIndex + 1}`,
+                value: Number(value) || 0,
+            }));
             return {
-                name: measurement.name!,
+                // Group name comes from the API source, not form state.
+                name: apiMeasurement?.name ?? "",
                 measurements: measurementData,
             };
         });
-        // console.log("MEASUREMENTS DATA::: ", JSON.stringify(data));
 
-        // Create the save measurement template request data.
+        const flatTemplateMeasurements = measurements?.flatMap((group) => group.measurements ?? []) ?? [];
+
+        const normalizedGender = selectedGender
+            ? selectedGender.charAt(0).toUpperCase() + selectedGender.slice(1).toLowerCase()
+            : selectedGender;
+
         const templateRequestData = {
-            templateName: data.templateName,
-            measurements: measurements?.map((measurement) => {
-                return {
-                    name: measurement.name,
-                    measurements: measurement.measurements?.map((measurementItem) => {
-                        return {
-                            field: measurementItem.field,
-                            value: measurementItem.value,
-                            unit: selectedUnit,
-                        };
-                    }),
-                };
-            }),
+            templateName: (data.templateName ?? "").trim(),
+            gender: normalizedGender,
+            measurements: flatTemplateMeasurements,
         };
-        // console.log("TEMPLATE REQUEST DATA::: ", JSON.stringify(templateRequestData));
-        
 
-        // Create the add to cart request data.
         const cartRequestData = (product.productType === "readyMadeCloth" || product.productType === "readyMadeShoe" || product.productType === "accessory")
             ? ({
                 productId: product.productId,
@@ -95,26 +103,25 @@ const useMeasurementHook = () => {
                 bespokeInstruction: data.instructions,
                 bodyMeasurements: measurements,
             });
-        console.log("CART REQUEST DATA::: ", JSON.stringify(cartRequestData));
 
         try {
-            // First, add product to cart
+            if (saveMeasurementForNextTime) {
+                await addBodyMeasurementTemplate(templateRequestData).unwrap();
+            }
+
+            dispatch(setLoadingMessage("Adding product to cart..."));
             const addProductToCartResponse = await addProductToCart(cartRequestData).unwrap();
-            console.log("ADD PRODUCT TO CART RESPONSE::: ", addProductToCartResponse);
-    
-            // If product was added successfully and user wants to save measurements
-            // if (saveMeasurementForNextTime) {
-            //     const bodyMeasurementResponse = await addBodyMeasurementTemplate(templateRequestData).unwrap();
-            //     console.log("BODY MEASUREMENT RESPONSE::: ", bodyMeasurementResponse);
-            // }
-                    
-            // Update cart ID and navigate only after all operations are complete
+
             dispatch(setSelectedCartID(addProductToCartResponse._id!));
+            dispatch(setShowAddNewMeasurementBottomSheet(false));
             navigation.navigate("homeScreen", {
                 screen: "Cart"
             });
         } catch (error) {
-            console.log("ERROR::: ", error);
+            handleError(error);
+        } finally {
+            dispatch(setIsLoading(false));
+            dispatch(setLoadingMessage(""));
         }
     };
 
@@ -123,6 +130,12 @@ const useMeasurementHook = () => {
     const onSubmitFromSavedMeasurementTemplate = async () => {
         dispatch(setLoadingMessage("Adding product to cart..."));
         dispatch(setIsLoading(true));
+
+        const rawTemplateMeasurements: any[] = selectedMeasurementTemplate.measurements ?? [];
+        const flatSavedMeasurements: any[] = rawTemplateMeasurements.length > 0 && rawTemplateMeasurements[0]?.field !== undefined
+            ? rawTemplateMeasurements
+            : rawTemplateMeasurements.flatMap((group: any) => group?.measurements ?? []);
+        const productGroupName = requiredMeasurementFormFields?.measurements?.[0]?.name ?? "";
 
         const cartRequestData = (product.productType === "readyMadeCloth" || product.productType === "readyMadeShoe" || product.productType === "accessory")
             ? ({
@@ -136,25 +149,35 @@ const useMeasurementHook = () => {
                     sku: "BESPOKE",
                     bespokeColor: selectedColor.name,
                     bespokeInstruction: "",
-                    bodyMeasurements: selectedMeasurementTemplate.measurements!,
+                    bodyMeasurements: [
+                        {
+                            name: productGroupName,
+                            measurements: flatSavedMeasurements,
+                        },
+                    ],
                 } : {
                     productId: product.productId,
                     quantity: selectedQuantity,
                     sku: "BESPOKE-MULTIPLE",
                     bespokeInstruction: "",
-                    bodyMeasurements: selectedMeasurementTemplate.measurements!.map((measurement: IMeasurement) => {
-                        return {
-                            name: measurement.name,
-                            measurements: measurement.measurements!,
-                        };
-                    }),
+                    bodyMeasurements: (requiredMeasurementFormFields?.measurements ?? []).map((group) => ({
+                        name: group.name ?? "",
+                        measurements: flatSavedMeasurements,
+                    })),
                 }
             );
-        console.log("CART REQUEST DATA::: ", cartRequestData);
+        // console.log("CART REQUEST DATA::: ", cartRequestData);
     
         try {
             const addProductToCartResponse = await addProductToCart(cartRequestData).unwrap();
-            console.log("ADD PRODUCT TO CART RESPONSE::: ", addProductToCartResponse);
+            // console.log("ADD PRODUCT TO CART RESPONSE::: ", addProductToCartResponse);
+
+            // Mirror the new-measurement path: stash the cart id, close any
+            // lingering measurement bottom sheet, and drop the user on the Cart
+            // tab so they have a clear sense that the item landed in cart.
+            dispatch(setSelectedCartID(addProductToCartResponse._id!));
+            dispatch(setShowAddNewMeasurementBottomSheet(false));
+            navigation.navigate("homeScreen", { screen: "Cart" });
         } catch (error) {
             handleError(error);
         } finally {
@@ -170,7 +193,7 @@ const useMeasurementHook = () => {
 
         try {
             const allSavedMeasurementsResponse = await getAllSavedMeasurements().unwrap();
-            console.log("ALL SAVED MEASUREMENTS RESPONSE::: ", allSavedMeasurementsResponse);
+            // console.log("ALL SAVED MEASUREMENTS RESPONSE::: ", allSavedMeasurementsResponse);
             
             if (allSavedMeasurementsResponse) {
                 dispatch(setAllSavedMeasurements(allSavedMeasurementsResponse));
@@ -190,7 +213,7 @@ const useMeasurementHook = () => {
 
         try {
             const requiredMeasurementFormFieldsResponse = await getRequiredMeasurementFormFields(product?.productId!).unwrap();
-            console.log("REQUIRED MEASUREMENT FORM FIELDS RESPONSE::: ", requiredMeasurementFormFieldsResponse);
+            // console.log("REQUIRED MEASUREMENT FORM FIELDS RESPONSE::: ", requiredMeasurementFormFieldsResponse);
             
             if (requiredMeasurementFormFieldsResponse) {
                 dispatch(setRequiredMeasurementFormFields(requiredMeasurementFormFieldsResponse));
@@ -203,6 +226,17 @@ const useMeasurementHook = () => {
         }
     };
 
+    // Handle edit measurement template
+    const handleEditMeasurementTemplate = async (template: IBodyMeasurement) => {
+        dispatch(setSelectedMeasurementTemplate(template));
+        const tplGender = (template as any)?.gender as string | undefined;
+        if (tplGender) {
+            dispatch(setSelectedGender(tplGender.toLowerCase()));
+            await handleGetBodyMeasurementGuides(tplGender.toLowerCase());
+        }
+        navigation.navigate("editMeasurementTemplateScreen");
+    };
+
     // Handle get body measurement guide
     const handleGetBodyMeasurementGuides = async (gender: string) => {
         dispatch(setLoadingMessage("Fetching body measurement guide..."));
@@ -210,7 +244,6 @@ const useMeasurementHook = () => {
 
         try {
             const bodyMeasurementGuideResponse = await getBodyMeasurementGuide(gender).unwrap();
-            console.log("BODY MEASUREMENT GUIDE RESPONSE::: ", bodyMeasurementGuideResponse);
             
             if (bodyMeasurementGuideResponse) {
                 dispatch(setBodyMeasurementGuides(bodyMeasurementGuideResponse));
@@ -223,14 +256,33 @@ const useMeasurementHook = () => {
         }
     };
     
+    // Delete a saved measurement template by id. Callers (the measurement
+    const handleDeleteMeasurementTemplate = async (templateId: string): Promise<boolean> => {
+        if (!templateId) return false;
+        try {
+            await deleteBodyMeasurementTemplate({ template_id: templateId }).unwrap();
+            if (selectedMeasurementTemplate?._id === templateId) {
+                dispatch(setSelectedMeasurementTemplate({} as IBodyMeasurement));
+            }
+            await handleGetAllSavedMeasurements();
+            return true;
+        } catch (error) {
+            console.log("DELETE TEMPLATE ERROR (raw):", JSON.stringify(error, null, 2));
+            handleError(error);
+            return false;
+        }
+    };
+
     return {
         control, handleSubmit, errors, getValues,
-        onSubmitFromMeasurementForm, 
+        onSubmitFromMeasurementForm,
         onSubmitFromSavedMeasurementTemplate,
 
         handleGetAllSavedMeasurements,
         handleGetRequiredMeasurementFormFields,
         handleGetBodyMeasurementGuides,
+        handleEditMeasurementTemplate,
+        handleDeleteMeasurementTemplate,
 
         requiredMeasurementFormFieldsLoading,
     };

@@ -6,8 +6,6 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { ArrowRight } from "iconsax-react-native";
 import Video from "react-native-video";
 import { useDispatch, useSelector } from "react-redux";
-import ShimmerPlaceHolder from 'react-native-shimmer-placeholder';
-import LinearGradient from 'react-native-linear-gradient';
 
 import { RootState } from "../../../../redux/store/store";
 import RootNavigationStackModel from "../../../../routes/model/routes_model";
@@ -17,9 +15,13 @@ import IProduct from "../../products/models/product_model";
 import FastImage from "react-native-fast-image";
 import { ICategory } from "../../products/models/productState_model";
 import ProductCardComponent from "../../../general/components/productCard_component";
+import SkeletonBlock from "../../../general/components/skeletonBlock_component";
 
 const MainDashboardScreen = () => {
   const { promoProducts, categories, selectedCategory, popularProducts, newestPrpducts, popularProductsIsLoading, newestProductsIsLoading } = useSelector((state: RootState) => state.productState);
+  const { userData } = useSelector((state: RootState) => state.profileState);
+  const isGuest = !!userData?.isGuest;
+  const greetingName = userData?.firstName || (userData as any)?.displayName || "there";
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
   const dispatch = useDispatch();
   const width = useWindowDimensions().width - 40;
@@ -37,24 +39,28 @@ const MainDashboardScreen = () => {
             {/*==== Main Body Section ====*/}
             <View className="h-auto w-[90%]">
                 {/*==== New Promo Section ====*/}
-                { (promoProducts.length !== 0) ? (
-                  <View className="h-[150px] rounded-2xl bg-lightGold">
+                {/* Cold-start loading is covered by HomeSkeletonLoader; when this
+                    renders, promoProducts is already populated. The empty case
+                    here is treated as a true "no promos" state, not a loading
+                    state — no in-section shimmer. */}
+                { (promoProducts.length !== 0) && (
+                  <View className="h-[420px] rounded-2xl bg-lightGold">
                     <Carousel
                       loop
                       width={width}
-                      height={width / 2}
+                      height={420}
                       autoPlay={true}
                       data={promoProducts}
                       scrollAnimationDuration={1000}
                       autoPlayInterval={5000}
-                      style={{ height: 150, width: width, borderRadius: 5 }}
+                      style={{ height: 420, width: width, borderRadius: 5 }}
                       renderItem={({ index }: { index: number }) => {
                         const item = promoProducts[index];
-                    
-                        return (item?.largeScreenImageUrl?.type === "video") ? (
+
+                        return (item?.smallScreenImageUrl?.type === "video") ? (
                           <Video
-                            source={{ uri: item.largeScreenImageUrl.link }}
-                            style={{ width: "100%", height: 150 }}
+                            source={{ uri: item.smallScreenImageUrl.link }}
+                            style={{ width: "100%", height: 420 }}
                             resizeMode="cover"
                             repeat
                             muted
@@ -62,26 +68,18 @@ const MainDashboardScreen = () => {
                         ) : (
                           <FastImage
                             key={index}
-                            className="h-[150px] w-full"
+                            className="h-[420px] w-full"
                             resizeMode="cover"
                             source={
-                              item?.largeScreenImageUrl?.type === "image"
-                                ? { uri: item.largeScreenImageUrl.link }
-                                : require("../../../../../assets/images/app_logo.png")
+                              item?.smallScreenImageUrl?.type === "image"
+                                ? { uri: item.smallScreenImageUrl.link }
+                                : require("../../../../../assets/images/app_logo_green.png")
                             }
                           />
                         );
                       }}
                     />
                   </View>
-                ) : (
-                  <ShimmerPlaceHolder
-                    LinearGradient={LinearGradient}
-                    shimmerColors={['#ebebeb', '#fefefe', '#ebebeb']}
-                    width={width}
-                    height={150}
-                    shimmerStyle={{ borderRadius: 5, marginTop: 5, marginRight: 15 }}
-                  />
                 ) }
                 
 
@@ -151,17 +149,11 @@ const MainDashboardScreen = () => {
                     showsHorizontalScrollIndicator={ false }
                     className="h-auto w-full mt-2"
                   >
-                    { popularProductsIsLoading ? (
-                      Array.from({ length: 5 }, (_, index) => (
-                        <ShimmerPlaceHolder
-                          key={`item-${index}`}
-                          // visible={!popularProductIsLoading}
-                          LinearGradient={LinearGradient}
-                          shimmerColors={['#ebebeb', '#fefefe', '#ebebeb']}
-                          height={220}
-                          width={150}
-                          shimmerStyle={{ borderRadius: 16, marginTop: 5, marginRight: 15 }}
-                        />
+                    { (popularProducts.length === 0 && popularProductsIsLoading) ? (
+                      [0, 1, 2, 3, 4].map((i) => (
+                        <View key={ `pop-skeleton-${i}` } style={{ marginRight: 12, marginTop: 5 }}>
+                          <SkeletonBlock width={ 150 } height={ 220 } radius={ 16 } />
+                        </View>
                       ))
                     ) : (
                       popularProducts.slice(0, 10).map((popularProduct: IProduct) => (
@@ -176,14 +168,14 @@ const MainDashboardScreen = () => {
                         />
                       ))
                     ) }
-                  </ScrollView>  
+                  </ScrollView>
                 </View>
 
                 {/*==== Signup Section ====*/}
                 <View className="mt-6 px-5 pt-5 pb-10 rounded-2xl bg-lightGreen">
                   <Text className="font-semibold text-base leading-tight text-gray-800">Guarantee return and cash back if tailor fails to deliver</Text>
                   <View className="mt-5 flex-row items-center justify-start">
-                    <TouchableOpacity onPress={ () => navigation.navigate("inviteFriendScreen") }
+                    <TouchableOpacity onPress={ () => navigation.navigate("productListScreen", { screenTitle: "Bespoke Collection" }) }
                       className="px-4 py-2 rounded-lg bg-gold">
                       <Text className="text-baseGreen text-sm font-medium">Browse our Bespoke Collection</Text>
                     </TouchableOpacity>
@@ -209,17 +201,11 @@ const MainDashboardScreen = () => {
                     showsHorizontalScrollIndicator={ false }
                     className="h-auto w-full mt-2"
                   >
-                    { newestProductsIsLoading ? (
-                      Array.from({ length: 5 }, (_, index) => (
-                        <ShimmerPlaceHolder
-                          key={`item-${index}`}
-                          // visible={!newestArrivalsIsLoading}
-                          LinearGradient={LinearGradient}
-                          shimmerColors={['#ebebeb', '#fefefe', '#ebebeb']}
-                          height={150}
-                          width={300}
-                          shimmerStyle={{ borderRadius: 16, marginTop: 5, marginRight: 15 }}
-                        />
+                    { (newestPrpducts.length === 0 && newestProductsIsLoading) ? (
+                      [0, 1, 2].map((i) => (
+                        <View key={ `new-skeleton-${i}` } style={{ marginRight: 12, marginTop: 5 }}>
+                          <SkeletonBlock width={ 300 } height={ 150 } radius={ 16 } />
+                        </View>
                       ))
                     ) : (
                       newestPrpducts.slice(0, 10).map((newestArrival: IProduct) => (
@@ -237,25 +223,57 @@ const MainDashboardScreen = () => {
                   </ScrollView>
                 </View>
 
-                {/*==== Signup Section ====*/}
-                <View className="mt-6 px-5 pt-5 pb-14 rounded-2xl bg-lightGreen">
-                  <Text className="font-semibold text-base leading-tight text-gray-800">Sign up and earn 500 points</Text>
-                  <View className="mt-2 flex-row items-center justify-start">
-                    <View className="mr-4">
-                      <Text className="text-sm text-gray-600">Sign up now</Text>
-                      <Text className="text-sm text-gray-600">get free coupons</Text>
+                {/*==== Bottom Hero — guest vs logged-in ====
+                    Guests see the acquisition pitch ("Sign up and earn 500
+                    points"); authenticated users see a personalized shopping
+                    prompt that drives them back into the catalogue. Same
+                    layout language as the bespoke hero above to keep the
+                    page rhythm consistent. */}
+                { isGuest ? (
+                  <View className="mt-6 px-5 pt-5 pb-14 rounded-2xl bg-lightGreen">
+                    <Text className="font-semibold text-base leading-tight text-gray-800">Sign up and earn 500 points</Text>
+                    <View className="mt-2 flex-row items-center justify-start">
+                      <View className="mr-4">
+                        <Text className="text-sm text-gray-600">Sign up now</Text>
+                        <Text className="text-sm text-gray-600">get free coupons</Text>
+                      </View>
+                      <TouchableOpacity
+                        onPress={ () => navigation.navigate("inviteFriendScreen") }
+                        className="px-4 py-2 rounded-lg bg-baseGreen"
+                      >
+                        <Text className="text-white text-sm font-medium">Sign Up</Text>
+                      </TouchableOpacity>
                     </View>
-                    <TouchableOpacity onPress={ () => navigation.navigate("inviteFriendScreen") }
-                      className="px-4 py-2 rounded-lg bg-baseGreen">
-                      <Text className="text-white text-sm font-medium">Sign Up</Text>
-                    </TouchableOpacity>
+                    <Image
+                      source={ require("../../../../../assets/images/home/invite_tree.png") }
+                      className="absolute bottom-0 right-0"
+                      resizeMode="contain"
+                    />
                   </View>
-                  <Image
-                    source={require("../../../../../assets/images/home/invite_tree.png")}
-                    className="absolute bottom-0 right-0"
-                    resizeMode="contain"
-                  />
-                </View>
+                ) : (
+                  <View className="mt-6 px-5 pt-5 pb-14 rounded-2xl bg-lightGold">
+                    <Text className="font-semibold text-base leading-tight text-gray-800">
+                      Welcome back, { greetingName.split(" ")[0] } 👋
+                    </Text>
+                    <Text className="mt-1 text-sm text-gray-600">
+                      Fresh ready-to-wear styles, ready to ship.
+                    </Text>
+                    <View className="mt-3 flex-row items-center justify-start">
+                      <TouchableOpacity
+                        onPress={ () => navigation.navigate("productListScreen", { screenTitle: "Ready to Wear" }) }
+                        className="px-4 py-2 flex-row items-center rounded-lg bg-baseGreen"
+                      >
+                        <Text className="text-white text-sm font-medium mr-2">Shop Ready-to-Wear</Text>
+                        <ArrowRight size={ 16 } color="#ffffff" />
+                      </TouchableOpacity>
+                    </View>
+                    <Image
+                      source={ require("../../../../../assets/images/home/invite_tree.png") }
+                      className="absolute bottom-0 right-0"
+                      resizeMode="contain"
+                    />
+                  </View>
+                ) }
             </View>
 
         </SafeAreaView>

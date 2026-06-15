@@ -1,18 +1,13 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ArrowRight, Call, Location, Map, Trash, Edit2, ArrowDown2, ArrowLeft } from 'iconsax-react-native';
-import { View, Text, TouchableOpacity, SafeAreaView, ScrollView, TextInput, StatusBar } from 'react-native';
+import { Trash, Edit2, ArrowLeft } from 'iconsax-react-native';
+import { View, Text, TouchableOpacity, SafeAreaView, ScrollView, StatusBar } from 'react-native';
 import RootNavigationStackModel from '../../../../routes/model/routes_model.ts';
 import { AppDispatch, RootState } from '../../../../redux/store/store.ts';
-import { Controller, set } from 'react-hook-form';
 import AppLoader from '../../../general/components/appLoader.tsx';
-import CheckBox from '@react-native-community/checkbox';
-import countries from "../../../../utils/deliveryCountries.json";
-import { SelectList } from 'react-native-dropdown-select-list';
 import { DeliveryFee } from '../../address/models/deliveryMethod_model.ts';
-import { setSelectedAddress } from '../../address/slices/address_slice.ts';
 import { setSelectedDeliveryFee } from '../slices/cart_slice.ts';
 
 const DeliveryMethodScreen = () => {

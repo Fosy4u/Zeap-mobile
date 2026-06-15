@@ -2,30 +2,21 @@ import { useNavigation } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { ArrowRight } from 'iconsax-react-native'
 import React from 'react'
-import { Image, ScrollView, StatusBar, Text, TouchableOpacity } from 'react-native'
+import { ScrollView, StatusBar, Text, TouchableOpacity } from 'react-native'
 import { View } from 'react-native-animatable'
 import FastImage from 'react-native-fast-image'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { Video } from 'react-native-video'
-import ShimmerPlaceHolder from 'react-native-shimmer-placeholder';
 import RootNavigationStackModel from '../../../../routes/model/routes_model'
 import ProductCardComponent from '../../../general/components/productCard_component'
-import LinearGradient from 'react-native-linear-gradient'
 import IProduct from '../../products/models/product_model'
 import { useDispatch, useSelector } from 'react-redux'
 import { RootState } from '../../../../redux/store/store'
-import useHomeHook from '../hooks/home_hook'
 import { setProductID } from '../../products/slices/product_slice'
-import formatCurrency from '../../../../utils/formatCurrency'
 
 const AccessoriesDashboardScreen = () => {
     const { popularProducts } = useSelector((state: RootState) => state.productState);
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const dispatch = useDispatch();
-
-    const {
-        popularProductIsLoading,
-    } = useHomeHook();
 
     const ourCollections = [
         {
@@ -124,7 +115,7 @@ const AccessoriesDashboardScreen = () => {
                         className="h-auto w-[25px] rounded-md"
                         resizeMode={ FastImage.resizeMode.cover }
                         source={{
-                            uri: "../../../../../assets/images/app_logo.png"
+                            uri: "../../../../../assets/images/app_logo_green.png"
                         }}
                     />
                     <Text className="font-montserratBold text-baseGreen text-2xl text-center">Our Return Guarantee</Text>
@@ -187,31 +178,17 @@ const AccessoriesDashboardScreen = () => {
                     showsHorizontalScrollIndicator={ false }
                     className="h-auto w-full mt-2"
                     >
-                    { popularProductIsLoading ? (
-                        Array.from({ length: 5 }, (_, index) => (
-                        <ShimmerPlaceHolder
-                            key={`item-${index}`}
-                            // visible={!popularProductIsLoading}
-                            LinearGradient={LinearGradient}
-                            shimmerColors={['#ebebeb', '#fefefe', '#ebebeb']}
-                            height={220}
-                            width={150}
-                            shimmerStyle={{ borderRadius: 16, marginTop: 5, marginRight: 15 }}
-                        />
-                        ))
-                    ) : (
-                        popularProducts.slice(0, 10).map((popularProduct: IProduct) => (
+                    { popularProducts.slice(0, 10).map((popularProduct: IProduct) => (
                         <ProductCardComponent
                             key={ popularProduct.productId }
                             product={ popularProduct }
                             handleOnPress={ () => {
-                            dispatch(setProductID(popularProduct.productId));
-                            navigation.navigate("productDetailScreen");
+                                dispatch(setProductID(popularProduct.productId));
+                                navigation.navigate("productDetailScreen");
                             } }
                             orientation="Vertical"
                         />
-                        ))
-                    ) }
+                    )) }
                     </ScrollView>
 
                 </View>

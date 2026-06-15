@@ -169,7 +169,7 @@ const SplashScreen = () => {
           style={[zoomInStyle, { width: 300, height: 300 }]}
         />
         <Animated.Image
-          source={require("../../../../assets/images/app_logo.png")}
+          source={require("../../../../assets/images/app_logo_green.png")}
           className="h-[80px] w-[80px] rounded-2xl absolute top-16"
           style={[zoomInTwoStyle, fadeOutStyle]}
         />

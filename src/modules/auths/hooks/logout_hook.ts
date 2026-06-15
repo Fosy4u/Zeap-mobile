@@ -1,12 +1,13 @@
-import { useNavigation } from "@react-navigation/native";
+import { CommonActions, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import EncryptedStorage from "react-native-encrypted-storage";
 import RootNavigationStackModel from "../../../routes/model/routes_model";
-import { getAuth, signInAnonymously } from "@react-native-firebase/auth";
+import { getAuth, signInAnonymously, signOut } from "@react-native-firebase/auth";
 import { useRegisterGuestUserMutation } from "../apis/auths_api";
 import { useDispatch } from "react-redux";
 import { setUserData } from "../../profile/slices/profileState_slice";
 import { setIsLoading, setLoadingMessage } from "../../general/slices/general_slice";
+import { clearPendingDestination } from "../slices/authState_slice";
 import { clearToken } from "../../../redux/services/authorizationHeader";
 
 const STORAGE_KEYS = {
@@ -24,16 +25,46 @@ const useLogoutHook = () => {
     const auth = getAuth();
 
     /**
-     * Sign out user
+     * Re-establish an anonymous Firebase session + backend guest record.
+     * Runs in the background after logout so the app has a working token if
+     * the user backs out of the login screen and resumes browsing.
+     */
+    const reestablishGuestSessionInBackground = async () => {
+        try {
+            const anonymousUserData = await signInAnonymously(auth);
+            if (!anonymousUserData) return;
+
+            const uid = anonymousUserData.user.uid;
+            await EncryptedStorage.setItem(STORAGE_KEYS.GUEST_UID, JSON.stringify(uid));
+
+            const guestUserData = await registerGuestUser({}).unwrap();
+            if (guestUserData) {
+                await EncryptedStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(guestUserData));
+                dispatch(setUserData(guestUserData));
+            }
+        } catch (err) {
+            console.warn("[Logout] Background guest re-init failed; splash will retry on next app launch.", err);
+        }
+    };
+
+    /**
+     * Sign out user — fast path: clear local state and reset the navigation
+     * stack to the home screen as a guest. Firebase signOut and the guest
+     * re-init both run in the background and never block the UI.
+     *
+     * Network resilience: a `auth/network-request-failed` from Firebase must
+     * not strand the user on the profile screen. We always tear down local
+     * state and navigate, even if Firebase is unreachable — Firebase persists
+     * the signed-out state to disk on next reachability.
      */
     const signOutUser = async () => {
         dispatch(setLoadingMessage("Signing out..."));
         dispatch(setIsLoading(true));
 
         try {
-            await auth.signOut();
-
-            // Clear all stored auth data using the correct keys
+            // Clear all locally-stored auth data first — this is the critical
+            // user-visible part of "logout" and must succeed even if the
+            // network is down.
             await Promise.all([
                 clearToken(),
                 EncryptedStorage.removeItem(STORAGE_KEYS.FIREBASE_USER),
@@ -42,32 +73,46 @@ const useLogoutHook = () => {
                 EncryptedStorage.removeItem(STORAGE_KEYS.GUEST_UID),
             ]);
 
-            dispatch(setUserData({}));
+            // Seed Redux with a minimal guest placeholder so the dashboard
+            // immediately renders the "Guest" header + "Login" button instead
+            // of a blank state while the background guest re-init runs. The
+            // background flow will replace this with the full backend record.
+            dispatch(setUserData({ isGuest: true } as any));
 
-            // Sign in anonymously to restore guest session
-            const anonymousUserData = await signInAnonymously(auth);
+            // Wipe any pending post-login destination from a previous session
+            // — the next login should start with no carryover from whatever
+            // protected screen got the previous user bounced here.
+            dispatch(clearPendingDestination());
 
-            if (anonymousUserData) {
-                const uid = anonymousUserData.user.uid;
-
-                await EncryptedStorage.setItem(STORAGE_KEYS.GUEST_UID, JSON.stringify(uid));
-
-                const guestUserData = await registerGuestUser({}).unwrap();
-
-                if (guestUserData) {
-                    await EncryptedStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(guestUserData));
-
-                    dispatch(setIsLoading(false));
-                    dispatch(setLoadingMessage(""));
-                    dispatch(setUserData(guestUserData));
-                    navigation.navigate("homeScreen", { screen: "Dashboard" });
-                }
-            }
+            // Reset the navigation stack to homeScreen → Home tab. Using
+            // `reset` (not `navigate`) so the user can't swipe back into the
+            // authenticated profile/settings screens, and so the splash screen
+            // sitting in the back stack can't re-fire its counter animation
+            // effect that navigates to onboarding.
+            navigation.dispatch(
+                CommonActions.reset({
+                    index: 0,
+                    routes: [{ name: "homeScreen", state: { routes: [{ name: "Home" }] } }],
+                })
+            );
         } catch (error) {
+            console.error("[Logout] local cleanup failed:", error);
+        } finally {
             dispatch(setIsLoading(false));
             dispatch(setLoadingMessage(""));
-            console.log("Error signing out user:::", error);
         }
+
+        // Fire-and-forget — Firebase signOut may need the network to revoke
+        // tokens server-side; if it fails, the local state is already cleared
+        // so the user is logged out from the app's perspective.
+        void (async () => {
+            try {
+                await signOut(auth);
+            } catch (err) {
+                console.warn("[Logout] Firebase signOut failed (likely offline); local state already cleared.", err);
+            }
+            await reestablishGuestSessionInBackground();
+        })();
     };
 
 

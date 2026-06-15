@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../../../../redux/store/store";
-import { stepThreeAddBespokeShoesSchema, stepThreeAddReadyMadeShoesSchema, } from "../../validations/addProduct_validation";
+import { stepThreeAddReadyMadeShoesSchema } from "../../validations/addProduct_validation";
 import { setLoadingMessage, setProductIsLoading, setSelectedStep } from "../../slices/vendorProductState_slice";
 import { useUpdateProductMutation } from "../../apis/readyMadeProduct_api";
 import handleError from "../../../../general/hooks/errorHandler_hook";

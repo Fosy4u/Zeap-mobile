@@ -9,12 +9,17 @@ const paymentAPI = rootAPI.injectEndpoints({
     endpoints: (builder) => ({
 
         // Get Payment Reference.
+        // Retries are explicitly disabled — this endpoint creates a Paystack
+        // reference server-side, and rootAPI's default 3 retries would (a)
+        // create orphan references each retry, and (b) on a cold Render
+        // server cause a 3+ minute silent wait that looks like a hang.
         getPaymentReference: builder.query<IPaymentReference, IPaymentReferenceParams>({
             query: (params) => ({
                 url: `/payment/reference`,
                 method: "GET",
-                params
+                params,
             }),
+            extraOptions: { maxRetries: 0 },
             providesTags: ["PaymentReference"],
             transformResponse: (response: { data: IPaymentReference }) => {
                 return response.data;

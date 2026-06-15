@@ -1,5 +1,5 @@
 import rootAPI from "../../../../redux/api/rootAPI.ts";
-import { allBodyMeasurementTemplateRoute, bodyMeasurementEnumsRoute, bodyMeasurementGuideRoute, requiredMeasurementFormFieldsRoute, singleBodyMeasurementTemplateRoute } from "../../../../redux/api/api_route.ts";
+import { allBodyMeasurementTemplateRoute, bodyMeasurementEnumsRoute, bodyMeasurementGuideRoute, deleteBodyMeasurementTemplateRoute, requiredMeasurementFormFieldsRoute, singleBodyMeasurementTemplateRoute, updateBodyMeasurementTemplateRoute } from "../../../../redux/api/api_route.ts";
 import IBodyMeasurement from "../models/bodyMeasurement_model.ts";
 import IBodyMeasurementEnumerations from "../models/bodyMeasurementEnumeration_model.ts";
 import IBodyMeasurementGuide from "../models/bodyMeasurementGuide_model.ts";
@@ -15,6 +15,33 @@ const measurementAPI = rootAPI.injectEndpoints({
                 body: requestData,
             }),
             invalidatesTags: ["BodyMeasurements", "Cart"],
+            transformResponse: (response: { data: any }) => {
+                return response.data;
+            },
+        }),
+
+        // Update Body Measurement Template
+        updateBodyMeasurementTemplate: builder.mutation<any, { template_id: string; templateName: string; measurements: { field: string; value: number }[] }>({
+            query: (body) => ({
+                url: updateBodyMeasurementTemplateRoute,
+                method: "PUT",
+                body,
+            }),
+            invalidatesTags: ["BodyMeasurements", "BodyMeasurement"],
+            transformResponse: (response: { data: any }) => {
+                return response.data;
+            },
+        }),
+
+        // Delete Body Measurement Template
+        deleteBodyMeasurementTemplate: builder.mutation<any, { template_id: string }>({
+            query: (body) => ({
+                url: deleteBodyMeasurementTemplateRoute,
+                method: "DELETE",
+                body,
+                headers: { "Content-Type": "application/json" },
+            }),
+            invalidatesTags: ["BodyMeasurements", "BodyMeasurement"],
             transformResponse: (response: { data: any }) => {
                 return response.data;
             },
@@ -91,6 +118,8 @@ const measurementAPI = rootAPI.injectEndpoints({
 
 export const {
     useAddBodyMeasurementTemplateMutation,
+    useUpdateBodyMeasurementTemplateMutation,
+    useDeleteBodyMeasurementTemplateMutation,
     useLazyGetAllSavedMeasurementsQuery,
     useGetSingleSavedMeasurementQuery,
     useLazyGetRequiredMeasurementFormFieldsQuery,

@@ -1,4 +1,5 @@
 import React from 'react'
+import AuthCheck from '../../../auths/components/authCheck';
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet'
 import { SafeAreaView, StatusBar, Text, TouchableOpacity, View } from 'react-native'
@@ -8,11 +9,11 @@ import { RootState } from '../../../../redux/store/store'
 import { setSelectedTab } from '../slices/reviewAndRating_slice'
 import PendingReviewsComponent from '../components/pendingReviews_component'
 import GivenReviewsComponent from '../components/givenReviews_component'
-import AppLoader from '../../../general/components/appLoader'
 import useReviewAndRatingHook from '../hooks/reviewAndRating_hook'
+import ReviewAndRatingSkeletonLoader from '../components/reviewAndRatingSkeletonLoader_component'
 
 const ReviewAndRatingScreen = () => {
-    const { tabs, selectedTab, isLoading, loadingMessage } = useSelector((state: RootState) => state.reviewAndRatingState);
+    const { tabs, selectedTab, isLoading } = useSelector((state: RootState) => state.reviewAndRatingState);
     const dispatch = useDispatch();
 
     const { handleGetAllReviews } = useReviewAndRatingHook();
@@ -47,18 +48,18 @@ const ReviewAndRatingScreen = () => {
                             )) }
                         </View>
 
-                        { (selectedTab === "Pending Reviews") ? (
+                        { isLoading ? (
+                            <ReviewAndRatingSkeletonLoader />
+                        ) : (selectedTab === "Pending Reviews") ? (
                             <PendingReviewsComponent />
                         ) : (
                             <GivenReviewsComponent />
                         ) }
                     </View>
-
-                    {(isLoading) && <AppLoader loadingAdditionalMessage={loadingMessage} />}
                 </SafeAreaView>
             </BottomSheetModalProvider>
         </GestureHandlerRootView>
     )
 }
 
-export default ReviewAndRatingScreen
+export default AuthCheck(ReviewAndRatingScreen);

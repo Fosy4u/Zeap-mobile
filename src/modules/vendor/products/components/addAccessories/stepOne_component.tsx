@@ -1,6 +1,6 @@
-import React, { useRef, useState } from 'react'
+import React, { useRef } from 'react'
 import { Control, Controller } from 'react-hook-form';
-import { View, Text, TextInput, Button, KeyboardAvoidingView, Platform } from 'react-native'
+import { View, Text, TextInput, KeyboardAvoidingView, Platform } from 'react-native'
 import { RichEditor, RichToolbar, actions } from 'react-native-pell-rich-editor';
 import { IStepOneAddProduct } from '../../validations/addProduct_validation';
 

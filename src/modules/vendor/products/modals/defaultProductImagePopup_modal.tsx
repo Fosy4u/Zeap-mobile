@@ -1,5 +1,5 @@
 import React from 'react';
-import {Image, ImageBackground, SafeAreaView, StatusBar, Text, TouchableOpacity, View} from 'react-native'
+import {ImageBackground, SafeAreaView, StatusBar, Text, TouchableOpacity, View} from 'react-native'
 
 interface Props {
     bodyText: string;
