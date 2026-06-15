@@ -21,7 +21,8 @@ const LoginScreen = () => {
   const { control, handleSubmit, onSubmit, handleGoogleSignIn, errors, isLoading, isGoogleLoading } = useLoginHook();
 
   return (
-    <SafeAreaView className="flex-1 items-center px-5">
+    <View className="flex-1">
+      <SafeAreaView className="flex-1 items-center px-5">
       <StatusBar
         backgroundColor="transparent"
         barStyle="dark-content"
@@ -154,10 +155,12 @@ const LoginScreen = () => {
         </View>
       </ScrollView>
 
+      </SafeAreaView>
+
       { isGlobalLoading &&
         <AppLoader loadingAdditionalMessage={ loadingMessage } />
       }
-    </SafeAreaView>
+    </View>
   )
 }
 

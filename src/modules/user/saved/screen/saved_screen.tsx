@@ -1,18 +1,24 @@
-import { useSelector } from 'react-redux';
+import AuthCheck from '../../../auths/components/authCheck';
 import { Notification, SearchNormal1 } from 'iconsax-react-native';
-import React, { useRef, useState } from 'react'
+import React, { useCallback, useRef, useState } from 'react'
 import { View, Text, SafeAreaView, StatusBar, TouchableOpacity, Animated, Image, TextInput, FlatList } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { setShowBottomSheetModal } from '../../../auths/slices/authState_slice';
-import { RootState } from '../../../../redux/store/store';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import RootNavigationStackModel from '../../../../routes/model/routes_model';
 import SavedProductCard from '../components/savedProductCard_component';
+import useSavedHook from '../hooks/saved_hook';
+import EmptyListComponent from '../../../general/components/emptyList_component';
 
 const SavedScreen = () => {
-  const { popularProducts } = useSelector((state: RootState) => state.productState);
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>()
+  const { wishItems, isWishlistLoading, isWishlistFetching, refetch } = useSavedHook();
+  const savedProducts = wishItems.map((item) => item.product).filter(Boolean);
+
+  // Refresh the wishlist whenever the tab regains focus, so items saved
+  // elsewhere appear right away.
+  useFocusEffect(useCallback(() => { refetch(); }, [refetch]));
 
   const [isFocused, setIsFocused] = useState(false);
   const iconTranslateX = useRef(new Animated.Value(0)).current;
@@ -113,17 +119,25 @@ const SavedScreen = () => {
         </View>
         <View className="h-5" />
 
-        <FlatList 
+        <FlatList
           className="h-auto w-full"
-          data={popularProducts}
+          data={savedProducts}
           renderItem={({ item }) => <SavedProductCard product={item} />}
-          keyExtractor={(item) => item.productId}
+          keyExtractor={(item, index) => item?.productId ?? `${index}`}
           numColumns={2}
           columnWrapperStyle={{
             gap: 10,
             marginBottom: 10,
           }}
-          showsVerticalScrollIndicator={false} 
+          showsVerticalScrollIndicator={false}
+          refreshing={isWishlistFetching}
+          onRefresh={refetch}
+          contentContainerStyle={{ flexGrow: 1 }}
+          ListEmptyComponent={
+            isWishlistLoading
+              ? <Text className="mt-10 text-center font-montserratMedium text-gray-400">Loading your favorites…</Text>
+              : <EmptyListComponent message="You haven't saved any items yet." />
+          }
         />
 
       </SafeAreaView>
@@ -133,4 +147,4 @@ const SavedScreen = () => {
   )
 }
 
-export default SavedScreen;
+export default AuthCheck(SavedScreen);

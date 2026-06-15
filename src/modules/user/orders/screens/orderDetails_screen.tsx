@@ -5,26 +5,25 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import RootNavigationStackModel from '../../../../routes/model/routes_model';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../../../redux/store/store';
-import { ArrowLeft, ArrowRight, Call, Location, Sms } from 'iconsax-react-native';
+import { ArrowLeft, ArrowRight, Call, Location, Receipt21, Sms } from 'iconsax-react-native';
 import formatCurrency from '../../../../utils/formatCurrency';
 import { timeAgo } from '../../../../utils/formatTime';
 import useGeneralHook from '../../../general/hooks/general_hook';
 import { setSelectedOrderStatus } from '../slices/order_slice';
 import useOrderHook from '../hooks/order_hook';
 import FastImage from 'react-native-fast-image';
-import AppLoader from '../../../general/components/appLoader';
 import LinearGradient from 'react-native-linear-gradient';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { BottomSheetModal, BottomSheetModalProvider } from '@gorhom/bottom-sheet';
-import { setShowBottomSheetModal } from '../../../auths/slices/authState_slice';
 import OrderStatusHistoryBottomSheetComponent from '../components/orderStatusHistoryBottomSheet_component';
+import OrderDetailsSkeletonLoader from '../components/orderDetailsSkeletonLoader_component';
 
 interface IProps {
     route: RouteProp<RootNavigationStackModel, 'orderDetailsScreen'>;
 };
 
 const OrderDetailsScreen: React.FC<IProps> = ({ route }) => {
-    const { orderDetails, isLoading, loadingMessage } = useSelector((state: RootState) => state.orderState);
+    const { orderDetails, isLoading } = useSelector((state: RootState) => state.orderState);
     const { userData } = useSelector((state: RootState) => state.profileState);
     const productOrders = orderDetails?.productOrders ?? [];
     const from = route.params?.from;
@@ -55,11 +54,11 @@ const OrderDetailsScreen: React.FC<IProps> = ({ route }) => {
         }
     }, [orderID]);
 
-    // Consider orderDetails empty if it's an empty object - in that case show loader
+    // Show the skeleton (instead of an early-returned AppLoader) while the
+    // order is being fetched OR while orderDetails is still an empty object —
+    // header chrome stays interactive during the wait.
     const isOrderDetailsEmpty = !orderDetails || Object.keys(orderDetails).length === 0;
-    if (isLoading || isOrderDetailsEmpty) {
-        return <AppLoader loadingAdditionalMessage={ loadingMessage } />;
-    }
+    const showSkeleton = isLoading || isOrderDetailsEmpty;
 
     return (
         <GestureHandlerRootView>
@@ -99,8 +98,11 @@ const OrderDetailsScreen: React.FC<IProps> = ({ route }) => {
                         />
                     </View>
 
+                    { showSkeleton ? (
+                        <OrderDetailsSkeletonLoader />
+                    ) : (
                     <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-                        
+
                         {/* ==== Order Summary ==== */}
                         <View className="mt-5 p-4 bg-[#F7F8FC] rounded-xl border border-gray-200">
                             <Text className="mb-1 font-montserratMedium text-base text-gray-700">Order ID: {orderDetails.orderId}</Text>
@@ -147,7 +149,7 @@ const OrderDetailsScreen: React.FC<IProps> = ({ route }) => {
                                             <View className="flex-row items-center">
                                                 <FastImage
                                                     source={{ uri: productOrder.images?.[0]?.link ?? undefined, priority: FastImage.priority.normal }}
-                                                    defaultSource={ require("../../../../../assets/images/app_logo.png") }
+                                                    defaultSource={ require("../../../../../assets/images/app_logo_green.png") }
                                                     resizeMode={ FastImage.resizeMode.cover }
                                                     className="h-[115px] w-[80px] mr-3 rounded-lg"
                                                 />
@@ -202,7 +204,7 @@ const OrderDetailsScreen: React.FC<IProps> = ({ route }) => {
                                         <View className="flex-row items-center">
                                             <FastImage
                                                 source={{ uri: productOrder.images?.[0]?.link ?? undefined, priority: FastImage.priority.normal }}
-                                                defaultSource={ require("../../../../../assets/images/app_logo.png") }
+                                                defaultSource={ require("../../../../../assets/images/app_logo_green.png") }
                                                 resizeMode={ FastImage.resizeMode.cover }
                                                 className="h-[115px] w-[80px] mr-3 rounded-lg"
                                             />
@@ -276,7 +278,19 @@ const OrderDetailsScreen: React.FC<IProps> = ({ route }) => {
                                 <Text className="ml-2 font-montserratMedium">{ orderDetails.deliveryDetails?.region }, { orderDetails.deliveryDetails?.country }</Text>
                             </View>
                         </View>
+
+                        {/* ==== View Receipt CTA ==== */}
+                        { orderDetails?.orderId && (
+                            <TouchableOpacity
+                                onPress={ () => navigation.navigate("receiptScreen", { orderId: orderDetails.orderId! }) }
+                                className="h-[55px] w-full mt-6 mb-4 flex-row items-center justify-center rounded-xl bg-baseGreen"
+                            >
+                                <Receipt21 size={ 18 } color="white" variant="Bold" />
+                                <Text className="ml-2 font-montserratMedium text-base text-white">View Receipt</Text>
+                            </TouchableOpacity>
+                        ) }
                     </ScrollView>
+                    ) }
 
                     <OrderStatusHistoryBottomSheetComponent
                         bottomSheetModalRef={bottomSheetModalRef}

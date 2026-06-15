@@ -1,7 +1,6 @@
 import React from 'react'
 import {useNavigation} from '@react-navigation/native';
-import {ArrowRight} from 'iconsax-react-native';
-import {Image, ImageBackground, SafeAreaView, StatusBar, Text, TouchableOpacity, View} from 'react-native'
+import {ImageBackground, SafeAreaView, StatusBar, Text, TouchableOpacity, View} from 'react-native'
 import FastImage from 'react-native-fast-image';
 import {NativeStackNavigationProp} from 'react-native-screens/lib/typescript/native-stack/types';
 import RootNavigationStackModel from "../../../../routes/model/routes_model.ts";

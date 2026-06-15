@@ -26,18 +26,28 @@ const deleteNotificationRoute = "/notification/inbox/delete";
 //  Measurement Routes
 const allBodyMeasurementTemplateRoute = "/bodyMeasurementTemplate/authUser";
 const singleBodyMeasurementTemplateRoute = "/bodyMeasurementTemplate";
+const updateBodyMeasurementTemplateRoute = "/bodyMeasurementTemplate/update";
+const deleteBodyMeasurementTemplateRoute = "/bodyMeasurementTemplate/delete";
 const requiredMeasurementFormFieldsRoute = "/bodyMeasurement/product";
 const bodyMeasurementEnumsRoute = "/bodyMeasurementEnums";
 const bodyMeasurementGuideRoute = "/bodyMeasurementGuide/bespoke";
 
 // Product Routes
 const filterProductsRoute = "/products/live";
+const searchProductsRoute = "/products/live/searchProducts";
 const addProductToCartRoute = "/basket/product/add";
 const promoProductRoute = "/promos/live";
 const productPromotionRoute = "/product/promo";
 const recentlyViewedProductsRoute = "/products/recentViews";
 const sizeGuideRoute = "/bodyMeasurementGuide/readyMade";
 const dynamicFiltersRoute = "/products/list/dynamicFilters";
+
+// Wishlist Routes
+// `/wish/add` (POST { productId, color }) and `/wish/auth/user` (GET list) are
+// confirmed. The remove URL follows the same convention — CONFIRM/ADJUST.
+const wishAddRoute = "/wish/add";
+const wishListRoute = "/wish/auth/user"; // GET the auth user's wishlist
+const wishRemoveRoute = "/wish/remove";  // ASSUMED: POST { productId } to unsave
 
 // Order 
 const getOrdersRoute = "/orders/authUser/buyer";
@@ -54,6 +64,18 @@ const convertPointsRoute = "/point/convert/voucher";
 
 // Review Routes
 const getAllReviewsRoute = "/reviews/user";
+
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+//  VENDOR ONBOARDING ROUTES
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+const registerVendorRoute = "/shop/create";
+const getSellerPoliciesRoute = "/policy/seller";
+const getAuthShopRoute = "/shop/auth";
+const getOnboardingDocumentsRoute = "/shop/onboarding-documents";
+const uploadOnboardingDocumentRoute = "/shop/onboarding-document/add";
 
 
 
@@ -102,18 +124,26 @@ export {
     // Measurement Routes exports
     allBodyMeasurementTemplateRoute,
     singleBodyMeasurementTemplateRoute,
+    updateBodyMeasurementTemplateRoute,
+    deleteBodyMeasurementTemplateRoute,
     requiredMeasurementFormFieldsRoute,
     bodyMeasurementEnumsRoute,
     bodyMeasurementGuideRoute,
 
     // Product Routes exports
     filterProductsRoute,
+    searchProductsRoute,
     addProductToCartRoute,
     promoProductRoute,
     productPromotionRoute,
     recentlyViewedProductsRoute,
     sizeGuideRoute,
     dynamicFiltersRoute,
+
+    // Wishlist Routes exports
+    wishAddRoute,
+    wishListRoute,
+    wishRemoveRoute,
 
     // Order Routes exports
     getOrdersRoute,
@@ -144,6 +174,13 @@ export {
     getVendorPaymentsRoute,
     getVendorPaymentDetailsRoute,
     // updatePaymentStatusRoute,
+
+    // Vendor Onboarding Routes exports
+    registerVendorRoute,
+    getSellerPoliciesRoute,
+    getAuthShopRoute,
+    getOnboardingDocumentsRoute,
+    uploadOnboardingDocumentRoute,
 }
 
 export default baseURL;

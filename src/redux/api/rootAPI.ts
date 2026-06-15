@@ -43,6 +43,7 @@ const rootAPI = createApi({
         "DeliveryDate",
         "Points",
         "Vouchers",
+        "Wishlist",
 
         // Vebdor
         "VendorAnalytics",
@@ -56,6 +57,7 @@ const rootAPI = createApi({
         "VendorOrderDetails",
         "VendorOrderHistory",
         "VendorPayments",
+        "OnboardingDocuments",
 
         "notifications",
     ],

@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef } from 'react'
+import AuthCheck from '../../../auths/components/authCheck';
 import { SafeAreaView, StatusBar, Text, TouchableOpacity, View } from 'react-native'
 import AppHeaderComp from '../../../vendor/general/components/appHeader_comp';
 import { useDispatch, useSelector } from 'react-redux';
@@ -10,16 +11,16 @@ import usePointAndVoucherHook from '../hooks/pointAndVoucher_hook';
 import VoucherDetailBottomSheetComponent from '../components/voucherDetailBottomSheet_component';
 import { BottomSheetModal, BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import AppLoader from '../../../general/components/appLoader';
 import { RouteProp } from '@react-navigation/native';
 import RootNavigationStackModel from '../../../../routes/model/routes_model';
+import PointAndVoucherSkeletonLoader from '../components/pointAndVoucherSkeletonLoader_component';
 
 interface IProps {
     route: RouteProp<RootNavigationStackModel, "pointAndVoucherScreen">;
 };
 
 const PointAndVoucherScreen: React.FC<IProps> = ({ route }) => {
-    const { tabs, selectedTab, points, loadingMessage, isLoading } = useSelector((state: RootState) => state.pointAndVoucherState);
+    const { tabs, selectedTab, points, isLoading } = useSelector((state: RootState) => state.pointAndVoucherState);
     const dispatch = useDispatch();
     const from = route.params?.from;
     const code = route.params?.code;
@@ -83,7 +84,9 @@ const PointAndVoucherScreen: React.FC<IProps> = ({ route }) => {
                             )) }
                         </View>
 
-                        { (selectedTab === "Points") ? (
+                        { isLoading && (!points || !points.availablePoints) ? (
+                            <PointAndVoucherSkeletonLoader />
+                        ) : (selectedTab === "Points") ? (
                             <PointsComponent points={ points } />
                         ) : (
                             <VoucherComponent setShowBottomSheetModal={ setShowBottomSheetModal } />
@@ -100,11 +103,10 @@ const PointAndVoucherScreen: React.FC<IProps> = ({ route }) => {
                         setShowBottomSheetModal={ setShowBottomSheetModal }
                     />
 
-                    {(isLoading) && <AppLoader loadingAdditionalMessage={loadingMessage} />}
                 </SafeAreaView>
             </BottomSheetModalProvider>
         </GestureHandlerRootView>
     );
 }
 
-export default PointAndVoucherScreen;
+export default AuthCheck(PointAndVoucherScreen);

@@ -4,8 +4,36 @@ import { useEffect } from "react";
 import { useRegisterFCMTokenMutation } from "../apis/notification_api";
 import handleError from "../../general/hooks/errorHandler_hook";
 import { PermissionsAndroid, Platform } from "react-native";
-import PushNotification from "react-native-push-notification";
-import navigate from "../../../routes/pushNavigation";
+import PushNotification, { Importance } from "react-native-push-notification";
+import handleNotificationNavigation from "../utils/notificationNavigation";
+
+// One-time library setup. Must run before any localNotification() call:
+//  • configure() registers the tap handler — without it, taps on local
+//    notifications never reach our navigator.
+//  • createChannel() registers the Android 8+ channel — Android silently
+//    drops notifications whose channelId hasn't been created, which is why
+//    foreground order notifications weren't appearing.
+PushNotification.configure({
+    onNotification: (notification: any) => {
+        // Only handle user taps, not the silent delivery callback fired
+        // when the notification is first shown.
+        if (notification?.userInteraction) {
+            handleNotificationNavigation(notification?.data ?? notification?.userInfo);
+        }
+    },
+    requestPermissions: false,
+});
+
+PushNotification.createChannel(
+    {
+        channelId: "default-channel-id",
+        channelName: "Default",
+        channelDescription: "Order, payment, and account notifications",
+        importance: Importance.HIGH,
+        vibrate: true,
+    },
+    () => {},
+);
 
 const useFCMNotificationHook = () => {
     const [registerFCMToken] = useRegisterFCMTokenMutation();
@@ -72,44 +100,6 @@ const useFCMNotificationHook = () => {
         }
     };
 
-    const handleNotificationNavigation = (data: any) => {
-        console.log("NAVIGATION DATA::: ", data);
-        
-        if (data?.notificationType === "order" && data?.orderId) {
-            console.log("NAVIGATION DATA::: ", data);
-            const userRole = data.roleType;
-            console.log("USER ROLE::: ", userRole);
-
-            if (userRole === "buyer") {
-                navigate("orderDetailsScreen", {
-                    from: "Notification Screen",
-                    orderId: data.orderId,
-                    itemNumber: data.itemNo ? parseInt(data.itemNo, 10) : undefined,
-                });
-            } else if (userRole === "vendor") {
-                navigate("vendorOrderDetailsScreen", {
-                    screen: "Orders",
-                    from: "Notification Screen",
-                    orderId: data.productOrder_id,
-                    itemNumber: data.itemNo ? parseInt(data.itemNo, 10) : undefined,
-                });
-            }
-            // navigate("ordersScreen");
-        } else if (data?.notificationType === "voucher" && data?.code) {
-            navigate("pointAndVoucherScreen", {
-                from: "Notification Screen",
-                code: data.code,
-            });
-        } else if (data?.notificationType === "shop" && data?.shopId) {
-            navigate("vendorHomeScreen", {
-                screen: "Dashboard",
-                shopId: data.shopId,
-            });
-        } else if (data?.notificationType === "payments" && data?.reference) {
-            navigate("paymentScreen");
-        }
-    };
-
     const handleNotificationOpen = async () => {
         // Check if app was opened from a notification
         const initialNotification = await getInitialNotification(messagingInstance);
@@ -120,7 +110,7 @@ const useFCMNotificationHook = () => {
         // Handle notification open when app is in background
         onNotificationOpenedApp(messagingInstance, remoteMessage => {
             if (remoteMessage) {
-                handleNotificationNavigation(remoteMessage.data);
+                handleNotificationNavigation(remoteMessage.data as any);
             }
         });
     };

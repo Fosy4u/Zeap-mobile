@@ -1,4 +1,4 @@
-import { addProductToCartRoute, dynamicFiltersRoute, filterProductsRoute, productPromotionRoute, promoProductRoute, recentlyViewedProductsRoute, sizeGuideRoute } from "../../../../redux/api/api_route.ts";
+import { addProductToCartRoute, dynamicFiltersRoute, filterProductsRoute, productPromotionRoute, promoProductRoute, recentlyViewedProductsRoute, searchProductsRoute, sizeGuideRoute } from "../../../../redux/api/api_route.ts";
 import rootAPI from "../../../../redux/api/rootAPI.ts";
 import ICart from "../../cart/models/cart_model";
 import IDynamicFilter from "../models/dynamicFilter_model.ts";
@@ -48,9 +48,34 @@ const productAPI = rootAPI.injectEndpoints({
                 })
             },
             providesTags: ["Products"],
-            transformResponse: (response: { data: { products: IProduct[]} }) => {
-                return response.data.products;
-            }
+            // Backend response shape is inconsistent across the endpoints this
+            // single query reaches:
+            //   • /products/live/newest, /mostPopular wrap as { data: { products: [...] } }
+            //   • /products/recentViews, /products/live/recommended return { data: [...] }
+            // Normalize both into a plain IProduct[] so consumers don't have
+            // to care which endpoint they hit.
+            transformResponse: (response: any): IProduct[] => {
+                if (Array.isArray(response?.data)) return response.data as IProduct[];
+                return (response?.data?.products as IProduct[]) ?? [];
+            },
+        }),
+
+        // Live product search — hits /products/live/searchProducts with
+        // `search`, `limit`, `pageNumber` query params. Kept as its own query
+        // (separate from getFilteredProducts) so the dedicated search screen
+        // can stay independent of the filter-list cache + screenTitle routing.
+        searchProducts: builder.query<IProduct[], { search: string; limit?: number; pageNumber?: number }>({
+            query: ({ search, limit = 10, pageNumber = 1 }) => ({
+                url: searchProductsRoute,
+                method: "GET",
+                params: { search, limit, pageNumber },
+            }),
+            // No providesTags — search results are ephemeral; don't want them
+            // invalidated by unrelated product mutations.
+            transformResponse: (response: any): IProduct[] => {
+                if (Array.isArray(response?.data)) { return response.data as IProduct[]; }
+                return (response?.data?.products as IProduct[]) ?? [];
+            },
         }),
 
         // Get Product By Product ID
@@ -121,7 +146,7 @@ const productAPI = rootAPI.injectEndpoints({
         // Get Dynamic Filter Options
         getDynamicFilterOptions: builder.query<IDynamicFilter[], {queryParams: any}>({
             query: ({queryParams}) => {
-                console.log("DYNAMIC FILTER QUERY::: ", queryParams);
+                // console.log("DYNAMIC FILTER QUERY::: ", queryParams);
 
                 return ({
                     url: dynamicFiltersRoute,
@@ -145,5 +170,7 @@ export const {
     useLazyGetProductPromotionQuery,
     useLazyGetSizeGuideQuery,
     useLazyGetDynamicFilterOptionsQuery,
+    useLazySearchProductsQuery,
+    useSearchProductsQuery,
 } = productAPI;
 export default productAPI;

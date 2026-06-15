@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React from 'react';
 import {SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View} from "react-native";
 import AppHeaderComp from "../../general/components/appHeader_comp.tsx";
 import {ArrowLeft, ArrowRight} from "iconsax-react-native";

@@ -6,10 +6,8 @@ import AppHeaderComp from '../../general/components/appHeader_comp';
 import { ArrowRight } from 'iconsax-react-native';
 import useVendorProductHook from '../hooks/vendorProduct_hook';
 import IPromotion from '../models/promotion_model';
-import AppLoader from '../../../general/components/appLoader';
 
 const PromoScreen = () => {
-    const { isLoading, loadingMessage } = useSelector((state: RootState) => state.generalState);
 
     const { promotions, handleGetAvailablePromos, selectedPromo, setSelectedPromo, handleApplyPromo, handleFormatDate } = useVendorProductHook();
     console.log("PROMOTIONS", promotions);
@@ -64,8 +62,8 @@ const PromoScreen = () => {
                                 <View className="mt-2 flex-row flex-wrap items-center space-y-2">
                                     { promotion?.permittedProductTypes!.map((eachProductType: string, index: number) => (
                                         <Text key={ `${index}_${eachProductType}` } className="mr-2 px-2 py-1 font-montserratMedium text-[10px] rounded-md bg-white">{
-                                            eachProductType === "readyMadeCloth" ? "Ready Made Clothes"
-                                            : eachProductType === "readyMadeShoe" ? "Ready Made Shoes"
+                                            eachProductType === "readyMadeCloth" ? "Ready to Wear Cloth"
+                                            : eachProductType === "readyMadeShoe" ? "Ready to Wear Shoe"
                                             : eachProductType === "bespokeCloth" ? "Bespoke Clothes"
                                             : eachProductType === "bespokeShoe" ? "Bespoke Shoes" : "Accessories"
                                         }</Text>
@@ -90,10 +88,6 @@ const PromoScreen = () => {
                     <ArrowRight className="text-white" />
                 </TouchableOpacity>
             </ScrollView>
-            
-            { isLoading && 
-                <AppLoader loadingAdditionalMessage={ loadingMessage } />
-            }
         </SafeAreaView>
     );
 };

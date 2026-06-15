@@ -16,6 +16,9 @@ const addressFormFieldsSchema = yup.object().shape({
     country: yup
         .string()
         .required("Country is required."),
+    postCode: yup
+        .string()
+        .optional(),
     phoneNumber: yup
         .string()
         .required("Phone number is required."),

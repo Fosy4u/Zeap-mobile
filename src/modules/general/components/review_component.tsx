@@ -1,16 +1,15 @@
-import React, { useEffect, useState } from 'react';
-import { ArrowRight, Dislike, Edit2, Like1, Star1 } from 'iconsax-react-native';
+import React, { useState } from 'react';
+import { ArrowRight, Dislike, Like1, Star1 } from 'iconsax-react-native';
 import { View, Text, Image, ScrollView, TextInput, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import RootNavigationStackModel from '../../../routes/model/routes_model';
 import useVendorProductHook from '../../vendor/products/hooks/vendorProduct_hook';
-import { Controller, set } from 'react-hook-form';
+import { Controller } from 'react-hook-form';
 import AppLoader from './appLoader';
 import useReviewHook from '../hooks/review_hook';
 import IReviewAndRating from '../models/review_model';
 import RatingCardComponent from './ratingCard_component';
-import formatDate from '../../../utils/formatDate';
 import { timeAgo } from '../../../utils/formatTime';
 
 interface IProps {
@@ -48,7 +47,7 @@ const ReviewComponent: React.FC<IProps> = ({ reviewAndRating, productID, loading
                   source={
                     review.user!.imageUrl!?.link!
                     ? { uri: review.user!.imageUrl!?.link! }
-                    : require("../../../../assets/images/app_logo.png")
+                    : require("../../../../assets/images/app_logo_green.png")
                   }
                 />
 
@@ -113,15 +112,10 @@ const ReviewComponent: React.FC<IProps> = ({ reviewAndRating, productID, loading
           </TouchableOpacity>
         ) }
 
-        { !showReviewForm && (
-          <TouchableOpacity
-            onPress={ () => setShowReviewForm(true) }
-            className="h-[55px] w-[80%] mx-auto mt-5 flex-row items-center justify-center rounded-xl bg-baseGreen"
-          >
-            <Text className="text-lg text-white mr-2">Write a review</Text>
-            <Edit2 size={20} className="text-white" />
-          </TouchableOpacity>
-        ) }
+        {/* "Write a review" intentionally hidden here — reviews are only
+            authored after delivery via the order-completion flow
+            (rateAndReviewScreen). Surfacing it on the product details page
+            lets non-buyers post, which the policy disallows. */}
 
         {/* ==== Form ==== */}
         { (showReviewForm) && (

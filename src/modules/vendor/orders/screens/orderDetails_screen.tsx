@@ -21,14 +21,13 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../../../redux/store/store.ts';
 import { setShowUpdateOrderBottomSheet } from '../slices/orderState_slice.ts';
 import FormatWords from '../../../../utils/formatWords.ts';
-import AppLoader from '../../../general/components/appLoader.tsx';
 
 interface IProps {
   route: RouteProp<RootNavigationStackModel, 'vendorOrderDetailsScreen'>;
 }
 
 const VendorOrderDetailsScreen: React.FC<IProps> = ({route}) => {
-  const { order, orderHistory, showUpdateOrderBottomSheet, isLoading, loadingMessage } = useSelector((state: RootState) => state.vendorOrderState);
+  const { order, orderHistory, showUpdateOrderBottomSheet } = useSelector((state: RootState) => state.vendorOrderState);
   const from = route.params?.from;
   const orderID = route.params?.orderId;
   const dispatch = useDispatch();
@@ -59,7 +58,7 @@ const VendorOrderDetailsScreen: React.FC<IProps> = ({route}) => {
             {/*==== Product Image ====*/}
             <FastImage
               source={{uri: order.images?.[0]?.link!}}
-              defaultSource={require('../../../../../assets/images/app_logo.png')}
+              defaultSource={require('../../../../../assets/images/app_logo_green.png')}
               resizeMode="cover"
               className="h-[385px] w-full mb-5 rounded-xl"
             />
@@ -111,7 +110,7 @@ const VendorOrderDetailsScreen: React.FC<IProps> = ({route}) => {
               </View>
               <View className="h-auto w-full mt-5 flex-row justify-between">
                 <Text className="font-montserratRegular text-gray-700">Product group</Text>
-                <Text className="font-montserratMedium text-sm text-gray-800">{order.product?.categories?.productGroup!}</Text>
+                <Text className="font-montserratMedium text-sm text-gray-800">{ FormatWords.productGroupLabel(order.product?.categories?.productGroup, order.product?.productType) }</Text>
               </View>
               <View className="h-auto w-full mt-5 flex-row justify-between">
                 <Text className="font-montserratRegular text-gray-700">Size</Text>
@@ -190,10 +189,6 @@ const VendorOrderDetailsScreen: React.FC<IProps> = ({route}) => {
           {showUpdateOrderBottomSheet && (
             <UpdateOrderStatusBottomSheetComponent />
           )}
-
-          { isLoading &&
-            <AppLoader loadingAdditionalMessage={ loadingMessage } />
-          }
         </SafeAreaView>
       </BottomSheetModalProvider>
     </GestureHandlerRootView>

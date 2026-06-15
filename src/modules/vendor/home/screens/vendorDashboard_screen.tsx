@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Dimensions, FlatList, Image, Pressable, SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View } from "react-native"
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../../../redux/store/store";
-import { Add, ArrowDown, ArrowRight, ArrowUp, Calendar, Edit2, Notification } from "iconsax-react-native";
+import { Add, ArrowDown, ArrowRight, ArrowUp, Calendar, Edit2, Notification, Shop } from "iconsax-react-native";
+import VendorDashboardSkeletonComponent from "../components/vendorDashboardSkeleton_component";
+import { useLazyGetAuthShopQuery } from "../../general/apis/general_api";
+import { setShop } from "../../general/slices/general_slice";
 import { useNavigation } from "@react-navigation/native";
-import ShimmerPlaceHolder from 'react-native-shimmer-placeholder';
-import LinearGradient from "react-native-linear-gradient";
+import SkeletonBlock from '../../../general/components/skeletonBlock_component';
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import RootNavigationStackModel from "../../../../routes/model/routes_model";
 import { BarChart } from "react-native-gifted-charts";
@@ -28,14 +30,40 @@ const VendorDashboardScreen = () => {
   const { shop } = useSelector((state: RootState) => state.vendorGeneralState);
   const { userData } = useSelector((state: RootState) => state.profileState);
   const [productIndex, setProductIndex] = useState<number | null>(null);
+  const [shopStatusReady, setShopStatusReady] = useState(false);
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
-  
+  const dispatch = useDispatch();
+
+  const [getAuthShop] = useLazyGetAuthShopQuery();
+
   const product = productIndex !== null ? products?.[productIndex] : undefined;
 
   const { handleGetShop, handleGeVendortAnalytics } = useVendorHomeHook();
   const { generateRandomInteger, handleGetProductOptions } = useGeneralHook();
   const { handleGetProductReviews } = useVendorProductHook();
   const { handleGetVendorPayments } = useVendorPaymentHook();
+
+  // Gate the dashboard behind /shop/auth. Renders a skeleton until we know
+  // the status — if it's "new", we reset to the welcome screen instead of
+  // letting the user interact with a half-set-up dashboard and then yanking
+  // them mid-session. A network failure falls through to the real dashboard.
+  useEffect(() => {
+    (async () => {
+      try {
+        const authShop = await getAuthShop().unwrap();
+        if (authShop) {
+          dispatch(setShop(authShop));
+          if ((authShop as any).status === "new") {
+            navigation.reset({ index: 0, routes: [{ name: "vendorWelcomeScreen" }] });
+            return;
+          }
+        }
+      } catch {
+        // Silent — render the dashboard so the user isn't stranded on skeleton.
+      }
+      setShopStatusReady(true);
+    })();
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -64,6 +92,10 @@ const VendorDashboardScreen = () => {
       handleGetVendorPayments("7601605");
   }, []);
 
+  if (!shopStatusReady) {
+    return <VendorDashboardSkeletonComponent />;
+  }
+
   return (
     <SafeAreaView className="h-full w-screen flex-1 pb-[1px] bg-gray-50">
       <StatusBar
@@ -75,16 +107,27 @@ const VendorDashboardScreen = () => {
       <View className="h-[290px] w-full px-5 pt-2 rounded-b-3xl bg-baseGreen">
         <View className="flex-row items-center justify-between">
           <Image
-            className="h-[60px] w-[60px] rounded-xl"
-            resizeMode="cover"
-            source={require("../../../../../assets/images/app_logo.png")}
+            className="h-[60px] w-[90px] rounded-sm"
+            resizeMode="contain"
+            source={require("../../../../../assets/images/app_logo_gold.png")}
           />
-          <Pressable
-            className="bg-[#20704329] p-2.5 rounded-xl"
-            onPress={ () => navigation.navigate("vendorNotificationsScreen") }
-          >
-            <Notification color="#D5B07B" size={24} variant="Bold" />
-          </Pressable>
+
+          <View className="flex-row items-center gap-x-2">
+            <TouchableOpacity
+              onPress={ () => navigation.navigate("homeScreen", { screen: "Home" }) }
+              className="px-3 py-2 flex-row items-center rounded-full bg-gold/20"
+            >
+              <Shop color="#D5B07B" size={ 16 } variant="Bold" />
+              <Text className="ml-1.5 font-montserratSemiBold text-xs text-gold">Marketplace</Text>
+            </TouchableOpacity>
+
+            <Pressable
+              className="bg-[#20704329] p-2.5 rounded-xl"
+              onPress={ () => navigation.navigate("vendorNotificationsScreen") }
+            >
+              <Notification color="#D5B07B" size={24} variant="Bold" />
+            </Pressable>
+          </View>
         </View>
 
 
@@ -200,36 +243,38 @@ const VendorDashboardScreen = () => {
                 </TouchableOpacity>
             </View>
 
-            <FlatList
-              data={payments}
-              keyExtractor={(item) => item.productOrder_id!}
-              showsVerticalScrollIndicator={ false }
-              ListEmptyComponent={<EmptyListComponent message={"payments at the moment."} />}
-              renderItem={({ item: payment }) => (!paymentIsLoading) ? (
-                  <View key={ payment.productOrder_id } className="py-3 flex-row items-center border-t border-gray-200">
-                    <View className={`h-[55px] w-[55px] mr-3 ${ payment.shopRevenue!.status == "success" ? "bg-lightGreen/70" : "bg-orange/10" } flex items-center justify-center rounded-full`}>
-                      { (payment.shopRevenue!.status === "success")
-                        ? <ArrowDown color="green" size={ 20 } className="rotate-[30deg]" />
-                        : <Text className="text-3xl text-orange">!</Text>
-                      }
-                    </View>
-                    <View>
-                      <Text className="text-sm">{ payment.purchasedProduct!.title }</Text>
-                      <Text className="font-montserratSemiBold text-base">{ formatCurrency(payment.shopRevenue!.value!, payment.shopRevenue!.currency!) }</Text>
-                      <Text className="text-xs">{ formatDate(payment.purchaseDate!, true) }</Text>
-                    </View>
+            {/* Plain map instead of FlatList — the parent is a vertical
+                ScrollView, and nesting a vertical VirtualizedList inside it
+                triggers React Native's "VirtualizedLists should never be
+                nested" warning and breaks windowing. The recent-payments
+                preview is small and bounded, so virtualization isn't needed. */}
+            { (!payments || payments.length === 0) ? (
+              <EmptyListComponent message={"payments at the moment."} />
+            ) : (
+              payments.map((payment) => (!paymentIsLoading) ? (
+                <View key={ payment.productOrder_id } className="py-3 flex-row items-center border-t border-gray-200">
+                  <View className={`h-[55px] w-[55px] mr-3 ${ payment.shopRevenue!.status == "success" ? "bg-lightGreen/70" : "bg-orange/10" } flex items-center justify-center rounded-full`}>
+                    { (payment.shopRevenue!.status === "success")
+                      ? <ArrowDown color="green" size={ 20 } className="rotate-[30deg]" />
+                      : <Text className="text-3xl text-orange">!</Text>
+                    }
                   </View>
+                  <View>
+                    <Text className="text-sm">{ payment.purchasedProduct!.title }</Text>
+                    <Text className="font-montserratSemiBold text-base">{ formatCurrency(payment.shopRevenue!.value!, payment.shopRevenue!.currency!) }</Text>
+                    <Text className="text-xs">{ formatDate(payment.purchaseDate!, true) }</Text>
+                  </View>
+                </View>
               ) : (
-                <ShimmerPlaceHolder
-                  // visible={!productIsLoading}
-                  LinearGradient={LinearGradient}
-                  shimmerColors={['#ebebeb', '#fefefe', '#ebebeb']}
-                  height={80}
-                  width={Dimensions.get('window').width - 40}
-                  shimmerStyle={{ borderRadius: 16, marginTop: 20 }}
-                />
-              )}
-            />
+                <View key={ payment.productOrder_id } style={{ marginTop: 20 }}>
+                  <SkeletonBlock
+                    width={ Dimensions.get('window').width - 40 }
+                    height={ 80 }
+                    radius={ 16 }
+                  />
+                </View>
+              ))
+            ) }
           </View>
 
           {/* ==== Product List ==== */}
@@ -254,18 +299,17 @@ const VendorDashboardScreen = () => {
                         uri: product.colors[0].images[0].link,
                         priority: FastImage.priority.normal
                       }}
-                      defaultSource={require("../../../../../assets/images/app_logo.png")}
+                      defaultSource={require("../../../../../assets/images/app_logo_green.png")}
                       resizeMode={FastImage.resizeMode.cover}
                       className="h-[300px] w-[180px] rounded-lg"
                       style={{ aspectRatio: 0.7 }}
                       fallback
                     />
                   ) : (
-                    <ShimmerPlaceHolder
-                      LinearGradient={LinearGradient}
-                      shimmerColors={['#ebebeb', '#fefefe', '#ebebeb']}
-                      height={250}
-                      width={Dimensions.get('window').width - 40}
+                    <SkeletonBlock
+                      width={ Dimensions.get('window').width - 40 }
+                      height={ 250 }
+                      radius={ 12 }
                     />
                   )}
 
@@ -325,14 +369,13 @@ const VendorDashboardScreen = () => {
               </TouchableOpacity>
             </View>
           ) : (
-            <ShimmerPlaceHolder
-              // visible={!productIsLoading}
-              LinearGradient={LinearGradient}
-              shimmerColors={['#ebebeb', '#fefefe', '#ebebeb']}
-              height={330}
-              width={Dimensions.get('window').width - 40}
-              shimmerStyle={{ borderRadius: 16, marginTop: 20 }}
-            />
+            <View style={{ marginTop: 20 }}>
+              <SkeletonBlock
+                width={ Dimensions.get('window').width - 40 }
+                height={ 330 }
+                radius={ 16 }
+              />
+            </View>
           ) }
         </View>
       </ScrollView>

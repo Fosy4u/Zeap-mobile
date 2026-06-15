@@ -2,7 +2,6 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import IMeasurementState from "../models/measurementState_model.ts";
 import IRequiredMeasurementFormFields from "../models/requiredMeasurementFormField_model.ts";
 import IBodyMeasurement from "../models/bodyMeasurement_model.ts";
-import { set } from "react-hook-form";
 import IBodyMeasurementGuide from "../models/bodyMeasurementGuide_model.ts";
 
 const initialState: IMeasurementState = {
@@ -29,6 +28,7 @@ const initialState: IMeasurementState = {
         ]
     },
     bodyMeasurementGuides: [],
+    selectedGender: "",
 
     loadingMessage: "",
     isLoading: false
@@ -65,6 +65,9 @@ export const measurementSlice = createSlice({
         setBodyMeasurementGuides: (state: IMeasurementState, action: PayloadAction<IBodyMeasurementGuide[]>) => {
             state.bodyMeasurementGuides = action.payload;
         },
+        setSelectedGender: (state: IMeasurementState, action: PayloadAction<string>) => {
+            state.selectedGender = action.payload;
+        },
         setLoadingMessage: (state: IMeasurementState, action: PayloadAction<string>) => {
             state.loadingMessage = action.payload;
         },
@@ -86,6 +89,7 @@ export const {
     setSelectedMeasurementTemplate,
     setRequiredMeasurementFormFields,
     setBodyMeasurementGuides,
+    setSelectedGender,
     setLoadingMessage,
     setIsLoading
 } = actions;

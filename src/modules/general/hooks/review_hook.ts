@@ -8,7 +8,6 @@ import handleError from "./errorHandler_hook";
 import { useCreateReviewMutation, useLazyGetProductReviewsQuery } from "../apis/review_api";
 import { useEffect, useState } from "react";
 import IReviewIndicator from "../models/reviewIndicator_model";
-import IReviewAndRating from "../models/review_model";
 import { setReviewAndRating } from "../../vendor/products/slices/vendorProductState_slice";
 
 const useReviewHook = (productId?: string) => {

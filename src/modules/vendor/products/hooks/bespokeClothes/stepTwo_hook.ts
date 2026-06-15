@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../../../../redux/store/store";
 // import { useUpdateWithCategoriesMutation } from "../../apis/bespokeProduct_api";
 import { Alert } from "react-native";
-import { setLoadingMessage, setProduct, setProductIsLoading, setSelectedStep } from "../../slices/vendorProductState_slice";
+import { setLoadingMessage, setProductIsLoading } from "../../slices/vendorProductState_slice";
 import { useLazyGetProductByProductIDQuery } from "../../apis/product_api";
 
 
@@ -132,7 +132,7 @@ const useStepTwoHook = () => {
 
     // Handle update default values
     const handleUpdateDefaultValues = () => {
-        if (!product.categories) return;
+        if (!product || !product.categories) return;
 
         // Format main categories
         const mainData = product.categories?.main!;

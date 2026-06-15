@@ -1,8 +1,7 @@
-import { stepTwoAddClothesSchema, stepTwoAddShoesSchema } from "../../validations/addProduct_validation";
+import { stepTwoAddShoesSchema } from "../../validations/addProduct_validation";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../../../../redux/store/store";
-import { Alert } from "react-native";
 import { setLoadingMessage, setProduct, setProductIsLoading, setSelectedStep } from "../../slices/vendorProductState_slice";
 import { useUpdateProductMutation, useLazyGetProductByProductIDQuery } from "../../apis/readyMadeProduct_api";
 import handleError from "../../../../general/hooks/errorHandler_hook";
@@ -130,7 +129,7 @@ const useStepTwoHook = () => {
 
     // Handle update default values
     const handleUpdateDefaultValues = () => {
-        if (!product.categories) return;
+        if (!product || !product.categories) return;
 
         // Format styles
         const styleData = product.categories?.style!;

@@ -1,7 +1,5 @@
 import IReviewAndRating from "../../modules/general/models/review_model";
 import IReviewIndicator from "../../modules/general/models/reviewIndicator_model";
-import IPaymentReferenceParams from "../../modules/user/payment/models/paymentReferenceParams_model";
-import IOrder from "../../modules/vendor/orders/models/oder_model";
 
 type RootNavigationStackModel = {
   splashScreen: undefined;
@@ -19,7 +17,7 @@ type RootNavigationStackModel = {
   // USERS
   // homeScreen: undefined;
   homeScreen: {
-    screen?: "Dashboard" | "Cart" | "Saved" | "Profile";
+    screen?: "Home" | "Cart" | "Saved" | "Profile";
   };
 
   inviteFriendScreen: undefined;
@@ -28,6 +26,7 @@ type RootNavigationStackModel = {
   productListScreen: { screenTitle: string } | undefined;
   productDetailScreen: undefined;
   measurementScreen: undefined;
+  editMeasurementTemplateScreen: undefined;
   reviewListScreen: {
     reviewAndRating: IReviewAndRating,
     reviewIndicators: IReviewIndicator[],
@@ -77,8 +76,14 @@ type RootNavigationStackModel = {
     orderId: string,
     itemNumber?: string | undefined,
   } | undefined;
+  receiptScreen: { orderId: string };
 
   // VENDORS
+  vendorOnboardingScreen: undefined;
+  vendorRegistrationScreen: undefined;
+  vendorWelcomeScreen: undefined;
+  vendorDocumentUploadScreen: undefined;
+  contactSupportScreen: undefined;
   vendorHomeScreen: {
     screen?: "Dashboard" | "Products" | "Orders" | "Profile" | "Market";
     shopId?: string;

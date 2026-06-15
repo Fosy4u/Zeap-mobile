@@ -1,5 +1,5 @@
 import React from 'react';
-import {Image, Text, TouchableOpacity, View} from "react-native";
+import {Text, TouchableOpacity, View} from "react-native";
 import {Add, DocumentUpload} from "iconsax-react-native";
 import FastImage from 'react-native-fast-image';
 

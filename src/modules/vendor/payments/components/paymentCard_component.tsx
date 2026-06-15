@@ -3,8 +3,7 @@ import { Dimensions, FlatList, Text, View } from 'react-native';
 import formatDate from '../../../../utils/formatDate';
 import formatCurrency from '../../../../utils/formatCurrency';
 import EmptyListComponent from '../../../general/components/emptyList_component';
-import ShimmerPlaceHolder from 'react-native-shimmer-placeholder';
-import LinearGradient from 'react-native-linear-gradient';
+import SkeletonBlock from '../../../general/components/skeletonBlock_component';
 import FastImage from 'react-native-fast-image';
 import IPayment from '../models/payment_model';
 
@@ -28,7 +27,7 @@ const PaymentCardComponent: React.FC<IProps> = ({ payments, isLoading }) => {
                         <View className="h-[60px] w-[60px] rounded-lg overflow-hidden">
                             <FastImage
                                 source={ { uri: payment.purchasedProduct!.images![0]!.link! } }
-                                defaultSource={require("../../../../../assets/images/app_logo.png")}
+                                defaultSource={require("../../../../../assets/images/app_logo_green.png")}
                                 resizeMode={FastImage.resizeMode.cover}
                                 className="h-[60px] w-[60px]"
                             />
@@ -44,14 +43,13 @@ const PaymentCardComponent: React.FC<IProps> = ({ payments, isLoading }) => {
                     </View>
                 </View>
             ) : (
-                <ShimmerPlaceHolder
-                    // visible={!productIsLoading}
-                    LinearGradient={LinearGradient}
-                    shimmerColors={['#ebebeb', '#fefefe', '#ebebeb']}
-                    height={80}
-                    width={Dimensions.get('window').width - 40}
-                    shimmerStyle={{ borderRadius: 10, marginTop: 15 }}
-                />
+                <View style={{ marginTop: 15 }}>
+                    <SkeletonBlock
+                        width={ Dimensions.get('window').width - 40 }
+                        height={ 80 }
+                        radius={ 10 }
+                    />
+                </View>
             )}
         />
     );

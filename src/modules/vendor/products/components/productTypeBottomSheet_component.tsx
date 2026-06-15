@@ -7,7 +7,7 @@ import {NativeStackNavigationProp} from "@react-navigation/native-stack";
 import RootNavigationStackModel from "../../../../routes/model/routes_model.ts";
 import { RootState } from '../../../../redux/store/store.ts';
 import { useDispatch, useSelector } from 'react-redux';
-import { setClotheType, setProductMode, setSelectedStep, setShoeType, setShowProductTypeBottomSheet } from '../slices/vendorProductState_slice.ts';
+import { setClotheType, setProductMode, setShoeType, setShowProductTypeBottomSheet } from '../slices/vendorProductState_slice.ts';
 
 
 const ProductTypeBottomSheetComponent = () => {

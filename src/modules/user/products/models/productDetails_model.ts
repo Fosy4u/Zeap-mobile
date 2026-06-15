@@ -42,6 +42,7 @@ interface Categories {
     fastening?:    string[];
     main?:         string[];
     productGroup?: string;
+    accessoryType?: string;
 }
 
 interface Age {

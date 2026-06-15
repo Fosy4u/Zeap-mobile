@@ -1,4 +1,4 @@
-import IReview, { IGivenReview, IPendingReview, IReviewOrder } from "./review_model";
+import { IGivenReview, IPendingReview, IReviewOrder } from "./review_model";
 
 interface IReviewAndRatingState {
     tabs: string[];

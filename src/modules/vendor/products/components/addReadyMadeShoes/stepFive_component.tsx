@@ -61,11 +61,11 @@ const StepFiveComponent: React.FC<IProps> = (props) => {
             </View>
             
             {/* ==== Addded Variations ==== */}
-            { product.variations && product.variations.length > 0 && (
+            { product?.variations && product?.variations.length > 0 && (
                 <>
                     <Text className="mt-6 font-montserratSemiBold text-xs text-gray-700">Added Variations</Text>
                     <View className="h-auto w-full mt-2 px-3 pt-2 rounded-lg border border-gray-200">
-                        { product.variations?.map((variation: IVariation) => (
+                        { product?.variations?.map((variation: IVariation) => (
                             <View key={variation._id} className="h-auto w-full mt-4 pb-4 border-b border-b-gray-200">
                                 <View className="h-auto w-full flex-row items-center justify-start gap-x-4">
                                     <View>

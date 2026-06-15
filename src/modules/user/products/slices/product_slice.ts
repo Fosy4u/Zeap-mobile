@@ -3,16 +3,14 @@ import IProductState, { ICategory } from "../models/productState_model";
 import IProduct from "../models/product_model";
 import { IColorEnum } from "../../../general/models/productOptions_model";
 import IProductDetails from "../models/productDetails_model";
-import { set } from "react-hook-form";
 import IPromoProduct from "../models/promotion_model";
-import IReview from "../../../general/models/review_model";
 import IReviewAndRating from "../../../general/models/review_model";
 import IDynamicFilter from "../models/dynamicFilter_model";
 
 const initialState: IProductState = {
     productID: "",
-    tabs: ["Description", "Reviews", "Timeline"],
-    selectedTab: "Description",
+    tabs: ["Details", "Reviews", "Timeline"],
+    selectedTab: "Details",
     timelines: ["Once measurement received", "Cutting - 2days", "Sewing - 2 weeks", "Finishing 3 days", "Dispatch 2 days", "Delivery"],
 
     

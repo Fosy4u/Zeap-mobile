@@ -1,19 +1,23 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { useDispatch } from 'react-redux';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import RootNavigationStackModel from '../../../routes/model/routes_model';
-import { getAuth, onAuthStateChanged } from '@react-native-firebase/auth';
+import { getAuth, getIdToken, onAuthStateChanged } from '@react-native-firebase/auth';
+import { setPendingDestination } from '../slices/authState_slice';
 
 const AuthCheck = <P extends object>(WrappedComponent: React.ComponentType<P>) => {
     const WithAuthCheck = (props: P) => {
         const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
-        const [currentUser, setCurrentUser] = useState<any>(null);
+        const route = useRoute();
+        const dispatch = useDispatch();
+        const [, setCurrentUser] = useState<any>(null);
         const [isLoading, setIsLoading] = useState(true);
 
         const refreshUserToken = async (user: any) => {
             try {
                 // Force token refresh
-                await user.getIdToken(true);
+                await getIdToken(user, true);
                 setCurrentUser(user);
                 return true;
             } catch (error) {
@@ -22,24 +26,35 @@ const AuthCheck = <P extends object>(WrappedComponent: React.ComponentType<P>) =
             }
         };
 
-        useEffect(() => {            
+        // Stash the route the user was actually trying to reach so the
+        // login/sign-up hook can navigate them back here after success.
+        // Without this, every protected-screen visit would dead-end on
+        // homeScreen and force the user to navigate by hand.
+        const stashPendingDestinationAndRedirect = () => {
+            dispatch(setPendingDestination({
+                name: route.name,
+                params: (route.params as Record<string, any> | undefined) ?? undefined,
+            }));
+            navigation.navigate("loginInfoScreen");
+        };
+
+        useEffect(() => {
             const authInstance = getAuth();
             const unsubscribe = onAuthStateChanged(authInstance, async (user: any) => {
-                // console.log("CURRENT USER AUTH CHECK (onAuthStateChanged): ", user);
-                
                 if (!user) {
-                    // If no user is found, redirect to login
-                    navigation.navigate("loginInfoScreen");
+                    // No Firebase user — guest hasn't even bootstrapped yet.
+                    stashPendingDestinationAndRedirect();
                 } else if (user.isAnonymous) {
-                    // If user is anonymous, redirect to login
-                    navigation.navigate("loginInfoScreen");
+                    // Anonymous (guest) user — bounce to login, but remember
+                    // where they wanted to go.
+                    stashPendingDestinationAndRedirect();
                 } else {
                     // For actual logged-in users, try to refresh the token
                     const refreshSuccess = await refreshUserToken(user);
-                    
+
                     if (!refreshSuccess) {
-                        // Only redirect to login if token refresh fails
-                        navigation.navigate("loginInfoScreen");
+                        // Only redirect to login if token refresh fails.
+                        stashPendingDestinationAndRedirect();
                     }
                 }
                 setIsLoading(false);

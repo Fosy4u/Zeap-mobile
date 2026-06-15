@@ -14,14 +14,12 @@ import { RootState } from "../../../../redux/store/store.ts";
 import ProductFilterBottomSheetComponent from "../../products/components/productFilterBottomSheet_component.tsx";
 import OrderFilterBottomSheetComponent from "../../orders/components/orderFilterBottomSheet_component.tsx";
 import useVendorProductHook from "../../products/hooks/vendorProduct_hook.ts";
-import AppLoader from "../../../general/components/appLoader.tsx";
 
 const Tab = createBottomTabNavigator();
 
 const VendorHomeScreen = () => {
 
   const { showProductFilterBottomSheet, showOrderFilterBottomSheet } = useSelector((state: RootState) => state.vendorHomeState);
-  const { isLoading, loadingMessage } = useSelector((state: RootState) => state.generalState);
   const { handleFetchFilteredProducts } = useVendorProductHook();
 
   useEffect(() => {
@@ -45,7 +43,20 @@ const VendorHomeScreen = () => {
             <Tab.Screen name="Products" component={ VendorProductsScreen } />
             <Tab.Screen name="Orders" component={ OrdersScreen } />
             <Tab.Screen name="Profile" component={ ProfileScreen } />
-            <Tab.Screen name="Market" component={ MarketScreen } />
+            {/* Tapping Market jumps the vendor to the buyer-side home stack
+                instead of rendering a tab. The component is kept on the screen
+                registration so the tab still appears in the bottom bar, but
+                the listener short-circuits the actual tab switch. */}
+            <Tab.Screen
+              name="Market"
+              component={ MarketScreen }
+              listeners={ ({ navigation: tabNavigation }) => ({
+                tabPress: (e) => {
+                  e.preventDefault();
+                  tabNavigation.getParent()?.navigate("homeScreen", { screen: "Home" });
+                },
+              }) }
+            />
           </Tab.Navigator>
 
           {/*
@@ -66,9 +77,6 @@ const VendorHomeScreen = () => {
             <OrderFilterBottomSheetComponent />
           ) }
 
-          { isLoading &&
-            <AppLoader loadingAdditionalMessage={ loadingMessage } />
-          }
         </SafeAreaView>
       </BottomSheetModalProvider>
     </GestureHandlerRootView>

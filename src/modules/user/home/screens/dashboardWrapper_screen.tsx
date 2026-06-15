@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Image, Text, View, Pressable, SafeAreaView, StatusBar, ScrollView, TextInput, TouchableOpacity, Modal } from "react-native";
+import { Text, View, Pressable, SafeAreaView, StatusBar, ScrollView, TextInput, TouchableOpacity, Modal } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useNavigation } from "@react-navigation/native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -10,21 +10,27 @@ import { RootState } from "../../../../redux/store/store";
 import RootNavigationStackModel from "../../../../routes/model/routes_model";
 import MainDashboardScreen from "./mainDashboard_screen";
 import { setIsMobileMenuOpen, setSelectedDashboard } from "../slices/dashboardWrapper_slice";
+import { clearPendingDestination } from "../../../auths/slices/authState_slice";
 import BespokeDashboardScreen from "./bespokeDashboard_screen";
 import ReadyMadeDashboardScreen from './readyMadeDashboard_screen.tsx';
 import AccessoriesDashboardScreen from "./accessoriesDashboard_screen.tsx";
 import useGeneralHook from "../../../general/hooks/general_hook.ts";
 import useFilterAndSearchHook from "../../products/hooks/filterAndSearch_hook.ts";
+import UserAvatar from "../../../general/components/userAvatar_component";
+import HomeSkeletonLoader from "../components/homeSkeletonLoader_component";
+import { useGetWishlistQuery } from "../../saved/apis/saved_api";
+import { setSavedProductIds } from "../../saved/slices/saved_slice";
 
 const DashboardWrapperScreen = () => {
   const { dashboards, selectedDashboard, isMobileMenuOpen } = useSelector((state: RootState) => state.dashboardWrapperState);
   const { userData } = useSelector((state: RootState) => state.profileState);
+  const { promoProducts, popularProducts, newestPrpducts } = useSelector((state: RootState) => state.productState);
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
   const dispatch = useDispatch();
-  
+
     const { handleGetProductOptions } = useGeneralHook();
     const { handleGetPromoProducts, handleGetFilteredProducts, handleGetPopularProducts, handleGetNewestProducts } = useFilterAndSearchHook();
-  
+
     useEffect(() => {
       handleGetProductOptions();
       handleGetPromoProducts();
@@ -32,6 +38,33 @@ const DashboardWrapperScreen = () => {
       handleGetPopularProducts("Popular Products");
       handleGetNewestProducts("Newest Products");
     }, []);
+
+    // Bootstrap the wishlist mirror as soon as the buyer lands on home, so
+    // every product card heart reflects the saved state from the FIRST render
+    // — previously it only hydrated when the user opened the Saved tab,
+    // leaving hearts gray on the home/popular/newest cards for previously
+    // saved items. Skip for guests since `/wish/auth/user` is authed-only.
+    const { data: wishItems = [] } = useGetWishlistQuery(undefined, {
+      skip: !userData?.uid || !!userData?.isGuest,
+    });
+    useEffect(() => {
+      dispatch(setSavedProductIds(
+        wishItems.map((item: any) => item.product?.productId).filter(Boolean) as string[],
+      ));
+    }, [wishItems]);
+
+  // Show the full-screen skeleton only on first load — once any of the three
+  // home data slices has content, hand off to the real layout (its existing
+  // per-section shimmers handle subsequent refreshes). This keeps pull-to-
+  // refresh and tab re-focus from re-triggering the full skeleton.
+  const isInitiallyLoading =
+    promoProducts.length === 0 &&
+    popularProducts.length === 0 &&
+    newestPrpducts.length === 0;
+
+  if (isInitiallyLoading) {
+    return <HomeSkeletonLoader />;
+  }
 
 
   return (
@@ -78,7 +111,10 @@ const DashboardWrapperScreen = () => {
                   className="mt-16 mx-auto px-6 py-3 flex-row items-center bg-baseGreen rounded-md"
                   onPress={() => {
                     dispatch(setIsMobileMenuOpen(false));
-                    // Add your action here
+                    // Same vendor entry point as the shop FAB — the onboarding
+                    // pitch branches by vendor/shop status from there. navigate
+                    // bubbles up to the root stack where this route lives.
+                    navigation.navigate("vendorOnboardingScreen");
                   }}
                 >
                   <Text className="text-lg text-white">Sell On Zeaper</Text>
@@ -94,10 +130,15 @@ const DashboardWrapperScreen = () => {
                 {/*==== Top Header ====*/}
                 <View className="flex-row items-center justify-between">
                   <View className="flex-row items-center">
-                    <Image
-                      className="h-[60px] w-[60px] rounded-full"
-                      resizeMode="cover"
-                      source={require("../../../../../assets/images/home/profile_image.png")}
+                    <UserAvatar
+                      photoURL={(userData as any).photoURL}
+                      firstName={userData.firstName}
+                      lastName={userData.lastName}
+                      displayName={(userData as any).displayName}
+                      email={userData.email}
+                      isGuest={!!userData.isGuest}
+                      seed={userData.uid || userData.email}
+                      size={60}
                     />
                     <View className="ml-2">
                       <Text className="text-gray-400 text-base">Welcome back,</Text>
@@ -108,7 +149,14 @@ const DashboardWrapperScreen = () => {
                         { (userData.isGuest) && (
                           <TouchableOpacity
                             className="px-5 py-1 flex items-center justify-center rounded-lg bg-white/[.2]"
-                            onPress={ () => navigation.navigate("loginScreen") }>
+                            onPress={ () => {
+                              // Explicit login from the home header — drop any
+                              // stale pendingDestination so the user lands back
+                              // on Home after login, not on whatever protected
+                              // screen they bounced from earlier.
+                              dispatch(clearPendingDestination());
+                              navigation.navigate("loginScreen");
+                            } }>
                             <Text className="text-sm text-white">
                               { (userData.isGuest) && "Login" }
                             </Text>
