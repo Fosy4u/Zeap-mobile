@@ -57,7 +57,7 @@ const ChangePasswordSettingsScreen = () => {
                   secureTextEntry={!showCurrentPassword}
                   placeholder="Enter password"
                   placeholderTextColor="#9ca3af"
-                  className="text-base flex-1"
+                  className="h-[44px] text-base flex-1"
                   onBlur={onBlur}
                   onChangeText={onChange}
                   value={value}
@@ -81,7 +81,7 @@ const ChangePasswordSettingsScreen = () => {
                   secureTextEntry={!showNewPassword}
                   placeholder="Enter new password"
                   placeholderTextColor="#9ca3af"
-                  className="text-base flex-1"
+                  className="h-[44px] text-base flex-1"
                   onBlur={onBlur}
                   onChangeText={onChange}
                   value={value}
@@ -105,7 +105,7 @@ const ChangePasswordSettingsScreen = () => {
                   secureTextEntry={!showConfirmNewPassword}
                   placeholder="Enter new password again"
                   placeholderTextColor="#9ca3af"
-                  className="text-base flex-1"
+                  className="h-[44px] text-base flex-1"
                   onBlur={onBlur}
                   onChangeText={onChange}
                   value={value}

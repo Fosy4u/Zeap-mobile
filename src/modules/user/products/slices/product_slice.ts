@@ -98,9 +98,9 @@ const initialState: IProductState = {
     dynamicFilterOptions: [],
 
     isLoading: false,
-    promoProductsIsLoading: false,
-    popularProductsIsLoading: false,
-    newestProductsIsLoading: false,
+    promoProductsIsLoading: true,
+    popularProductsIsLoading: true,
+    newestProductsIsLoading: true,
     recentlyViewedProductsIsLoading: false,
     recommendedProductsIsLoading: false,
     wishListProductsIsLoading: false,

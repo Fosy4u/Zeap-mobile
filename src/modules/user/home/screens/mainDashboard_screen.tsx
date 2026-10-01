@@ -16,64 +16,67 @@ import FastImage from "react-native-fast-image";
 import { ICategory } from "../../products/models/productState_model";
 import ProductCardComponent from "../../../general/components/productCard_component";
 import SkeletonBlock from "../../../general/components/skeletonBlock_component";
+import encodeMediaUri from "../../../../utils/encodeMediaUri";
+import AppStatusBar from "../../../general/components/appStatusBar";
 
 const MainDashboardScreen = () => {
-  const { promoProducts, categories, selectedCategory, popularProducts, newestPrpducts, popularProductsIsLoading, newestProductsIsLoading } = useSelector((state: RootState) => state.productState);
+  const { promoProducts, categories, selectedCategory, popularProducts, newestPrpducts, promoProductsIsLoading, popularProductsIsLoading, newestProductsIsLoading } = useSelector((state: RootState) => state.productState);
   const { userData } = useSelector((state: RootState) => state.profileState);
   const isGuest = !!userData?.isGuest;
   const greetingName = userData?.firstName || (userData as any)?.displayName || "there";
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
   const dispatch = useDispatch();
   const width = useWindowDimensions().width - 40;
-  // console.log("PROMO PRODUCTS::: ", promoProducts);
+  // Promo slides now use the landscape (largeScreenImageUrl) artwork, so the
+  // carousel takes a 16:9 landscape height instead of the old tall portrait box.
+  const promoHeight = Math.round(width * 9 / 16);
 
 
   return (
     <GestureHandlerRootView>
         <SafeAreaView className="flex-1 h-auto w-screen pb-20 bg-white">
-            <StatusBar
-                backgroundColor="#112F1E"
-                barStyle="light-content"
-            />
+            <AppStatusBar backgroundColor="#112F1E" barStyle="light-content" />
 
             {/*==== Main Body Section ====*/}
             <View className="h-auto w-[90%]">
                 {/*==== New Promo Section ====*/}
-                {/* Cold-start loading is covered by HomeSkeletonLoader; when this
-                    renders, promoProducts is already populated. The empty case
-                    here is treated as a true "no promos" state, not a loading
-                    state — no in-section shimmer. */}
-                { (promoProducts.length !== 0) && (
-                  <View className="h-[420px] rounded-2xl bg-lightGold">
+                { (promoProducts.length === 0 && promoProductsIsLoading) ? (
+                  <SkeletonBlock width={ width } height={ promoHeight } radius={ 16 } />
+                ) : promoProducts.length === 0 ? (
+                  <View className="h-[120px] w-full items-center justify-center rounded-2xl bg-gray-50">
+                    <Text className="text-sm text-gray-400">No promotions available yet.</Text>
+                  </View>
+                ) : (
+                  <View className="rounded-2xl bg-lightGold" style={{ height: promoHeight }}>
                     <Carousel
                       loop
                       width={width}
-                      height={420}
+                      height={promoHeight}
                       autoPlay={true}
                       data={promoProducts}
                       scrollAnimationDuration={1000}
                       autoPlayInterval={5000}
-                      style={{ height: 420, width: width, borderRadius: 5 }}
+                      style={{ height: promoHeight, width: width, borderRadius: 5 }}
                       renderItem={({ index }: { index: number }) => {
                         const item = promoProducts[index];
-
-                        return (item?.smallScreenImageUrl?.type === "video") ? (
+                        const mediaUri = encodeMediaUri(item?.largeScreenImageUrl?.link);
+                        return (item?.largeScreenImageUrl?.type === "video") ? (
                           <Video
-                            source={{ uri: item.smallScreenImageUrl.link }}
-                            style={{ width: "100%", height: 420 }}
-                            resizeMode="cover"
+                            source={{ uri: mediaUri }}
+                            style={{ width: width, height: promoHeight, borderRadius: 5 }}
+                            resizeMode={ FastImage.resizeMode.cover }
                             repeat
                             muted
                           />
                         ) : (
                           <FastImage
                             key={index}
-                            className="h-[420px] w-full"
-                            resizeMode="cover"
+                            style={{ width: width, height: promoHeight, borderRadius: 5 }}
+                            resizeMode={ FastImage.resizeMode.cover }
                             source={
-                              item?.smallScreenImageUrl?.type === "image"
-                                ? { uri: item.smallScreenImageUrl.link }
-                                : require("../../../../../assets/images/app_logo_green.png")
+                              item?.largeScreenImageUrl?.type === "image"
+                                ? { uri: mediaUri }
+                                : require("../../../../../assets/images/image_placeholder.png")
                             }
                           />
                         );
@@ -155,6 +158,10 @@ const MainDashboardScreen = () => {
                           <SkeletonBlock width={ 150 } height={ 220 } radius={ 16 } />
                         </View>
                       ))
+                    ) : popularProducts.length === 0 ? (
+                      <View className="h-[120px] w-full mt-1 items-center justify-center rounded-2xl bg-gray-50">
+                        <Text className="text-sm text-gray-400">No popular products available yet.</Text>
+                      </View>
                     ) : (
                       popularProducts.slice(0, 10).map((popularProduct: IProduct) => (
                         <ProductCardComponent
@@ -207,6 +214,10 @@ const MainDashboardScreen = () => {
                           <SkeletonBlock width={ 300 } height={ 150 } radius={ 16 } />
                         </View>
                       ))
+                    ) : newestPrpducts.length === 0 ? (
+                      <View className="h-[120px] w-full mt-1 items-center justify-center rounded-2xl bg-gray-50">
+                        <Text className="text-sm text-gray-400">No new arrivals available yet.</Text>
+                      </View>
                     ) : (
                       newestPrpducts.slice(0, 10).map((newestArrival: IProduct) => (
                         <ProductCardComponent
@@ -223,12 +234,6 @@ const MainDashboardScreen = () => {
                   </ScrollView>
                 </View>
 
-                {/*==== Bottom Hero — guest vs logged-in ====
-                    Guests see the acquisition pitch ("Sign up and earn 500
-                    points"); authenticated users see a personalized shopping
-                    prompt that drives them back into the catalogue. Same
-                    layout language as the bespoke hero above to keep the
-                    page rhythm consistent. */}
                 { isGuest ? (
                   <View className="mt-6 px-5 pt-5 pb-14 rounded-2xl bg-lightGreen">
                     <Text className="font-semibold text-base leading-tight text-gray-800">Sign up and earn 500 points</Text>

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
     Alert,
     Linking,
@@ -9,10 +9,13 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootState } from "../../../../redux/store/store";
+import { useLazyGetAuthShopQuery } from "../apis/general_api";
+import { setShop } from "../slices/general_slice";
+import { setPendingDestination } from "../../../auths/slices/authState_slice";
 import {
     ArrowLeft,
     ArrowRight,
@@ -34,10 +37,8 @@ import {
 } from "iconsax-react-native";
 
 import RootNavigationStackModel from "../../../../routes/model/routes_model";
+import AppStatusBar from "../../../general/components/appStatusBar";
 
-// Tapping the video card opens the onboarding video in the native YouTube
-// app (or the browser if not installed). The `&t=6s` jumps a few seconds in
-// to skip the static intro frame.
 const VENDOR_VIDEO_URL = "https://www.youtube.com/watch?v=gguCDZpJQT4&t=6s";
 
 interface ICard {
@@ -78,16 +79,23 @@ const audienceCards: IAudienceCard[] = [
 
 const VendorOnboardingScreen = () => {
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
+    const dispatch = useDispatch();
     const { shop } = useSelector((state: RootState) => state.vendorGeneralState);
-
-    // A populated `shopId` is the cheapest "the user already has a shop" check
-    // — the slice's initial state has shopId as "". Status "new" means the
-    // post-create welcome / document-upload flow is still pending, so we send
-    // the user back there; any other status means a verified shop, so jump
-    // straight to the dashboard.
-    const hasShop = !!shop?.shopId;
+    const { userData } = useSelector((state: RootState) => state.profileState);
+    const [getAuthShop] = useLazyGetAuthShopQuery();
+    const isVendorUser = !!userData?.isVendor || !!userData?.shopId;
+    const hasShop = isVendorUser || !!shop?.shopId;
     const shopStatus = (shop as any)?.status;
-    const isNewShop = hasShop && shopStatus === "new";
+    const isNewShop = !!shop?.shopId && shopStatus === "new";
+
+    useEffect(() => {
+        if (isVendorUser && !shop?.shopId && userData?.uid && !userData?.isGuest) {
+            getAuthShop()
+                .unwrap()
+                .then((authShop) => dispatch(setShop(authShop)))
+                .catch(() => { /* no-op: CTA still works from userData */ });
+        }
+    }, [isVendorUser, shop?.shopId, userData?.uid, userData?.isGuest]);
 
     const handleOpenVideo = () => {
         Linking.openURL(VENDOR_VIDEO_URL).catch(() => {
@@ -95,8 +103,18 @@ const VendorOnboardingScreen = () => {
         });
     };
 
-    // BECOME A VENDOR pushes the user into the 9-step registration stepper.
+    // BECOME A VENDOR is gated on auth: shop creation is an authed-only flow,
+    // so a guest (or no-session) user is sent to log in FIRST. We stash the
+    // registration stepper as the pending destination, so login_hook's
+    // redirectAfterAuth drops them straight into onboarding once they sign in.
+    // Logged-in users go straight to the stepper.
+    const isGuest = !userData?.uid || !!userData?.isGuest;
     const handleBecomeVendor = () => {
+        if (isGuest) {
+            dispatch(setPendingDestination({ name: "vendorRegistrationScreen" }));
+            navigation.navigate("loginInfoScreen");
+            return;
+        }
         navigation.navigate("vendorRegistrationScreen");
     };
 
@@ -116,7 +134,7 @@ const VendorOnboardingScreen = () => {
 
     return (
         <View className="flex-1 bg-baseGreen">
-            <StatusBar backgroundColor="#0c1e15" barStyle="light-content" />
+            <AppStatusBar backgroundColor="#0c1e15" barStyle="light-content" />
 
             <SafeAreaView className="flex-1">
                 <ScrollView

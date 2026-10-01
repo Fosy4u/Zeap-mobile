@@ -9,6 +9,8 @@ interface IOrderState {
     filteredOrders: IOrder[];
     orderHistory: IOrderHistory;
     selectedOrderStatus: IStatus
+    selectedProductOrderID: string;
+    showCancelOrderModal: boolean;
     isLoading: boolean;
     loadingMessage: string;
 }

@@ -29,6 +29,32 @@ const useStepNineHook = () => {
         }
     };
 
+    // Shared success path: pull the canonical shop via /shop/auth, flip the
+    // local user to vendor, clear the stepper and land on the welcome screen.
+    // Used both after a fresh create and when recovering from "already has a
+    // shop" (the shop exists from a prior attempt — treat it as done).
+    const finishOnboarding = async (createdShop?: any) => {
+        dispatch(setOnboardingLoadingMessage("Fetching your shop details..."));
+        const authShop = await getAuthShop().unwrap().catch(() => createdShop);
+        dispatch(setShop(authShop));
+
+        if (userData) {
+            dispatch(setUserData({
+                ...userData,
+                isVendor: true,
+                shopId: authShop?.shopId || createdShop?.shopId || userData.shopId,
+            }));
+        }
+
+        dispatch(resetOnboarding());
+
+        // `reset` so they can't swipe back into the stepper.
+        navigation.reset({
+            index: 0,
+            routes: [{ name: "vendorWelcomeScreen" }],
+        });
+    };
+
     const onSubmit = async () => {
         // Auth guard: /shop/create is an authed-only endpoint, so guests +
         // anonymous Firebase sessions would 401. Fail fast with a clear
@@ -77,40 +103,8 @@ const useStepNineHook = () => {
             };
 
             const createdShop = await registerVendor(payload).unwrap();
-
-            // Pull a fresh shop record via /shop/auth so the welcome screen has
-            // the canonical `status` ("new" right after creation) and any
-            // server-side normalization (currency, _id, etc.).
-            dispatch(setOnboardingLoadingMessage("Fetching your shop details..."));
-            const authShop = await getAuthShop().unwrap().catch(() => createdShop);
-            dispatch(setShop(authShop));
-
-            // Flip the local user record so the FAB and downstream gates route
-            // the user to the vendor side immediately, without waiting for a
-            // profile refetch.
-            if (userData) {
-                dispatch(setUserData({
-                    ...userData,
-                    isVendor: true,
-                    shopId: authShop?.shopId || createdShop?.shopId || userData.shopId,
-                }));
-            }
-
-            dispatch(setOnboardingIsSubmitting(false));
-            dispatch(setOnboardingLoadingMessage(""));
-            dispatch(resetOnboarding());
-
-            // Drop the user on the welcome screen instead of the dashboard —
-            // shop is "new" / disabled until documents are uploaded and the
-            // admin verifies. `reset` so they can't swipe back into the stepper.
-            navigation.reset({
-                index: 0,
-                routes: [{ name: "vendorWelcomeScreen" }],
-            });
+            await finishOnboarding(createdShop);
         } catch (error: any) {
-            dispatch(setOnboardingIsSubmitting(false));
-            dispatch(setOnboardingLoadingMessage(""));
-
             // Dump the raw error so we can debug from Metro / `adb logcat`.
             // RTK Query's fetchBaseQuery wraps the response as
             // `{ status, data, error? }`; surface every plausible message path
@@ -128,11 +122,26 @@ const useStepNineHook = () => {
                 error?.error ||
                 error?.message;
 
+            // The shop already exists (created on a previous attempt, or the
+            // account is already a vendor). That's not a real failure — recover
+            // by loading the existing shop and moving the user forward instead
+            // of dead-ending them on "Registration failed".
+            const alreadyHasShop =
+                status === 409 ||
+                /already has a shop|shop already exists|already a vendor/i.test(String(backendMessage ?? ""));
+            if (alreadyHasShop) {
+                try {
+                    await finishOnboarding();
+                    return;
+                } catch (recoverError) {
+                    console.log("[stepNine] already-has-shop recovery failed::: ", JSON.stringify(recoverError, null, 2));
+                    // fall through to the normal error alert below
+                }
+            }
+
             let alertMessage: string;
             if (status === 401 || status === 403) {
                 alertMessage = "Please log in or refresh your session before registering a shop.";
-            } else if (status === 409) {
-                alertMessage = backendMessage || "A shop already exists for this account.";
             } else if (status === "FETCH_ERROR") {
                 alertMessage = "Couldn't reach Zeaper. Check your internet connection and try again.";
             } else if (backendMessage) {
@@ -145,6 +154,9 @@ const useStepNineHook = () => {
             }
 
             Alert.alert("Registration failed", alertMessage);
+        } finally {
+            dispatch(setOnboardingIsSubmitting(false));
+            dispatch(setOnboardingLoadingMessage(""));
         }
     };
 

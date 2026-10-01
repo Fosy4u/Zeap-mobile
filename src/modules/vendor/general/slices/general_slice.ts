@@ -2,63 +2,19 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import IVendorGeneralState from "../models/vendorGeneralState_model";
 import IShop from "../models/shop_model";
 
+/* Starts null instead of a hollow placeholder shop: the placeholder claimed the
+   account had a shop with blank details, and a real null crashed consumers. */
 const initialState: IVendorGeneralState = {
-    shop: {
-        isMakeUpArtist: false,
-        _id: "",
-        shopId: "",
-        user: {
-            createdBy: "",
-            _id: "",
-            userId: "",
-            uid: "",
-            shopEnabled: false,
-            signInCount: 0,
-            firstName: "",
-            lastName: "",
-            displayName: "",
-            disabled: false,
-            isAdmin: false,
-            superAdmin: false,
-            email: "",
-            emailVerified: false,
-            isVendor: false,
-            points: 0,
-            updatedAt: new Date,
-            createdAt: new Date,
-            __v: 0,
-            shopId: "",
-            address: "",
-            phoneNumber: "",
-            phoneNumberVerified: false,
-            social: {
-                instagram: "",
-                website: "",
-                _id: "",
-            },
-        },
-
-        userId: "",
-        shopName: "",
-        isTailor: false,
-        isShoeMaker: false,
-        disabled: false,
-        currency: {
-            name: "",
-            symbol: "",
-            _id: "",
-        },
-        updatedAt: new Date,
-        createdAt: new Date,
-        __v: 0,
-    },
+    shop: null,
 };
 
 export const vendorGeneralSlice = createSlice({
     name: "vendorGeneralSlice",
     initialState,
     reducers: {
-        setShop: (state: IVendorGeneralState, action: PayloadAction<IShop>) => {
+        /* Accepts null so callers can record a definitive "no shop on this
+           account" instead of leaving stale details on screen. */
+        setShop: (state: IVendorGeneralState, action: PayloadAction<IShop | null>) => {
             state.shop = action.payload;
         },
     },

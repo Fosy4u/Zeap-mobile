@@ -14,7 +14,6 @@ import CountriesPhoneCodeModal from "../modals/countriesPhoneCode_modal";
 import SuccessPopupModal from "../../auths/modals/successPopup_modal";
 import AppLoader from "../../general/components/appLoader";
 
-
 const EditAccountDetailsScreen = () => {
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
 
@@ -60,10 +59,9 @@ const EditAccountDetailsScreen = () => {
         navigation.navigate("personalInformationScreen");
     };
 
-
     return (
         <GestureHandlerRootView>
-           <SafeAreaView className="h-full w-full flex-1 px-5 pt-2 pb-3">
+           <SafeAreaView className="h-full w-full flex-1">
 
                 <StatusBar
                     backgroundColor="transparent"
@@ -71,7 +69,7 @@ const EditAccountDetailsScreen = () => {
                 />
 
                 {/*==== Header ====*/}
-                <View className="h-auto w-full py-3 flex-row items-center justify-between">
+                <View className="h-auto w-full px-5 pt-5 pb-3 flex-row items-center justify-between">
                     <TouchableOpacity onPress={ () => navigation.pop() }>
                         <View className="h-[40px] w-[40px] flex items-center justify-center rounded-full bg-baseGreen">
                             <ArrowLeft color="white" />
@@ -84,6 +82,7 @@ const EditAccountDetailsScreen = () => {
 
                 <ScrollView
                     showsVerticalScrollIndicator={false}
+                    contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 12 }}
                     showsHorizontalScrollIndicator={false}
                     className="h-full w-full pb-2"
                 >
@@ -103,7 +102,7 @@ const EditAccountDetailsScreen = () => {
                                         keyboardType="name-phone-pad"
                                         placeholder="Enter first name"
                                         placeholderTextColor="#9ca3af"
-                                        className="text-base"
+                                        className="h-[44px] text-base"
                                         onBlur={ onBlur }
                                         onChangeText={ onChange }
                                         value={ value }
@@ -125,7 +124,7 @@ const EditAccountDetailsScreen = () => {
                                         keyboardType="name-phone-pad"
                                         placeholder="Enter last name"
                                         placeholderTextColor="#9ca3af"
-                                        className="text-base"
+                                        className="h-[44px] text-base"
                                         onBlur={ onBlur }
                                         onChangeText={ onChange }
                                         value={ value }
@@ -153,7 +152,7 @@ const EditAccountDetailsScreen = () => {
                                         keyboardType="phone-pad"
                                         placeholder="Enter phone number"
                                         placeholderTextColor="#9ca3af"
-                                        className="text-base"
+                                        className="h-[44px] flex-1 text-base"
                                         onBlur={ onBlur }
                                         onChangeText={ onChange }
                                         value={ value }
@@ -162,9 +161,6 @@ const EditAccountDetailsScreen = () => {
                             />
                         </View>
 
-                        {/* Country — typeable search via SelectList. Tapping the box turns it
-                            into a search input and brings up the keyboard. Same search/expand
-                            behavior as the State and City pickers below. */}
                         <Text aria-label="Country" nativeID="country" className="mt-5">Country</Text>
                         <View className="h-auto w-full mt-1.5 py-0 border border-gray-300 rounded-xl bg-gray-100">
                             <SelectList
@@ -181,13 +177,6 @@ const EditAccountDetailsScreen = () => {
                             />
                         </View>
 
-                        {/* State (depends on Country)
-                            NOTE: the wrapper View is intentionally NOT `flex-row`. When
-                            `search={true}` the SelectList's internal search row uses
-                            `flex: 1`, but a `flex-row` parent collapses the SelectList to
-                            its content's intrinsic width — making the search input render
-                            at half the box width. Keeping the wrapper as a block (`w-full`
-                            only) lets the SelectList stretch edge-to-edge. */}
                         <Text className="mt-5">State</Text>
                         {isCountryChosen && stateOptions.length > 0 ? (
                             <View className="h-auto w-full mt-1.5 py-0 border border-gray-300 rounded-xl bg-gray-100">
@@ -245,22 +234,31 @@ const EditAccountDetailsScreen = () => {
                                 keyboardType="number-pad"
                                 placeholder="Enter postal code"
                                 placeholderTextColor="#9ca3af"
-                                className="text-base"
+                                className="h-[44px] text-base"
                             />
                         </View>
 
                         <Text aria-label="Address" nativeID="address" className="mt-5">Address</Text>
                         <View className="h-auto w-full mt-1.5 px-3 py-1 border border-gray-300 rounded-xl bg-gray-100">
-                            <TextInput
-                                aria-label="Address"
-                                aria-labelledby="address"
-                                keyboardType="default"
-                                placeholder="Enter address"
-                                placeholderTextColor="#9ca3af"
-                                multiline={ true }
-                                autoComplete="address-line1"
-                                textAlignVertical="top"
-                                className="h-[80px] text-base"
+                            <Controller
+                                control={ control }
+                                name="address"
+                                render={ ({ field: { onChange, onBlur, value } }) => (
+                                    <TextInput
+                                        aria-label="Address"
+                                        aria-labelledby="address"
+                                        keyboardType="default"
+                                        placeholder="Enter address"
+                                        placeholderTextColor="#9ca3af"
+                                        multiline={ true }
+                                        autoComplete="address-line1"
+                                        textAlignVertical="top"
+                                        className="h-[80px] text-base"
+                                        onBlur={ onBlur }
+                                        onChangeText={ onChange }
+                                        value={ value }
+                                    />
+                                ) }
                             />
                         </View>
 
@@ -285,7 +283,7 @@ const EditAccountDetailsScreen = () => {
                                 keyboardType="phone-pad"
                                 placeholder="Enter your height"
                                 placeholderTextColor="#9ca3af"
-                                className="text-base"
+                                className="h-[44px] flex-1 text-base"
                             />
                         </View>
 
@@ -310,7 +308,7 @@ const EditAccountDetailsScreen = () => {
                                 keyboardType="phone-pad"
                                 placeholder="Enter your weight"
                                 placeholderTextColor="#9ca3af"
-                                className="text-base"
+                                className="h-[44px] flex-1 text-base"
                             />
                         </View>
 
@@ -366,15 +364,13 @@ const EditAccountDetailsScreen = () => {
                             />
                         </View>
 
-                        {/* Submit button — label and behavior driven by isVendor (from auth user data):
-                              vendor    → "Proceed"               → save details + navigate to next setup step
-                              non-vendor → "Update Account Details" → save details + show success modal */}
                         <TouchableOpacity
                             onPress={ handleProceed }
-                            className="h-[55px] w-auto mt-8 flex flex-row items-center justify-center rounded-xl bg-baseGreen"
+                            disabled={ isLoading }
+                            className={`h-[55px] w-auto mt-8 flex flex-row items-center justify-center rounded-xl bg-baseGreen ${ isLoading ? "opacity-60" : "" }`}
                         >
-                            <Text className="text-lg text-white mr-2">{ isVendor ? "Proceed" : "Update Account Details" }</Text>
-                            <ArrowRight className="text-white" />
+                            <Text className="text-lg text-white mr-2">{ isLoading ? "Updating..." : "Update Account Details" }</Text>
+                            { isLoading ? null : <ArrowRight className="text-white" /> }
                         </TouchableOpacity>
 
                     </View>
@@ -399,6 +395,5 @@ const EditAccountDetailsScreen = () => {
         </GestureHandlerRootView>
     );
 };
-
 
 export default AuthCheck(EditAccountDetailsScreen);

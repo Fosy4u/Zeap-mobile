@@ -88,7 +88,7 @@ const PaymentMethodScreen = () => {
               keyboardType="number-pad"
               placeholder="Enter card number"
               placeholderTextColor="#9ca3af"
-              className="text-base"
+              className="h-[44px] text-base"
               onChangeText={ () => {} }
             />
           </View>
@@ -101,7 +101,7 @@ const PaymentMethodScreen = () => {
               keyboardType="default"
               placeholder="Enter card name"
               placeholderTextColor="#9ca3af"
-              className="text-base"
+              className="h-[44px] text-base"
               onChangeText={ () => {} }
             />
           </View>
@@ -116,7 +116,7 @@ const PaymentMethodScreen = () => {
                   keyboardType="numeric"
                   placeholder="DD/MM"
                   placeholderTextColor="#9ca3af"
-                  className="text-base"
+                  className="h-[44px] text-base"
                   onChangeText={ () => {} }
                 />
               </View>
@@ -131,7 +131,7 @@ const PaymentMethodScreen = () => {
                   keyboardType="numeric"
                   placeholder="***"
                   placeholderTextColor="#9ca3af"
-                  className="text-base"
+                  className="h-[44px] text-base"
                   onChangeText={ () => {} }
                 />
               </View>
@@ -143,6 +143,14 @@ const PaymentMethodScreen = () => {
               value={ saveMeasurementForNextTime }
               onValueChange={ (newValue) => setSaveMeasurementForNextTime(newValue) }
               tintColors={{ true: "#133522", false: "#151518" }}
+              boxType="square"
+              lineWidth={1.5}
+              tintColor="#151518"
+              onCheckColor="#ffffff"
+              onFillColor="#133522"
+              onTintColor="#133522"
+              animationDuration={0.15}
+              style={{ height: 20, width: 20 }}
             />
             <Text className="ml-2 text-lg">Save my payment card details for next time</Text>
           </View>

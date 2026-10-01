@@ -1,18 +1,20 @@
-import { useLazyGetOrderDetailsQuery, useLazyGetOrderHistoryQuery, useLazyGetOrdersQuery } from "../apis/order_api";
+import { useCancelOrderMutation, useLazyGetOrderDetailsQuery, useLazyGetOrderHistoryQuery, useLazyGetOrdersQuery } from "../apis/order_api";
 import { useDispatch, useSelector } from "react-redux";
-import { setFilteredOrders, setIsLoading, setLoadingMessage, setOrderDetails, setOrderHistory, setOrders } from "../slices/order_slice";
+import { setFilteredOrders, setIsLoading, setLoadingMessage, setOrderDetails, setOrderHistory, setOrders, setShowCancelOrderModal } from "../slices/order_slice";
 import handleError from "../../../general/hooks/errorHandler_hook";
 import { RootState } from "../../../../redux/store/store";
 import { useState } from "react";
 
 const useOrderHook = () => {
-    const { orders } = useSelector((state: RootState) => state.orderState);
+    const { orders, orderDetails, selectedProductOrderID } = useSelector((state: RootState) => state.orderState);
     const dispatch = useDispatch();
     const [historyIsLoading, setHistoryIsLoading] = useState(false);
+    const [cancellationReason, setCancellationReason] = useState("");
 
     const [getOrders] = useLazyGetOrdersQuery();
     const [getOrderDetails] = useLazyGetOrderDetailsQuery();
     const [getOrderHistory] = useLazyGetOrderHistoryQuery();
+    const [cancelOrder] = useCancelOrderMutation();
 
     // Handle get orders
     const handleGetOrders = async () => {
@@ -50,7 +52,9 @@ const useOrderHook = () => {
         }
         
         const filteredOrders = orders.filter(order =>
-            order.productOrders.some(productOrder => productOrder.status.name.toLowerCase() === status.toLowerCase())
+            (order?.productOrders ?? []).some(
+                productOrder => productOrder?.status?.name?.toLowerCase() === status.toLowerCase()
+            )
         );
         if (filteredOrders.length > 0) {
             dispatch(setFilteredOrders(filteredOrders));
@@ -65,11 +69,11 @@ const useOrderHook = () => {
         dispatch(setIsLoading(true));
 
         try {
-            const orderDetails = await getOrderDetails({ orderId: orderID }).unwrap();
+            const orderDetailsResponse = await getOrderDetails({ orderId: orderID }).unwrap();
             // console.log("ORDER DETAILS RESPONSE::: ", order);
             
-            if (orderDetails) {
-                dispatch(setOrderDetails(orderDetails));
+            if (orderDetailsResponse) {
+                dispatch(setOrderDetails(orderDetailsResponse));
             }
         } catch (error) {
             handleError(error);
@@ -97,11 +101,42 @@ const useOrderHook = () => {
         }
     }
 
+    // Handle cancel order
+    const handleCancelOrder = async () => {
+        if (!selectedProductOrderID) {
+            handleError(new Error("This item could not be identified. Please reopen its status history and try again."));
+            return;
+        }
+
+        dispatch(setLoadingMessage("Cancelling order..."));
+        dispatch(setIsLoading(true));
+
+        try {
+            await cancelOrder({
+                productOrder_id: selectedProductOrderID,
+                reason: cancellationReason.trim(),
+            }).unwrap();
+
+            if (orderDetails?.orderId) {
+                await handleGetOrderDetails(orderDetails.orderId);
+            }
+
+            setCancellationReason("");
+            dispatch(setShowCancelOrderModal(false));
+        } catch (error) {
+            handleError(error);
+        } finally {
+            dispatch(setIsLoading(false));
+            dispatch(setLoadingMessage(""));
+        }
+    };
+
     return {
         handleGetOrders,
         filterOrdersByStatus,
         handleGetOrderDetails,
         handleGetOrderHistory, historyIsLoading,
+        handleCancelOrder, cancellationReason, setCancellationReason,
     };
 }; 
 

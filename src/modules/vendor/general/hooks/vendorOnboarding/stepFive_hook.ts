@@ -9,7 +9,7 @@ const useStepFiveHook = () => {
     const { formData } = useSelector((state: RootState) => state.vendorOnboardingState);
     const dispatch = useDispatch();
 
-    const { control, handleSubmit, formState: { errors }, setValue } = useForm<IStepFiveForm>({
+    const { control, handleSubmit, formState: { errors, isValid }, setValue } = useForm<IStepFiveForm>({
         defaultValues: {
             bankName: formData.bankName,
             accountName: formData.accountName,
@@ -29,7 +29,7 @@ const useStepFiveHook = () => {
         dispatch(setSelectedOnboardingStep(6));
     };
 
-    return { control, handleSubmit, errors, onSubmit, setValue };
+    return { control, handleSubmit, errors, isValid, onSubmit, setValue };
 };
 
 export default useStepFiveHook;

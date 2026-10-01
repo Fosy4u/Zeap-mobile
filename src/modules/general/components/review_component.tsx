@@ -28,7 +28,6 @@ const ReviewComponent: React.FC<IProps> = ({ reviewAndRating, productID, loading
   } = useReviewHook(productID);
   const { handleReviewLike, handleReviewDislike } = useVendorProductHook();
 
-
   return (
     <ScrollView className="h-auto">
       <View className="mt-2 px-2 pb-4 bg-lightGray">
@@ -112,11 +111,6 @@ const ReviewComponent: React.FC<IProps> = ({ reviewAndRating, productID, loading
           </TouchableOpacity>
         ) }
 
-        {/* "Write a review" intentionally hidden here — reviews are only
-            authored after delivery via the order-completion flow
-            (rateAndReviewScreen). Surfacing it on the product details page
-            lets non-buyers post, which the policy disallows. */}
-
         {/* ==== Form ==== */}
         { (showReviewForm) && (
           <View className="mt-8">
@@ -141,7 +135,7 @@ const ReviewComponent: React.FC<IProps> = ({ reviewAndRating, productID, loading
                     keyboardType="default"
                     placeholder="Enter title"
                     placeholderTextColor="#9ca3af"
-                    className="text-base"
+                    className="h-[44px] text-base"
                     onBlur={ onBlur }
                     onChangeText={ onChange }
                     value={ value }
@@ -163,7 +157,7 @@ const ReviewComponent: React.FC<IProps> = ({ reviewAndRating, productID, loading
                     keyboardType="decimal-pad"
                     placeholder="Enter rating"
                     placeholderTextColor="#9ca3af"
-                    className="text-base"
+                    className="h-[44px] text-base"
                     onBlur={ onBlur }
                     onChangeText={ onChange }
                     value={ value.toString() }

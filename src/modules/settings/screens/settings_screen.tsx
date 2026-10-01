@@ -1,7 +1,7 @@
 import React from 'react'
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ArrowLeft, ArrowRight2, Global, Lock, MoneyChange, Notification, SecuritySafe } from 'iconsax-react-native';
+import { ArrowLeft, ArrowRight2, Global, Lock, MoneyChange, SecuritySafe } from 'iconsax-react-native';
 import { SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View } from 'react-native';
 import RootNavigationStackModel from '../../../routes/model/routes_model';
 
@@ -38,11 +38,13 @@ const SettingsScreen = () => {
                     />
 
                     {/* ==== Notifications Settings ==== */}
-                    <CardItems
+                    {/* Hidden: the notification settings do not persist yet (toggles revert
+                        to their defaults after being turned on). */}
+                    {/* <CardItems
                         handleOnPress={ () => navigation.navigate("notificationSettingsScreen") }
                         title="Notification settings"
                         icon={ <Notification className="text-gray-800" /> }
-                    />
+                    /> */}
 
                     {/* ==== Security ==== */}
                     <CardItems

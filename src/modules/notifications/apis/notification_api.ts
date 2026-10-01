@@ -1,5 +1,5 @@
 import rootAPI from "../../../redux/api/rootAPI";
-import { deleteNotificationRoute, getNotificationsRoute, registerFCMToken } from "../../../redux/api/api_route";
+import { deleteNotificationRoute, getNotificationsRoute, markNotificationAsReadRoute, markNotificationAsSeenRoute, registerFCMToken } from "../../../redux/api/api_route";
 import INotificationDetails from "../models/notification_model";
 
 
@@ -32,6 +32,31 @@ const notificationsApi = rootAPI.injectEndpoints({
             }
         }),
 
+        // Mark all notifications as read (clears the unread bell badge).
+        markNotificationsAsRead: builder.mutation<any, void>({
+            query: () => ({
+                url: markNotificationAsReadRoute,
+                method: "PUT",
+            }),
+            invalidatesTags: ["notifications"],
+            transformResponse(response: any) {
+                return response;
+            }
+        }),
+
+        // Mark specific notifications as seen (persists read-state per item).
+        markNotificationAsSeen: builder.mutation<any, { notification_ids: string[] }>({
+            query: (requestData) => ({
+                url: markNotificationAsSeenRoute,
+                method: "PUT",
+                body: requestData,
+            }),
+            invalidatesTags: [],
+            transformResponse(response: any) {
+                return response;
+            }
+        }),
+
         // Delete Notification
         deleteNotification: builder.mutation<INotificationDetails, { notification_id: string }>({
             query: (requestData) => ({
@@ -50,6 +75,8 @@ const notificationsApi = rootAPI.injectEndpoints({
 export const {
     useRegisterFCMTokenMutation,
     useLazyGetNotificationsQuery,
+    useMarkNotificationsAsReadMutation,
+    useMarkNotificationAsSeenMutation,
     useDeleteNotificationMutation,
 } = notificationsApi;
 

@@ -1,8 +1,3 @@
-/**
- * Formats a date string into a relative time string (e.g., "23 min ago", "a week ago")
- * @param dateString - The date string to format
- * @returns A formatted relative time string
- */
 type DateInput = string | number | Date;
 
 const timeAgo = (dateInput: DateInput): string => {

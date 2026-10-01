@@ -64,11 +64,11 @@ const productAPI = rootAPI.injectEndpoints({
         // `search`, `limit`, `pageNumber` query params. Kept as its own query
         // (separate from getFilteredProducts) so the dedicated search screen
         // can stay independent of the filter-list cache + screenTitle routing.
-        searchProducts: builder.query<IProduct[], { search: string; limit?: number; pageNumber?: number }>({
-            query: ({ search, limit = 10, pageNumber = 1 }) => ({
+        searchProducts: builder.query<IProduct[], { search: string; limit?: number; pageNumber?: number; filters?: Record<string, string | number> }>({
+            query: ({ search, limit = 10, pageNumber = 1, filters = {} }) => ({
                 url: searchProductsRoute,
                 method: "GET",
-                params: { search, limit, pageNumber },
+                params: removeUndefined({ search, limit, pageNumber, ...filters }),
             }),
             // No providesTags — search results are ephemeral; don't want them
             // invalidated by unrelated product mutations.
@@ -164,6 +164,7 @@ const productAPI = rootAPI.injectEndpoints({
 
 export const {
     useLazyGetFilteredProductsQuery,
+    useGetProductByProductIDQuery,
     useLazyGetProductByProductIDQuery,
     useAddProductToCartMutation,
     useLazyGetPromoProductsQuery,

@@ -1,10 +1,10 @@
-import { stepTwoAddClothesSchema } from "../../validations/addProduct_validation";
+import { stepTwoAddBespokeClothesSchema } from "../../validations/addProduct_validation";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../../../../redux/store/store";
-// import { useUpdateWithCategoriesMutation } from "../../apis/bespokeProduct_api";
+import { useUpdateProductMutation } from "../../apis/bespokeProduct_api";
 import { Alert } from "react-native";
-import { setLoadingMessage, setProductIsLoading } from "../../slices/vendorProductState_slice";
+import { setLoadingMessage, setProduct, setProductIsLoading, setSelectedStep } from "../../slices/vendorProductState_slice";
 import { useLazyGetProductByProductIDQuery } from "../../apis/product_api";
 
 
@@ -51,8 +51,8 @@ const useStepTwoHook = () => {
     const [showFasteningDropDown, setShowFasteningDropDown] = useState(false);
     const [showFitDropDown, setShowFitDropDown] = useState(false);
     
-    // const [updateWithCategories] = useUpdateWithCategoriesMutation();
-    const [getProductByProductID] = useLazyGetProductByProductIDQuery();  
+    const [updatedProduct] = useUpdateProductMutation();
+    const [getProductByProductID] = useLazyGetProductByProductIDQuery();
 
     // Handle submit
     const handleSubmit = async () => {
@@ -61,54 +61,57 @@ const useStepTwoHook = () => {
         const productId = product?.productId || "";
         
         try {
-            const categoriesData = {
-                main: selectedMain,
-                style: selectedStyle,
-                gender: selectedGender,
-                age: {
-                    ageGroup: selectedAgeGroup,
-                    ageRange: selectedAgeRange
-                },
-                brand: selectedBrand,
-                design: selectedDesign,
-                occasion: selectedOccasion,
-                sleeveLength: selectedSleeveLength,
-                fastening: selectedFastening,
-                fit: selectedFit,
-            };
-
-            // Validate categories data
-            const validatedCategoriesData = await stepTwoAddClothesSchema.validate(categoriesData);
-
             const requestData = {
                 productId,
-                categories: validatedCategoriesData,
-                currentStep: 2,
+                categories: {
+                    main: selectedMain,
+                    style: selectedStyle,
+                    gender: selectedGender,
+                    age: {
+                        ageGroup: selectedAgeGroup,
+                        ...(selectedAgeRange ? { ageRange: selectedAgeRange } : {}),
+                    },
+                    brand: selectedBrand,
+                    design: selectedDesign,
+                    occasion: selectedOccasion,
+                    sleeveLength: selectedSleeveLength,
+                    fastening: selectedFastening,
+                    fit: selectedFit,
+                },
+            };
+
+            // Validate against the bespoke-clothes step-2 schema (design,
+            // occasion, sleeveLength, fastening, fit are optional here).
+            const validatedRequestData = await stepTwoAddBespokeClothesSchema.validate(requestData);
+
+            const updateResponseData = await updatedProduct(validatedRequestData as any).unwrap();
+
+            if (updateResponseData) {
+                dispatch(setLoadingMessage("Getting product details..."));
+
+                // Refresh the product, then advance to step 3.
+                const updatedProductData = await getProductByProductID(productId).unwrap();
+
+                if (updatedProductData) {
+                    dispatch(setProduct(updatedProductData));
+                    dispatch(setProductIsLoading(false));
+                    dispatch(setLoadingMessage(""));
+                    dispatch(setSelectedStep(3));
+                }
             }
-            console.log("REQUEST DATA::: ", requestData);
-
-            // const updateWithCategoryResponseData = await updateWithCategories(requestData).unwrap();
-            // console.log("RESPONSE::: ", updateWithCategoryResponseData);
-
-            // if (updateWithCategoryResponseData) {
-            //     dispatch(setLoadingMessage("Getting product details..."));
-
-            //     // Get the updated product data
-            //     const updatedProduct = await getProductByProductID(productId).unwrap();
-            //     console.log("UPDATED PRODUCT::: ", updatedProduct);
-
-            //     if (updatedProduct) {
-            //         dispatch(setProduct(updatedProduct));
-            //         dispatch(setProductIsLoading(false));
-            //         dispatch(setLoadingMessage(""));
-            //         dispatch(setSelectedStep(3));
-            //     }
-            // }
         } catch (error: any) {
             dispatch(setProductIsLoading(false));
             dispatch(setLoadingMessage(""));
-            Alert.alert("Error", error.errors[0]);
-            console.log("ERROR::: ", error);
+            // Defensive: surface yup (error.errors[0]) or API (error.data.*)
+            // messages without throwing when a shape is absent.
+            const message =
+                error?.errors?.[0] ||
+                error?.data?.error ||
+                error?.data?.message ||
+                error?.message ||
+                "Something went wrong saving the category. Please try again.";
+            Alert.alert("Error", message);
+            console.log("STEP TWO SUBMIT ERROR::: ", error);
         }
     };
 

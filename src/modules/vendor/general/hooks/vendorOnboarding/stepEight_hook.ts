@@ -9,7 +9,7 @@ const useStepEightHook = () => {
     const { formData } = useSelector((state: RootState) => state.vendorOnboardingState);
     const dispatch = useDispatch();
 
-    const { control, handleSubmit, formState: { errors }, setValue } = useForm<IStepEightForm>({
+    const { control, handleSubmit, formState: { errors, isValid }, setValue } = useForm<IStepEightForm>({
         defaultValues: {
             referralSource: formData.referralSource,
         },
@@ -22,7 +22,7 @@ const useStepEightHook = () => {
         dispatch(setSelectedOnboardingStep(9));
     };
 
-    return { control, handleSubmit, errors, onSubmit, setValue };
+    return { control, handleSubmit, errors, isValid, onSubmit, setValue };
 };
 
 export default useStepEightHook;

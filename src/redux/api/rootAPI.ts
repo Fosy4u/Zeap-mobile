@@ -2,6 +2,8 @@ import { createApi, fetchBaseQuery, retry } from "@reduxjs/toolkit/query/react";
 import AuthorizationHeader from "../services/authorizationHeader";
 import baseURL from "./api_route";
 
+const DEFAULT_MAX_RETRIES = 3;
+
 const rootAPI = createApi({
     reducerPath: "rootAPI",
     baseQuery: retry(
@@ -11,7 +13,14 @@ const rootAPI = createApi({
             credentials: "include",
         }),
         {
-            maxRetries: 3,
+            retryCondition: (error, _args, { attempt, extraOptions }) => {
+                const maxRetries = (extraOptions as { maxRetries?: number } | undefined)?.maxRetries
+                    ?? DEFAULT_MAX_RETRIES;
+                if (attempt > maxRetries) { return false; }
+
+                const status = (error as { status?: number | string } | undefined)?.status;
+                return !(typeof status === "number" && status >= 400 && status < 500);
+            },
         }
     ),
     tagTypes: [

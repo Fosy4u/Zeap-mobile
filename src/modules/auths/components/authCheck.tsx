@@ -3,28 +3,22 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { useDispatch } from 'react-redux';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import RootNavigationStackModel from '../../../routes/model/routes_model';
-import { getAuth, getIdToken, onAuthStateChanged } from '@react-native-firebase/auth';
+import { getAuth, onAuthStateChanged } from '@react-native-firebase/auth';
 import { setPendingDestination } from '../slices/authState_slice';
 
-const AuthCheck = <P extends object>(WrappedComponent: React.ComponentType<P>) => {
+// `LoadingComponent` is shown for the brief moment while we resolve the auth
+// state. Without it the HOC rendered `null` — a blank white screen. Screens
+// that want branded loading (e.g. a content-shaped skeleton) pass one; others
+// fall back to null as before.
+const AuthCheck = <P extends object>(
+    WrappedComponent: React.ComponentType<P>,
+    LoadingComponent?: React.ComponentType,
+) => {
     const WithAuthCheck = (props: P) => {
         const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
         const route = useRoute();
         const dispatch = useDispatch();
-        const [, setCurrentUser] = useState<any>(null);
         const [isLoading, setIsLoading] = useState(true);
-
-        const refreshUserToken = async (user: any) => {
-            try {
-                // Force token refresh
-                await getIdToken(user, true);
-                setCurrentUser(user);
-                return true;
-            } catch (error) {
-                console.error('Token refresh failed:', error);
-                return false;
-            }
-        };
 
         // Stash the route the user was actually trying to reach so the
         // login/sign-up hook can navigate them back here after success.
@@ -40,23 +34,18 @@ const AuthCheck = <P extends object>(WrappedComponent: React.ComponentType<P>) =
 
         useEffect(() => {
             const authInstance = getAuth();
-            const unsubscribe = onAuthStateChanged(authInstance, async (user: any) => {
-                if (!user) {
-                    // No Firebase user — guest hasn't even bootstrapped yet.
+            const unsubscribe = onAuthStateChanged(authInstance, (user: any) => {
+                if (!user || user.isAnonymous) {
+                    // No Firebase user, or an anonymous (guest) session — bounce
+                    // to login, remembering where they were headed.
                     stashPendingDestinationAndRedirect();
-                } else if (user.isAnonymous) {
-                    // Anonymous (guest) user — bounce to login, but remember
-                    // where they wanted to go.
-                    stashPendingDestinationAndRedirect();
-                } else {
-                    // For actual logged-in users, try to refresh the token
-                    const refreshSuccess = await refreshUserToken(user);
-
-                    if (!refreshSuccess) {
-                        // Only redirect to login if token refresh fails.
-                        stashPendingDestinationAndRedirect();
-                    }
                 }
+                // Authenticated, non-anonymous user → allow through immediately.
+                // We deliberately do NOT force-refresh the ID token here: that
+                // round-trip (getIdToken(user, true)) blocked rendering for 2-3s
+                // before the screen/skeleton even appeared. The per-request
+                // AuthorizationHeader already mints a fresh token for every API
+                // call, so this gate doesn't need to.
                 setIsLoading(false);
             });
 
@@ -66,7 +55,9 @@ const AuthCheck = <P extends object>(WrappedComponent: React.ComponentType<P>) =
         }, [navigation]);
 
         if (isLoading) {
-            return null; // or a loading spinner
+            // Render the screen's loading fallback (e.g. a content skeleton)
+            // instead of a blank white screen during the token-refresh check.
+            return LoadingComponent ? <LoadingComponent /> : null;
         }
 
         return <WrappedComponent {...props} />;

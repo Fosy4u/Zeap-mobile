@@ -79,9 +79,6 @@ const StepFourComponent: React.FC<IProps> = ({ control, errors, onOpenCountryPic
                 </View>
 
                 {/*==== Region ====*/}
-                {/* Disabled until a country is picked — the region list is
-                    derived from the chosen country, so opening it without one
-                    would show an empty sheet. */}
                 <View className="mt-6">
                     <Text className="font-montserratSemiBold text-[11px] uppercase tracking-wider text-gray-500">
                         Region / state

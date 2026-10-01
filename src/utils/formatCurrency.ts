@@ -1,9 +1,4 @@
-/**
- * Formats a number into Nigerian Naira currency format
- * @param amount - The amount to format (in Naira)
- * @returns Formatted currency string (e.g., "₦6,400.00")
- */
-const formatCurrency = (amount: number | string, currency: string = "NGN", showDecimal: boolean = false): string => {
+const formatCurrency = (amount: number | string, currency: string = "NGN"): string => {
 
     const currencyLocaleMap: Record<string, string> = {
         NGN: "en-NG", // Nigerian Naira → Nigeria
@@ -21,16 +16,21 @@ const formatCurrency = (amount: number | string, currency: string = "NGN", showD
         throw new Error("Invalid amount. Please provide a valid number or numeric string.");
     }
 
+    /* Tested on the amount rounded to the nearest minor unit, so 999.999 counts
+       as whole (₦1,000) instead of slipping through as a fractional ₦1,000.00. */
+    const hasFraction = Math.round(numericAmount * 100) % 100 !== 0;
+    const fractionDigits = (currency.toUpperCase() === "NGN" && !hasFraction) ? 0 : 2;
+
     return new Intl.NumberFormat(
         currencyLocaleMap[currency] || "en-NG",
         {
             style: 'currency',
             currency: currency,
-            minimumFractionDigits: showDecimal ? 2 : 0,
-            maximumFractionDigits: showDecimal ? 2 : 0,
+            minimumFractionDigits: fractionDigits,
+            maximumFractionDigits: fractionDigits,
             currencyDisplay: 'symbol'
         }
     ).format(numericAmount);
-}; 
+};
 
 export default formatCurrency;

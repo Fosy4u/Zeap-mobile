@@ -15,12 +15,15 @@ import useOrderHook from '../hooks/order_hook';
 import { RootState } from '../../../../redux/store/store';
 import LinearGradient from 'react-native-linear-gradient';
 import EmptyListComponent from '../../../general/components/emptyList_component';
+import useDisplayCurrency from '../../../general/hooks/displayCurrency_hook';
+import AppStatusBar from "../../../general/components/appStatusBar";
 
 const OrdersScreen: React.FC = () => {   
     const { filteredOrders, isLoading } = useSelector((state: RootState) => state.orderState);
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
 
     const { handleGetOrders } = useOrderHook();
+    const { currencyRefreshToken } = useDisplayCurrency();
 
     // const [isFocused, setIsFocused] = useState(false);
     const iconTranslateX = useRef(new Animated.Value(0)).current;
@@ -75,16 +78,13 @@ const OrdersScreen: React.FC = () => {
 
     useEffect(() => {
         handleGetOrders();
-    }, []);
+    }, [currencyRefreshToken]);
 
     return (
         <GestureHandlerRootView>
             <BottomSheetModalProvider>
                 <SafeAreaView className="h-auto w-full flex-1 pb-2 pt-2 bg-lightGray">
-                    <StatusBar
-                        backgroundColor="#133522"
-                        barStyle="light-content"
-                    />
+                    <AppStatusBar backgroundColor="#133522" barStyle="light-content" />
 
                     {/* ==== Header ==== */}
                     <View className="h-auto w-full pt-5 px-5">
@@ -117,7 +117,7 @@ const OrdersScreen: React.FC = () => {
 
                     {/*==== Search Box ====*/}
                     <View className="h-auto w-full mt-5 px-5 flex-row items-center justify-center">
-                        <View className="h-auto w-full px-3 py-1 flex-1 flex-row items-center border border-gray-300 rounded-xl bg-gray-100">
+                        <View className="h-[55px] w-full px-3 py-1 flex-1 flex-row items-center border border-gray-300 rounded-xl bg-gray-100">
                             <TouchableOpacity onPress={() => null}>
                             <Animated.View style={{ 
                                 transform: [{ translateX: iconTranslateX }],
@@ -135,7 +135,7 @@ const OrdersScreen: React.FC = () => {
                             <AnimatedTextInput
                                 placeholder="Search item"
                                 placeholderTextColor="#9ca3af"
-                                className="text-base"
+                                className="h-[44px] text-base"
                                 onChangeText={(value) => null}
                                 onFocus={handleFocus}
                                 onBlur={handleBlur}

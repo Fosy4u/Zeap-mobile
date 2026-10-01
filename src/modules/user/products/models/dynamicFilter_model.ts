@@ -6,6 +6,7 @@ interface IDynamicFilter {
 
 interface Option {
     value?: string;
+    slug?: string;
     count?: number;
 };
 

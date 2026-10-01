@@ -56,7 +56,8 @@ const appStore = configureStore({
     },
 
     middleware: (getDefaultMiddleware) => getDefaultMiddleware({
-        serializableCheck: false
+        serializableCheck: false,
+        immutableCheck: false,
     }).concat([
         rootAPI.middleware
     ]),

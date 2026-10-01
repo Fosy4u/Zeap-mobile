@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { Dimensions, ScrollView, Text,  ToastAndroid,  View } from "react-native";
+import { Dimensions, ScrollView, Text,   View } from "react-native";
 import { RootState } from "../../../../redux/store/store";
 import { useSelector } from "react-redux";
 import { Copy } from "iconsax-react-native";
@@ -9,6 +9,7 @@ import * as Animatable from 'react-native-animatable';
 import LinearGradient from "react-native-linear-gradient";
 import { BottomSheetModalMethods } from "@gorhom/bottom-sheet/lib/typescript/types";
 import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
+import showToast from "../../../../utils/showToast";
 
 
 type IVoucherDetailBottomSheetComponent = {
@@ -75,7 +76,7 @@ const VoucherDetailBottomSheetComponent = ({ bottomSheetModalRef, snapPoints, se
                                         onPress={() => {
                                             if (selectedVoucher?.code) {
                                                 Clipboard.setString(selectedVoucher.code);
-                                                ToastAndroid.show("Copied to clipboard!", ToastAndroid.SHORT);
+                                                showToast("Copied to clipboard!");
                                             }
                                         }}
                                     />

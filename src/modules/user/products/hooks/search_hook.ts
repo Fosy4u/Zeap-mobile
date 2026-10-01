@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import EncryptedStorage from "react-native-encrypted-storage";
+import { readSecureJSON, writeSecureItem } from "../../../../utils/secureStorage";
 import { AppDispatch, RootState } from "../../../../redux/store/store";
-import { useLazySearchProductsQuery } from "../apis/product_api";
+import { useLazyGetDynamicFilterOptionsQuery, useLazySearchProductsQuery } from "../apis/product_api";
 import { setSearchPhrase } from "../slices/product_slice";
+import buildFilterParams from "../utils/buildFilterParams";
 
 // 500ms debounce — fires the search once the user has paused typing. Standard
 // UX sweet spot: responsive enough to feel live, slow enough that mid-word
@@ -30,27 +31,18 @@ const useSearchHook = () => {
     // Load persisted recent searches once on mount.
     useEffect(() => {
         (async () => {
-            try {
-                const stored = await EncryptedStorage.getItem(RECENT_SEARCHES_KEY);
-                if (stored) {
-                    const parsed = JSON.parse(stored);
-                    if (Array.isArray(parsed)) {
-                        setRecentSearches(parsed.filter((s) => typeof s === "string").slice(0, MAX_RECENT_SEARCHES));
-                    }
-                }
-            } catch {
-                // Non-fatal — start with an empty list if storage is unreadable.
+            const parsed = await readSecureJSON<unknown>(RECENT_SEARCHES_KEY);
+            if (Array.isArray(parsed)) {
+                setRecentSearches(
+                    parsed.filter((s): s is string => typeof s === "string").slice(0, MAX_RECENT_SEARCHES),
+                );
             }
         })();
     }, []);
 
     const persistRecentSearches = async (list: string[]) => {
         setRecentSearches(list);
-        try {
-            await EncryptedStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(list));
-        } catch {
-            // Ignore persistence failures — the in-memory list still works for the session.
-        }
+        await writeSecureItem(RECENT_SEARCHES_KEY, JSON.stringify(list));
     };
 
     // Add a term to the top: dedupe case-insensitively, newest-first, capped at
@@ -66,6 +58,38 @@ const useSearchHook = () => {
         persistRecentSearches(recentSearches.filter((s) => s !== term));
     };
 
+    const [selectedFilters, setSelectedFilters] = useState<Record<string, (string | number)[]>>({});
+    const [showBottomSheetModal, setShowBottomSheetModal] = useState(false);
+    const [getDynamicFilterOptions, { data: dynamicFilterOptions = [], isFetching: filtersLoading }] =
+        useLazyGetDynamicFilterOptionsQuery();
+
+    const formattedFilters = useMemo(
+        () => buildFilterParams(selectedFilters, dynamicFilterOptions),
+        [selectedFilters, dynamicFilterOptions],
+    );
+
+    const activeFilterCount = useMemo(
+        () => Object.values(selectedFilters).reduce((n, v) => n + (v?.length ?? 0), 0),
+        [selectedFilters],
+    );
+
+    const toggleCheckboxOption = useCallback((filterName: string, optionValue: string | number) => {
+        setSelectedFilters((prev) => {
+            const current = prev[filterName] ?? [];
+            const next = current.includes(optionValue)
+                ? current.filter((v) => v !== optionValue)
+                : [...current, optionValue];
+
+            if (!next.length) {
+                const { [filterName]: _dropped, ...rest } = prev;
+                return rest;
+            }
+            return { ...prev, [filterName]: next };
+        });
+    }, []);
+
+    const clearAllFilters = useCallback(() => setSelectedFilters({}), []);
+
     // Debounced auto-search while typing. Does NOT persist the term — saving only
     // happens on an explicit search (the magnifying-glass button).
     //
@@ -78,25 +102,31 @@ const useSearchHook = () => {
         const term = searchPhrase?.trim();
         if (!term) { return; }
         const handle = setTimeout(() => {
-            triggerSearch({ search: term, limit: DEFAULT_LIMIT, pageNumber: DEFAULT_PAGE });
+            triggerSearch({ search: term, limit: DEFAULT_LIMIT, pageNumber: DEFAULT_PAGE, filters: formattedFilters });
         }, SEARCH_DEBOUNCE_MS);
         return () => clearTimeout(handle);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [searchPhrase]);
+    }, [searchPhrase, formattedFilters]);
 
     // Search icon: run immediately AND persist the term as a recent search.
     const handleSearchNow = () => {
         const term = searchPhrase?.trim();
         if (!term) { return; }
-        triggerSearch({ search: term, limit: DEFAULT_LIMIT, pageNumber: DEFAULT_PAGE });
+        triggerSearch({ search: term, limit: DEFAULT_LIMIT, pageNumber: DEFAULT_PAGE, filters: formattedFilters });
         saveRecentSearch(term);
+    };
+
+    const handleOpenFilters = () => {
+        const term = searchPhrase?.trim();
+        getDynamicFilterOptions({ queryParams: { ...(term ? { search: term } : {}), ...formattedFilters } });
+        setShowBottomSheetModal(true);
     };
 
     // Tapping a recent search: fill the box and search immediately (no re-save —
     // it's already in the list).
     const selectRecentSearch = (term: string) => {
         dispatch(setSearchPhrase(term));
-        triggerSearch({ search: term, limit: DEFAULT_LIMIT, pageNumber: DEFAULT_PAGE });
+        triggerSearch({ search: term, limit: DEFAULT_LIMIT, pageNumber: DEFAULT_PAGE, filters: formattedFilters });
     };
 
     return {
@@ -108,6 +138,17 @@ const useSearchHook = () => {
         recentSearches,
         removeRecentSearch,
         selectRecentSearch,
+
+        // Filters
+        selectedFilters,
+        toggleCheckboxOption,
+        clearAllFilters,
+        dynamicFilterOptions,
+        filtersLoading,
+        activeFilterCount,
+        showBottomSheetModal,
+        setShowBottomSheetModal,
+        handleOpenFilters,
     };
 };
 

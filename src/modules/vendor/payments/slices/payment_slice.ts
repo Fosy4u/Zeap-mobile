@@ -4,12 +4,15 @@ import IPayment from "../models/payment_model";
 
 const initialState: IPaymentState = {
     payments: [],
-    tabs: ["All", "Received", "Pending"],
+    /* Mirrors the web's payment filters. "Received" was renamed to "Paid" to
+       match, and "Cancelled" added. */
+    tabs: ["All", "Pending", "Paid", "Cancelled"],
     selectedTab: "All",
 
 
     loadingMessage: "",
     isLoading: false,
+    hasFetched: false,
 };
 
 export const paymentSlice = createSlice({
@@ -28,6 +31,9 @@ export const paymentSlice = createSlice({
         setIsLoading: (state: IPaymentState, action: PayloadAction<boolean>) => {
             state.isLoading = action.payload;
         },
+        setHasFetched: (state: IPaymentState, action: PayloadAction<boolean>) => {
+            state.hasFetched = action.payload;
+        },
     }
 });
 
@@ -38,5 +44,6 @@ export const {
     setPayments,
     setLoadingMessage,
     setIsLoading,
+    setHasFetched,
 } = actions;
 export default reducer;

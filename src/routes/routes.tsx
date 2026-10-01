@@ -2,6 +2,7 @@ import React from 'react'
 import { NavigationContainer } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import RootNavigationStackModel from './model/routes_model';
+import NotificationSyncComponent from '../modules/notifications/components/notificationSync_component';
 
 // Import Screens.
 import SplashScreen from '../modules/splash/screens/splash_screen';
@@ -9,8 +10,6 @@ import OnboardingOneScreen from '../modules/onboarding/screens/onboarding_screen
 import WelcomeScreen from "../modules/onboarding/screens/welcome_screen";
 import LoginScreen from "../modules/auths/screen/login_screen";
 import ForgotPasswordScreen from '../modules/auths/screen/forgotPassword_screen';
-import OTPScreen from '../modules/auths/screen/otp_screen';
-import ResetPasswordScreen from '../modules/auths/screen/resetPassword_screen';
 import RegisterScreen from '../modules/auths/screen/register_screen';
 import LoginInfoScreen from '../modules/auths/screen/loginInfo_screen';
 import ProfileSetupScreen from '../modules/profile/screens/profileSetup_screen.tsx';
@@ -22,11 +21,15 @@ import InviteFriendScreen from '../modules/user/home/screens/inviteFriend_screen
 import ProductDetailScreen from '../modules/user/products/screens/productDetails_screen.tsx';
 import MeasurementScreen from '../modules/user/measurements/screens/measurement_screen.tsx';
 import EditMeasurementTemplateScreen from '../modules/user/measurements/screens/editMeasurementTemplate_screen.tsx';
+import SavedMeasurementsScreen from '../modules/user/measurements/screens/savedMeasurements_screen.tsx';
 import VendorHomeScreen from '../modules/vendor/home/screens/vendorHome_screen';
 import VendorOnboardingScreen from '../modules/vendor/general/screens/vendorOnboarding_screen';
 import VendorRegistrationScreen from '../modules/vendor/general/screens/vendorRegistration_screen';
 import VendorWelcomeScreen from '../modules/vendor/general/screens/vendorWelcome_screen';
 import VendorDocumentUploadScreen from '../modules/vendor/general/screens/vendorDocumentUpload_screen';
+import ShopInformationScreen from '../modules/vendor/general/screens/shopInformation_screen';
+import BankDetailsScreen from '../modules/vendor/general/screens/bankDetails_screen';
+import ShopDocumentsScreen from '../modules/vendor/general/screens/shopDocuments_screen';
 import ContactSupportScreen from '../modules/general/screens/contactSupport_screen';
 import VendorNotificationsScreen from '../modules/notifications/screens/notifications_screen';
 import ReviewListScreen from '../modules/general/screens/reviewList_screen.tsx';
@@ -73,7 +76,14 @@ const Stack = createNativeStackNavigator<RootNavigationStackModel>();
 const AppRoutes = () => {
   return (
     <NavigationContainer ref={navigationRef}>
-      <Stack.Navigator initialRouteName="splashScreen">
+      {/* Keeps the unread badge live on every screen. Renders nothing. */}
+      <NotificationSyncComponent />
+      <Stack.Navigator
+        initialRouteName="splashScreen"
+        /* freezeOnBlur suspends re-renders of screens that aren't focused, so a
+           Redux change no longer re-renders every mounted screen in the stack. */
+        screenOptions={{ freezeOnBlur: true }}
+      >
         {/* ==== Splash & Onboarding ==== */}
         <Stack.Screen
           name="splashScreen" component={SplashScreen} options={{ headerShown: false }}
@@ -93,21 +103,12 @@ const AppRoutes = () => {
           name="forgotPasswordScreen" component={ForgotPasswordScreen} options={{ headerShown: false }}
         />
         <Stack.Screen
-          name="otpScreen" component={OTPScreen} options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="resetPasswordScreen" component={ResetPasswordScreen} options={{ headerShown: false }}
-        />
-        <Stack.Screen
           name="signUpScreen" component={RegisterScreen} options={{ headerShown: false }}
         />
         <Stack.Screen
           name="loginInfoScreen" component={LoginInfoScreen} options={{ headerShown: false }}
         />
 
-        {/**
-         * USERS ROUTES
-         */}
         {/* ==== Home ==== */}
         <Stack.Screen
           name="homeScreen" component={HomeScreen} options={{ headerShown: false }}
@@ -130,6 +131,9 @@ const AppRoutes = () => {
         />
         <Stack.Screen
           name="editMeasurementTemplateScreen" component={EditMeasurementTemplateScreen} options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="savedMeasurementsScreen" component={SavedMeasurementsScreen} options={{ headerShown: false }}
         />
 
         {/* ==== Cart Checkout ==== */}
@@ -173,9 +177,6 @@ const AppRoutes = () => {
         <Stack.Screen name="orderDetailsScreen" component={UserOrderDetailsScreen} options={{ headerShown: false }} />
         <Stack.Screen name="receiptScreen" component={ReceiptScreen} options={{ headerShown: false }} />
 
-        {/**
-         * VENDORS ROUTES
-         */}
         {/* ==== Home ==== */}
         <Stack.Screen
           name="vendorHomeScreen" component={VendorHomeScreen} options={{ headerShown: false }}
@@ -239,6 +240,15 @@ const AppRoutes = () => {
         /> */}
         <Stack.Screen
           name="shopSetupScreen" component={ShopSetupScreen} options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="shopInformationScreen" component={ShopInformationScreen} options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="bankDetailsScreen" component={BankDetailsScreen} options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="shopDocumentsScreen" component={ShopDocumentsScreen} options={{ headerShown: false }}
         />
 
         {/* ==== Others ==== */}

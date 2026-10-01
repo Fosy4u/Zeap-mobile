@@ -1,10 +1,10 @@
 import React, { useRef } from 'react';
 import {KeyboardAvoidingView, Platform, Text, TextInput, View} from "react-native";
 import { Control, Controller } from 'react-hook-form';
-import { IStepOneAddProduct } from '../../validations/addProduct_validation';
+import { IStepOneAddBespokeShoes } from '../../validations/addProduct_validation';
 import { RichToolbar, actions, RichEditor } from 'react-native-pell-rich-editor';
 interface IProps {
-    control: Control<IStepOneAddProduct>;
+    control: Control<IStepOneAddBespokeShoes>;
     errors: any;
 }
 
@@ -29,7 +29,7 @@ const StepOneComponent: React.FC<IProps> = ({ control, errors }) => {
                             keyboardType="default"
                             placeholder="Enter title"
                             placeholderTextColor="#9ca3af"
-                            className="font-montserratMedium text-base"
+                            className="h-[44px] font-montserratMedium text-base"
                             onBlur={ onBlur }
                             onChangeText={ onChange }
                             value={ value }
@@ -39,7 +39,7 @@ const StepOneComponent: React.FC<IProps> = ({ control, errors }) => {
                 { errors.title && <Text className="text-red-600">{errors.title.message}</Text> }
             </View>
 
-            <Text aria-label="Product Subtitle" nativeID="productSubtitle" className="mt-5 font-montserratMedium">Product subtitle<Text className="text-red-600">*</Text></Text>
+            <Text aria-label="Product Subtitle" nativeID="productSubtitle" className="mt-5 font-montserratMedium">Product subtitle</Text>
             <View className="h-auto w-full mt-1.5 px-3 py-0.5 border rounded-xl border-gray-200 bg-gray-50">
                 <Controller
                     control={ control }
@@ -51,7 +51,7 @@ const StepOneComponent: React.FC<IProps> = ({ control, errors }) => {
                             keyboardType="default"
                             placeholder="Enter subtitle"
                             placeholderTextColor="#9ca3af"
-                            className="font-montserratMedium text-base"
+                            className="h-[44px] font-montserratMedium text-base"
                             onBlur={ onBlur }
                             onChangeText={ onChange }
                             value={ value }

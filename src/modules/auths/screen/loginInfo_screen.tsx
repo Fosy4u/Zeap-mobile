@@ -1,12 +1,38 @@
 import React, { useEffect, useRef } from 'react'
-import { SafeAreaView, Text, View, TouchableOpacity, Image, BackHandler, ToastAndroid } from 'react-native';
+import { SafeAreaView, ScrollView, Text, View, TouchableOpacity, Image, BackHandler, Alert, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import RootNavigationStackModel from '../../../routes/model/routes_model';
-import { ArrowRight } from 'iconsax-react-native';
+import { ArrowRight, Bag2 } from 'iconsax-react-native';
+import useLoginHook from '../hooks/login_hook';
+import AppLoader from '../../general/components/appLoader';
+import { useDispatch } from 'react-redux';
+import { clearPendingDestination } from '../slices/authState_slice';
+import showToast from '../../../utils/showToast';
 
 const LoginInfoScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
+  const dispatch = useDispatch();
+  // Reuse the login hook's Google flow so social sign-in here behaves exactly
+  // like the dedicated login screen — including the post-auth redirect back to
+  // the protected screen the user was bounced from (pendingDestination).
+  const { handleGoogleSignIn, isGoogleLoading } = useLoginHook();
+
+  // Apple Sign-In isn't wired up yet (no native handler exists). Be honest
+  // instead of silently doing nothing, and point users to a working option.
+  const handleApplePressed = () => {
+    Alert.alert(
+      "Apple Sign-In coming soon",
+      "Apple Sign-In isn't available yet. Please continue with email or Google.",
+    );
+  };
+  /* Opting out of logging in also drops the stashed destination — otherwise a
+     later, unrelated sign-in would bounce the user into the screen they left. */
+  const handleContinueShopping = () => {
+    dispatch(clearPendingDestination());
+    navigation.navigate("homeScreen", { screen: "Home" });
+  };
+
   const backPressCount = useRef(0);
   const backPressTimer = useRef<NodeJS.Timeout | null>(null);
 
@@ -14,7 +40,7 @@ const LoginInfoScreen = () => {
     const backAction = () => {
       if (backPressCount.current === 0) {
         backPressCount.current = 1;
-        ToastAndroid.show('Press back again to exit', ToastAndroid.SHORT);
+        showToast('Press back again to exit');
         
         // Reset the counter after 2 seconds
         if (backPressTimer.current) {
@@ -47,6 +73,12 @@ const LoginInfoScreen = () => {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
+      {/* Scrollable so the last action stays reachable on short screens and at
+          large font scales — the stack is ~585pt before any accessibility bump. */}
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: 24 }}
+        showsVerticalScrollIndicator={ false }
+      >
       <View className="mt-20 flex-1 items-center justify-start px-6">
         <View className="h-[48px] w-auto mx-auto mt-6 relative">
           <View className="h-[35px] w-auto mx-auto px-3.5 flex items-center justify-center rounded-lg bg-gold">
@@ -81,19 +113,27 @@ const LoginInfoScreen = () => {
         </View>
 
         <View className="mt-8 flex-row justify-center">
-          <TouchableOpacity 
-              onPress={ () => null }
+          <TouchableOpacity
+              onPress={ handleGoogleSignIn }
+              disabled={ isGoogleLoading }
               className="h-[55px] w-full flex-1 flex-row items-center justify-center border border-gray-300 rounded-xl bg-transparent"
+              style={{ opacity: isGoogleLoading ? 0.6 : 1 }}
             >
-              <Image source={ require("../../../../assets/images/google_logo.png") } className="h-[20px] w-[20px] mr-1" />
-              <View className="w-[5px]" /> 
-              <Text className="font-medium text-lg text-baseGreen">Google</Text>
+              { isGoogleLoading ? (
+                <ActivityIndicator size="small" color="#133522" />
+              ) : (
+                <>
+                  <Image source={ require("../../../../assets/images/google_logo.png") } className="h-[20px] w-[20px] mr-1" />
+                  <View className="w-[5px]" />
+                  <Text className="font-medium text-lg text-baseGreen">Google</Text>
+                </>
+              ) }
           </TouchableOpacity>
 
           <View className="w-[15px]" />
 
-          <TouchableOpacity 
-            onPress={ () => null }
+          <TouchableOpacity
+            onPress={ handleApplePressed }
             className="h-[55px] w-full flex-1 flex-row items-center justify-center border border-gray-300 rounded-xl bg-transparent"
           >
             <Image source={ require("../../../../assets/images/apple_logo.png") } className="h-[20px] w-[20px] mr-1" />
@@ -110,7 +150,22 @@ const LoginInfoScreen = () => {
             Don't have an account? Sign up
           </Text>
         </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={ handleContinueShopping }
+          className="h-[55px] w-full mt-8 flex flex-row items-center justify-center rounded-xl border border-gray-300 bg-transparent"
+        >
+          <Bag2 size={ 18 } color="#133522" />
+          <Text className="ml-2 text-lg text-baseGreen">Continue Shopping</Text>
+        </TouchableOpacity>
       </View>
+      </ScrollView>
+
+      {/* Full-screen overlay while the Google flow runs — it navigates away on
+          success, so this covers the brief auth + profile-fetch window. */}
+      { isGoogleLoading && (
+        <AppLoader loadingAdditionalMessage="Signing in with Google..." />
+      ) }
     </SafeAreaView>
   )
 }

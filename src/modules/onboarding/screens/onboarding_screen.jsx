@@ -82,8 +82,13 @@ const OnboardingScreen = () => {
             : 'Fast door-step delivery'}
         </Text>
         <Text className="mt-3 text-center text-base">
-          Lorem ipsum dolor sit amet consectetur. Ridiculus pellentesque id
-          commodo et odio.
+          {progress === 1
+            ? 'Discover ready-made and bespoke fashion from trusted vendors, all in one place.'
+            : progress === 2
+            ? 'Check out in seconds with secure, encrypted payments you can rely on.'
+            : progress === 3
+            ? 'Follow every order from checkout to your door with live status updates.'
+            : 'Get your pieces delivered quickly and reliably, right to your doorstep.'}
         </Text>
 
         <View className="h-[80px] w-[80px] relative mx-auto mt-10 flex items-center justify-center">

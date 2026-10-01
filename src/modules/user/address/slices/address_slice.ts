@@ -11,6 +11,7 @@ const initialState: IAddressState = {
     selectedCountry: "Nigeria",
 
     showNewDeliveryAddressForm: false,
+    editingAddressId: "",
 
     isLoading: false,
     loadingMessage: "",
@@ -38,6 +39,9 @@ export const addressSlice = createSlice({
         setShowNewDeliveryAddressForm: (state: IAddressState, action: PayloadAction<boolean>) => {
             state.showNewDeliveryAddressForm = action.payload;
         },
+        setEditingAddressId: (state: IAddressState, action: PayloadAction<string>) => {
+            state.editingAddressId = action.payload;
+        },
         setIsLoading: (state: IAddressState, action: PayloadAction<boolean>) => {
             state.isLoading = action.payload;
         },
@@ -57,6 +61,7 @@ export const {
     setSaveAddressForNextTime,
     setSelectedCountry,
     setShowNewDeliveryAddressForm,
+    setEditingAddressId,
     setIsLoading,
     setLoadingMessage
 } = actions;

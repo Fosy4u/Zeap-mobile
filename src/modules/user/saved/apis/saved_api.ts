@@ -3,9 +3,9 @@ import { wishAddRoute, wishListRoute, wishRemoveRoute } from "../../../../redux/
 import IWishItem from "../models/wishList_model";
 
 // Wishlist ("Saved") endpoints.
-//   • addToWishlist     — CONFIRMED: POST /wish/add { productId, color }
-//   • getWishlist       — CONFIRMED: GET  /wish/auth/user → { data: IWishItem[] }
-//   • removeFromWishlist— ASSUMED:   POST /wish/remove { productId } (confirm)
+//   • addToWishlist     — CONFIRMED: POST   /wish/add { productId, color }
+//   • getWishlist       — CONFIRMED: GET    /wish/auth/user → { data: IWishItem[] }
+//   • removeFromWishlist— CONFIRMED: DELETE /wish/remove { productId }
 // The hook keeps an optimistic local copy of saved productIds, so the heart
 // toggles instantly even before these settle.
 const savedAPI = rootAPI.injectEndpoints({
@@ -22,12 +22,12 @@ const savedAPI = rootAPI.injectEndpoints({
             transformResponse: (response: { data: any }) => response?.data,
         }),
 
-        // Remove a product from the wishlist.
-        removeFromWishlist: builder.mutation<any, { productId: string }>({
+        removeFromWishlist: builder.mutation<any, { wish_id: string }>({
             query: (body) => ({
                 url: wishRemoveRoute,
-                method: "POST",
+                method: "DELETE",
                 body,
+                headers: { "Content-Type": "application/json" },
             }),
             invalidatesTags: ["Wishlist"],
             transformResponse: (response: { data: any }) => response?.data,

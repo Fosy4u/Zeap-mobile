@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, TouchableOpacity, Dimensions, Text } from 'react-native';
+import SkeletonBlock from '../../../general/components/skeletonBlock_component';
 import Svg, { Path } from 'react-native-svg';
 import { ShopAdd, Home, ShoppingBag, Heart, Profile } from 'iconsax-react-native';
 import { useSelector } from 'react-redux';
@@ -15,6 +16,11 @@ const AppBottomBarComponent = ({ state, descriptors, navigation }: any) => {
   // when the cart hasn't been hydrated yet so we never flash a stale number.
   const cartCount = useSelector(
     (rootState: RootState) => rootState.cartState?.cart?.basketItems?.length ?? 0,
+  );
+  // Cart-items fetch in flight — the badge shows a spinner instead of a
+  // (stale or empty) count until the first response settles.
+  const isCartLoading = useSelector(
+    (rootState: RootState) => !!rootState.cartState?.isCartItemsLoading,
   );
   // The shop FAB always lands on the vendor onboarding pitch — the pitch's
   // own CTA branches the user from there: "Become a vendor" if they have no
@@ -87,10 +93,12 @@ const AppBottomBarComponent = ({ state, descriptors, navigation }: any) => {
               { bottomNavIcon }
               { isFocused && <View className="h-[4px] w-[4px] mt-0.5 rounded-full bg-white" /> }
 
-              {/* Cart-count badge — overlays the Cart icon, hidden when 0.
-                  "9+" caps the visual width so a long number doesn't break
-                  the badge's circular shape. */}
-              { route.name === "Cart" && cartCount > 0 && (
+              { route.name === "Cart" && isCartLoading && (
+                <View className="absolute -top-1 -right-1">
+                  <SkeletonBlock width={ 18 } height={ 18 } radius={ 9 } />
+                </View>
+              ) }
+              { route.name === "Cart" && !isCartLoading && cartCount > 0 && (
                 <View
                   className="absolute -top-1 -right-1 px-1 items-center justify-center rounded-full bg-red-500"
                   style={{ minWidth: 18, height: 18 }}
@@ -108,10 +116,6 @@ const AppBottomBarComponent = ({ state, descriptors, navigation }: any) => {
       </View>
 
       {/*==== FAB ====*/}
-      {/* The shop FAB has two destinations gated on userData.isVendor:
-          non-vendors get the onboarding stepper, vendors jump straight into
-          their admin dashboard. Both routes live at root-stack level so we
-          reach past the tab navigator to push them. */}
       <View className="absolute self-center bottom-[42px]">
         <TouchableOpacity
           className="h-[40px] w-[40px] rounded-full bg-baseGreen justify-center items-center shadow-md"

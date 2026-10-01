@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { ArrowLeft, DocumentUpload, TickCircle, Warning2 } from "iconsax-react-native";
+import { ArrowLeft, DocumentText1, DocumentUpload, TickCircle, Warning2 } from "iconsax-react-native";
 import RootNavigationStackModel from "../../../../routes/model/routes_model";
 import useVendorDocumentUploadHook, { IDocSlotState } from "../hooks/vendorOnboarding/vendorDocumentUpload_hook";
 import { IOnboardingDocumentRequirement } from "../apis/general_api";
@@ -81,6 +81,10 @@ const DocCard: React.FC<IDocCardProps> = ({ doc, slot, onPickFile, onUpload }) =
     const isUploaded = status === "uploaded";
 
     const previewUri = slot?.file?.uri || slot?.remoteLink || null;
+    /* A PDF can't render in <Image>, so we detect it from the picked file's
+       mime type (or a .pdf remote link) and show a document tile instead. */
+    const isPdf = slot?.file?.type === "application/pdf"
+        || (!slot?.file && !!slot?.remoteLink && /\.pdf(\?|$)/i.test(slot.remoteLink));
 
     return (
         <View className="p-4 rounded-2xl bg-white border border-gray-100">
@@ -101,7 +105,17 @@ const DocCard: React.FC<IDocCardProps> = ({ doc, slot, onPickFile, onUpload }) =
 
             {/*==== Preview / placeholder ====*/}
             <View className="mt-3 h-32 rounded-xl bg-gray-50 border border-gray-100 overflow-hidden items-center justify-center">
-                { previewUri ? (
+                { previewUri && isPdf ? (
+                    <View className="items-center">
+                        <DocumentText1 size={ 32 } color="#133522" variant="Bold" />
+                        <Text className="mt-1.5 text-xs text-gray-600">PDF document</Text>
+                        { !!slot?.file?.name && (
+                            <Text numberOfLines={ 1 } className="mt-0.5 max-w-[200px] text-[11px] text-gray-400">
+                                { slot.file.name }
+                            </Text>
+                        ) }
+                    </View>
+                ) : previewUri ? (
                     <Image
                         source={{ uri: previewUri }}
                         className="h-full w-full"
@@ -236,7 +250,7 @@ const VendorDocumentUploadScreen = () => {
                     ) }
 
                     <Text className="mt-5 text-[11px] text-gray-400 leading-5">
-                        Files must be images (PNG / JPEG / WEBP), max 1.5 MB each. You can upload them in any order. Editing is only available until your shop has been verified.
+                        Files must be images (PNG / JPEG / WEBP) or PDF, max 1.5 MB each. You can upload them in any order. Editing is only available until your shop has been verified.
                     </Text>
                 </ScrollView>
 

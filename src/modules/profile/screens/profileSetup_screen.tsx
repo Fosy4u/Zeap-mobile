@@ -42,14 +42,16 @@ const ProfileSetupScreen = () => {
   
 
   return (
-    <SafeAreaView className="flex-1 px-5 pt-5 items-center">
+    <SafeAreaView className="flex-1 pt-5">
       <StatusBar
         backgroundColor="transparent"
         barStyle="dark-content"
       />
 
       <View className="h-full w-full pb-3">
-        <ScrollView 
+        <ScrollView
+          className="flex-1 w-full"
+          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 24 }}
           showsVerticalScrollIndicator={false}
           showsHorizontalScrollIndicator={false}
         >
@@ -81,7 +83,7 @@ const ProfileSetupScreen = () => {
                 keyboardType="name-phone-pad"
                 placeholder="Enter first name"
                 placeholderTextColor="#9ca3af"
-                className="text-base"
+                className="h-[44px] text-base"
                 onChangeText={(value) => null}
               />
             </View>
@@ -94,7 +96,7 @@ const ProfileSetupScreen = () => {
                 keyboardType="name-phone-pad"
                 placeholder="Enter last name"
                 placeholderTextColor="#9ca3af"
-                className="text-base"
+                className="h-[44px] text-base"
                 onChangeText={(value) => null}
               />
             </View>
@@ -213,7 +215,7 @@ const ProfileSetupScreen = () => {
                 keyboardType="number-pad"
                 placeholder="Enter postal code"
                 placeholderTextColor="#9ca3af"
-                className="text-base"
+                className="h-[44px] text-base"
                 onChangeText={(value) => null}
               />
             </View>
@@ -255,7 +257,7 @@ const ProfileSetupScreen = () => {
                 keyboardType="phone-pad"
                 placeholder="Enter your height"
                 placeholderTextColor="#9ca3af"
-                className="text-base"
+                className="h-[44px] flex-1 text-base"
                 onChangeText={(value) => null}
               />
             </View>
@@ -281,7 +283,7 @@ const ProfileSetupScreen = () => {
                 keyboardType="phone-pad"
                 placeholder="Enter your weight"
                 placeholderTextColor="#9ca3af"
-                className="text-base"
+                className="h-[44px] flex-1 text-base"
                 onChangeText={(value) => null}
               />
             </View>

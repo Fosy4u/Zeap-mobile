@@ -1,6 +1,8 @@
 import React from 'react';
 import {ScrollView, Text, TextInput, TouchableOpacity, View} from "react-native";
 import CheckBox from "@react-native-community/checkbox";
+import ColorSwatchChipComponent, { isMulticolor, MULTICOLOR_STOPS } from "../colorSwatchChip_component";
+import LinearGradient from "react-native-linear-gradient";
 
 interface IProps {
     propsData: {
@@ -38,15 +40,31 @@ const StepFiveComponent: React.FC<IProps> = (props) => {
                     <CheckBox
                         onValueChange={ () => handleSelectColourType("Single") }
                         value={ colourType === "Single" }
+                        boxType="square"
+                        lineWidth={ 1.5 }
+                        tintColor="#151518"
+                        onCheckColor="#ffffff"
+                        onFillColor="#133522"
+                        onTintColor="#133522"
+                        animationDuration={ 0.15 }
+                        style={{ height: 20, width: 20, marginRight: 8 }}
                     />
-                    <Text className="font-montserratMedium text-baseGreen">Single Color</Text>
+                    <Text className="font-montserratMedium text-baseGreen">Plain Single Color</Text>
                 </View>
                 <View className="h-auto flex-row items-center justify-start">
                     <CheckBox
                         onValueChange={ () => handleSelectColourType("Multiple") }
                         value={ colourType === "Multiple" }
+                        boxType="square"
+                        lineWidth={ 1.5 }
+                        tintColor="#151518"
+                        onCheckColor="#ffffff"
+                        onFillColor="#133522"
+                        onTintColor="#133522"
+                        animationDuration={ 0.15 }
+                        style={{ height: 20, width: 20, marginRight: 8 }}
                     />
-                    <Text className="font-montserratMedium text-baseGreen">Multiple Colors</Text>
+                    <Text className="font-montserratMedium text-baseGreen">Multi-Color Design</Text>
                 </View>
             </View>
 
@@ -70,9 +88,7 @@ const StepFiveComponent: React.FC<IProps> = (props) => {
                         <View className="h-auto w-full mt-3 flex-row items-center gap-x-1">
                             { colorOptions.map((color, index) => (
                                 <TouchableOpacity onPress={ () => handleSelectColour(color) } key={index}>
-                                    <View className="h-auto w-16 py-2.5 rounded-lg" style={{ backgroundColor: color.colorCode }}>
-                                        <Text className={`text-xs text-center ${getTextColor(color.colorCode)}`}>{ color.colorName }</Text>
-                                    </View>
+                                    <ColorSwatchChipComponent colorName={ color.colorName } colorCode={ color.colorCode } />
                                 </TouchableOpacity>
                             )) }
                         </View>
@@ -83,7 +99,18 @@ const StepFiveComponent: React.FC<IProps> = (props) => {
                             <Text className="mt-6 font-montserratSemiBold text-xs text-gray-700">Selected Colors</Text>
                             <View className="h-auto w-full mt-2 flex-row items-center justify-start gap-x-2">
                                 { selectedColor.map((color, index) => (
-                                    <View key={ color.colorCode } className="h-[25px] w-[25px] rounded-full" style={{ backgroundColor: color.colorCode }} />
+                                    isMulticolor(color.colorName, color.colorCode) ? (
+                                        <LinearGradient
+                                            key={ color.colorName || index }
+                                            colors={ MULTICOLOR_STOPS }
+                                            start={{ x: 0, y: 0 }}
+                                            end={{ x: 1, y: 1 }}
+                                            className="h-[25px] w-[25px] border border-gray-300"
+                                            style={{ borderRadius: 999 }}
+                                        />
+                                    ) : (
+                                        <View key={ color.colorCode } className="h-[25px] w-[25px] rounded-full border border-gray-300" style={{ backgroundColor: color.colorCode }} />
+                                    )
                                 )) }
                             </View>
                         </View>
@@ -101,7 +128,7 @@ const StepFiveComponent: React.FC<IProps> = (props) => {
                     textContentType="givenName"
                     placeholder="Enter amount"
                     placeholderTextColor="#9ca3af"
-                    className="font-montserratMedium text-base"
+                    className="h-[44px] font-montserratMedium text-base"
                     onChangeText={(value) => handleChangePrice(value)}
                 />
             </View>

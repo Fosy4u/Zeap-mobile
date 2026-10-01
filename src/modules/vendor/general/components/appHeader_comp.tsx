@@ -18,7 +18,7 @@ const AppHeaderComp: React.FC<IProps> = ({ title }) => {
     
     return (userData.isVendor
         ? (
-            <View className="h-[120px] w-full pt-4 px-5 rounded-b-3xl bg-baseGreen">
+            <View className="h-auto w-full pt-4 pb-4 px-5 rounded-b-3xl bg-baseGreen">
                 <View className="h-auto w-full flex-row items-center justify-between ">
                     <TouchableOpacity
                         onPress={ () => navigation.goBack() }

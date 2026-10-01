@@ -31,8 +31,13 @@ class FormatWords {
     // one of: BSC (Bespoke Cloth), BSS (Bespoke Shoe), RMC (Ready-Made
     // Cloth), RMS (Ready-Made Shoe), ACC (Accessory).
     static productGroupLabel = (productGroup?: string, productType?: string, productId?: string) => {
-        if ((!productGroup || !productType) && productId) {
-            const code = productId.split("/")[1]?.toUpperCase();
+        // Type code embedded in the productId (`shopId/TYPE_CODE/productCode`).
+        // Derived up-front so accessories are recognised even when the slimmed
+        // list payloads omit/vary productType (which was making them fall
+        // through to the shared "Ready to Wear" badge).
+        const code = productId?.split("/")[1]?.toUpperCase();
+
+        if ((!productGroup || !productType) && code) {
             const derived: Record<string, { group: string; type: string }> = {
                 BSC: { group: "Bespoke", type: "bespokeCloth" },
                 BSS: { group: "Bespoke", type: "bespokeShoe" },
@@ -40,7 +45,7 @@ class FormatWords {
                 RMS: { group: "Ready-Made", type: "readyMadeShoe" },
                 ACC: { group: "Ready-Made", type: "accessory" },
             };
-            const fallback = code ? derived[code] : undefined;
+            const fallback = derived[code];
             if (fallback) {
                 productGroup = productGroup || fallback.group;
                 productType = productType || fallback.type;
@@ -49,8 +54,9 @@ class FormatWords {
 
         // Accessories (eyewear, watches, bags…) are technically ready-made but
         // aren't "worn" — label them by their own group rather than the shared
-        // "Ready to Wear" badge.
-        if (productType === "accessory") return "Accessories";
+        // "Ready to Wear" badge. Matched case-insensitively, with the productId
+        // type code (ACC) as a backstop when productType is absent.
+        if (productType?.toLowerCase() === "accessory" || code === "ACC") return "Accessory";
 
         if (!productGroup) return "N/A";
         const isReadyMade = productGroup === "Ready-Made" || productGroup === "Ready Made";

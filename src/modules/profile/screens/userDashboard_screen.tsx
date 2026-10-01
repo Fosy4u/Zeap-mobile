@@ -14,6 +14,7 @@ import FastImage from 'react-native-fast-image';
 import { setProductID } from '../../user/products/slices/product_slice';
 import UserAvatar from '../../general/components/userAvatar_component';
 import ProductCardComponent from '../../general/components/productCard_component';
+import AppStatusBar from "../../general/components/appStatusBar";
 
 const UserDashboardScreen = () => {
     const { recentlyViewedProducts, recommendedProducts, wishListProducts, recentlyViewedProductsIsLoading, recommendedProductsIsLoading } = useSelector((state: RootState) => state.productState);
@@ -33,10 +34,7 @@ const UserDashboardScreen = () => {
 
     return (
         <SafeAreaView className="flex-1 h-auto w-screen bg-white">
-             <StatusBar
-                backgroundColor="#112F1E"
-                barStyle="light-content"
-            />
+             <AppStatusBar backgroundColor="#112F1E" barStyle="light-content" />
 
             {/* ==== Header (fixed — stays mounted above the ScrollView so
                     it doesn't scroll away with the content) ==== */}

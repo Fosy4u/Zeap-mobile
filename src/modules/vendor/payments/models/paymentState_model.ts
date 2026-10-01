@@ -7,6 +7,7 @@ interface IPaymentState {
 
     loadingMessage: string;
     isLoading: boolean;
+    hasFetched: boolean;
 };
 
 export default IPaymentState;

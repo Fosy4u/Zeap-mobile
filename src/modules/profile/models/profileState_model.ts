@@ -16,8 +16,8 @@ interface IProfileState {
     acceptMarketing: boolean;
     isLoading: boolean;
     loadingMessage: string;
+    currencyRefreshToken: number;
 };
-
 
 interface IUser {
     _id?:                 string;

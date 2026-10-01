@@ -1,6 +1,6 @@
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import {SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View} from "react-native";
+import {ActivityIndicator, SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View} from "react-native";
 import AppHeaderComp from "../../general/components/appHeader_comp";
 import {ArrowLeft, ArrowRight} from "iconsax-react-native";
 import {useNavigation} from "@react-navigation/native";
@@ -26,9 +26,11 @@ import useStepSixHook from '../hooks/readyMadeClothes/stepSix_hook.ts';
 import PriceAdjustmentModal from '../modals/priceAdjustment_modal.tsx';
 import WarningPopupModal from '../modals/warningPopup_modal.tsx';
 import SuccessPopupModal from '../modals/successPopup_modal.tsx';
+import UploadColorImageModal from '../modals/uploadColorImage_modal.tsx';
+import AppStatusBar from "../../../general/components/appStatusBar";
 
 const AddReadyMadeClothesScreen = () => {
-    const { selectedStep , productIsLoading, loadingMessage } = useSelector((state: RootState) => state.vendorProductState);
+    const { selectedStep , productIsLoading, loadingMessage, product } = useSelector((state: RootState) => state.vendorProductState);
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const dispatch = useDispatch();
 
@@ -47,12 +49,16 @@ const AddReadyMadeClothesScreen = () => {
     } = useStepTwoHook();
 
     const {
-        clotheSizes, selectedSizes, setSelectedSizes, handleSubmit: stepThreeHandleSubmit, 
+        sizeStandardOptions, selectedSizeStandard, handleSelectSizeStandard,
+        clotheSizes, selectedSizes, setSelectedSizes,
+        showSizesDropDown, setShowSizesDropDown, handleSubmit: stepThreeHandleSubmit,
      } = useStepThreeHook();
 
      const {
         colorOptions, handleSelectColour, selectedColor: stepFourSelectedColor,
-        selectedImages, uploadedColorAndImages, handleAddImage, handleRemoveImage, handleDeleteColor, handleDeleteImage, handleUploadImage,
+        selectedImages, uploadedColorAndImages, handleAddImage, handleRemoveImage, handleDeleteColor, handleDeleteUploadedImage,
+        handleUploadColorAndImages, handleProceedToNextStep,
+        showImageUploadModal, handleCloseImageUploadModal, handleAddMoreImages,
         setSelectedDefaultImage, showDefaultImageModal, setShowDefaultImageModal, handleSetDefaultImage,
      } = useStepFourHook();
 
@@ -92,7 +98,9 @@ const AddReadyMadeClothesScreen = () => {
         }
 
         if (selectedStep === 4) {
-            handleUploadImage();
+            // Per-colour uploads happen via the in-card "Upload" button; here we
+            // just advance once at least one colour has been uploaded.
+            handleProceedToNextStep();
         }
 
         if (selectedStep === 5) {
@@ -106,13 +114,10 @@ const AddReadyMadeClothesScreen = () => {
 
     return (
         <SafeAreaView className="h-full w-full flex-1 bg-white">
-            <StatusBar
-                backgroundColor="#133522"
-                barStyle="light-content"
-            />
+            <AppStatusBar backgroundColor="#133522" barStyle="light-content" />
 
             {/*==== Header ====*/}
-            <AppHeaderComp title={`Add Readymade\nClothes`} />
+            <AppHeaderComp title={`Add Ready to Wear\nClothes`} />
 
             {/*==== Step Indicators ====*/}
             <View className="h-auto w-full px-5 pt-4 pb-2 flex-row gap-x-2">
@@ -132,9 +137,14 @@ const AddReadyMadeClothesScreen = () => {
                     <StepTwoComponent manageState={ manageState } />
                 ) : (selectedStep === 3) ? (
                     <StepThreeComponent
+                        sizeStandardOptions={ sizeStandardOptions }
+                        selectedSizeStandard={ selectedSizeStandard }
+                        handleSelectSizeStandard={ handleSelectSizeStandard }
                         clotheSizes={ clotheSizes }
                         selectedSizes={ selectedSizes }
                         setSelectedSizes={ setSelectedSizes }
+                        showSizesDropDown={ showSizesDropDown }
+                        setShowSizesDropDown={ setShowSizesDropDown }
                     />
                 ) : (selectedStep === 4) ? (
                     <StepFourComponent
@@ -142,12 +152,10 @@ const AddReadyMadeClothesScreen = () => {
                         selectedColor={ stepFourSelectedColor }
                         handleGetTextColor={ handleGetTextColor }
                         handleSelectColour={ handleSelectColour }
-                        selectedImages={ selectedImages }
                         uploadedColorAndImages={ uploadedColorAndImages }
-                        handleAddImage={ handleAddImage }
-                        handleRemoveImage={ handleRemoveImage }
                         handleDeleteColor={ handleDeleteColor }
-                        handleDeleteImage={ handleDeleteImage }
+                        handleDeleteUploadedImage={ handleDeleteUploadedImage }
+                        handleAddMoreImages={ handleAddMoreImages }
                         setSelectedDefaultImage={ setSelectedDefaultImage }
                         setShowDefaultImageModal={ setShowDefaultImageModal }
                     />
@@ -175,12 +183,12 @@ const AddReadyMadeClothesScreen = () => {
                     />
                 ) }
 
-                {/* ==== Cancel and Save & Continue ==== */}
                 { selectedStep <= 5 ? (
                     <View className="h-auto w-full mt-8 flex-row">
                         <TouchableOpacity
                             onPress={ () => navigation.goBack() }
-                            className="h-[55px] w-[35%] flex-row items-center justify-center rounded-xl bg-red-50"
+                            disabled={ productIsLoading }
+                            className={`h-[55px] w-[35%] flex-row items-center justify-center rounded-xl bg-red-50 ${ productIsLoading ? "opacity-50" : "" }`}
                         >
                             <Text className="font-montserratMedium text-base text-red-700">Cancel</Text>
                         </TouchableOpacity>
@@ -188,26 +196,41 @@ const AddReadyMadeClothesScreen = () => {
 
                         <TouchableOpacity
                             onPress={ () => handleSaveAndContinue() }
-                            className="h-[55px] flex-1 flex-row items-center justify-center rounded-xl bg-baseGreen"
+                            disabled={ productIsLoading }
+                            className={`h-[55px] flex-1 flex-row items-center justify-center rounded-xl bg-baseGreen ${ productIsLoading ? "opacity-70" : "" }`}
                         >
-                            <Text className="mr-2 font-montserratRegular text-base text-white">Save & Continue</Text>
-                            <ArrowRight size={ 18 } className="text-white" />
+                            { productIsLoading && selectedStep <= 4 ? (
+                                <ActivityIndicator color="#FFFFFF" />
+                            ) : (
+                                <>
+                                    <Text className="mr-2 font-montserratRegular text-base text-white">Save & Continue</Text>
+                                    <ArrowRight size={ 18 } className="text-white" />
+                                </>
+                            ) }
                         </TouchableOpacity>
                     </View>
                 ) : (
                     <TouchableOpacity
                         onPress={ () => setShowWarningModal(true) }
-                        className="h-[55px] flex-1 mt-8 flex-row items-center justify-center rounded-xl bg-baseGreen"
+                        disabled={ productIsLoading }
+                        className={`h-[55px] flex-1 mt-8 flex-row items-center justify-center rounded-xl bg-baseGreen ${ productIsLoading ? "opacity-70" : "" }`}
                     >
-                        <Text className="mr-2 font-montserratRegular text-base text-white">Submit</Text>
-                        <ArrowRight size={ 18 } className="text-white" />
+                        { productIsLoading ? (
+                            <ActivityIndicator color="#FFFFFF" />
+                        ) : (
+                            <>
+                                <Text className="mr-2 font-montserratRegular text-base text-white">Submit</Text>
+                                <ArrowRight size={ 18 } className="text-white" />
+                            </>
+                        ) }
                     </TouchableOpacity>
                 ) }
 
-                { selectedStep > 1 && selectedStep <= 5 && (
+                { selectedStep > 1 && (
                     <TouchableOpacity
                         onPress={ () => handleGoBack() }
-                        className="h-[55px] w-full mt-5 flex-row items-center justify-center rounded-xl bg-lightGreen"
+                        disabled={ productIsLoading }
+                        className={`h-[55px] w-full mt-5 flex-row items-center justify-center rounded-xl bg-lightGreen ${ productIsLoading ? "opacity-50" : "" }`}
                     >
                         <ArrowLeft size={ 18 } className="text-baseGreen" />
                         <Text className="ml-2 font-montserratMedium text-base text-baseGreen">Go Back</Text>
@@ -221,6 +244,7 @@ const AddReadyMadeClothesScreen = () => {
                 <PriceAdjustmentModal 
                     priceAdjustmentModalType={ priceAdjustmentModalType }
                     autoPricePercentage={ autoPricePercentage }
+                    productIsLoading={ productIsLoading }
                     setAutoPricePercentage={ setAutoPricePercentage }
                     setShowPriceAdjustmentModal={ setShowPriceAdjustmentModal }
                     setIsAutoPriceAdjustment={ setIsAutoPriceAdjustment }
@@ -231,7 +255,6 @@ const AddReadyMadeClothesScreen = () => {
 
             { showWarningModal &&
                 <WarningPopupModal 
-                    bodyText={"This will change the status of the product to \"under review\" and you will not be able to edit the product without contacting the admin." }
                     screenURL="profileSetupScreen" 
                     setShowWarningModal={setShowWarningModal}
                     handleSubmitProduct={handleSubmitProduct}
@@ -240,8 +263,8 @@ const AddReadyMadeClothesScreen = () => {
 
             { showSuccessModal &&
                 <SuccessPopupModal
-                    bodyText="You have successfully uploaded your item. It will be reviewed before it is listed for customers."
                     setShowSuccessModal={ setShowSuccessModal }
+                    productID={ product?.productId }
                 />
             }
 
@@ -252,8 +275,22 @@ const AddReadyMadeClothesScreen = () => {
                     handleSetDefaultImage={ handleSetDefaultImage }
                 />
             }
-            
-            { productIsLoading && 
+
+            {/* Per-colour image upload modal — opens when a colour is selected. */}
+            { showImageUploadModal && stepFourSelectedColor.length > 0 &&
+                <UploadColorImageModal
+                    colorName={ stepFourSelectedColor[0].colorName }
+                    colorCode={ stepFourSelectedColor[0].colorCode }
+                    selectedImages={ selectedImages }
+                    handleAddImage={ handleAddImage }
+                    handleRemoveImage={ handleRemoveImage }
+                    handleUploadColorAndImages={ handleUploadColorAndImages }
+                    isUploading={ productIsLoading }
+                    onClose={ handleCloseImageUploadModal }
+                />
+            }
+
+            { productIsLoading && selectedStep > 5 && !showPriceAdjustmentModal &&
                 <AppLoader loadingAdditionalMessage={ loadingMessage } />
             }
         </SafeAreaView>

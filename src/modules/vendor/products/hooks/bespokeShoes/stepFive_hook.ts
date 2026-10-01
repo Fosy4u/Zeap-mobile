@@ -7,6 +7,7 @@ import { Alert } from "react-native";
 import { setLoadingMessage, setProduct, setProductIsLoading, setSelectedStep } from "../../slices/vendorProductState_slice";
 import { useLazyGetProductByProductIDQuery } from "../../apis/product_api";
 import { stepFiveAddBespokeShoesSchema } from "../../validations/addProduct_validation";
+import handleError from "../../../../general/hooks/errorHandler_hook";
 
 interface IColorOption {
     colorName: string;
@@ -15,7 +16,7 @@ interface IColorOption {
 
 const useStepFiveHook = () => {
 
-    const { bespokeClothesOptions } = useSelector((state: RootState) => state.generalState);
+    const { bespokeShoesOptions } = useSelector((state: RootState) => state.generalState);
     const { product } = useSelector((state: RootState) => state.vendorProductState );
     const [colourType, setColourType] = useState<string>("Single");
     const [colorOptions, setColorOptions] = useState<IColorOption[]>([]);
@@ -37,9 +38,9 @@ const useStepFiveHook = () => {
     
     // Handle format product colours
     const handleFormatProductColours = () => {
-        if (!bespokeClothesOptions) return;
+        if (!bespokeShoesOptions) return;
 
-        const formattedColours: IColorOption[] = bespokeClothesOptions.colorEnums!.map((colour: IColorEnum) => ({
+        const formattedColours: IColorOption[] = bespokeShoesOptions.colorEnums!.map((colour: IColorEnum) => ({
             colorName: colour.name || "",
             colorCode: colour.hex || "",
         }));
@@ -73,8 +74,9 @@ const useStepFiveHook = () => {
         const productId = product?.productId || "";
 
         try {
-            // Check if there are selected colours
-            if (selectedColor.length === 0) {
+            // Plain single colour must carry at least one chosen colour. Multi-
+            // colour is "any colour on request", so it submits with an empty list.
+            if (colourType === "Single" && selectedColor.length === 0) {
                 Alert.alert("Error", "Please select at least one colour.");
                 dispatch(setProductIsLoading(false));
                 dispatch(setLoadingMessage(""));
@@ -86,7 +88,7 @@ const useStepFiveHook = () => {
                 productId,
                 variation: {
                     colorType: colourType.toLocaleLowerCase(),
-                    availableColors: selectedColor.map((color) => color.colorName),
+                    availableColors: colourType === "Single" ? selectedColor.map((color) => color.colorName) : [],
                     price: Number(price),
                 },
                 currentStep: 5,
@@ -135,7 +137,7 @@ const useStepFiveHook = () => {
         } catch (error: any) {
             dispatch(setProductIsLoading(false));
             dispatch(setLoadingMessage(""));
-            console.log("ERROR: ", error);
+            handleError(error);
         }
     };
 
@@ -159,15 +161,15 @@ const useStepFiveHook = () => {
 
     // Handle get color code from the color enums
     const handleGetColorCode = (colorName: string) => {
-        const color = bespokeClothesOptions?.colorEnums?.find((color) => color.name === colorName);
+        const color = bespokeShoesOptions?.colorEnums?.find((color) => color.name === colorName);
         return color?.hex! || "";
     };
     
     useEffect(() => {
-        if (bespokeClothesOptions?.colorEnums) {
+        if (bespokeShoesOptions?.colorEnums) {
             handleFormatProductColours();
         }
-    }, [bespokeClothesOptions]);
+    }, [bespokeShoesOptions]);
 
     useEffect(() => {
         handleSetProductVariations();

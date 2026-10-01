@@ -19,7 +19,9 @@ interface IFieldProps {
     error?: string;
 }
 
-const Field: React.FC<IFieldProps> = ({ label, placeholder, name, keyboardType = "default", icon: Icon, control, error }) => (
+const Field: React.FC<IFieldProps> = ({ label, placeholder, name, keyboardType = "default", icon: Icon, control, error }) => {
+    const maxLength = (name === "accountNumber" || name === "confirmAccountNumber") ? 10 : undefined;
+    return (
     <View className="mt-5">
         <Text className="font-montserratSemiBold text-[11px] uppercase tracking-wider text-gray-500">
             { label }
@@ -34,6 +36,7 @@ const Field: React.FC<IFieldProps> = ({ label, placeholder, name, keyboardType =
                         placeholder={ placeholder }
                         placeholderTextColor="#9ca3af"
                         keyboardType={ keyboardType }
+                        maxLength={ maxLength }
                         className={ `${ Icon ? "ml-3" : "" } flex-1 font-montserratMedium text-base text-black` }
                         onBlur={ onBlur }
                         onChangeText={ onChange }
@@ -44,7 +47,8 @@ const Field: React.FC<IFieldProps> = ({ label, placeholder, name, keyboardType =
         </View>
         { error && <Text className="mt-2 text-xs text-red-600">{ error }</Text> }
     </View>
-);
+    );
+};
 
 const StepFiveComponent: React.FC<IProps> = ({ control, errors }) => {
     return (

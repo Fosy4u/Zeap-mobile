@@ -17,7 +17,7 @@ const useStepThreeHook = () => {
     // USD/CAD → +1, GBP → +44). Falls back to Nigeria if currency is unset.
     const currencyDialCode = dialCodeForCurrency(recommendedCurrency?.code);
 
-    const { control, handleSubmit, formState: { errors }, setValue } = useForm<IStepThreeForm>({
+    const { control, handleSubmit, formState: { errors, isValid }, setValue } = useForm<IStepThreeForm>({
         defaultValues: {
             // Prefill with the auth user's email — they can edit if their
             // business email differs. Falls back to whatever's already in the
@@ -49,7 +49,7 @@ const useStepThreeHook = () => {
         dispatch(setSelectedOnboardingStep(4));
     };
 
-    return { control, handleSubmit, errors, onSubmit, setValue };
+    return { control, handleSubmit, errors, isValid, onSubmit, setValue };
 };
 
 export default useStepThreeHook;

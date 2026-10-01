@@ -9,7 +9,7 @@ const useStepOneHook = () => {
     const { formData } = useSelector((state: RootState) => state.vendorOnboardingState);
     const dispatch = useDispatch();
 
-    const { control, handleSubmit, formState: { errors }, setValue } = useForm<IStepOneForm>({
+    const { control, handleSubmit, formState: { errors, isValid }, setValue } = useForm<IStepOneForm>({
         defaultValues: {
             businessName: formData.businessName,
         },
@@ -22,7 +22,7 @@ const useStepOneHook = () => {
         dispatch(setSelectedOnboardingStep(2));
     };
 
-    return { control, handleSubmit, errors, onSubmit, setValue };
+    return { control, handleSubmit, errors, isValid, onSubmit, setValue };
 };
 
 export default useStepOneHook;

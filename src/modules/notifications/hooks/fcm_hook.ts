@@ -1,11 +1,14 @@
 // fcm_hook.ts
-import { AuthorizationStatus, getInitialNotification, getMessaging, getToken, onMessage, onNotificationOpenedApp, onTokenRefresh, requestPermission } from "@react-native-firebase/messaging";
-import { useEffect } from "react";
+import { AuthorizationStatus, getInitialNotification, getMessaging, getToken, onMessage, onNotificationOpenedApp, onTokenRefresh, registerDeviceForRemoteMessages, requestPermission } from "@react-native-firebase/messaging";
+import { useEffect, useRef } from "react";
+import { useSelector } from "react-redux";
+import { RootState } from "../../../redux/store/store";
 import { useRegisterFCMTokenMutation } from "../apis/notification_api";
 import handleError from "../../general/hooks/errorHandler_hook";
 import { PermissionsAndroid, Platform } from "react-native";
 import PushNotification, { Importance } from "react-native-push-notification";
 import handleNotificationNavigation from "../utils/notificationNavigation";
+import { isNotificationForUser } from "../utils/notificationRelevance";
 
 // One-time library setup. Must run before any localNotification() call:
 //  • configure() registers the tap handler — without it, taps on local
@@ -38,6 +41,10 @@ PushNotification.createChannel(
 const useFCMNotificationHook = () => {
     const [registerFCMToken] = useRegisterFCMTokenMutation();
     const messagingInstance = getMessaging();
+    const { userData } = useSelector((state: RootState) => state.profileState);
+
+    const audienceRef = useRef(userData);
+    audienceRef.current = userData;
 
     // Request user permission (STEP 1)
     const handleRequestUserPermission = async () => {
@@ -74,6 +81,10 @@ const useFCMNotificationHook = () => {
     // Get Firebase Cloud Messaging (FCM) token (STEP 2)
     const handleGetFCMToken = async () => {
         try {
+            if (Platform.OS === "ios") {
+                await registerDeviceForRemoteMessages(messagingInstance);
+            }
+
             const fcmToken = await getToken(messagingInstance);
             // console.log("FCM TOKEN::: ", fcmToken);
 
@@ -123,6 +134,13 @@ const useFCMNotificationHook = () => {
         // Listen for foreground messages and show local notification
         const unsubscribeOnMessage = onMessage(messagingInstance, async remoteMessage => {
             // console.log("REMOTE NOTIFICATION::: ", remoteMessage);
+
+            /* Delivery is the backend's call, display is ours: drop anything the
+               payload shows belongs to another shop or another role. */
+            if (!isNotificationForUser(remoteMessage.data as any, audienceRef.current)) {
+                console.log("NOTIFICATION SUPPRESSED (not for this user):::", remoteMessage.data);
+                return;
+            }
 
             // Try to get image URL from notification payload
             const imageUrl =

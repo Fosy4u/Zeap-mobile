@@ -9,7 +9,7 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import RootNavigationStackModel from "../../../../routes/model/routes_model";
 import handleError from "../../../general/hooks/errorHandler_hook";
-
+import buildFilterParams from "../utils/buildFilterParams";
 
 const useFilterAndSearchHook = () => {
       const { searchPhrase, currentPage, dynamicFilterOptions } = useSelector((state: RootState) => state.productState);
@@ -34,7 +34,6 @@ const useFilterAndSearchHook = () => {
             const updated = isSelected
                 ? current.filter((value: string | number) => value !== optionValue)
                 : [...current, optionValue];
-
 
             const selectedFilter = {
                 ...prev,
@@ -65,30 +64,11 @@ const useFilterAndSearchHook = () => {
         }
     };
 
-    // Format the user-selected dynamic filters into API params (lowercase the
-    // key, strip spaces, camel-case productType values, join arrays as CSV).
-    const buildFormattedFilters = (): Record<string, string | number> => {
-        const formattedFilters: Record<string, string | number> = {};
-        Object.keys(selectedFilters).forEach((eachKey) => {
-            let formattedKey = eachKey.charAt(0).toLowerCase() + eachKey.slice(1);
-            formattedKey = formattedKey.replace(/\s+/g, '');
-
-            const values = selectedFilters[eachKey];
-            let joinedValues: string | number;
-            if (formattedKey === 'productType' && Array.isArray(values)) {
-                joinedValues = values.map(val => {
-                    const strVal = val as string;
-                    return strVal.split(' ').map((word, index) =>
-                        index === 0 ? word.toLowerCase() : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-                    ).join('');
-                }).join(',');
-            } else {
-                joinedValues = Array.isArray(values) ? values.join(',') : values;
-            }
-            formattedFilters[formattedKey] = joinedValues;
-        });
-        return formattedFilters;
-    };
+    const buildFormattedFilters = (): Record<string, string | number> =>
+        buildFilterParams(
+            selectedFilters as Record<string, (string | number)[]>,
+            (dynamicFilterOptions as any) || [],
+        );
 
     // Map a category screen to its backend filter. Female/Male filter by the
     // dedicated `gender` param (a product's gender lives in categories.gender —
@@ -152,6 +132,7 @@ const useFilterAndSearchHook = () => {
     const handleGetFilteredProducts = async({ screenTitle, setShowBottomSheetModal }: { screenTitle: string; setShowBottomSheetModal?: (value: boolean) => void }) => {
         dispatch(setLoadingMessage(`Getting ${screenTitle.toLowerCase()}...`));
         dispatch(setIsLoading(true));
+        dispatch(setAllProducts([]));
         // Any new filter/category load starts from page 1.
         dispatch(setCurrentPage(1));
 
@@ -311,6 +292,9 @@ const useFilterAndSearchHook = () => {
     const handleSubmit =  async(screenTitle: string) => {
         dispatch(setLoadingMessage(`Searching for "${searchPhrase.toLowerCase()}"...`));
         dispatch(setIsLoading(true));
+        /* Clear the old results so the skeleton loader shows while the search
+           runs, rather than the previous list. */
+        dispatch(setAllProducts([]));
 
         const queryParams = {
             search: searchPhrase,

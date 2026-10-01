@@ -1,5 +1,5 @@
 import IBodyMeasurement from "./bodyMeasurement_model";
-import IBodyMeasurementGuide from "./bodyMeasurementGuide_model";
+import IBodyMeasurementGuide from "../../../general/models/bodyMeasurementGuide_model";
 import IRequiredMeasurementFormFields from "./requiredMeasurementFormField_model";
 
 interface IMeasurementState {

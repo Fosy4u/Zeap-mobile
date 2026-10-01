@@ -15,22 +15,23 @@ const WelcomeScreen = () => {
           barStyle="dark-content"
       />
 
-      <View className="flex-[0.5] items-center justify-center bg-white">
+      <View className="flex-[0.4] items-center justify-center bg-white">
         <Image
-          source={require("../../../../assets/images/app_logo_green.png")}
-          className="h-[80px] w-[80px] mt-14 rounded-2xl"
+          source={require("../../../../assets/images/app_icon_green.png")}
+          className="h-[100px] w-[120px] mt-14"
+          resizeMode="contain"
         />
 
-        <Image
+        {/* <Image
           source={ require("../../../../assets/images/welcome_image.png") }
           resizeMode={"contain"}
           className="h-[250px] w-auto mt-10"
-        />
+        /> */}
       </View>
 
-      <View className="flex-[0.5] px-7 items-center bg-white">
+      <View className="flex-[0.6] px-7 items-center bg-white">
         
-        <Text className="mt-8 font-bold text-2xl text-baseGreen">Welcome to ZEAP ✌🏽</Text>
+        <Text className="mt-8 font-bold text-2xl text-baseGreen">Welcome to ZEAPER ✌🏽</Text>
         <Text className="mt-3 text-center text-base">Let’s get you into the system, ASAP</Text>
 
         <TouchableOpacity 

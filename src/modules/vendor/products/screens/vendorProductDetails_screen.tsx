@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
+import { IVariation } from '../models/vendorProductDetails_model.ts';
 import {Dimensions, Image, SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View} from "react-native";
 import { Edit2, Star1, Trash } from "iconsax-react-native";
 import AppHeaderComp from "../../general/components/appHeader_comp.tsx";
@@ -6,18 +7,21 @@ import {useDispatch, useSelector} from "react-redux";
 import {RootState} from "../../../../redux/store/store.ts";
 import {RouteProp, useNavigation} from "@react-navigation/native";
 import RootNavigationStackModel from "../../../../routes/model/routes_model.ts";
-import AppLoader from '../../../general/components/appLoader.tsx';
 import SkeletonBlock from '../../../general/components/skeletonBlock_component.tsx';
+import VendorProductDetailsSkeletonComponent from '../components/vendorProductDetailsSkeleton_component.tsx';
 import useProductHook from '../hooks/vendorProduct_hook.ts';
 import FastImage from 'react-native-fast-image';
 import VendorProductDescriptionComponent from '../components/vendorProductDescription_component.tsx';
 import ReviewComponent from '../../../general/components/review_component.tsx';
 import VendorProductTimelineComponent from '../components/vendorProductTimeline_component.tsx';
+import VendorProductRejectionReasonsComponent from '../components/vendorProductRejectionReasons_component.tsx';
 import { setProduct, setProductMode, setSelectedStep, setSelectedTab } from '../slices/vendorProductState_slice.ts';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import DeleteProducWarningPopupModal from '../modals/deleteProductWarningPopup_modal.tsx';
 import FormatWords from '../../../../utils/formatWords';
-
+import useDisplayCurrency from '../../../general/hooks/displayCurrency_hook.ts';
+import ColorSwatchComponent from '../../../general/components/colorSwatch_component.tsx';
+import AppStatusBar from "../../../general/components/appStatusBar";
 
 interface IProps {
     route: RouteProp<RootNavigationStackModel, "vendorProductDetailsScreen">
@@ -28,19 +32,34 @@ const VendorProductDetailsScreen: React.FC<IProps> = ({ route }) => {
     const { isLoading, loadingMessage } = useSelector((state: RootState) => state.generalState);
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const dispatch = useDispatch();
+    const { formatPrice, currencyRefreshToken } = useDisplayCurrency();
     const { productID } = route.params!;
     // console.log("PROMOTION: ", productPromotion);
     
-    const { 
+    const {
         featuredImage, setFeaturedImage,
-        defaultFeaturedImageAndThumbnails,
+        defaultFeaturedImageAndThumbnails, handleUpdateDefaultFeaturedImageAndThumbnails,
         handleGetProductByProductID,
+        handleGetShopPricedProduct,
         showDeleteProductWarningModal, setShowDeleteProductWarningModal,
         handleDeleteProduct,
         featuredColors,
-        handleFormatDate,
         handleTornOffPromo,
     } = useProductHook();
+
+    // The colour currently shown (drives the selected-swatch ring + the sizes).
+    const selectedColorName = (defaultFeaturedImageAndThumbnails as any)?.value as string | undefined;
+
+    // Sizes available for the selected colour, derived from the product's
+    // variations (ready-to-wear). Falls back to the flat product.sizes for
+    // products that don't carry per-colour variations.
+    const sizesForSelectedColor = Array.from(new Set(
+        (product?.variations ?? [])
+            .filter((variation) => variation.colorValue?.toLowerCase() === (selectedColorName ?? "").toLowerCase())
+            .map((variation) => variation.size)
+            .filter(Boolean) as string[]
+    ));
+    const displaySizes = sizesForSelectedColor.length > 0 ? sizesForSelectedColor : (product?.sizes ?? []);
     // const isLoading = isLoadingReviews || isLoadingDeleteProduct;
     
 
@@ -48,19 +67,36 @@ const VendorProductDetailsScreen: React.FC<IProps> = ({ route }) => {
         if (productID) {
             handleGetProductByProductID(productID);
         }
+    }, [productID, currencyRefreshToken]);
+
+    const [shopPricedVariation, setShopPricedVariation] = useState<IVariation | undefined>();
+
+    useEffect(() => {
+        if (!productID) { return; }
+        let active = true;
+        (async () => {
+            const shopPriced = await handleGetShopPricedProduct(productID);
+            if (active) { setShopPricedVariation(shopPriced?.variations?.[0]); }
+        })();
+        return () => { active = false; };
     }, [productID]);
+
+    // Falls back to the converted payload only if the shop lookup returned nothing.
+    const priceVariation = shopPricedVariation ?? product?.variations?.[0];
     
 
     return (
         <SafeAreaView className="h-full w-full flex-1">
-            <StatusBar
-                backgroundColor="#133522"
-                barStyle="light-content"
-            />
+            <AppStatusBar backgroundColor="#133522" barStyle="light-content" />
 
             {/*==== Header ====*/}
             <AppHeaderComp title="Product Details" />
 
+            {/* While the product loads, show a layout-matching skeleton instead
+                of a blocking full-screen loader. */}
+            { isLoading ? (
+                <VendorProductDetailsSkeletonComponent />
+            ) : (
             <ScrollView
                 showsVerticalScrollIndicator={false}
                 className="h-full w-full mt-2 px-5 pt-3"
@@ -98,10 +134,13 @@ const VendorProductDetailsScreen: React.FC<IProps> = ({ route }) => {
                 <View className="mt-2">
                     <View className="h-auto flex-row items-end space-x-3">
                         <Text className="font-montserratSemiBold text-xl text-baseGreen">
-                            ₦{ (productPromotion?.discount?.fixedPercentage!) ? product?.variations?.[0].discount?.toLocaleString() : product?.variations?.[0].price!.toLocaleString() }
+                            { formatPrice(
+                                (productPromotion?.discount?.fixedPercentage!) ? priceVariation?.discount : priceVariation?.price,
+                                priceVariation?.currency
+                            ) }
                         </Text>
                         <Text className={`font-montserratNormal text-sm text-gray-400 line-through ${ (productPromotion?.discount?.fixedPercentage!) ? "flex" : "hidden" }`}>
-                            ₦{ product?.variations?.[0].price!.toLocaleString() }
+                            { formatPrice(priceVariation?.price, priceVariation?.currency) }
                         </Text>
                     </View>
                     <View className="mt-2.5 flex-row items-center space-x-3">
@@ -114,7 +153,7 @@ const VendorProductDetailsScreen: React.FC<IProps> = ({ route }) => {
                         </View>
 
                         <View className="flex-row items-center">
-                            <Text className={`font-montserratMedium ${ product?.variations?.[0].quantity! >= 10 ? "text-green-600" : "text-red-600" }`}>{ product?.variations?.[0].quantity! }</Text>
+                            <Text className={`font-montserratMedium ${ (product?.variations?.[0]?.quantity ?? 0) >= 10 ? "text-green-600" : "text-red-600" }`}>{ product?.variations?.[0]?.quantity ?? 0 }</Text>
                             <Text className="ml-1 font-montserratMedium text-xs text-black">In stock</Text>
                         </View>
 
@@ -130,21 +169,14 @@ const VendorProductDetailsScreen: React.FC<IProps> = ({ route }) => {
                     </View>
                 </View>
 
+                {/*==== Rejection Reasons — shown until the product goes live again ====*/}
+                { (product?.status !== "live" && (product?.rejectionReasons?.length ?? 0) > 0) && (
+                    <VendorProductRejectionReasonsComponent rejectionReasons={ product?.rejectionReasons } />
+                ) }
+
                 <View className="h-auto w-full mt-3 p-2 rounded-xl border border-gray-200 bg-[#EDEFF4]">
                     <View className="h-auto w-auto p-0 flex items-center justify-center rounded-xl bg-transparent">
-                        { !isLoading && featuredImage?.link ? (
-                            <FastImage
-                                source={{
-                                    uri: featuredImage?.link!,
-                                    priority: FastImage.priority.normal
-                                }}
-                                defaultSource={ require("../../../../../assets/images/app_logo_green.png") }
-                                resizeMode={ FastImage.resizeMode.cover }
-                                className="h-[500px] w-full rounded-lg"
-                                style={{ aspectRatio: 0.68 }}
-                                fallback
-                            />
-                        ) : (
+                        { isLoading ? (
                             <View style={{ marginTop: 20 }}>
                                 <SkeletonBlock
                                     width={ Dimensions.get('window').width - 40 }
@@ -152,7 +184,31 @@ const VendorProductDetailsScreen: React.FC<IProps> = ({ route }) => {
                                     radius={ 16 }
                                 />
                             </View>
-                        ) } 
+                        ) : featuredImage?.link ? (
+                            <FastImage
+                                source={{
+                                    uri: featuredImage?.link!,
+                                    priority: FastImage.priority.normal
+                                }}
+                                defaultSource={ require("../../../../../assets/images/image_placeholder.png") }
+                                resizeMode={ FastImage.resizeMode.contain }
+                                className="h-[500px] w-full rounded-lg"
+                                style={{ aspectRatio: 0.68 }}
+                                fallback
+                            />
+                        ) : (
+                            // No image uploaded yet (e.g. a draft) — show the app
+                            // logo with a caption so it's clear an image belongs
+                            // here, rather than a shimmer that reads as loading.
+                            <View className="h-[500px] w-full rounded-lg bg-gray-100 items-center justify-center">
+                                <Image
+                                    source={ require("../../../../../assets/images/image_placeholder.png") }
+                                    resizeMode="contain"
+                                    className="h-[120px] w-[120px]"
+                                />
+                                <Text className="mt-3 font-montserratMedium text-sm text-gray-400">No image</Text>
+                            </View>
+                        ) }
                     </View>
                 </View>
 
@@ -174,7 +230,7 @@ const VendorProductDetailsScreen: React.FC<IProps> = ({ route }) => {
                                         source={
                                             defaultFeaturedImageAndThumbnails?.images![index]?.link!
                                             ? { uri: defaultFeaturedImageAndThumbnails?.images![index]?.link! }
-                                            : require("../../../../../assets/images/app_logo_green.png")
+                                            : require("../../../../../assets/images/image_placeholder.png")
                                         }
                                         resizeMode="cover"
                                         className="h-[76px] w-[68px] rounded-2xl"
@@ -185,13 +241,37 @@ const VendorProductDetailsScreen: React.FC<IProps> = ({ route }) => {
                     </ScrollView>
                 </View>
 
-                {/*==== Available Sizes ====*/}
+                { featuredColors.length !== 0 && (
+                    <View className="mt-7">
+                        <View className="h-auto w-full ">
+                            <Text className="font-montserratSemiBold text-[16px] text-gray-700">Available Colors</Text>
+
+                            <View className="h-auto w-full mt-2 flex-row items-center flex-wrap gap-x-3">
+                                { featuredColors.map((eachColor) => {
+                                    const isSelected = eachColor.name?.toLowerCase() === (selectedColorName ?? "").toLowerCase();
+                                    return (
+                                        <TouchableOpacity
+                                            key={ eachColor.hex }
+                                            onPress={ () => handleUpdateDefaultFeaturedImageAndThumbnails(eachColor.name!) }
+                                            className="h-10 w-10 flex items-center justify-center rounded-full"
+                                            style={ isSelected ? { borderWidth: 2, borderColor: "#133522" } : undefined }
+                                        >
+                                            <ColorSwatchComponent value={ eachColor.name } hex={ eachColor.hex } size={ 32 } />
+                                        </TouchableOpacity>
+                                    );
+                                }) }
+                            </View>
+                        </View>
+                    </View>
+                ) }
+
+                {/*==== Available Sizes (for the selected colour) ====*/}
                 <View className="mt-7">
                     <View className="h-auto w-full ">
                         <Text className="font-montserratSemiBold text-[16px] text-gray-700">Available Sizes</Text>
 
                         <View className="h-auto w-full mt-2 flex-row items-center flex-wrap gap-x-3">
-                            { product?.sizes?.map((eachSize: string) => (
+                            { displaySizes.map((eachSize: string) => (
                                 <View key={ eachSize } className="px-4 py-2 border border-gray-300 rounded-xl">
                                     <Text className="font-montserratMedium">{ eachSize }</Text>
                                 </View>
@@ -200,27 +280,6 @@ const VendorProductDetailsScreen: React.FC<IProps> = ({ route }) => {
                     </View>
                 </View>
 
-
-                {/*==== Available Colors ====*/}
-                { featuredColors.length !== 0 && (
-                    <View className="mt-7">
-                        <View className="h-auto w-full ">
-                            <Text className="font-montserratSemiBold text-[16px] text-gray-700">Available Colors</Text>
-
-                            <View className="h-auto w-full mt-2 flex-row items-center flex-wrap gap-x-3">
-                                { featuredColors.map((eachColor) => (
-                                    <View key={ eachColor.hex }
-                                        className="h-10 w-10 flex items-center justify-center border rounded-full"
-                                        style={ { borderColor: eachColor.hex! } }
-                                    >
-                                        <View className="h-8 w-8 rounded-full" style={ { backgroundColor: eachColor.hex! } } />
-                                    </View>
-                                )) }
-                            </View>
-                        </View>
-                    </View>
-                ) }
-
                 <View className="h-[1.5px] w-full mt-5 bg-gray-200" />
 
                 {/*==== Product Promo ====*/}
@@ -228,7 +287,9 @@ const VendorProductDetailsScreen: React.FC<IProps> = ({ route }) => {
                 { Object.entries(productPromotion).length > 0 ? (
                     <View className="h-auto w-full mt-2 px-3 pt-4 pb-4 border border-gray-200 rounded-xl bg-lightGray">
                         <View className="h-auto w-full flex-row items-center justify-between">
-                            <View>
+                            {/* flex-1 so a long promo title wraps rather than
+                                pushing the status badge off the card. */}
+                            <View className="flex-1 mr-3">
                                 <Text className="font-montserratSemiBold text-base text-gray-700">{  productPromotion?.title! }</Text>
                                 <Text className="font-montserratMedium text-sm text-gray-700">Discount: { productPromotion?.discount?.fixedPercentage! ? productPromotion?.discount?.fixedPercentage! : 0 }%</Text>
                             </View>
@@ -264,18 +325,22 @@ const VendorProductDetailsScreen: React.FC<IProps> = ({ route }) => {
                             onPress={ () => handleTornOffPromo(productPromotion?.promoId!) }
                             className="mt-4 py-4 rounded-lg border border-red-200/70 backdrop-blur-lg bg-red-50"
                         >
-                            <Text className="font-montserratMedium text-red-800 text-center">Torn Off Promo</Text> 
+                            <Text className="font-montserratMedium text-red-800 text-center">Leave Promo</Text>
                         </TouchableOpacity>
                     </View>
                 ) : (
                     <View className="h-auto w-full mt-2 px-3 py-4 flex-row items-center justify-between border border-gray-200 rounded-xl bg-lightGray">
-                        <Text className="font-montserratSemiBold text-base text-gray-700">No promotion</Text>
+                        {/* flex-1 + mr so the longer copy wraps instead of
+                            colliding with the button. */}
+                        <Text className="flex-1 mr-3 font-montserratSemiBold text-base text-gray-700">
+                            This product is not part of any promo
+                        </Text>
 
                         <TouchableOpacity
                             onPress={ () => navigation.navigate("promoScreen") }
                             className="px-4 py-2.5 rounded-lg backdrop-blur-lg bg-baseGreen"
                         >
-                            <Text className="font-montserratMedium text-center text-white">Add Promo</Text> 
+                            <Text className="font-montserratMedium text-center text-white">Join Promo</Text>
                         </TouchableOpacity>
                     </View>
                 )}
@@ -298,7 +363,7 @@ const VendorProductDetailsScreen: React.FC<IProps> = ({ route }) => {
                 ) : (selectedTab === "Reviews") ? (
                     <ReviewComponent reviewAndRating={ reviewAndRating! } productID={ product!.productId! } loadingMessage={ loadingMessage } />
                 ) : (
-                    <VendorProductTimelineComponent timelines={ product!.timeLine! } handleFormatDate={ handleFormatDate } />
+                    <VendorProductTimelineComponent timelines={ product!.timeLine! } />
                 ) }
 
                 <View className="h-[1.5px] w-full mt-5 bg-gray-200" />
@@ -337,6 +402,7 @@ const VendorProductDetailsScreen: React.FC<IProps> = ({ route }) => {
                 <View className="h-10" />
 
             </ScrollView>
+            ) }
 
             {/* ==== Show Delete Product Warning Popup ==== */}
             { showDeleteProductWarningModal &&
@@ -345,10 +411,6 @@ const VendorProductDetailsScreen: React.FC<IProps> = ({ route }) => {
                     setShowDeleteProductWarningModal={ setShowDeleteProductWarningModal }
                     handleDeleteProduct={ handleDeleteProduct }
                 />
-            }
-            
-            { isLoading && 
-                <AppLoader loadingAdditionalMessage={ loadingMessage } />
             }
         </SafeAreaView>
     )

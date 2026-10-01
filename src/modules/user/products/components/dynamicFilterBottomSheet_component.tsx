@@ -2,8 +2,8 @@ import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 import { BottomSheetModalMethods } from "@gorhom/bottom-sheet/lib/typescript/types";
 import { ArrowDown2, ArrowRight2 } from "iconsax-react-native";
 import React, { useState } from "react";
-import { View, Image, Text, TouchableOpacity } from "react-native";
-import { ScrollView } from "react-native-gesture-handler";
+import { View, Image, Text, ActivityIndicator } from "react-native";
+import { ScrollView, TouchableOpacity } from "react-native-gesture-handler";
 import IDynamicFilter from "../models/dynamicFilter_model";
 
 interface IDynamicFilterBottomSheetComponent {
@@ -19,7 +19,7 @@ interface IDynamicFilterBottomSheetComponent {
 };
 
 const DynamicFilterBottomSheetComponent: React.FC<IDynamicFilterBottomSheetComponent> = (props) => {
-  const { bottomSheetModalRef, snapPoints, setShowBottomSheetModal, selectedFilters, toggleCheckboxOption, clearAllFilters, dynamicFilterOptions } = props;
+  const { bottomSheetModalRef, snapPoints, setShowBottomSheetModal, selectedFilters, toggleCheckboxOption, clearAllFilters, dynamicFilterOptions, isloading, loadingMessage } = props;
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   // const [selectedFilters, setSelectedFilters] = useState<Record<string, string[]>>({});
   // console.log("DYNAMIC FILTER OPTIONS::: ", JSON.stringify(dynamicFilterOptions));
@@ -132,11 +132,14 @@ const DynamicFilterBottomSheetComponent: React.FC<IDynamicFilterBottomSheetCompo
                   ) }
                   </View>
                 ))
+              ) : isloading ? (
+                <View className="mt-10 items-center justify-center">
+                  <ActivityIndicator size="small" color="#133522" />
+                  <Text className="mt-3 text-sm text-gray-500">{ loadingMessage || "Loading filters..." }</Text>
+                </View>
               ) : (
                 <View className="mt-6 items-center justify-center">
-                  <TouchableOpacity onPress={clearAllFilters} className="px-6 py-3 bg-baseGreen rounded-lg">
-                    <Text className="text-white font-medium">Clear All Filters</Text>
-                  </TouchableOpacity>
+                  <Text className="text-sm text-gray-500">No filters available for this search.</Text>
                 </View>
               )
             ) : null

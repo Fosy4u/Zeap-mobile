@@ -18,6 +18,7 @@ import FastImage from 'react-native-fast-image';
 import ProductCardComponent from '../../../general/components/productCard_component';
 import IProduct from '../models/product_model';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import useDisplayCurrency from '../../../general/hooks/displayCurrency_hook';
 
 
 const ProductDetailScreen = () => {
@@ -37,11 +38,12 @@ const ProductDetailScreen = () => {
     handleGetProductByProductID,
     handleAddProductToCart,
   } = useProductsHook();
+  const { currencyRefreshToken } = useDisplayCurrency();
 
 
   useEffect(() => {        
       handleGetProductByProductID(productID);
-  }, [productID]);
+  }, [productID, currencyRefreshToken]);
   
   return (
     <GestureHandlerRootView>

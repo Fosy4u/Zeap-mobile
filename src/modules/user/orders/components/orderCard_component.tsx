@@ -14,12 +14,17 @@ const OrderCardComponent: React.FC<IProps> = ({ order }) => {
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     // console.log("ORDER DATA::: ", order);
 
+    /* Orders arrive sparse — productOrders and progress are both absent on some
+       records — so every field is read through a guard. */
+    const itemCount = (order?.productOrders ?? []).length;
+    const progressValue = order?.progress?.value ?? 0;
+
     return (
         <TouchableOpacity
             onPress={ () => {
                 navigation.navigate("orderDetailsScreen", {
                     from: "Orders Screen",
-                    orderId: order.orderId
+                    orderId: order?.orderId
                 });
             } }
         >
@@ -28,15 +33,15 @@ const OrderCardComponent: React.FC<IProps> = ({ order }) => {
                 <View className="h-auto w-full flex-row items-center justify-between">
                     <View className="flex-row items-center">
                         <View className="h-[60px] w-[60px] mr-3 items-center justify-center border border-gray-200 rounded-lg bg-gray-200">
-                            <Text className="font-montserratSemiBold text-lg text-center">{ order.productOrders.length }</Text>
-                            <Text className="text-center">{ order.productOrders.length > 1 ? "Items" : "Item" }</Text>
+                            <Text className="font-montserratSemiBold text-lg text-center">{ itemCount }</Text>
+                            <Text className="text-center">{ itemCount > 1 ? "Items" : "Item" }</Text>
                         </View>
                         <View>
                             <Text className="font-montserratMedium text-xs text-gray-500">
                                 Order ID
                             </Text>
                             <Text className="font-montserratMedium text-gray-700">
-                                {order.orderId}
+                                {order?.orderId ?? "—"}
                             </Text>
                         </View>
                     </View>
@@ -46,7 +51,7 @@ const OrderCardComponent: React.FC<IProps> = ({ order }) => {
                             Placed On
                         </Text>
                         <Text className="font-montserratMedium text-gray-700">
-                            { timeAgo(order.createdAt) }
+                            { timeAgo(order?.createdAt) }
                         </Text>
                     </View>
                 </View>
@@ -54,10 +59,10 @@ const OrderCardComponent: React.FC<IProps> = ({ order }) => {
                 {/* ==== Progress Bar with percentage ==== */}
                 <View className="h-auto w-full mt-4">
                     <Text className="font-montserratMedium text-xs text-gray-500">
-                        Order Progress: { order.progress.value }%
+                        Order Progress: { progressValue }%
                     </Text>
                     <View className="h-[8px] w-full mt-1 bg-gray-200 rounded-lg">
-                        <View style={{ height: 8, width: `${ order.progress.value }%`, backgroundColor: "#133522", borderRadius: 10 }} />
+                        <View style={{ height: 8, width: `${ progressValue }%`, backgroundColor: "#133522", borderRadius: 10 }} />
                     </View>
                 </View>
             </View>

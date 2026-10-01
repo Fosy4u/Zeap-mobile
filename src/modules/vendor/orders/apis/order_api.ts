@@ -1,20 +1,32 @@
 import rootAPI from "../../../../redux/api/rootAPI";
-import { getVendorOrderDetailsRoute, getVendorOrdersRoute, orderHistoryRoute, updateOrderStatusRoute } from "../../../../redux/api/api_route";
+import { getVendorOrderDetailsRoute, getVendorOrdersRoute, orderHistoryRoute, rejectOrderRoute, updateOrderStatusRoute } from "../../../../redux/api/api_route";
 import IOrder from "../models/oder_model";
 import IOrderHistory from "../models/orderHistory_model";
 import IOrderUpdate from "../models/orderUpdate_model";
+import IOrderReject from "../models/orderReject_model";
 import IOrderDetails from "../models/orderDetails_model";
+import IVendorOrderFilter from "../models/orderFilter_model";
 
 const orderAPI = rootAPI.injectEndpoints({
     overrideExisting: true,
     endpoints: (builder) => ({
 
-        // Get all orders
-        getOrders: builder.query<IOrder[], void>({
-            query: () => ({
-                url: getVendorOrdersRoute,
-                method: "GET",
-            }),
+        getVendorOrders: builder.query<IOrder[], IVendorOrderFilter | void>({
+            query: (filter) => {
+                const { status, itemName, orderId, fromDate, toDate } = filter ?? {};
+                const params: Record<string, string> = {};
+                if (status?.length) { params.status = status.join(","); }
+                if (itemName?.trim()) { params.title = itemName.trim(); }
+                if (orderId?.trim()) { params.orderId = orderId.trim(); }
+                if (fromDate) { params.startDate = fromDate; }
+                if (toDate) { params.endDate = toDate; }
+
+                return {
+                    url: getVendorOrdersRoute,
+                    method: "GET",
+                    params,
+                };
+            },
             providesTags: ["VendorOrders"],
             transformResponse: (response: { data: IOrder[] }) => {
                 return response.data;
@@ -22,7 +34,7 @@ const orderAPI = rootAPI.injectEndpoints({
         }),
 
         // Get order details
-        getOrderDetails: builder.query<IOrderDetails, { orderID: string }>({
+        getVendorOrderDetails: builder.query<IOrderDetails, { orderID: string }>({
             query: ({ orderID }) => ({
                 url: getVendorOrderDetailsRoute,
                 method: "GET",
@@ -41,20 +53,33 @@ const orderAPI = rootAPI.injectEndpoints({
                 method: "PUT",
                 body: order,
             }),
-            invalidatesTags: ["VendorOrders", "VendorOrderDetails", "VendorOrderHistory"],
+            invalidatesTags: ["VendorOrders", "VendorOrderDetails", "VendorOrderHistory", "OrderHistory"],
+            transformResponse: (response: { data: IOrderDetails }) => {
+                return response.data;
+            }
+        }),
+
+        // Reject order
+        rejectOrder: builder.mutation<IOrderDetails, IOrderReject>({
+            query: (rejection: IOrderReject) => ({
+                url: rejectOrderRoute,
+                method: "PUT",
+                body: rejection,
+            }),
+            invalidatesTags: ["VendorOrders", "VendorOrderDetails", "VendorOrderHistory", "OrderHistory"],
             transformResponse: (response: { data: IOrderDetails }) => {
                 return response.data;
             }
         }),
 
         // Get order history
-        getOrderHistory: builder.query<IOrderHistory, { productOrder_id: string }>({
+        getVendorOrderHistory: builder.query<IOrderHistory, { productOrder_id: string }>({
             query: ({ productOrder_id }) => ({
                 url: orderHistoryRoute,
                 method: "GET",
                 params: { productOrder_id }
             }),
-            providesTags: ["OrderHistory"],
+            providesTags: ["OrderHistory", "VendorOrderHistory"],
             transformResponse: (response: { data: IOrderHistory }) => {
                 return response.data;
             }
@@ -63,8 +88,9 @@ const orderAPI = rootAPI.injectEndpoints({
 });
 
 export const {
-    useLazyGetOrdersQuery,
-    useLazyGetOrderDetailsQuery,
+    useLazyGetVendorOrdersQuery,
+    useLazyGetVendorOrderDetailsQuery,
     useUpdateOrderStatusMutation,
-    useLazyGetOrderHistoryQuery,
+    useRejectOrderMutation,
+    useLazyGetVendorOrderHistoryQuery,
 } = orderAPI;

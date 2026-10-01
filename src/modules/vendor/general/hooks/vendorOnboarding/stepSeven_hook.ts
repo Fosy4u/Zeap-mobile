@@ -21,7 +21,7 @@ const useStepSevenHook = () => {
         }
     }, [data, dispatch]);
 
-    const { control, handleSubmit, formState: { errors }, setValue } = useForm<IStepSevenForm>({
+    const { control, handleSubmit, formState: { errors, isValid }, setValue } = useForm<IStepSevenForm>({
         defaultValues: {
             agreedToTerms: formData.agreedToTerms,
         },
@@ -38,6 +38,7 @@ const useStepSevenHook = () => {
         control,
         handleSubmit,
         errors,
+        isValid,
         onSubmit,
         setValue,
         policies: sellerPolicies,

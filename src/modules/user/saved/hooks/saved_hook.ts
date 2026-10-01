@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../../../redux/store/store";
 import { useGetWishlistQuery } from "../apis/saved_api";
-import { setSavedProductIds } from "../slices/saved_slice";
+import { setSavedWishEntries } from "../slices/saved_slice";
 import useWishlistToggle from "./wishlistToggle_hook";
 
 // Full wishlist controller for the Saved screen (and anywhere that needs to
@@ -17,7 +17,11 @@ const useSavedHook = () => {
     // Reconcile the local saved-id mirror whenever the server list changes, so
     // hearts reflect the true wishlist after a fresh fetch / app restart.
     useEffect(() => {
-        dispatch(setSavedProductIds(wishItems.map((item) => item.product?.productId).filter(Boolean) as string[]));
+        dispatch(setSavedWishEntries(
+            wishItems
+                .filter((item) => !!item.product?.productId)
+                .map((item) => ({ productId: item.product!.productId, wishId: item._id })),
+        ));
     }, [wishItems]);
 
     return {

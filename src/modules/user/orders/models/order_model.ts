@@ -9,8 +9,10 @@ interface IOrder {
     disabled: boolean
     orderId: string
     payment: Payment
-    productOrders: ProductOrder[]
-    progress: Progress
+    /* Optional on purpose: the API omits both of these on some orders, so every
+       read must guard. Marking them required hid four crashes from the compiler. */
+    productOrders?: ProductOrder[]
+    progress?: Progress
     updatedAt: string
     user: string
   }

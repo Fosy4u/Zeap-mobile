@@ -14,6 +14,7 @@ import { RootState } from "../../../../redux/store/store.ts";
 import ProductFilterBottomSheetComponent from "../../products/components/productFilterBottomSheet_component.tsx";
 import OrderFilterBottomSheetComponent from "../../orders/components/orderFilterBottomSheet_component.tsx";
 import useVendorProductHook from "../../products/hooks/vendorProduct_hook.ts";
+import useDisplayCurrency from "../../../general/hooks/displayCurrency_hook.ts";
 
 const Tab = createBottomTabNavigator();
 
@@ -21,12 +22,13 @@ const VendorHomeScreen = () => {
 
   const { showProductFilterBottomSheet, showOrderFilterBottomSheet } = useSelector((state: RootState) => state.vendorHomeState);
   const { handleFetchFilteredProducts } = useVendorProductHook();
+  const { currencyRefreshToken } = useDisplayCurrency();
 
   useEffect(() => {
     (async () => {
       await handleFetchFilteredProducts();
     })();
-  }, []);
+  }, [currencyRefreshToken]);
 
   return (
     <GestureHandlerRootView>
@@ -42,11 +44,11 @@ const VendorHomeScreen = () => {
             <Tab.Screen name="Dashboard" component={ VendorDashboardScreen } />
             <Tab.Screen name="Products" component={ VendorProductsScreen } />
             <Tab.Screen name="Orders" component={ OrdersScreen } />
-            <Tab.Screen name="Profile" component={ ProfileScreen } />
-            {/* Tapping Market jumps the vendor to the buyer-side home stack
-                instead of rendering a tab. The component is kept on the screen
-                registration so the tab still appears in the bottom bar, but
-                the listener short-circuits the actual tab switch. */}
+            <Tab.Screen
+              name="Profile"
+              component={ ProfileScreen }
+              initialParams={{ mode: "vendor" }}
+            />
             <Tab.Screen
               name="Market"
               component={ MarketScreen }
@@ -59,17 +61,6 @@ const VendorHomeScreen = () => {
             />
           </Tab.Navigator>
 
-          {/*
-            NOTE: The custom BottomSheets are been moved to this parent component is to make sure it's always on top
-            of the "AppBottomBarComponent" component. This is because the "AppBottomBarComponent" is being always on top
-            of the "BottomSheetModalProvider" component. So, if we move the custom BottomSheets to this parent component,
-            it will always be on top of the "AppBottomBarComponent" component.
-
-            A better easier approach would have been to move the "AppBottomBarComponent" component to their respective
-            parent component and remove the and wrap them with the "BottomSheetModal" component. But, this will make the
-            "AppBottomBarComponent" component have a transparent backdrop which will always be clickable. So, this is
-            not a good effect we want to achieve.
-          */}
           { showProductFilterBottomSheet && (
             <ProductFilterBottomSheetComponent />
           ) }

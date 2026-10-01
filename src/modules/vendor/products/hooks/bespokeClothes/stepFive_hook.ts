@@ -72,8 +72,9 @@ const useStepFiveHook = () => {
         const productId = product?.productId || "";
 
         try {
-            // Check if there are selected colours
-            if (selectedColor.length === 0) {
+            // Plain single colour must carry at least one chosen colour. Multi-
+            // colour is "any colour on request", so it submits with an empty list.
+            if (colourType === "Single" && selectedColor.length === 0) {
                 Alert.alert("Error", "Please select at least one colour.");
                 dispatch(setProductIsLoading(false));
                 dispatch(setLoadingMessage(""));
@@ -85,7 +86,7 @@ const useStepFiveHook = () => {
                 productId,
                 variation: {
                     colorType: colourType.toLocaleLowerCase(),
-                    availableColors: selectedColor.map((color) => color.colorName),
+                    availableColors: colourType === "Single" ? selectedColor.map((color) => color.colorName) : [],
                     price: Number(price),
                 },
                 currentStep: 5,

@@ -1,9 +1,10 @@
 import React from 'react';
-import { SafeAreaView, StatusBar, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, SafeAreaView, StatusBar, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 interface IProps {
     priceAdjustmentModalType: string;
     autoPricePercentage: string;
+    productIsLoading: boolean;
     setAutoPricePercentage: React.Dispatch<React.SetStateAction<string>>;
     setShowPriceAdjustmentModal: React.Dispatch<React.SetStateAction<boolean>>;
     setIsAutoPriceAdjustment: React.Dispatch<React.SetStateAction<boolean>>;
@@ -14,7 +15,7 @@ interface IProps {
 
 
 const PriceAdjustmentModal: React.FC<IProps> = ({
-        priceAdjustmentModalType, autoPricePercentage, setAutoPricePercentage,
+        priceAdjustmentModalType, autoPricePercentage, productIsLoading, setAutoPricePercentage,
         setShowPriceAdjustmentModal, setIsAutoPriceAdjustment,
         handleSaveAutoPricePercentage, handleDeactivateAutoPriceAdjustment,
     }) => {
@@ -54,7 +55,7 @@ const PriceAdjustmentModal: React.FC<IProps> = ({
                                 keyboardType="number-pad"
                                 placeholder="Enter limit"
                                 placeholderTextColor="#9ca3af"
-                                className="flex-1 font-montserratMedium text-base"
+                                className="h-[44px] flex-1 font-montserratMedium text-base"
                                 // onBlur={ onBlur }
                                 onChangeText={ (value) => {
                                     setAutoPricePercentage(value);
@@ -78,33 +79,44 @@ const PriceAdjustmentModal: React.FC<IProps> = ({
 
                                     setShowPriceAdjustmentModal(false);
                                 } }
-                                className="h-[50px] flex-1 flex-row items-center justify-center rounded-xl bg-red-50"
+                                disabled={ productIsLoading }
+                                className={`h-[50px] flex-1 flex-row items-center justify-center rounded-xl bg-red-50 ${ productIsLoading ? "opacity-50" : "" }`}
                             >
                                 <Text className="font-montserratMedium text-red-700">Cancel</Text>
                             </TouchableOpacity>
 
                             <TouchableOpacity
                                 onPress={() => handleSaveAutoPricePercentage() }
-                                disabled={ autoPricePercentage === "" || autoPricePercentage === "0" }
-                                className={ autoPricePercentage === "" || autoPricePercentage === "0" ? "h-[50px] flex-1 flex-row items-center justify-center rounded-xl bg-gray-200" : "h-[50px] flex-1 flex-row items-center justify-center rounded-xl bg-baseGreen" }
+                                disabled={ autoPricePercentage === "" || autoPricePercentage === "0" || productIsLoading }
+                                className={ autoPricePercentage === "" || autoPricePercentage === "0" ? "h-[50px] flex-1 flex-row items-center justify-center rounded-xl bg-gray-200" : `h-[50px] flex-1 flex-row items-center justify-center rounded-xl bg-baseGreen ${ productIsLoading ? "opacity-70" : "" }` }
                             >
-                                <Text className="font-montserratRegular text-white">Save</Text>
+                                { productIsLoading ? (
+                                    <ActivityIndicator color="#FFFFFF" />
+                                ) : (
+                                    <Text className="font-montserratRegular text-white">Save</Text>
+                                ) }
                             </TouchableOpacity>
                         </View>
                     ) : (
                         <View className="h-auto w-full mt-6 flex-row justify-between space-x-3">
                             <TouchableOpacity
                                 onPress={ () => setShowPriceAdjustmentModal(false) }
-                                className="h-[50px] flex-1 flex-row items-center justify-center rounded-xl bg-red-50"
+                                disabled={ productIsLoading }
+                                className={`h-[50px] flex-1 flex-row items-center justify-center rounded-xl bg-red-50 ${ productIsLoading ? "opacity-50" : "" }`}
                             >
                                 <Text className="font-montserratMedium text-red-700">Cancel</Text>
                             </TouchableOpacity>
 
                             <TouchableOpacity
                                 onPress={ () => handleDeactivateAutoPriceAdjustment() }
-                                className="h-[50px] flex-1 flex-row items-center justify-center rounded-xl bg-baseGreen"
+                                disabled={ productIsLoading }
+                                className={`h-[50px] flex-1 flex-row items-center justify-center rounded-xl bg-baseGreen ${ productIsLoading ? "opacity-70" : "" }`}
                             >
-                                <Text className="font-montserratRegular text-white">Yes, I'm sure</Text>
+                                { productIsLoading ? (
+                                    <ActivityIndicator color="#FFFFFF" />
+                                ) : (
+                                    <Text className="font-montserratRegular text-white">Yes, I'm sure</Text>
+                                ) }
                             </TouchableOpacity>
                         </View>
                     )}

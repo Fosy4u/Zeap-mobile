@@ -17,6 +17,9 @@ const editAccountDetailsSchema = yup.object().shape({
     country: yup
         .string()
         .optional(),
+    address: yup
+        .string()
+        .optional(),
 });
 
 export type IEditAccountDetailsSchema = yup.InferType<typeof editAccountDetailsSchema>;

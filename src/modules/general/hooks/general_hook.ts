@@ -5,27 +5,15 @@ import { SubmitHandler } from "react-hook-form";
 import { ILikeReview } from "../validations/review_validation";
 import { useDislikeReviewMutation, useLikeReviewMutation } from "../apis/review_api";
 import { RootState } from "../../../redux/store/store";
-import { useState, useEffect } from "react";
 
-
-/**
- * The useGeneralHook
- * @returns { handleGetProductOptions }
- */
 const useGeneralHook = () => {
     const { readyMadeClothesOptions } = useSelector((state: RootState) => state.generalState);
     const dispatch = useDispatch();
-
 
     const [getProductOptions] = useLazyGetProductOptionsQuery();
     const [likeReview] = useLikeReviewMutation();
     const [dislikeReview] = useDislikeReviewMutation();
 
-    /**
-     * Generates a random integer between 0 and max (inclusive)
-     * @param {number} max - The upper bound of the random number range
-     * @return {number} A random integer between 0 and max
-     */
     const generateRandomInteger = (max: number): number => {
         return Math.floor(Math.random() * (max + 1));
     }
@@ -75,15 +63,6 @@ const useGeneralHook = () => {
         const color = colors!.find(color => color.name === colorName);
         return color?.hex!;
     };
-    
-    // Enforce rerender every minute to update timeAgo
-    const [now, setNow] = useState(Date.now());
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setNow(Date.now());
-        }, 60000); // Update every minute
-        return () => clearInterval(interval);
-    }, []);
 
     return {
         generateRandomInteger,

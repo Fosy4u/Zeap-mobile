@@ -18,20 +18,35 @@ const OrderFilterBottomSheetComponent = ({ bottomSheetModalRef, snapPoints, setS
     const { filterOrdersByStatus } = useOrderHook();
 
     const filterCounts = useMemo(() => {
+        /* The API can return an order with no productOrders (and a product order
+           with no status), so every hop is guarded — one miss throws here. */
+        const countByStatus = (status: string) =>
+            (orders ?? []).filter(order =>
+                (order?.productOrders ?? []).some(
+                    productOrder => productOrder?.status?.name?.toLowerCase() === status,
+                ),
+            ).length;
+
         return {
-            allCount: orders.length,
-            placedCount: orders.filter(order => order.productOrders.some(productOrder => productOrder.status.name === 'placed')).length,
-            processingCount: orders.filter(order => order.productOrders.some(productOrder => productOrder.status.name === 'processing')).length,
-            dispatchedCount: orders.filter(order => order.productOrders.some(productOrder => productOrder.status.name === 'dispatched')).length,
-            deliveredCount: orders.filter(order => order.productOrders.some(productOrder => productOrder.status.name === 'delivered')).length,
-            cancelledCount: orders.filter(order => order.productOrders.some(productOrder => productOrder.status.name === 'cancelled')).length,
+            allCount: (orders ?? []).length,
+            placedCount: countByStatus('placed'),
+            confirmedCount: countByStatus('confirmed'),
+            processingCount: countByStatus('processing'),
+            readyCount: countByStatus('ready'),
+            dispatchedCount: countByStatus('dispatched'),
+            deliveredCount: countByStatus('delivered'),
+            cancelledCount: countByStatus('cancelled'),
         };
     }, [orders]);
 
+    // The full lifecycle — Confirmed and Ready were missing, so orders sitting in
+    // those states weren't filterable here.
     const filterItems = [
         { name: 'All', count: filterCounts.allCount },
         { name: 'Placed', count: filterCounts.placedCount },
+        { name: 'Confirmed', count: filterCounts.confirmedCount },
         { name: 'Processing', count: filterCounts.processingCount },
+        { name: 'Ready', count: filterCounts.readyCount },
         { name: 'Dispatched', count: filterCounts.dispatchedCount },
         { name: 'Delivered', count: filterCounts.deliveredCount },
         { name: 'Cancelled', count: filterCounts.cancelledCount },

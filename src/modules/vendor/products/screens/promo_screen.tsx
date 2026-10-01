@@ -1,17 +1,15 @@
 import React, { useEffect } from 'react';
 import { SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View } from 'react-native';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../../../redux/store/store';
 import AppHeaderComp from '../../general/components/appHeader_comp';
 import { ArrowRight } from 'iconsax-react-native';
 import useVendorProductHook from '../hooks/vendorProduct_hook';
 import IPromotion from '../models/promotion_model';
+import PromoSkeletonLoader from '../components/promoSkeletonLoader_component';
+import AppStatusBar from "../../../general/components/appStatusBar";
 
 const PromoScreen = () => {
 
-    const { promotions, handleGetAvailablePromos, selectedPromo, setSelectedPromo, handleApplyPromo, handleFormatDate } = useVendorProductHook();
-    console.log("PROMOTIONS", promotions);
-    
+    const { promotions, handleGetAvailablePromos, selectedPromo, setSelectedPromo, handleApplyPromo, handleFormatDate, isLoadingPromotions } = useVendorProductHook();
 
     useEffect(() => {
         handleGetAvailablePromos();
@@ -19,10 +17,7 @@ const PromoScreen = () => {
 
     return (
         <SafeAreaView className="h-full w-full flex-1 bg-gray-50">
-            <StatusBar
-                backgroundColor="#133522"
-                barStyle="light-content"
-            />
+            <AppStatusBar backgroundColor="#133522" barStyle="light-content" />
                     
             {/* ==== Header ==== */}
             <AppHeaderComp title="Join Promo" />
@@ -34,7 +29,9 @@ const PromoScreen = () => {
                 <Text className="mt-1 font-montserratSemiBold text-gray-600">All ongoing promo</Text>
 
                 <View className="h-auto w-full mt-3">
-                    { promotions && promotions.length !== 0 ? (
+                    { isLoadingPromotions ? (
+                        <PromoSkeletonLoader />
+                    ) : promotions && promotions.length !== 0 ? (
                         promotions?.map((promotion: IPromotion) => (
                             <TouchableOpacity
                                 key={ promotion._id }

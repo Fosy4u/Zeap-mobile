@@ -1,16 +1,31 @@
 import rootAPI from "../../../redux/api/rootAPI.ts";
+import { createReviewRoute, updateReviewRoute } from "../../../redux/api/api_route";
 import IReviewAndRating from "../models/review_model";
-import { ILikeReview, IReviewProduct } from "../validations/review_validation";
+import ICreateReviewPayload, { IUpdateReviewPayload } from "../models/createReviewPayload_model";
+import { ILikeReview } from "../validations/review_validation";
 
 // 4.3 ({reviewData?.reviews?.length} { reviewData?.reviews?.length! > 1 ? "reviews" : "review" })
 const reviewAPI = rootAPI.injectEndpoints({
     endpoints: (builder) => ({
 
         // Add a review
-        createReview: builder.mutation<any, IReviewProduct>({
+        createReview: builder.mutation<any, ICreateReviewPayload>({
             query: (requestData) => ({
-                url: "/review/create",
+                url: createReviewRoute,
                 method: "POST",
+                body: requestData,
+            }),
+            invalidatesTags: ["Reviews", "VendorProductPreview"],
+            transformResponse: (response) => {
+                return response;
+            }
+        }),
+
+        // Edit an existing review
+        updateReview: builder.mutation<any, IUpdateReviewPayload>({
+            query: (requestData) => ({
+                url: updateReviewRoute,
+                method: "PUT",
                 body: requestData,
             }),
             invalidatesTags: ["Reviews", "VendorProductPreview"],
@@ -61,6 +76,7 @@ const reviewAPI = rootAPI.injectEndpoints({
 
 export const {
     useCreateReviewMutation,
+    useUpdateReviewMutation,
     useLazyGetProductReviewsQuery,
     useLikeReviewMutation,
     useDislikeReviewMutation,

@@ -1,5 +1,5 @@
 import { SubmitHandler, useForm } from "react-hook-form";
-import { IStepOneAddProduct, stepOneAddProductSchema } from "../../validations/addProduct_validation";
+import { IStepOneAddAccessories, stepOneAddAccessoriesSchema } from "../../validations/addProduct_validation";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../../../../redux/store/store";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -16,7 +16,7 @@ const useStepOneHook = () => {
     const [createProduct] = useCreateProductMutation();
     const [updatedProduct] = useUpdateProductMutation();
 
-    const { control, handleSubmit, formState: { errors } } = useForm<IStepOneAddProduct>({ 
+    const { control, handleSubmit, formState: { errors } } = useForm<IStepOneAddAccessories>({
         defaultValues: {
             title: product?.title || "",
             subTitle: product?.subTitle || "",
@@ -24,37 +24,37 @@ const useStepOneHook = () => {
             productType: "accessory",
             shopId: product?.shopId || userData?.shopId || "",
         },
-        resolver: yupResolver(stepOneAddProductSchema),
+        resolver: yupResolver(stepOneAddAccessoriesSchema),
         mode: "onChange" // Validate the form either "onChange" or "onBlur" or "onSubmit" or "all"
     });
 
-     const onSubmit: SubmitHandler<IStepOneAddProduct> = async (data) => {
+     const onSubmit: SubmitHandler<IStepOneAddAccessories> = async (data) => {
             dispatch(setLoadingMessage("Saving basic details..."));
             dispatch(setProductIsLoading(true));
     
             try {
                 const requestData = {
                     title: data.title,
-                    subTitle: data.subTitle,
+                    subTitle: data.subTitle || "",
                     description: data.description,
                     productType: data.productType,
                     productId: product?.productId! || "",
                     shopId: data.shopId,
                     currentStep: product?.currentStep! || 1,
                 };
-                console.log("REQUEST DATA::: ", requestData);
+                // console.log("REQUEST DATA::: ", requestData);
     
                 let createProductResponseData: IVendorProductDetails | undefined;
                 if (!product || Object.entries(product).length === 0) {
-                    console.log("ADDING ACCESSORIES");
+                    // console.log("ADDING ACCESSORIES");
                     dispatch(setLoadingMessage("Adding basic details..."));
                     createProductResponseData = await createProduct(requestData).unwrap();
                 } else {
-                    console.log("UPDATING ACCESSORIES");
+                    // console.log("UPDATING ACCESSORIES");
                     dispatch(setLoadingMessage("Updating basic details..."));
                     createProductResponseData = await updatedProduct(requestData).unwrap();
                 }
-                console.log("RESPONSE::: ", createProductResponseData);
+                // console.log("RESPONSE::: ", createProductResponseData);
     
                 if (createProductResponseData) {
                     dispatch(setProduct(createProductResponseData));
@@ -66,7 +66,7 @@ const useStepOneHook = () => {
                 dispatch(setProductIsLoading(false));
                 dispatch(setLoadingMessage(""));
                 Alert.alert("Error", error.errors[0]);
-                console.log("ERROR::: ", error);
+                // console.log("ERROR::: ", error);
             }
         };
     

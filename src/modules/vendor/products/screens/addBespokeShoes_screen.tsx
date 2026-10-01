@@ -1,6 +1,6 @@
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View } from "react-native";
 import AppHeaderComp from "../../general/components/appHeader_comp.tsx";
 import { ArrowLeft, ArrowRight } from "iconsax-react-native";
 import { useNavigation } from "@react-navigation/native";
@@ -26,9 +26,10 @@ import StepFourComponent from '../components/addBespokeShoes/stepFour_component.
 import StepFiveComponent from '../components/addBespokeShoes/stepFive_component.tsx';
 import StepSixComponent from '../components/addBespokeShoes/stepSix_component.tsx';
 import DefaultProductImagePopupModal from '../modals/defaultProductImagePopup_modal.tsx';
+import AppStatusBar from "../../../general/components/appStatusBar";
 
 const AddBespokeShoesScreen = () => {
-    const { selectedStep, productIsLoading, loadingMessage } = useSelector((state: RootState) => state.vendorProductState);
+    const { selectedStep, productIsLoading, loadingMessage, product } = useSelector((state: RootState) => state.vendorProductState);
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const dispatch = useDispatch();
 
@@ -46,7 +47,10 @@ const AddBespokeShoesScreen = () => {
     } = useStepTwoHook();
 
     const {
-        handleSubmit: stepThreeHandleSubmit, formattedMeasurements, measurementOptions, handleSelectMeasurementField,
+        handleSubmit: stepThreeHandleSubmit, handleSelectMeasurementField,
+        showMeasurementSkeleton, genderTabs, selectedGenders, activeGender, setActiveGender,
+        activeMeasurements, getGuideField, isFieldChecked, expandedFields, toggleField, titleCase,
+        additionalMeasurementNote, setAdditionalMeasurementNote,
      } = useStepThreeHook();
 
      const {
@@ -68,7 +72,6 @@ const AddBespokeShoesScreen = () => {
         priceAdjustmentModalType, setPriceAdjustmentModalType,
         handleSubmitProduct,
     } = useStepSixHook(setShowWarningModal, setShowSuccessModal);
-
 
     const handleSaveAndContinue = () => {
 
@@ -99,16 +102,12 @@ const AddBespokeShoesScreen = () => {
         (selectedStep >= 1) && dispatch(setSelectedStep(selectedStep - 1));
     };
 
-
     return (
         <SafeAreaView className="h-full w-full flex-1 bg-white">
-            <StatusBar
-                backgroundColor="#133522"
-                barStyle="light-content"
-            />
+            <AppStatusBar backgroundColor="#133522" barStyle="light-content" />
 
             {/*==== Header ====*/}
-            <AppHeaderComp title={`Add Bespoke\nShoes`} />
+            <AppHeaderComp title={`Add Bespoke\nFootwear`} />
 
             {/*==== Step Indicators ====*/}
             <View className="h-auto w-full px-5 pt-4 pb-2 flex-row gap-x-2">
@@ -128,9 +127,20 @@ const AddBespokeShoesScreen = () => {
                     <StepTwoComponent manageState={ manageState } />
                 ) : (selectedStep === 3) ? (
                     <StepThreeComponent
-                        formattedMeasurements={formattedMeasurements}
-                        footMeasurementOptions={ measurementOptions }
                         handleSelectMeasurementField={ handleSelectMeasurementField }
+                        showMeasurementSkeleton={ showMeasurementSkeleton }
+                        genderTabs={ genderTabs }
+                        selectedGenders={ selectedGenders }
+                        activeGender={ activeGender }
+                        setActiveGender={ setActiveGender }
+                        activeMeasurements={ activeMeasurements }
+                        getGuideField={ getGuideField }
+                        isFieldChecked={ isFieldChecked }
+                        expandedFields={ expandedFields }
+                        toggleField={ toggleField }
+                        titleCase={ titleCase }
+                        additionalMeasurementNote={ additionalMeasurementNote }
+                        setAdditionalMeasurementNote={ setAdditionalMeasurementNote }
                     />
                 ) : (selectedStep === 4) ? (
                     <StepFourComponent
@@ -161,12 +171,12 @@ const AddBespokeShoesScreen = () => {
                     />
                 ) }
 
-                {/* ==== Cancel and Save & Continue ==== */}
                 { selectedStep <= 5 ? (
                     <View className="h-auto w-full mt-8 flex-row">
                         <TouchableOpacity
                             onPress={ () => navigation.goBack() }
-                            className="h-[55px] w-[35%] flex-row items-center justify-center rounded-xl bg-red-50"
+                            disabled={ productIsLoading }
+                            className={`h-[55px] w-[35%] flex-row items-center justify-center rounded-xl bg-red-50 ${ productIsLoading ? "opacity-50" : "" }`}
                         >
                             <Text className="font-montserratMedium text-base text-red-700">Cancel</Text>
                         </TouchableOpacity>
@@ -174,26 +184,41 @@ const AddBespokeShoesScreen = () => {
 
                         <TouchableOpacity
                             onPress={ () => handleSaveAndContinue() }
-                            className="h-[55px] flex-1 flex-row items-center justify-center rounded-xl bg-baseGreen"
+                            disabled={ productIsLoading }
+                            className={`h-[55px] flex-1 flex-row items-center justify-center rounded-xl bg-baseGreen ${ productIsLoading ? "opacity-70" : "" }`}
                         >
-                            <Text className="mr-2 font-montserratRegular text-base text-white">Save & Continue</Text>
-                            <ArrowRight size={ 18 } className="text-white" />
+                            { productIsLoading ? (
+                                <ActivityIndicator color="#FFFFFF" />
+                            ) : (
+                                <>
+                                    <Text className="mr-2 font-montserratRegular text-base text-white">Save & Continue</Text>
+                                    <ArrowRight size={ 18 } className="text-white" />
+                                </>
+                            ) }
                         </TouchableOpacity>
                     </View>
                 ) : (
                     <TouchableOpacity
                         onPress={ () => setShowWarningModal(true) }
-                        className="h-[55px] flex-1 mt-8 flex-row items-center justify-center rounded-xl bg-baseGreen"
+                        disabled={ productIsLoading }
+                        className={`h-[55px] flex-1 mt-8 flex-row items-center justify-center rounded-xl bg-baseGreen ${ productIsLoading ? "opacity-70" : "" }`}
                     >
-                        <Text className="mr-2 font-montserratRegular text-base text-white">Submit</Text>
-                        <ArrowRight size={ 18 } className="text-white" />
+                        { productIsLoading ? (
+                            <ActivityIndicator color="#FFFFFF" />
+                        ) : (
+                            <>
+                                <Text className="mr-2 font-montserratRegular text-base text-white">Submit</Text>
+                                <ArrowRight size={ 18 } className="text-white" />
+                            </>
+                        ) }
                     </TouchableOpacity>
                 ) }
 
                 { selectedStep > 1 && selectedStep <= 5 && (
                     <TouchableOpacity
                         onPress={ () => handleGoBack() }
-                        className="h-[55px] w-full mt-5 flex-row items-center justify-center rounded-xl bg-lightGreen"
+                        disabled={ productIsLoading }
+                        className={`h-[55px] w-full mt-5 flex-row items-center justify-center rounded-xl bg-lightGreen ${ productIsLoading ? "opacity-50" : "" }`}
                     >
                         <ArrowLeft size={ 18 } className="text-baseGreen" />
                         <Text className="ml-2 font-montserratMedium text-base text-baseGreen">Go Back</Text>
@@ -204,9 +229,10 @@ const AddBespokeShoesScreen = () => {
             </ScrollView>
 
             { showPriceAdjustmentModal &&
-                <PriceAdjustmentModal 
+                <PriceAdjustmentModal
                     priceAdjustmentModalType={ priceAdjustmentModalType }
                     autoPricePercentage={ autoPricePercentage }
+                    productIsLoading={ productIsLoading }
                     setAutoPricePercentage={ setAutoPricePercentage }
                     setShowPriceAdjustmentModal={ setShowPriceAdjustmentModal }
                     setIsAutoPriceAdjustment={ setIsAutoPriceAdjustment }
@@ -217,7 +243,6 @@ const AddBespokeShoesScreen = () => {
 
             { showWarningModal &&
                 <WarningPopupModal 
-                    bodyText={"This will change the status of the product to \"under review\" and you will not be able to edit the product without contacting the admin." }
                     screenURL="profileSetupScreen" 
                     setShowWarningModal={setShowWarningModal} 
                     handleSubmitProduct={handleSubmitProduct}
@@ -226,8 +251,8 @@ const AddBespokeShoesScreen = () => {
 
             { showSuccessModal &&
                 <SuccessPopupModal
-                    bodyText="You have successfully uploaded your item. It will be reviewed before it is listed for customers."
                     setShowSuccessModal={ setShowSuccessModal }
+                    productID={ product?.productId }
                 />
             }
 
@@ -239,7 +264,11 @@ const AddBespokeShoesScreen = () => {
                 />
             }
 
-            { productIsLoading &&
+            {/* Steps 1–5 keep the user on the step with an in-button spinner;
+                only the final submit (step 6) uses the full-screen loader. The
+                price-adjustment modal handles its own in-button spinner, so the
+                full-screen loader is suppressed while that modal is open. */}
+            { productIsLoading && selectedStep > 5 && !showPriceAdjustmentModal &&
                 <AppLoader loadingAdditionalMessage={ loadingMessage } />
             }
         </SafeAreaView>

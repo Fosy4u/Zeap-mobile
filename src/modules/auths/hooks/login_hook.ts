@@ -16,6 +16,7 @@ import { GoogleSignin, statusCodes } from "@react-native-google-signin/google-si
 import handleError from "../../general/hooks/errorHandler_hook";
 import EncryptedStorage from 'react-native-encrypted-storage';
 import { storeToken, clearToken } from "../../../redux/services/authorizationHeader";
+import { forgetSecureItem } from "../../../utils/secureStorage";
 
 const STORAGE_KEYS = {
     FIREBASE_USER: 'fb_user',
@@ -24,10 +25,6 @@ const STORAGE_KEYS = {
     GUEST_UID: 'guest_uid'
 } as const;
 
-/**
- * The useLoginHook 
- * @returns control
- */
 const useLoginHook = () => {
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const dispatch = useDispatch();
@@ -54,10 +51,6 @@ const useLoginHook = () => {
         navigation.navigate("homeScreen", { screen: "Home" });
     };
 
-    /**
-     * Get the Firebase Auth instance.
-     * @returns The Auth instance
-     */
     const authInstance = getAuth(); // ✅ Modular API
 
     const { control, handleSubmit, formState: { errors } } = useForm<ILoginUser>({
@@ -107,9 +100,9 @@ const useLoginHook = () => {
                             // Clear all stored data
                             await Promise.all([
                                 clearToken(),
-                                EncryptedStorage.removeItem(STORAGE_KEYS.FIREBASE_USER),
-                                EncryptedStorage.removeItem(STORAGE_KEYS.USER_ID),
-                                EncryptedStorage.removeItem(STORAGE_KEYS.GUEST_UID)
+                                forgetSecureItem(STORAGE_KEYS.FIREBASE_USER),
+                                forgetSecureItem(STORAGE_KEYS.USER_ID),
+                                forgetSecureItem(STORAGE_KEYS.GUEST_UID)
                             ]);
                             
                             // Dispatch merged user data to Redux Store
@@ -211,9 +204,6 @@ const useLoginHook = () => {
         }
     };
 
-    /**
-     * Handle Google Sign-In
-     */
     const handleGoogleSignIn = async () => {
         setIsGoogleLoading(true);
         dispatch(setLoadingMessage("Signing in with Google..."));
@@ -290,7 +280,7 @@ const useLoginHook = () => {
                 } catch (mergeErr: any) {
                     console.warn("[GoogleSignIn] Guest merge failed; continuing with fetched profile.", mergeErr);
                 }
-                await EncryptedStorage.removeItem(STORAGE_KEYS.GUEST_UID);
+                await forgetSecureItem(STORAGE_KEYS.GUEST_UID);
             }
 
             // ALWAYS normalize after fetch + merge — backend writes `isGuest: true` for

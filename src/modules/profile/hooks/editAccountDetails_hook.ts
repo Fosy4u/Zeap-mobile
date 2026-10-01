@@ -1,14 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigation } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Country, State, City } from "country-state-city";
 
 import editAccountDetailsSchema, { IEditAccountDetailsSchema } from "../validations/editAccountDetails_validation";
 import { RootState } from "../../../redux/store/store";
-import RootNavigationStackModel from "../../../routes/model/routes_model";
 import {
     setIsLoading,
     setLoadingMessage,
@@ -16,15 +13,28 @@ import {
     setSelectedPhoneCode,
     setShowPhoneCodeModal,
     setUserData,
+    bumpCurrencyRefreshToken,
 } from "../slices/profileState_slice";
 import handleError from "../../general/hooks/errorHandler_hook";
 import { useUpdateUserDetailsMutation } from "../apis/profile_api";
-import IEmailUpdate from "../models/emailUpdate_model";
 import ICurrencyUpdate from "../models/currencyUpdate_model";
+import IProfileUpdate from "../models/profileUpdate_model";
 import { phoneCodeForCurrency } from "../../../utils/currencyToPhoneCode";
+import rootAPI from "../../../redux/api/rootAPI";
+import baseURL from "../../../redux/api/api_route";
+import { getAuth } from "@react-native-firebase/auth";
+import { useLazyGetUserByIdQuery } from "../../auths/apis/auths_api";
+
+const PRICED_CACHE_TAGS = [
+    "Product", "Products", "PromoProduct", "DraftProducts", "Wishlist",
+    "Cart", "OrderSummary", "DeliveryMethod",
+    "Orders", "Order", "OrderDetails",
+    "Points", "Vouchers",
+    "VendorProductPreview", "VendorProductDetails", "Promotions", "Promotion",
+    "VendorOrders", "VendorOrderDetails", "VendorPayments", "VendorAnalytics",
+] as const;
 
 const useEditAccountDetailsHook = () => {
-    const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const dispatch = useDispatch();
 
     const {
@@ -47,6 +57,30 @@ const useEditAccountDetailsHook = () => {
     } = useSelector((state: RootState) => state.profileState);
 
     const [updateUserDetails] = useUpdateUserDetailsMutation();
+    const [getUserById] = useLazyGetUserByIdQuery();
+
+    const resolveUserId = async (refreshFromCurrentSession = false): Promise<string | undefined> => {
+        const currentUid = getAuth().currentUser?.uid;
+        const cachedProfileMatchesSession = !currentUid || !userData?.uid || userData.uid === currentUid;
+
+        if (!refreshFromCurrentSession && userData?._id && cachedProfileMatchesSession) {
+            return userData._id;
+        }
+
+        const uid = currentUid || userData?.uid;
+        if (!uid) { return undefined; }
+
+        try {
+            const freshUser = await getUserById(uid).unwrap();
+            if (freshUser?._id) {
+                dispatch(setUserData({ ...userData, ...freshUser }));
+                return freshUser._id;
+            }
+        } catch {
+            // Fall through — the caller reports a single, clear failure.
+        }
+        return undefined;
+    };
 
     // Auth-driven flag — the seller/vendor split now reads from the live user record
     // instead of a hardcoded local toggle. When the user record changes (e.g. after
@@ -78,6 +112,7 @@ const useEditAccountDetailsHook = () => {
             phoneNumber: userData?.phoneNumber! || "",
             country: selectedCountry || "",
             email: userData?.email! || "",
+            address: userData?.address || "",
         },
         resolver: yupResolver(editAccountDetailsSchema),
     });
@@ -150,17 +185,33 @@ const useEditAccountDetailsHook = () => {
     };
 
     // ---- Submit ----
-    // Pure save: persists the email/marketing update and returns the new user, or
-    // null on failure. No navigation / no modal — those are the screen's concern.
-    // Other consumers (e.g. checkout) reuse this without inheriting any post-save UX.
     const saveAccountDetails = async (data: IEditAccountDetailsSchema): Promise<any | null> => {
         dispatch(setLoadingMessage("Updating account details..."));
         dispatch(setIsLoading(true));
 
-        const requestData: IEmailUpdate = {
-            _id: userData?._id!,
+        /* Region comes from the State/City pickers, which live in local state
+           rather than the form — city is the more specific of the two. */
+        const stateName = stateOptions.find((option) => option.key === selectedStateIso)?.value;
+        const region = selectedCity || stateName;
+
+        const profileUserId = await resolveUserId();
+        if (!profileUserId) {
+            dispatch(setIsLoading(false));
+            dispatch(setLoadingMessage(""));
+            handleError(new Error("We couldn't identify your account. Please restart the app and try again."));
+            return null;
+        }
+
+        const requestData: IProfileUpdate = {
+            _id: profileUserId,
             email: data.email!,
             acceptMarketing,
+            ...(data.firstName?.trim() ? { firstName: data.firstName.trim() } : {}),
+            ...(data.lastName?.trim() ? { lastName: data.lastName.trim() } : {}),
+            ...(data.phoneNumber?.trim() ? { phoneNumber: data.phoneNumber.trim() } : {}),
+            ...(data.address?.trim() ? { address: data.address.trim() } : {}),
+            ...(selectedCountry ? { country: selectedCountry } : {}),
+            ...(region ? { region } : {}),
         };
 
         try {
@@ -184,18 +235,11 @@ const useEditAccountDetailsHook = () => {
         await saveAccountDetails(data);
     };
 
-    // Edit-Account-Details screen submit — save, then branch on isVendor:
-    //   - Vendor     → navigate to shopSetupScreen (the next step in setup).
-    //   - Non-vendor → show the success modal acknowledging the update.
     const handleProceed = handleSubmit(async (data) => {
         const updated = await saveAccountDetails(data);
         if (!updated) return;
 
-        if (isVendor) {
-            navigation.navigate("shopSetupScreen");
-        } else {
-            setShowSuccessModal(true);
-        }
+        setShowSuccessModal(true);
     });
 
     // ---- Other ----
@@ -203,17 +247,51 @@ const useEditAccountDetailsHook = () => {
         dispatch(setLoadingMessage("Updating preferred currency..."));
         dispatch(setIsLoading(true));
 
+        // Anonymous Firebase sessions may be replaced after logout, reinstall,
+        // or auth recovery. Re-resolve their backend record instead of trusting
+        // an `_id` cached by an older guest session.
+        const userId = await resolveUserId(!!userData?.isGuest);
+        if (!userId) {
+            dispatch(setIsLoading(false));
+            dispatch(setLoadingMessage(""));
+            handleError(new Error("We couldn't identify your account. Please restart the app and try again."));
+            return;
+        }
+
         const requestData: ICurrencyUpdate = {
-            _id: userData?._id!,
+            _id: userId,
             prefferedCurrency: currency,
         };
+
+        // Mirrors what profile_api builds, so the log names the real request.
+        const requestUrl = `${ baseURL }/user/update?_id=${ userId }`;
+        console.log("CURRENCY UPDATE REQUEST:::", JSON.stringify({
+            url: requestUrl,
+            method: "PUT",
+            payload: requestData,
+            isGuest: userData?.isGuest ?? null,
+            uid: userData?.uid ?? null,
+        }, null, 2));
 
         try {
             const updatedUserDataResponse = await updateUserDetails(requestData).unwrap();
             if (updatedUserDataResponse) {
                 dispatch(setUserData(updatedUserDataResponse));
+                /* Drop the cached responses, then nudge the screens that copy
+                   lazy-query results into slices to run their fetch again. */
+                dispatch(rootAPI.util.invalidateTags([...PRICED_CACHE_TAGS]));
+                dispatch(bumpCurrencyRefreshToken());
             }
-        } catch (error) {
+        } catch (error: any) {
+            /* Repeats the request alongside the response — the alert alone never
+               says which id the backend refused, or whether it even got that far. */
+            console.log("CURRENCY UPDATE FAILED:::", JSON.stringify({
+                url: requestUrl,
+                method: "PUT",
+                payload: requestData,
+                status: error?.status ?? null,
+                response: error?.data ?? null,
+            }, null, 2));
             handleError(error);
         } finally {
             dispatch(setIsLoading(false));

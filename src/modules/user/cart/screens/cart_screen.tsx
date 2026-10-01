@@ -1,10 +1,11 @@
 import { useDispatch, useSelector } from 'react-redux';
-import { View, Text, SafeAreaView, StatusBar, TouchableOpacity, Image, ScrollView, ToastAndroid, RefreshControl, ActivityIndicator } from 'react-native'
+import { View, Text, SafeAreaView, StatusBar, TouchableOpacity, Image, ScrollView, RefreshControl, ActivityIndicator } from 'react-native'
 import React, { useCallback, useState } from 'react'
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ArrowRight, Notification, Trash } from 'iconsax-react-native';
 import { RootState } from '../../../../redux/store/store';
 import AppLoader from '../../../general/components/appLoader';
+import NotificationBadgeComponent from '../../../notifications/components/notificationBadge_component';
 import useCartHook from '../hooks/cart_hook';
 import useAddressHook from '../../address/hooks/address_hook';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -12,17 +13,18 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import RootNavigationStackModel from '../../../../routes/model/routes_model';
 import { setProductID } from '../../products/slices/product_slice';
 import useGeneralHook from '../../../general/hooks/general_hook';
-import formatCurrency from '../../../../utils/formatCurrency';
 import ProductCardComponent from '../../../general/components/productCard_component.tsx';
 import EmptyListComponent from '../../../general/components/emptyList_component';
 import CartSkeletonLoader from '../components/cartSkeletonLoader_component.tsx';
-
+import useDisplayCurrency from '../../../general/hooks/displayCurrency_hook';
+import ColorSwatchComponent from '../../../general/components/colorSwatch_component';
 
 const CartScreen = () => {
-  const { cart } = useSelector((state: RootState) => state.cartState);
+  const { cart, isCartItemsLoading } = useSelector((state: RootState) => state.cartState);
   const { popularProducts } = useSelector((state: RootState) => state.productState);
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
   const dispatch = useDispatch();
+  const { formatPrice, currencyRefreshToken } = useDisplayCurrency();
 
   // Track whether the initial cart fetch has settled at least once. Until it has,
   // we suppress the empty-cart UI so the user never sees a flash of "empty" before
@@ -71,7 +73,7 @@ const CartScreen = () => {
       // back from checkout). Without this, the loader would still be on screen.
       setIsOpeningCheckout(false);
       fetchAllCartData();
-    }, [])
+    }, [currencyRefreshToken])
   );
 
   // Show the loader instantly on tap, then yield one animation frame so React
@@ -95,7 +97,7 @@ const CartScreen = () => {
 
   return (
     <GestureHandlerRootView>
-      <SafeAreaView className="h-full w-full flex-1 px-5 pt-2 pb-3">
+      <SafeAreaView className="h-full w-full flex-1 pt-2 pb-3">
 
         <StatusBar
             backgroundColor="transparent"
@@ -103,7 +105,7 @@ const CartScreen = () => {
         />
 
         {/*==== Header ====*/}
-        <View className="h-auto w-full py-3 flex-row items-center justify-between">
+        <View className="h-auto w-full px-5 py-3 flex-row items-center justify-between">
           <View className="h-[40px] w-[40px]" />
           <Text className="font-semibold text-lg text-baseGreen">My Cart</Text>
           <TouchableOpacity
@@ -111,6 +113,7 @@ const CartScreen = () => {
             onPress={ () => navigation.navigate("userNotificationsScreen") }
           >
             <Notification color="#133522" size={24} variant="Bold" />
+            <NotificationBadgeComponent />
           </TouchableOpacity>
         </View>
 
@@ -118,6 +121,7 @@ const CartScreen = () => {
         <ScrollView
           showsVerticalScrollIndicator={ false }
           className="h-auto w-full"
+          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 96 }}
           refreshControl={
             <RefreshControl
               refreshing={ isPullRefreshing }
@@ -127,10 +131,8 @@ const CartScreen = () => {
             />
           }
         >
-          { (!hasInitialCartFetched && (!cart?.basketItems || cart.basketItems.length === 0))
+          { (isCartItemsLoading && !isPullRefreshing) || (!hasInitialCartFetched && (!cart?.basketItems || cart.basketItems.length === 0))
           ? (
-            // Initial fetch hasn't settled — show the skeleton instead of flashing
-            // "no items" before the user's real cart loads.
             <CartSkeletonLoader />
           )
           : (cart?.basketItems && cart.basketItems.length > 0)
@@ -141,21 +143,37 @@ const CartScreen = () => {
                   <View key={ basketItem._id! } className="h-auto w-full">
                     <View
                       className="h-auto w-full pt-[20px] pb-1 flex-row items-center justify-start">
-                      <Image
-                        className="h-[120px] w-[80px]"
-                        resizeMode="center"
-                        source={
-                          basketItem?.image!
-                          ? { uri: basketItem?.image! }
-                          : require("../../../../../assets/images/app_logo_green.png")
-                        }
-                      />
+                      <TouchableOpacity
+                        disabled={ !basketItem.productId }
+                        onPress={ () => {
+                          dispatch(setProductID(basketItem.productId!));
+                          navigation.navigate("productDetailScreen");
+                        } }
+                      >
+                        <Image
+                          className="h-[120px] w-[80px]"
+                          resizeMode="center"
+                          source={
+                            basketItem?.image!
+                            ? { uri: basketItem?.image! }
+                            : require("../../../../../assets/images/image_placeholder.png")
+                          }
+                        />
+                      </TouchableOpacity>
                       <View className="h-auto flex-1 ml-3">
-                        <Text className="text-sm text-gray-800">{ basketItem.title! }</Text>
+                        <TouchableOpacity
+                          disabled={ !basketItem.productId }
+                          onPress={ () => {
+                            dispatch(setProductID(basketItem.productId!));
+                            navigation.navigate("productDetailScreen");
+                          } }
+                        >
+                          <Text className="text-sm text-gray-800">{ basketItem.title! }</Text>
+                        </TouchableOpacity>
                         <View className="h-auto flex-row mt-1 items-center justify-start space-x-5">
                           <View className="h-auto flex-row mt-1 items-center justify-start">
                             <Text className="mr-1 text-xs text-gray-500"> Color:</Text>
-                            <View className="h-3 w-3 mr-0.5 rounded-full" style={ { backgroundColor: getColorCode(basketItem.color!) } } />
+                            <ColorSwatchComponent value={ basketItem.color } hex={ getColorCode(basketItem.color!) } size={ 12 } style={{ marginRight: 2 }} />
                             <Text className="font-semibold text-xs text-gray-600">{ basketItem.color! }</Text>
                           </View>
 
@@ -170,14 +188,9 @@ const CartScreen = () => {
                         <View className="h-auto flex-1 mt-2 flex-row items-center justify-between">
                           <View className="flex-row items-center gap-x-4">
                             <TouchableOpacity
-                             className={ `h-[30px] w-[30px] p-0 justify-center items-center border border-gray-400 rounded-lg ${ qtyBusy?.id === basketItem._id && qtyBusy?.type === "dec" ? "" : "pb-2" }` }
-                              disabled={ qtyBusy?.id === basketItem._id }
+                             className={ `h-[30px] w-[30px] p-0 justify-center items-center border border-gray-400 rounded-lg ${ qtyBusy?.id === basketItem._id && qtyBusy?.type === "dec" ? "" : "pb-2" } ${ (basketItem?.quantity ?? 0) <= 1 ? "opacity-40" : "" }` }
+                              disabled={ qtyBusy?.id === basketItem._id || (basketItem?.quantity ?? 0) <= 1 }
                               onPress={ async () => {
-                                // If the quantity is 1, show a toast message
-                                if (basketItem?.quantity === 1) {
-                                    ToastAndroid.show("You cannot decrement the quantity below 1", ToastAndroid.SHORT);
-                                    return;
-                                }
                                 setQtyBusy({ id: basketItem._id!, type: "dec" });
                                 try {
                                   await handleDecreamentProductQuantity(basketItem._id!);
@@ -211,7 +224,7 @@ const CartScreen = () => {
                             </TouchableOpacity>
                           </View>
 
-                          <Text className="font-semibold text-lg text-baseGreen">{ formatCurrency(basketItem.actualAmount!, basketItem.currency!) }</Text>
+                          <Text className="font-semibold text-lg text-baseGreen">{ formatPrice(basketItem.actualAmount, basketItem.currency) }</Text>
 
                           <TouchableOpacity
                             disabled={ removingId === basketItem._id }
@@ -247,13 +260,15 @@ const CartScreen = () => {
               {/*==== Subtotal ====*/}
               <View className="mt-5 flex-row justify-between items-center">
                 <Text className="text-base text-baseGreen">Subtotal</Text>
-                <Text className="font-semibold text-lg text-baseGreen">{ formatCurrency(cart?.subTotal!, cart?.currency!) }</Text>
+                <Text className="font-semibold text-lg text-baseGreen">{ formatPrice(cart?.subTotal, cart?.currency) }</Text>
               </View>
               <Text className="text-xs text-gray-500">Delivery fees not included yet.</Text>
             </View>
           )
           : (
-            <EmptyListComponent />
+            <View className="mt-8">
+              <EmptyListComponent standalone message="Your cart is empty" />
+            </View>
           ) }
 
           { (cart?.basketItems && cart.basketItems.length > 0) && (

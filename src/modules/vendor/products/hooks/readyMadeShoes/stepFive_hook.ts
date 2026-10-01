@@ -6,7 +6,7 @@ import { IColor, IVariation } from "../../models/vendorProductDetails_model";
 import { setLoadingMessage, setProduct, setProductIsLoading, setSelectedStep } from "../../slices/vendorProductState_slice";
 import { useAddProductVariationMutation, useDeleteProductVariationMutation, useUpdateProductVariationMutation } from "../../apis/readyMadeProduct_api";
 import handleError from "../../../../general/hooks/errorHandler_hook";
-import { stepFiveAddReadyMadeClothesSchema } from "../../validations/addProduct_validation";
+import { stepFiveAddReadyMadeShoesSchema } from "../../validations/addProduct_validation";
 
 interface IColorOption {
     colorName: string;
@@ -15,7 +15,7 @@ interface IColorOption {
 
 const useStepFiveHook = () => {
     
-    const { readyMadeClothesOptions } = useSelector((state: RootState) => state.generalState);
+    const { readyMadeShoesOptions } = useSelector((state: RootState) => state.generalState);
     const { product } = useSelector((state: RootState) => state.vendorProductState );
 
     // State variables
@@ -56,7 +56,7 @@ const useStepFiveHook = () => {
     
     // Handle get color code from the color enums
     const handleGetColorCode = (colorName: string) => {
-        const color = readyMadeClothesOptions?.colorEnums?.find((color) => color.name === colorName);
+        const color = readyMadeShoesOptions?.colorEnums?.find((color) => color.name === colorName);
         return color?.hex! || "";
     };
 
@@ -82,7 +82,7 @@ const useStepFiveHook = () => {
             };
 
             // Validate variations data
-            const requestData = await stepFiveAddReadyMadeClothesSchema.validate(variationsData);
+            const requestData = await stepFiveAddReadyMadeShoesSchema.validate(variationsData);
             console.log("VARIATIONS DATA: ", requestData);
             
             const addProductVariationResponseData = await addProductVariation(requestData).unwrap();
@@ -129,7 +129,7 @@ const useStepFiveHook = () => {
             };
 
             // Validate variations data
-            const requestData = await stepFiveAddReadyMadeClothesSchema.validate(variationsData);
+            const requestData = await stepFiveAddReadyMadeShoesSchema.validate(variationsData);
             console.log("VARIATIONS DATA: ", requestData);
             
             const addProductVariationResponseData = await updateProductVariation(requestData).unwrap();
@@ -201,7 +201,7 @@ const useStepFiveHook = () => {
 
     useEffect(() => {
         handleGetUploadedColors();
-    }, [readyMadeClothesOptions, product]);
+    }, [readyMadeShoesOptions, product]);
     
     useEffect(() => {
         handleGetUploadedSizes();

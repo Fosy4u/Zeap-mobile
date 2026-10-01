@@ -217,7 +217,7 @@ const useStepFourHook = () => {
     // Handle delete image
     const handleDeleteImage = async (index: number) => {
         
-        if (product?.colors?.[0].images?.[index]) {
+        if (product?.colors?.[0]?.images?.[index]) {
             dispatch(setLoadingMessage("Deleting product image..."));
             dispatch(setProductIsLoading(true));
 
@@ -252,7 +252,7 @@ const useStepFourHook = () => {
     const handleSetUploadedImagesFromDraftProduct = () => {
         if (!product) return;
 
-        const productImages = product.colors?.[0].images || [];
+        const productImages = product.colors?.[0]?.images || [];
 
         // Format selected images
         const formattedSelectedImages = productImages.map((image) => ({

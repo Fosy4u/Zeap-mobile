@@ -90,6 +90,28 @@ const VendorRegistrationScreen = () => {
         [],
     );
 
+    // Per-step gate for the Continue button. A step's own react-hook-form
+    // `isValid` (all use mode: "onChange" + a yup resolver) tells us whether
+    // every required field is filled and valid:
+    //   • Steps 1–5: all fields required → disabled until valid.
+    //   • Step 6 (socials): every field optional → isValid is true when empty
+    //     (acts as "skip"), but flips false the moment an entry breaks format.
+    //   • Step 7: disabled until the terms checkbox is ticked.
+    //   • Step 8: disabled until a referral source is selected.
+    //   • Step 9 (review): always enabled — it's the submit screen.
+    const stepValidity: Record<number, boolean> = {
+        1: stepOne.isValid,
+        2: stepTwo.isValid,
+        3: stepThree.isValid,
+        4: stepFour.isValid,
+        5: stepFive.isValid,
+        6: stepSix.isValid,
+        7: stepSeven.isValid,
+        8: stepEight.isValid,
+        9: true,
+    };
+    const canProceed = stepValidity[selectedStep] ?? true;
+
     const handleNext = () => {
         switch (selectedStep) {
             case 1: stepOne.handleSubmit(stepOne.onSubmit)(); break;
@@ -170,10 +192,6 @@ const VendorRegistrationScreen = () => {
                 {/*==== Top chrome ====*/}
                 <View className="px-5 pt-3">
                     <View className="h-10 flex-row items-center justify-between">
-                        {/* Spacer kept where the back button used to live so the
-                            "Step N of 9" pill stays visually centered. The only
-                            back affordance now is the one in the bottom action
-                            bar — having two was redundant. */}
                         <View className="h-10 w-10" />
 
                         <View className="px-3 py-1.5 rounded-full bg-gray-100">
@@ -220,6 +238,17 @@ const VendorRegistrationScreen = () => {
                     className="absolute bottom-0 left-0 right-0 px-5 pt-3 pb-6 bg-white border-t border-gray-100"
                     style={{ shadowColor: "#000", shadowOpacity: 0.04, shadowRadius: 8, shadowOffset: { width: 0, height: -2 }, elevation: 8 }}
                 >
+                    {/* Socials (step 6) are optional — let the vendor skip straight ahead. */}
+                    { selectedStep === 6 && (
+                        <TouchableOpacity
+                            onPress={ stepSix.handleSkip }
+                            disabled={ isSubmitting }
+                            className="mb-3 h-11 flex-row items-center justify-center rounded-2xl"
+                        >
+                            <Text className="font-montserratSemiBold text-base text-gray-500 underline">Skip for now</Text>
+                        </TouchableOpacity>
+                    ) }
+
                     <View className="flex-row gap-x-3">
                         { selectedStep > 1 && (
                             <TouchableOpacity
@@ -234,9 +263,9 @@ const VendorRegistrationScreen = () => {
 
                         <TouchableOpacity
                             onPress={ handleNext }
-                            disabled={ isSubmitting }
+                            disabled={ isSubmitting || !canProceed }
                             activeOpacity={ 0.85 }
-                            className={ `flex-1 h-14 flex-row items-center justify-center rounded-2xl bg-baseGreen ${ isSubmitting ? "opacity-60" : "" }` }
+                            className={ `flex-1 h-14 flex-row items-center justify-center rounded-2xl bg-baseGreen ${ (isSubmitting || !canProceed) ? "opacity-60" : "" }` }
                         >
                             { isSubmitting ? (
                                 <ActivityIndicator color="#ffffff" />
@@ -268,9 +297,6 @@ const VendorRegistrationScreen = () => {
             ) }
 
             {/*==== Full-screen loading overlay during submission ====*/}
-            {/* Uses the shared AppLoader (rotating brand icon on a dark
-                backdrop) so the loading visual matches every other long-op
-                across the app instead of a stand-alone spinner card. */}
             { isSubmitting && (
                 <AppLoader loadingAdditionalMessage={ loadingMessage || "Submitting your shop details..." } />
             ) }

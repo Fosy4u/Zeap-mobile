@@ -9,6 +9,7 @@ interface IAddressState {
     selectedCountry: string;
 
     showNewDeliveryAddressForm: boolean;
+    editingAddressId: string;
 
     isLoading: boolean;
     loadingMessage: string;

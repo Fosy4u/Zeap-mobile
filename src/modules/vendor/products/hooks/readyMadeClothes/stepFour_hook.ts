@@ -46,6 +46,8 @@ const useStepFourHook = () => {
     const [showDefaultImageModal, setShowDefaultImageModal] = useState(false);
     const [colorOptions, setColorOptions] = useState<IColorOption[]>([]);
     const [selectedColor, setSelectedColor] = useState<IColorOption[]>([]);
+    // Controls the per-colour image-upload modal (opens when a colour is picked).
+    const [showImageUploadModal, setShowImageUploadModal] = useState(false);
     const dispatch = useDispatch();
 
     const [uploadProductImages] = useUploadProductImagesMutation();
@@ -67,7 +69,10 @@ const useStepFourHook = () => {
         setColorOptions(formattedColours);
     };
 
-    // Handle selecting colour
+    // Handle selecting colour — single active colour at a time. Tapping a new
+    // colour switches to it (and clears any images picked for the previous
+    // one); tapping the active colour again deselects it. The active colour is
+    // what the uploader and "Selected colour" indicator reflect.
     const handleSelectColour = (colour: IColorOption) => {
 
         // Check if the selected color already exist in the uploaded color and images
@@ -77,11 +82,18 @@ const useStepFourHook = () => {
             return;
         }
 
-        if (selectedColor.find((color) => color.colorCode === colour.colorCode)) {
-            setSelectedColor(prevState => prevState.filter((color) => color.colorCode !== colour.colorCode));
-        } else {
-            setSelectedColor(prevState => [...prevState, colour]);
-        };
+        // Activate the colour and open the upload modal for it. Images are
+        // reset so the modal starts empty for this colour.
+        setSelectedColor([colour]);
+        setSelectedImages([]);
+        setShowImageUploadModal(true);
+    };
+
+    // Close the modal and clear the in-progress colour/images (cancel).
+    const handleCloseImageUploadModal = () => {
+        setShowImageUploadModal(false);
+        setSelectedColor([]);
+        setSelectedImages([]);
     };
 
     // Request gallery permissions for Android
@@ -189,30 +201,28 @@ const useStepFourHook = () => {
         setSelectedImages(prevState => prevState.filter((_, i) => i !== index));
     };
 
-    // Handle upload image
-    const handleUploadImage = async () => {
-        dispatch(setLoadingMessage("Uploading product color and their images..."));
+    // Upload the ACTIVE colour and its images via /product/update/addColorAndImages.
+    // Stays on step 4 and resets the selection so the vendor can add the next
+    // colour (select colour → add images → Upload → repeat → Save & Continue).
+    const handleUploadColorAndImages = async () => {
+        // Require an active colour and at least one image for it.
+        if (selectedColor.length === 0) {
+            Alert.alert("Select a colour", "Please select a colour before uploading images.");
+            return;
+        }
+        if (selectedImages.length === 0) {
+            Alert.alert("Add an image", "Please add at least one image for the selected colour.");
+            return;
+        }
+
+        dispatch(setLoadingMessage("Uploading colour and images..."));
         dispatch(setProductIsLoading(true));
         const productId = product?.productId || "";
 
         try {
-            // Check if there are images to upload
-            if (selectedImages.length === 0 && uploadedColorAndImages.length === 0) {
-                Alert.alert("Error", "Please select at least one image to upload.");
-                dispatch(setProductIsLoading(false));
-                dispatch(setLoadingMessage(""));
-                return;
-            }
-            if (selectedImages.length === 0 && uploadedColorAndImages.length > 0) {
-                dispatch(setProductIsLoading(false));
-                dispatch(setLoadingMessage(""));
-                dispatch(setSelectedStep(4));
-                return;
-            }
-
             // Create a FormData instance
             const formData = new FormData();
-            
+
             formData.append("productId", productId);
             formData.append("color", selectedColor[0].colorName);
             formData.append("currentStep", 4);
@@ -228,10 +238,8 @@ const useStepFourHook = () => {
                     type: imageType,
                 });
             });
-            // console.log("FORM DATA: ", JSON.stringify(formData));
-            
-            
-            // Check if the selected color is found in the uploaded color and images. If it does not, call the uploadProductImages else call the updateProductImages
+
+            // New colour → add; an existing one → append to it.
             let uploadProductImagesResponseData: IVendorProductDetails | undefined;
             const isColorAlreadySelected = uploadedColorAndImages.find((colorAndImage) => colorAndImage.color?.colorName === selectedColor[0].colorName);
             if (isColorAlreadySelected) {
@@ -239,21 +247,22 @@ const useStepFourHook = () => {
             } else {
                 uploadProductImagesResponseData = await uploadProductImages(formData).unwrap();
             }
-            // console.log("RESPONSE DATA: ", uploadProductImagesResponseData);
 
             if (uploadProductImagesResponseData) {
                 dispatch(setLoadingMessage("Getting product details..."));
-                setSelectedImages([]);
-                
+
                 // Get the updated product data
                 const updatedProduct = await getProductByProductID(productId).unwrap();
-                console.log("UPDATED PRODUCT::: ", updatedProduct);
 
                 if (updatedProduct) {
                     dispatch(setProduct(updatedProduct));
+                    // Reset and close the modal so the vendor returns to the
+                    // main screen and can pick the next colour.
+                    setShowImageUploadModal(false);
+                    setSelectedColor([]);
+                    setSelectedImages([]);
                     dispatch(setProductIsLoading(false));
                     dispatch(setLoadingMessage(""));
-                    dispatch(setSelectedStep(5));
                 }
             }
         } catch (error: any) {
@@ -261,6 +270,15 @@ const useStepFourHook = () => {
             dispatch(setLoadingMessage(""));
             handleError(error);
         }
+    };
+
+    // Save & Continue — requires at least one uploaded colour, then advances.
+    const handleProceedToNextStep = () => {
+        if (uploadedColorAndImages.length === 0) {
+            Alert.alert("Add a colour", "Please upload at least one colour with its images before continuing.");
+            return;
+        }
+        dispatch(setSelectedStep(5));
     };
 
     // Handle delete color
@@ -299,37 +317,39 @@ const useStepFourHook = () => {
     };
 
     // Handle delete image
-    const handleDeleteImage = async (index: number) => {
-        
-        if (product?.colors?.[0].images?.[index]) {
-            dispatch(setLoadingMessage("Deleting product image..."));
-            dispatch(setProductIsLoading(true));
+    // Delete a single already-uploaded image from a colour via
+    // /product/update/deleteProductImage ({ productId, color, imageName }).
+    const handleDeleteUploadedImage = async (colorName: string, imageName: string) => {
+        if (!colorName || !imageName) return;
 
-            const productId = product?.productId || "";
-            const imageName = uploadedColorAndImages[index].images[0].name || "";
-            const color = selectedColor[0].colorName || "";
+        dispatch(setLoadingMessage("Deleting product image..."));
+        dispatch(setProductIsLoading(true));
+        const productId = product?.productId || "";
 
-            try {
-                const deleteProductImageResponseData = await deleteProductImage({ productId, imageName, color }).unwrap();
-                console.log("DELETE PRODUCT IMAGE RESPONSE: ", deleteProductImageResponseData);
+        try {
+            const deleteProductImageResponseData = await deleteProductImage({ productId, color: colorName, imageName }).unwrap();
 
-                if (deleteProductImageResponseData) {
-                    const updatedProduct = await getProductByProductID(productId).unwrap();
-
-                    if (updatedProduct) {
-                        dispatch(setProduct(updatedProduct));
-                        dispatch(setProductIsLoading(false));
-                        dispatch(setLoadingMessage(""));
-                    }
+            if (deleteProductImageResponseData) {
+                const updatedProduct = await getProductByProductID(productId).unwrap();
+                if (updatedProduct) {
+                    dispatch(setProduct(updatedProduct));
                 }
-            } catch (error) {
-                dispatch(setProductIsLoading(false));
-                dispatch(setLoadingMessage(""));
-                handleError(error);
             }
-        } else {
-            setSelectedImages(prevState => prevState.filter((_, i) => i !== index));
+        } catch (error) {
+            handleError(error);
+        } finally {
+            dispatch(setProductIsLoading(false));
+            dispatch(setLoadingMessage(""));
         }
+    };
+
+    // Open the upload modal for an already-uploaded colour to add more images.
+    // Skips the "already selected" guard in handleSelectColour on purpose — the
+    // upload then routes to /product/update/addImagesToProductColor.
+    const handleAddMoreImages = (colour: IColorOption) => {
+        setSelectedColor([colour]);
+        setSelectedImages([]);
+        setShowImageUploadModal(true);
     };
 
     // Handle set uploaded images from draft product
@@ -406,8 +426,10 @@ const useStepFourHook = () => {
 
     return {
         colorOptions, handleSelectColour, selectedColor,
-        selectedImages, handleAddImage, handleRemoveImage, handleUploadImage,
-        uploadedColorAndImages, handleDeleteColor, handleDeleteImage,
+        selectedImages, handleAddImage, handleRemoveImage,
+        handleUploadColorAndImages, handleProceedToNextStep,
+        showImageUploadModal, handleCloseImageUploadModal, handleAddMoreImages,
+        uploadedColorAndImages, handleDeleteColor, handleDeleteUploadedImage,
         setSelectedDefaultImage, showDefaultImageModal, setShowDefaultImageModal, handleSetDefaultImage,
     };
 };

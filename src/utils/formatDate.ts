@@ -1,15 +1,9 @@
-/**
- * Formats a date string into a readable format
- * @param dateString - The date string to format (ISO format)
- * @param isCompact - If true, returns date in "dd/MM/yyyy" format
- * @returns Formatted date string
- */
 
 type IDateInput = string | number | Date;
 
-const formatDate = (dateString: IDateInput, isCompact: boolean = false): string => {
+const formatDate = (dateString: IDateInput, isCompact: boolean = false, dateOnly: boolean = false): string => {
     if (!dateString && dateString !== 0) return "";
-    
+
     const date = new Date(dateString);
 
     if (isCompact) {
@@ -23,9 +17,8 @@ const formatDate = (dateString: IDateInput, isCompact: boolean = false): string 
         year: 'numeric',
         month: 'long',
         day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true
+        // e.g. "23 June 2026" when dateOnly, otherwise the time is appended.
+        ...(dateOnly ? {} : { hour: '2-digit', minute: '2-digit', hour12: true }),
     }).format(date);
 };
 

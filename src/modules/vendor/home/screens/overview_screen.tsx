@@ -6,6 +6,7 @@ import { RootState } from '../../../../redux/store/store';
 import { ArrowRight, Calendar } from 'iconsax-react-native';
 import { PieChart } from 'react-native-gifted-charts';
 import formatCurrency from '../../../../utils/formatCurrency';
+import AppStatusBar from "../../../general/components/appStatusBar";
 
 const OverviewScreen = () => {
     const { overviews, salesCountPieData, salesRevenuePieData } = useSelector((state: RootState) => state.vendorHomeState);
@@ -14,10 +15,7 @@ const OverviewScreen = () => {
 
     return (
         <SafeAreaView className="flex-1 h-auto w-screen pb-2 bg-gray-50">
-            <StatusBar
-                backgroundColor="#133522"
-                barStyle="light-content"
-            />
+            <AppStatusBar backgroundColor="#133522" barStyle="light-content" />
 
             {/* ==== Header ==== */}
             <AppHeaderComp title="Overview" />

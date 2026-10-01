@@ -1,81 +1,78 @@
-import React, { useState } from 'react';
-import {ScrollView, Text, TouchableOpacity, View} from "react-native";
-import CheckBox from '@react-native-community/checkbox';
-import { ArrowDown2, ArrowUp2 } from 'iconsax-react-native';
+import React from 'react';
+import { Text, TouchableOpacity, View } from "react-native";
+import SearchableDropdownComponent from '../searchableDropdown_component';
 
 interface IProps {
+    sizeStandardOptions: string[];
+    selectedSizeStandard: string;
+    handleSelectSizeStandard: (standard: string) => void;
     shoeSizes: string[];
     selectedSizes: string[];
     setSelectedSizes: React.Dispatch<React.SetStateAction<string[]>>;
+    showSizesDropDown: boolean;
+    setShowSizesDropDown: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
-const StepThreeComponent: React.FC<IProps> = (props) => {
-    const { shoeSizes, selectedSizes, setSelectedSizes } = props;
-    const [showSizeDropDown, setShowSizeDropDown] = useState(false);
+const StepThreeComponent: React.FC<IProps> = ({
+    sizeStandardOptions,
+    selectedSizeStandard,
+    handleSelectSizeStandard,
+    shoeSizes,
+    selectedSizes,
+    setSelectedSizes,
+    showSizesDropDown,
+    setShowSizesDropDown,
+}) => {
 
     return (
         <View>
-            <Text className="mt-5 font-montserratSemiBold text-base text-baseGreen">Step 3: Foot Measurements</Text>
-            <Text className="mt-2 font-montserratMedium">Provide the applicable foot measurements for this product.</Text>
+            <Text className="mt-5 font-montserratSemiBold text-base text-baseGreen">Step 3: Size</Text>
+            <Text className="mt-2 font-montserratMedium">Select the size standard, then the sizes available for this product.</Text>
 
-            {/* ==== Sizes ==== */}
-            <Text aria-label="Sizes" nativeID="style" className="mt-5 font-montserratMedium">Sizes<Text className="text-red-600">*</Text></Text>
-            <View className="h-auto w-full mt-1.5 px-3 py-2.5 border rounded-xl border-gray-200 bg-gray-50 z-50">
-                { showSizeDropDown ? (
-                    <>
-                        <TouchableOpacity
-                            onPress={ () => setShowSizeDropDown(!showSizeDropDown) }
-                            className="px-2 py-4 flex-row items-center justify-between  rounded-lg border border-[#ececed]"
-                        >
-                            <Text className="h-auto flex-1 text-base text-[#9ca3af]" >Select available sizes</Text>
-                            <ArrowUp2 size={18} color="#9ca3af" className="mx-1 mt-1" />
-                        </TouchableOpacity>
+            {/* ==== Size standard ==== */}
+            <View className="h-auto w-full mt-4 px-3 py-3.5 border rounded-xl border-gray-200 bg-gray-50">
+                <Text className="font-montserratSemiBold text-base text-baseGreen">Size standard<Text className="text-red-600">*</Text></Text>
+                <Text className="mt-1 font-montserratMedium text-sm text-gray-500">Which size standard is used for this product?</Text>
 
-                        <View className="h-[280px] mt-2 border border-gray-200 rounded-lg overflow-hidden">
-                            <ScrollView
-                                nestedScrollEnabled={true}
-                                showsVerticalScrollIndicator={true}
-                                contentContainerStyle={{ flexGrow: 1, padding: 10 }}
+                <View className="mt-3">
+                    { sizeStandardOptions.map((standard: string) => {
+                        const isSelected = selectedSizeStandard === standard;
+                        return (
+                            <TouchableOpacity
+                                key={ standard }
+                                onPress={ () => handleSelectSizeStandard(standard) }
+                                className="h-auto w-full py-2.5 flex-row items-center"
                             >
-                                { [...shoeSizes]
-                                    .sort((a, b) => parseFloat(a) - parseFloat(b))
-                                    .map((item: string, index: number) => (
-                                        <View key={ index } className="flex-row items-center gap-x-2">
-                                            <CheckBox
-                                                value={ selectedSizes.includes(item) }
-                                                onValueChange={ (newValue: boolean) => {
-                                                    if (newValue) {
-                                                        setSelectedSizes([...selectedSizes, item]);
-                                                    } else {
-                                                        setSelectedSizes(selectedSizes.filter((value: string) => value !== item));
-                                                    }
-                                                } }
-                                                tintColors={{ true: "gray", false: "gray" }}
-                                                lineWidth={1}
-                                                style={{
-                                                    transform: [{ scaleX: 0.9 }, { scaleY: 0.9 }],
-                                                }}
-                                            /> 
-                                            <Text className="font-montserratMedium text-sm">{ item }</Text>
-                                        </View>
-                                    )) 
-                                }
-                            </ScrollView>
-                        </View>
-                    </>
-                ) : (
-                    <TouchableOpacity
-                        onPress={ () => setShowSizeDropDown(!showSizeDropDown) }
-                        className="py-1.5 flex-row items-center justify-between"
-                    >
-                        <View className="h-auto w-full flex-1 flex-row items-center justify-start flex-wrap space-x-2 space-y-1">
-                            <Text className="h-auto flex-1 text-base text-[#9ca3af]" >Select available sizes</Text>
-                        </View>
-                        <ArrowDown2 size={18} color="#9ca3af" className="mx-1 mt-1" />
-                    </TouchableOpacity>
-                ) }
-                {/* { errors.main && <Text claSelectList doesn't pre-select the savedDraftProduct ssName="text-red-600 text-xs mt-1">{errors.main.message}</Text> } */}
+                                {/* Radio indicator */}
+                                <View className={`h-[20px] w-[20px] rounded-full border-2 items-center justify-center ${ isSelected ? "border-baseGreen" : "border-gray-300" }`}>
+                                    { isSelected && <View className="h-[10px] w-[10px] rounded-full bg-baseGreen" /> }
+                                </View>
+                                <Text className="ml-3 font-montserratMedium text-base text-baseGreen">{ standard }</Text>
+                            </TouchableOpacity>
+                        );
+                    }) }
+                </View>
             </View>
+
+            {/* ==== Sizes (for the chosen standard) — searchable multi-select.
+                Selected sizes appear as badges below the field. ==== */}
+            { selectedSizeStandard ? (
+                <SearchableDropdownComponent
+                    label="Available sizes"
+                    required
+                    placeholder={ `Select the ${selectedSizeStandard} sizes available` }
+                    options={ shoeSizes }
+                    isOpen={ showSizesDropDown }
+                    onToggleOpen={ () => setShowSizesDropDown(!showSizesDropDown) }
+                    mode="multi"
+                    selectedValues={ selectedSizes }
+                    onChangeValues={ setSelectedSizes }
+                />
+            ) : (
+                <View className="mt-4 px-3 py-5 border border-gray-200 rounded-xl bg-gray-50 items-center">
+                    <Text className="font-montserratMedium text-sm text-gray-500 text-center">Select a size standard above to choose the available sizes.</Text>
+                </View>
+            ) }
         </View>
     );
 };

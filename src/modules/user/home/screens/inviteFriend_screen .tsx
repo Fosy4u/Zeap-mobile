@@ -14,7 +14,8 @@ const InviteFriendScreen = () => {
   return (
     <GestureHandlerRootView>
       <BottomSheetModalProvider>
-        <SafeAreaView className="h-full w-full flex-1 px-[25px] pt-[20px]">
+        <SafeAreaView className="h-full w-full flex-1 pt-5">
+          <View className="flex-1 px-6">
           <StatusBar
             backgroundColor="transparent"
             barStyle="dark-content"
@@ -61,6 +62,7 @@ const InviteFriendScreen = () => {
               </View>
             </View>
           </ScrollView>
+          </View>
         </SafeAreaView>
       </BottomSheetModalProvider>
     </GestureHandlerRootView>

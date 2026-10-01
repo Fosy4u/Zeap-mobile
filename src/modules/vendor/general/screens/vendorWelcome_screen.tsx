@@ -114,7 +114,7 @@ const VendorWelcomeScreen = () => {
                         </TouchableOpacity>
 
                         <TouchableOpacity
-                            onPress={ () => navigation.reset({ index: 0, routes: [{ name: "vendorOnboardingScreen" }] }) }
+                            onPress={ () => navigation.reset({ index: 0, routes: [{ name: "vendorHomeScreen", params: { screen: "Dashboard" } }] }) }
                             activeOpacity={ 0.85 }
                             className="mt-3 h-14 items-center justify-center rounded-2xl bg-gray-100"
                         >

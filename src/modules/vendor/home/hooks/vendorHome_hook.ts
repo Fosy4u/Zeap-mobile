@@ -4,29 +4,28 @@ import { setShop } from "../../general/slices/general_slice";
 import { useLazyGetAnalyticsQuery } from "../apis/home_api";
 import { setAnalytics, setOverviews, setSalesCountPieData, setSalesRevenuePieData } from "../slices/vendorHome_slice";
 
-
-/**
- * The useGeneralHook
- * @returns { handleGetShop }
- */
 const useVendorHomeHook = () => {
     const dispatch = useDispatch();
     
     const [getShop] = useLazyGetShopQuery();
     const [getAnalytics] = useLazyGetAnalyticsQuery();
-    // const [getOverview] = useLazyGetOverviewQuery();
-    // const [getWeeklySalesChartData] = useLazyGetWeeklySalesChartDataQuery();
-    // const [getRecentPayment] = useLazyGetRecentPaymentQuery();
-    // const [getProductsByCategories] = useLazyGetProductsByCategoriesQuery();
-    // const [getPromoProducts] = useLazyGetPromoProductsQuery();
+    /* Not wired yet: getOverview, getWeeklySalesChartData, getRecentPayment,
+       getProductsByCategories, getPromoProducts. */
 
-    const handleGetShop = async (shopId: string) => {        
+    const handleGetShop = async (shopId: string) => {
+        /* Without a shop id this hits /shop with `undefined` and comes back
+           "shop not found" — the caller should be gating on the id instead. */
+        if (!shopId) { return; }
+
         try {
             const shop = await getShop(shopId).unwrap();
             // console.log("SHOP RESPONSE::: ", shop);
-    
-            // Dispatch to redux store
-            dispatch(setShop(shop));
+
+            /* Only write a real shop through — a terminated shop answers 2xx with
+               an empty body, and the guard hook owns the "no shop" verdict. */
+            if (shop?.shopId) {
+                dispatch(setShop(shop));
+            }
         } catch (error) {
             console.log("ERROR::: ", error);
         };
@@ -37,45 +36,52 @@ const useVendorHomeHook = () => {
             const analytics = await getAnalytics(shopId).unwrap();
             // console.log("VENDOR ANALYTICS RESPONSE::: ", analytics);
 
+            /* A tile with no number reads as broken, so every count falls back
+               to 0 when the payload omits its status. */
+            const orderCounts = analytics.ordersCountByStatus ?? {};
             const overviews = [
                 {
                     name: "Product sold",
-                    count: analytics.productSold!
+                    count: analytics.productSold ?? 0
                 },
                 {
                     name: "Placed orders",
-                    count: analytics.ordersCountByStatus?.placed!
+                    count: orderCounts.placed ?? 0
                 },
                 {
                     name: "Confirmed orders",
-                    count: analytics.ordersCountByStatus?.confirmed!
+                    count: orderCounts.confirmed ?? 0
                 },
                 {
                     name: "Processing orders",
-                    count: analytics.ordersCountByStatus?.processing!
+                    count: orderCounts.processing ?? 0
                 },
                 {
-                    name: "Ready orders",
-                    count: analytics.ordersCountByStatus?.ready!
+                    name: "Quality check orders",
+                    count: orderCounts["quality check"] ?? 0
+                },
+                {
+                    name: "Ready for delivery orders",
+                    count: orderCounts["ready for delivery"] ?? 0
                 },
                 {
                     name: "Dispatched orders",
-                    count: analytics.ordersCountByStatus?.dispatched!
+                    count: orderCounts.dispatched ?? 0
                 },
                 {
                     name: "Delivered orders",
-                    count: analytics.ordersCountByStatus?.delivered!
+                    count: orderCounts.delivered ?? 0
                 },
                 {
                     name: "Cancelled orders",
-                    count: analytics.ordersCountByStatus?.cancelled!
+                    count: orderCounts.cancelled ?? 0
                 },
             ];
 
             const salesCount = [
                 {
                     value: analytics.productGroupsCount?.["Ready-Made"]!,
-                    title: "Ready made",
+                    title: "Ready to wear",
                     color: "#133522",
                 },
                 {
@@ -111,8 +117,7 @@ const useVendorHomeHook = () => {
     };
 
     return {
-        // handleGetItems,
-        // handleGetMarket,
+        /* handleGetItems, handleGetMarket, */
         handleGetShop,
         handleGeVendortAnalytics,
         // handleGetNotifications,

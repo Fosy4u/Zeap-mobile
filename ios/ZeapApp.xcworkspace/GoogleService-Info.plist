@@ -3,9 +3,11 @@
 <plist version="1.0">
 <dict>
 	<key>CLIENT_ID</key>
-	<string>241723989064-ps9apa7aj9agm0fqerqjneg2sord6qit.apps.googleusercontent.com</string>
+	<string>241723989064-b3tc9gdbbij5qmav0b4mmnodmnv3j28m.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.241723989064-ps9apa7aj9agm0fqerqjneg2sord6qit</string>
+	<string>com.googleusercontent.apps.241723989064-b3tc9gdbbij5qmav0b4mmnodmnv3j28m</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>241723989064-tbtalkie0qs4q13unp9kfhvhfis5fpcv.apps.googleusercontent.com</string>
 	<key>API_KEY</key>
 	<string>AIzaSyCkjCpEmD7Ty0DhUMlx8QYIYDTLnbmO7bE</string>
 	<key>GCM_SENDER_ID</key>
@@ -13,7 +15,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>org.reactjs.native.example.zeapapp</string>
+	<string>com.zeaper.app</string>
 	<key>PROJECT_ID</key>
 	<string>zeap-7de3d</string>
 	<key>STORAGE_BUCKET</key>
@@ -29,6 +31,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:241723989064:ios:66ef3685aeef976ac50c7d</string>
+	<string>1:241723989064:ios:ace276feddc12633c50c7d</string>
 </dict>
 </plist>
