@@ -13,6 +13,7 @@ import IProduct from '../../products/models/product_model'
 import { useDispatch, useSelector } from 'react-redux'
 import { RootState } from '../../../../redux/store/store'
 import { setProductID } from '../../products/slices/product_slice'
+import AppStatusBar from "../../../general/components/appStatusBar";
 
 const BespokeDashboardScreen = () => {
     const { popularProducts } = useSelector((state: RootState) => state.productState);
@@ -54,10 +55,7 @@ const BespokeDashboardScreen = () => {
 
     return (
         <SafeAreaView className="flex-1 h-auto w-screen pb-20 bg-white">
-            <StatusBar
-                backgroundColor="#112F1E"
-                barStyle="light-content"
-            />
+            <AppStatusBar backgroundColor="#112F1E" barStyle="light-content" />
 
             {/*==== Main Body Section ====*/}
             <View className="h-auto w-[90%]">

@@ -12,7 +12,9 @@ interface IOrderDetails {
     size?:                         string;
     color?:                        string;
     images?:                       IImage[];
-    bodyMeasurements?:             any[];
+    bodyMeasurements?:             IBodyMeasurement[];
+    bespokeInstruction?:           string;
+    bespokeColor?:                 string;
     status?:                       IStatus;
     amount?:                       IAmount[];
     expectedVendorCompletionDate?: IExpectedDate;
@@ -29,6 +31,19 @@ interface IOrderDetails {
     deliveryTrackingNumber?:       string;
     deliveryDetails?:              IDeliveryDetails;
     __v?:                          number;
+};
+
+interface IBodyMeasurement {
+    name?:         string;
+    measurements?: IMeasurement[];
+    _id?:          string;
+};
+
+interface IMeasurement {
+    field?: string;
+    value?: number;
+    unit?:  string;
+    _id?:   string;
 };
 
 interface IAmount {
@@ -48,6 +63,7 @@ interface IDeliveryDetails {
     address?:     string;
     region?:      string;
     country?:     string;
+    postCode?:    string;
     phoneNumber?: string;
     firstName?:   string;
     lastName?:    string;

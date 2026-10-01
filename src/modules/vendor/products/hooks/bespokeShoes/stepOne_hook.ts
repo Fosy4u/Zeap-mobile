@@ -5,7 +5,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { setLoadingMessage, setProduct, setProductIsLoading, setSelectedStep } from "../../slices/vendorProductState_slice";
 import { useCreateProductMutation, useUpdateProductMutation } from "../../apis/bespokeProduct_api";
 import IVendorProductDetails from "../../models/vendorProductDetails_model";
-import { IStepOneAddProduct, stepOneAddProductSchema } from "../../validations/addProduct_validation";
+import { IStepOneAddBespokeShoes, stepOneAddBespokeShoesSchema } from "../../validations/addProduct_validation";
 import handleError from "../../../../general/hooks/errorHandler_hook";
 
 const useStepOneHook = () => {
@@ -16,26 +16,26 @@ const useStepOneHook = () => {
     const [createProduct] = useCreateProductMutation();
     const [updateProduct] = useUpdateProductMutation();
 
-    const { control, handleSubmit, formState: { errors } } = useForm<IStepOneAddProduct>({
+    const { control, handleSubmit, formState: { errors } } = useForm<IStepOneAddBespokeShoes>({
         
         defaultValues: {
             title: product?.title || "",
             subTitle: product?.subTitle || "",
             description: product?.description || "",
-            productType: "readyMadeShoe",
+            productType: "bespokeShoe",
             shopId: product?.shopId || userData?.shopId || "",
         },
-        resolver: yupResolver(stepOneAddProductSchema),
+        resolver: yupResolver(stepOneAddBespokeShoesSchema),
         mode: "onChange" // Validate the form either "onChange" or "onBlur" or "onSubmit" or "all"
     });
 
-    const onSubmit: SubmitHandler<IStepOneAddProduct> = async (data) => {
+    const onSubmit: SubmitHandler<IStepOneAddBespokeShoes> = async (data) => {
         dispatch(setProductIsLoading(true));
 
         try {
             const requestData = {
                 title: data.title,
-                subTitle: data.subTitle,
+                subTitle: data.subTitle || "",
                 description: data.description,
                 productType: data.productType,
                 productId: product?.productId! || "",

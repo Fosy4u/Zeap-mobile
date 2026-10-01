@@ -13,6 +13,8 @@ import SkeletonBlock from '../../../general/components/skeletonBlock_component';
 import FastImage from 'react-native-fast-image';
 import formatCurrency from '../../../../utils/formatCurrency';
 import FormatWords from '../../../../utils/formatWords';
+import useDisplayCurrency from '../../../general/hooks/displayCurrency_hook';
+import ColorSwatchComponent from '../../../general/components/colorSwatch_component';
 
 interface IProps {
   defaultFeaturedImageAndThumbnails: IColor;
@@ -38,6 +40,7 @@ const ProductImagesAndColorsComponent: React.FC<IProps> = (props) => {
   } = props;
 
   const { product, reviewAndRating, productPromotion, selectedColor, selectedSize, isLoading } = useSelector((state: RootState) => state.productState);
+  const { resolveCurrency } = useDisplayCurrency();
   const [visible, setVisible] = useState(false);
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
   const dispatch = useDispatch();
@@ -57,6 +60,15 @@ const ProductImagesAndColorsComponent: React.FC<IProps> = (props) => {
     (variation) => variation.colorValue === selectedColor?.name && variation.size === selectedSize
   );
   const canAddToCart = (selectedVariation?.quantity ?? 0) > 0;
+
+  // Price follows the selected colour (and the exact size once one is chosen).
+  // Each colour can carry its own price, so reading variations[0] always showed
+  // the first colour's price regardless of selection. Fall back to the selected
+  // colour's first variation, then to the product's first variation.
+  const priceVariation =
+    product?.variations?.find((variation) => variation.colorValue === selectedColor?.name && variation.size === selectedSize) ||
+    product?.variations?.find((variation) => variation.colorValue === selectedColor?.name) ||
+    product?.variations?.[0];
 
   // Color Palette Toggle Slide Animation.
   const slideAnim = useRef(new Animated.Value(300)).current;
@@ -145,7 +157,7 @@ const ProductImagesAndColorsComponent: React.FC<IProps> = (props) => {
                           uri: featuredImage?.link!,
                           priority: FastImage.priority.normal
                       }}
-                      defaultSource={ require("../../../../../assets/images/app_logo_green.png") }
+                      defaultSource={ require("../../../../../assets/images/image_placeholder.png") }
                       resizeMode={ FastImage.resizeMode.cover }
                       className="h-[500px] w-full rounded-lg"
                       style={{ aspectRatio: 0.68 }}
@@ -176,7 +188,7 @@ const ProductImagesAndColorsComponent: React.FC<IProps> = (props) => {
                     uri: eachImage.link!,
                     priority: FastImage.priority.normal
                   }}
-                  defaultSource={ require("../../../../../assets/images/app_logo_green.png") }
+                  defaultSource={ require("../../../../../assets/images/image_placeholder.png") }
                   resizeMode={ FastImage.resizeMode.cover }
                   className="h-[73px] w-[73px] rounded-2xl"
                 />
@@ -184,12 +196,12 @@ const ProductImagesAndColorsComponent: React.FC<IProps> = (props) => {
             ))) }
           </View>
 
-          {/*==== Product Price ====*/}
+          {/*==== Product Price (follows the selected colour) ====*/}
           <View className="h-auto w-full mt-5 px-5 flex-row items-center justify-between">
             <View className="h-auto w-auto flex items-start justify-center">
               <View className="flex-row items-center">
-                    <Text className="mt-2.5 text-2xl font-medium text-gray-900">{ product.variations![0].discount ? formatCurrency(product?.variations![0].discount || "0", product?.variations![0].currency || "NGN", true) : formatCurrency(product?.variations![0].price || "0", product?.variations![0].currency || "NGN", true) }</Text>
-                    <Text className="mt-2.5 ml-3 text-lg font-medium text-gray-400 line-through">{ product.variations![0].discount && formatCurrency(product?.variations![0].price || "0",  product?.variations![0].currency || "NGN", true) }</Text>
+                    <Text className="mt-2.5 text-2xl font-medium text-gray-900">{ priceVariation?.discount ? formatCurrency(priceVariation?.discount || "0", resolveCurrency(priceVariation?.currency)) : formatCurrency(priceVariation?.price || "0", resolveCurrency(priceVariation?.currency)) }</Text>
+                    <Text className="mt-2.5 ml-3 text-lg font-medium text-gray-400 line-through">{ priceVariation?.discount && formatCurrency(priceVariation?.price || "0", resolveCurrency(priceVariation?.currency)) }</Text>
                 </View>
             </View>
           </View>
@@ -221,7 +233,7 @@ const ProductImagesAndColorsComponent: React.FC<IProps> = (props) => {
                         borderColor: selectedColor?.name === eachColor.name ? "#133522" : "transparent",
                       } }
                     >
-                      <View className="h-5 w-5 rounded-full border border-gray-200" style={ { backgroundColor: eachColor.hex! } } />
+                      <ColorSwatchComponent value={ eachColor.name } hex={ eachColor.hex } size={ 20 } />
                       { !isColorAvailable && (
                         <View
                           style={{
@@ -387,7 +399,7 @@ const ProductImagesAndColorsComponent: React.FC<IProps> = (props) => {
                           uri: featuredImage?.link!,
                           priority: FastImage.priority.normal
                       }}
-                      defaultSource={ require("../../../../../assets/images/app_logo_green.png") }
+                      defaultSource={ require("../../../../../assets/images/image_placeholder.png") }
                       resizeMode={ FastImage.resizeMode.cover }
                       className="h-[500px] w-full rounded-lg"
                       style={{ aspectRatio: 0.68 }}
@@ -417,7 +429,7 @@ const ProductImagesAndColorsComponent: React.FC<IProps> = (props) => {
                   source={
                     defaultFeaturedImageAndThumbnails?.images![index]?.link!
                     ? { uri: defaultFeaturedImageAndThumbnails?.images![index]?.link! }
-                    : require("../../../../../assets/images/app_logo_green.png")
+                    : require("../../../../../assets/images/image_placeholder.png")
                   }
                   resizeMode="cover"
                   className="h-[73px] w-[73px] rounded-2xl"
@@ -430,13 +442,13 @@ const ProductImagesAndColorsComponent: React.FC<IProps> = (props) => {
           { (() => {
             const variation = product?.variations?.[0];
             if (!variation) return null;
-            const currency = variation.currency || "NGN";
+            const currency = resolveCurrency(variation.currency);
             return (
               <View className="h-auto w-full mt-5 px-5 flex-row items-center justify-between">
                 <View className="h-auto w-auto flex items-start justify-center">
                   <View className="flex-row items-center">
-                    <Text className="mt-2.5 text-2xl font-medium text-gray-900">{ variation.discount ? formatCurrency(variation.discount || "0", currency, true) : formatCurrency(variation.price || "0", currency, true) }</Text>
-                    <Text className="mt-2.5 ml-3 text-lg font-medium text-gray-400 line-through">{ variation.discount && formatCurrency(variation.price || "0", currency, true) }</Text>
+                    <Text className="mt-2.5 text-2xl font-medium text-gray-900">{ variation.discount ? formatCurrency(variation.discount || "0", currency) : formatCurrency(variation.price || "0", currency) }</Text>
+                    <Text className="mt-2.5 ml-3 text-lg font-medium text-gray-400 line-through">{ variation.discount && formatCurrency(variation.price || "0", currency) }</Text>
                   </View>
                 </View>
               </View>
@@ -458,7 +470,7 @@ const ProductImagesAndColorsComponent: React.FC<IProps> = (props) => {
                       className="h-7 w-7 flex items-center justify-center rounded-full"
                       style={ {  borderWidth: 1, borderColor: selectedColor?.hex === eachColor.hex ? eachColor.hex : "transparent" } }
                     >
-                    <View className="h-5 w-5 rounded-full" style={ { backgroundColor: eachColor.hex! } } />
+                    <ColorSwatchComponent value={ eachColor.name } hex={ eachColor.hex } size={ 20 } />
                   </TouchableOpacity>
                   )) }
                 </View>

@@ -4,37 +4,44 @@ import { View } from 'react-native-animatable';
 import { Heart } from 'iconsax-react-native';
 import FormatWords from '../../../utils/formatWords';
 import FastImage from 'react-native-fast-image';
-import { Text, TouchableOpacity } from 'react-native';
+import { Image, Text, TouchableOpacity } from 'react-native';
 import formatCurrency from '../../../utils/formatCurrency';
 import useWishlistToggle from '../../user/saved/hooks/wishlistToggle_hook';
+import useDisplayCurrency from '../hooks/displayCurrency_hook';
+import ColorSwatchComponent from './colorSwatch_component';
+import getProductSwatchValues from '../../../utils/productColors';
 
 interface IProductCardItemProps {
   product: IProduct;
   handleOnPress: () => void;
   orientation: "Horizontal" | "Vertical";
-  // When true, a Vertical card fills its parent's width (no fixed 170px / right
-  // margin) so it can sit in a responsive 2-column grid (e.g. search results).
   gridItem?: boolean;
 }
 
 const ProductCardComponent: React.FC<IProductCardItemProps> = (props) => {
     const { product, handleOnPress, orientation, gridItem = false } = props;
     const { isSaved, toggleSave } = useWishlistToggle();
+    const { resolveCurrency } = useDisplayCurrency();
     const saved = isSaved(product?.productId);
-
 
     return (
         <TouchableOpacity
             onPress={ handleOnPress }
-            className={`p-3 rounded-2xl overflow-hidden bg-[#F8F9FE] ${ orientation === "Horizontal" ? "mr-4 h-auto w-[280px] flex-row justify-start" : gridItem ? "h-[300px] w-full" : "mr-4 h-[300px] w-[170px]" }`}
+            className={`p-3 rounded-2xl overflow-hidden bg-[#F8F9FE] ${ orientation === "Horizontal" ? "mr-4 h-auto w-[280px] flex-row justify-start" : gridItem ? "h-auto w-full" : "mr-4 h-[300px] w-[170px]" }`}
             >
-            <View className={`relative rounded-xl overflow-hidden ${ orientation === "Horizontal" ? "h-[150px] w-[130px] mr-4" : "h-[160px] w-full" }`}>
+            <View className={`relative rounded-xl overflow-hidden bg-[#EEF0F7] ${ orientation === "Horizontal" ? "h-[150px] w-[130px] mr-4" : "h-[160px] w-full" }`}>
+                <View className="absolute inset-0 items-center justify-center">
+                    <Image
+                        source={ require("../../../../assets/images/image_placeholder.png") }
+                        resizeMode="contain"
+                        className="h-1/2 w-1/2"
+                    />
+                </View>
                 <FastImage
                     source={{
                         uri: product?.colors?.[0]?.images?.[0]?.link!,
                         priority: FastImage.priority.normal
                     }}
-                    defaultSource={ require("../../../../assets/images/app_logo_green.png") }
                     resizeMode={ FastImage.resizeMode.cover }
                     className="h-full w-full"
                     fallback
@@ -44,6 +51,8 @@ const ProductCardComponent: React.FC<IProductCardItemProps> = (props) => {
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                     className="h-[35px] w-[35px] absolute top-1.5 right-1.5 flex items-center justify-center rounded-xl bg-gray-200"
                 >
+                    {/* Always render the heart — it starts unsaved and flips to
+                        filled once the wishlist lands, so no spinner is shown. */}
                     <Heart color={ saved ? "#e11d48" : "gray" } variant={ saved ? "Bold" : "Linear" } />
                 </TouchableOpacity>
             </View>
@@ -63,12 +72,22 @@ const ProductCardComponent: React.FC<IProductCardItemProps> = (props) => {
                 { (() => {
                     const variation = product?.variations?.[0];
                     if (!variation) { return null; }
-                    const currency = variation.currency || "NGN";
+                    const currency = resolveCurrency(variation.currency);
                     const price = Number(variation.price) || 0;
-                    const discount = Number(variation.discount) || 0;
-                    const hasDiscount = discount > 0 && discount < price;
-                    const savePercent = hasDiscount ? Math.round(((price - discount) / price) * 100) : 0;
-                    const colors = product.colors ?? [];
+                    const variationDiscount = Number(variation.discount) || 0;
+                    const promoPercent = Number(product?.promo?.discountPercentage) || 0;
+
+                    let displayPrice = price;
+                    let savePercent = 0;
+                    if (variationDiscount > 0 && variationDiscount < price) {
+                        displayPrice = variationDiscount;
+                        savePercent = ((price - variationDiscount) / price) * 100;
+                    } else if (promoPercent > 0 && promoPercent < 100 && price > 0) {
+                        savePercent = promoPercent;
+                        displayPrice = price * (1 - promoPercent / 100);
+                    }
+                    const hasDiscount = savePercent > 0 && displayPrice < price;
+                    const colors = getProductSwatchValues(product);
                     const visibleColors = colors.slice(0, 4);
                     const extraColors = Math.max(0, colors.length - visibleColors.length);
 
@@ -80,32 +99,30 @@ const ProductCardComponent: React.FC<IProductCardItemProps> = (props) => {
                         <View className={ isHorizontal ? "" : "flex-1 mr-2" }>
                             <View className="flex-row items-baseline flex-wrap">
                                 <Text className="text-sm font-semibold text-gray-900">
-                                    { formatCurrency(hasDiscount ? discount : price, currency, false) }
+                                    { formatCurrency(hasDiscount ? displayPrice : price, currency) }
                                 </Text>
                                 { hasDiscount && (
                                     <Text className="ml-2 text-[11px] font-medium text-gray-400 line-through">
-                                        { formatCurrency(price, currency, false) }
+                                        { formatCurrency(price, currency) }
                                     </Text>
                                 ) }
                             </View>
                             { hasDiscount && (
                                 <Text className="mt-0.5 text-[11px] font-semibold text-green-600">
-                                    Save { savePercent }%
+                                    Save { Number(savePercent.toFixed(2)) }%
                                 </Text>
                             ) }
                         </View>
                     );
-
-                    // Colour swatches (capped at 4 + "+N"). On Horizontal cards
-                    // (Newest Arrivals) they sit BELOW the price, anchored to the
-                    // bottom-right; on Vertical cards they sit beside the price.
+                    
                     const swatches = colors.length > 0 ? (
                         <View className={ `flex-row items-center flex-shrink-0 ${ isHorizontal ? "mt-2 self-end" : "mt-1" }` }>
                             { visibleColors.map((color, idx) => (
-                                <View
-                                    key={ color._id || `${ color.value }-${ idx }` }
-                                    className="h-3 w-3 mr-1 rounded-full border border-gray-200"
-                                    style={{ backgroundColor: (color.value || "#d1d5db").toLowerCase() }}
+                                <ColorSwatchComponent
+                                    key={ `${ color }-${ idx }` }
+                                    value={ color }
+                                    size={ 12 }
+                                    style={{ marginRight: 4 }}
                                 />
                             )) }
                             { extraColors > 0 && (

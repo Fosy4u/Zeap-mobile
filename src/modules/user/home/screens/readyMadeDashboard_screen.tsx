@@ -13,7 +13,7 @@ import IProduct from '../../products/models/product_model'
 import { useDispatch, useSelector } from 'react-redux'
 import { RootState } from '../../../../redux/store/store'
 import { setProductID } from '../../products/slices/product_slice'
-import formatCurrency from '../../../../utils/formatCurrency'
+import AppStatusBar from "../../../general/components/appStatusBar";
 
 const ReadyMadeDashboardScreen = () => {
     const { popularProducts } = useSelector((state: RootState) => state.productState);
@@ -24,47 +24,38 @@ const ReadyMadeDashboardScreen = () => {
         {
             id: 1,
             title: "Women",
-            price: "7000",
             image: "https://zeap-web.vercel.app/_next/static/media/rtw_women.39f9f4e5.webp",
         },
         {
             id: 2,
             title: "Men",
-            price: "7000",
             image: "https://zeap-web.vercel.app/_next/static/media/rtw_men.b7a9853d.webp",
         },
         {
             id: 3,
             title: "Kids",
-            price: "7000",
             image: "https://zeap-web.vercel.app/_next/static/media/rtw_kid.3b835fb0.webp",
         },
         {
             id: 4,
             title: "Dresses",
-            price: "7000",
             image: "https://zeap-web.vercel.app/_next/static/media/rtw_dress.4358c248.webp",
         },
         {
             id: 5,
             title: "Matching Sets",
-            price: "7000",
             image: "https://zeap-web.vercel.app/_next/static/media/rtw_matching.58a37606.webp",
         },
         {
             id: 6,
             title: "Shoes",
-            price: "7000",
             image: "https://zeap-web.vercel.app/_next/static/media/sneakers_1.217e6852.webp",
         },
     ];
 
     return (
         <SafeAreaView className="flex-1 h-auto w-screen pb-20 bg-white">
-            <StatusBar
-                backgroundColor="#112F1E"
-                barStyle="light-content"
-            />
+            <AppStatusBar backgroundColor="#112F1E" barStyle="light-content" />
 
             {/*==== Main Body Section ====*/}
             <View className="h-auto w-[90%]">
@@ -120,9 +111,11 @@ const ReadyMadeDashboardScreen = () => {
                                         priority: FastImage.priority.normal
                                     }}
                                 />
+                                {/* Category tile — no price. These are static
+                                    banners, so any figure here would be invented. */}
                                 <View className="h-[70px] w-full absolute bottom-0 flex items-center justify-center rounded-b-md bg-black/60 ">
                                     <Text className="font-montserratBold text-white">{ item.title }</Text>
-                                    <Text className="text-xs text-white italic">{ formatCurrency(item.price, "NGN") }</Text>
+                                    <Text className="mt-0.5 text-xs text-white italic">Shop now</Text>
                                 </View>
                             </View>
                         )) }

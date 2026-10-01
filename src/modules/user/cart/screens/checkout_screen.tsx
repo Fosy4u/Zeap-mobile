@@ -18,6 +18,7 @@ import countries from "../../../../utils/deliveryCountries.json";
 import countryStates from "../../../../utils/countryAndStates.json";
 import { SelectList } from 'react-native-dropdown-select-list';
 import usePaymentHook from '../../payment/hooks/payment_hook.ts';
+import useDisplayCurrency from '../../../general/hooks/displayCurrency_hook.ts';
 import OrderSuccessPopupModal from '../../payment/modals/orderSuccessPopup_modal.tsx';
 
 const CheckoutScreen = () => {
@@ -41,6 +42,7 @@ const CheckoutScreen = () => {
   const dispatch = useDispatch();
 
   const { handleProceedToPayment, isLoading: isPaymentLoading, loadingMessage: paymentLoadingMessage } = usePaymentHook();
+  const { resolveCurrency } = useDisplayCurrency();
   const isLoading = isCartLoading || isAddressLoading || isProfileLoading || isPaymentLoading;
   const loadingMessage = paymentLoadingMessage || cartLoadingMessage || addressLoadingMessage;
   const {
@@ -51,8 +53,9 @@ const CheckoutScreen = () => {
   } = useEditAccountDetailsHook();
 
   const {
-      control, errors, setValue, getValues,
+      control, errors, setValue, getValues, phoneRules,
       handleSubmit: addressHandleSubmit, onSubmit: deliveryAddressOnSubmit,
+      handleViewAddresses,
   } = useAddressHook();
 
   // Cart-screen pre-fetches delivery addresses, delivery method, and order summary
@@ -108,10 +111,6 @@ const CheckoutScreen = () => {
             </View>
 
             { isGuest ? (
-                /* Guests have no email on file. Collect a required contact email +
-                   marketing preference and persist it via `/user/update` (the same
-                   updateUserDetails mutation). Saving populates `userData.email`,
-                   which flips `guestNeedsEmail` false and unlocks the delivery step. */
                 <View>
                   <Text aria-label="Email" nativeID="email" className="mt-5 font-montserratMedium">Email <Text className="text-red-500">*</Text></Text>
                   <View className="h-auto w-full mt-1.5 px-3 py-1 border border-gray-300 rounded-xl bg-gray-100">
@@ -126,7 +125,7 @@ const CheckoutScreen = () => {
                           autoCapitalize="none"
                           placeholder="Enter your email"
                           placeholderTextColor="#9ca3af"
-                          className="text-base"
+                          className="h-[44px] text-base"
                           onBlur={ onBlur }
                           onChangeText={ onChange }
                           value={ value }
@@ -141,6 +140,14 @@ const CheckoutScreen = () => {
                       value={ acceptMarketing }
                       onValueChange={ (newValue) => dispatch(setAcceptMarketing(newValue)) }
                       tintColors={{ true: "#133522", false: "#151518" }}
+                      boxType="square"
+                      lineWidth={1.5}
+                      tintColor="#151518"
+                      onCheckColor="#ffffff"
+                      onFillColor="#133522"
+                      onTintColor="#133522"
+                      animationDuration={0.15}
+                      style={{ height: 20, width: 20 }}
                     />
                     <Text className="ml-2 font-montserratMedium text-sm">Email me news and offers.</Text>
                   </View>
@@ -169,7 +176,7 @@ const CheckoutScreen = () => {
                           keyboardType="default"
                           placeholder="Enter your email"
                           placeholderTextColor="#9ca3af"
-                          className="text-base"
+                          className="h-[44px] text-base"
                           onBlur={ onBlur }
                           onChangeText={ onChange }
                           value={ value }
@@ -184,6 +191,14 @@ const CheckoutScreen = () => {
                       value={ acceptMarketing }
                       onValueChange={ (newValue) => dispatch(setAcceptMarketing(newValue)) }
                       tintColors={{ true: "#133522", false: "#151518" }}
+                      boxType="square"
+                      lineWidth={1.5}
+                      tintColor="#151518"
+                      onCheckColor="#ffffff"
+                      onFillColor="#133522"
+                      onTintColor="#133522"
+                      animationDuration={0.15}
+                      style={{ height: 20, width: 20 }}
                     />
                     <Text className="ml-2 font-montserratMedium text-sm">I would like to receive news and offers from Zeap.</Text>
                   </View>
@@ -225,7 +240,7 @@ const CheckoutScreen = () => {
               <View className="flex-row items-center justify-between">
                 <Text className="font-montserratSemiBold text-base text-gray-700">Delivery Address</Text>
                 <TouchableOpacity
-                  onPress={ () => navigation.navigate("addressScreen") }
+                  onPress={ () => { handleViewAddresses(); navigation.navigate("addressScreen"); } }
                   className="h-auto w-auto px-3 py-2  bg-baseGreen rounded-lg"
                 >
                   <Text className="font-Montserrat font-medium text-xs text-white">Change Address</Text>
@@ -272,7 +287,7 @@ const CheckoutScreen = () => {
                         keyboardType="default"
                         placeholder="Enter your first name"
                         placeholderTextColor="#9ca3af"
-                        className="text-base"
+                        className="h-[44px] text-base"
                         onBlur={ onBlur }
                         onChangeText={ onChange }
                         value={ value }
@@ -295,7 +310,7 @@ const CheckoutScreen = () => {
                         keyboardType="default"
                         placeholder="Enter your last name"
                         placeholderTextColor="#9ca3af"
-                        className="text-base"
+                        className="h-[44px] text-base"
                         onBlur={ onBlur }
                         onChangeText={ onChange }
                         value={ value }
@@ -318,7 +333,7 @@ const CheckoutScreen = () => {
                         keyboardType="default"
                         placeholder="Enter your address"
                         placeholderTextColor="#9ca3af"
-                        className="text-base"
+                        className="h-[44px] text-base"
                         onBlur={ onBlur }
                         onChangeText={ onChange }
                         value={ value }
@@ -421,7 +436,7 @@ const CheckoutScreen = () => {
                         keyboardType="default"
                         placeholder="Enter your post code"
                         placeholderTextColor="#9ca3af"
-                        className="text-base"
+                        className="h-[44px] text-base"
                         onBlur={ onBlur }
                         onChangeText={ onChange }
                         value={ value }
@@ -432,7 +447,7 @@ const CheckoutScreen = () => {
                 </View>
 
                 <Text aria-label="Phone" nativeID="phoneNumber" className="mt-5 font-montserratMedium">Phone</Text>
-                <View className="h-auto w-full mt-1.5 px-3 py-1 border border-gray-300 rounded-xl bg-gray-100">
+                <View className={`h-auto w-full mt-1.5 px-3 py-1 border rounded-xl bg-gray-100 ${ errors.phoneNumber ? "border-red-400" : "border-gray-300" }`}>
                     <Controller
                       control={ control }
                       name="phoneNumber"
@@ -441,18 +456,23 @@ const CheckoutScreen = () => {
                         <TextInput
                           aria-label="Phone"
                           aria-labelledby="phoneNumber"
-                          keyboardType="number-pad"
-                          placeholder="Enter phone number"
+                          keyboardType="phone-pad"
+                          placeholder={ phoneRules.placeholder }
                           placeholderTextColor="#9ca3af"
-                          className="text-base"
+                          maxLength={ phoneRules.maxLength }
+                          className="h-[44px] text-base"
                           onBlur={ onBlur }
-                          onChangeText={ onChange }
+                          onChangeText={ (text) => onChange(phoneRules.sanitize(text)) }
                           value={ value }
                         />
                       ) }
                     />
-                    { errors.phoneNumber && (<Text className="text-red-500 text-xs">{errors.phoneNumber.message}</Text>) }
                 </View>
+                { errors.phoneNumber ? (
+                  <Text className="mt-1 text-red-500 text-xs">{ errors.phoneNumber.message }</Text>
+                ) : (
+                  <Text className="mt-1 text-gray-500 text-xs">{ phoneRules.hint }</Text>
+                ) }
 
                 
                 <View className="mt-5 flex-row items-center">
@@ -465,6 +485,14 @@ const CheckoutScreen = () => {
                         }
                       }}
                       tintColors={{ true: "#133522", false: "#151518" }}
+                      boxType="square"
+                      lineWidth={1.5}
+                      tintColor="#151518"
+                      onCheckColor="#ffffff"
+                      onFillColor="#133522"
+                      onTintColor="#133522"
+                      animationDuration={0.15}
+                      style={{ height: 20, width: 20 }}
                     />
                     <Text className={ `ml-2 font-montserratMedium text-base ${ isGuest ? "text-gray-400" : "" }` }>Save my address for next time.</Text>
                 </View>
@@ -492,7 +520,7 @@ const CheckoutScreen = () => {
                 keyboardType="default"
                 placeholder="Enter voucher code"
                 placeholderTextColor="#9ca3af"
-                className="text-base"
+                className="h-[44px] flex-1 text-base"
                 // onBlur={ onBlur }
                 // onChangeText={ onChange }
                 // value={ value }
@@ -511,18 +539,17 @@ const CheckoutScreen = () => {
 
             <View className="h-auto w-full mt-5 flex-row items-center justify-between">
               <Text className="text-base text-baseGreen">Item Subtotal ({ cart.basketItems?.length })</Text>
-              <Text className="font-semibold text-base text-baseGreen">{ formatCurrency(Number(orderSummary.subTotal || 0), orderSummary.currency || "NGN") }</Text>
+              <Text className="font-semibold text-base text-baseGreen">{ formatCurrency(Number(orderSummary.subTotal || 0), resolveCurrency(orderSummary.currency)) }</Text>
             </View>
             <View className="h-auto w-full mt-2 flex-row items-center justify-between">
               <Text className="text-base text-baseGreen">Delivery Fee</Text>
-              <Text className="font-semibold text-base text-baseGreen">{ orderSummary.deliveryFee !== "0.00" ? formatCurrency(Number(orderSummary.deliveryFee || 0), orderSummary.currency || "NGN") : "Free" }</Text>
+              <Text className="font-semibold text-base text-baseGreen">{ orderSummary.deliveryFee !== "0.00" ? formatCurrency(Number(orderSummary.deliveryFee || 0), resolveCurrency(orderSummary.currency)) : "Free" }</Text>
             </View>
             <View className="h-auto w-full mt-2 flex-row items-center justify-between">
               <Text className="text-base text-baseGreen">Total</Text>
-              <Text className="font-semibold text-lg text-baseGreen">{ formatCurrency(Number(orderSummary.total || 0), orderSummary.currency || "NGN") }</Text>
+              <Text className="font-semibold text-lg text-baseGreen">{ formatCurrency(Number(orderSummary.total || 0), resolveCurrency(orderSummary.currency)) }</Text>
             </View>
           </View>
-
 
           <TouchableOpacity 
             onPress={ () => {

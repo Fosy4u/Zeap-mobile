@@ -1,6 +1,22 @@
 {
     "java.configuration.updateBuildConfiguration": "interactive",
 
+    /* Keep the Java/Gradle extensions off node_modules: some RN libs ship their own
+       Gradle 4.x wrappers, which cannot run on Java 17. */
+    "java.import.exclusions": [
+        "**/node_modules/**",
+        "**/.metadata/**",
+        "**/archetype-resources/**",
+        "**/META-INF/maven/**"
+    ],
+    "java.import.gradle.java.home": "/opt/homebrew/Cellar/openjdk@17/17.0.16/libexec/openjdk.jdk/Contents/Home",
+    "java.import.gradle.wrapper.enabled": true,
+    "gradle.nestedProjects": false,
+    "gradle.java.home": "/opt/homebrew/Cellar/openjdk@17/17.0.16/libexec/openjdk.jdk/Contents/Home",
+    "files.watcherExclude": {
+        "**/node_modules/**": true
+    },
+
     "diffEditor.wordWrap": "off",
     "editor.wordWrap": "off",
     "editor.rulers": [180]

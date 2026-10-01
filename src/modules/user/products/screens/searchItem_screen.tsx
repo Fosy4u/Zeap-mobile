@@ -1,6 +1,6 @@
-import React from 'react'
+import React, { useEffect, useMemo, useRef } from 'react'
 import { ActivityIndicator, Image, SafeAreaView, StatusBar, Text, TextInput, View } from 'react-native';
-import { ArrowLeft, SearchNormal1 } from 'iconsax-react-native';
+import { ArrowLeft, Filter, SearchNormal1 } from 'iconsax-react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../../redux/store/store.ts';
 import { GestureHandlerRootView, ScrollView } from 'react-native-gesture-handler';
@@ -12,6 +12,7 @@ import useSearchHook from '../hooks/search_hook.ts';
 import { setProductID, setSearchPhrase } from '../slices/product_slice.ts';
 import ProductCardComponent from '../../../general/components/productCard_component.tsx';
 import EmptyListComponent from '../../../general/components/emptyList_component.tsx';
+import DynamicFilterBottomSheetComponent from '../components/dynamicFilterBottomSheet_component.tsx';
 
 
 const SearchItemScreen = () => {
@@ -19,23 +20,31 @@ const SearchItemScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
   const dispatch = useDispatch<AppDispatch>();
 
-  // Debounced search via /products/live/searchProducts. Typing fires the
-  // search after a 500ms pause; tapping the search icon triggers it now AND
-  // persists the term to the recent-searches list (max 5, secure storage).
-  const { results, isFetching, isUninitialized, handleSearchNow, recentSearches, removeRecentSearch, selectRecentSearch } = useSearchHook();
+  const {
+    results, isFetching, isUninitialized, handleSearchNow, recentSearches, removeRecentSearch, selectRecentSearch,
+    selectedFilters, toggleCheckboxOption, clearAllFilters, dynamicFilterOptions, filtersLoading,
+    activeFilterCount, showBottomSheetModal, setShowBottomSheetModal, handleOpenFilters,
+  } = useSearchHook();
+  const bottomSheetModalRef = useRef<any>(null);
+  const snapPoints = useMemo(() => ['90%'], []);
+
+  useEffect(() => {
+    if (showBottomSheetModal) { bottomSheetModalRef.current?.present(); }
+    else { bottomSheetModalRef.current?.dismiss(); }
+  }, [showBottomSheetModal]);
   const hasSearchPhrase = !!searchPhrase?.trim();
 
   return (
-    <GestureHandlerRootView>
+    <GestureHandlerRootView style={{ flex: 1 }}>
       <BottomSheetModalProvider>
-        <SafeAreaView className="h-full w-full flex-1 px-[20px] pt-[20px]">
+        <SafeAreaView className="h-full w-full flex-1 pt-5">
           <StatusBar
             backgroundColor="transparent"
             barStyle="dark-content"
           />
 
           {/*==== Header ====*/}
-          <View className="h-auto w-full flex-row items-center justify-between">
+          <View className="h-auto w-full px-5 flex-row items-center justify-between">
             <TouchableOpacity onPress={ () => navigation.goBack() }>
               <View className="h-[40px] w-[40px] flex items-center justify-center rounded-full bg-baseGreen">
                 <ArrowLeft color="white" />
@@ -45,7 +54,7 @@ const SearchItemScreen = () => {
             <View className="h-[40px] w-[40px]" />
           </View>
 
-          <View>
+          <View className="px-5">
             {/*==== Search Box ====*/}
             <View className="h-auto w-full mt-5 flex-row items-center justify-between">
               <TextInput
@@ -54,7 +63,7 @@ const SearchItemScreen = () => {
                   keyboardType="default"
                   placeholder="Search item"
                   placeholderTextColor="#9ca3af"
-                  className="h-auto px-3 py-3 flex-row flex-1 items-center justify-between border border-gray-300 rounded-xl bg-gray-100"
+                  className="h-[44px] px-3 py-3 flex-row flex-1 items-center justify-between border border-gray-300 rounded-xl bg-gray-100"
                   onChangeText={(value) => {
                     dispatch(setSearchPhrase(value));
                   }}
@@ -64,6 +73,17 @@ const SearchItemScreen = () => {
               <TouchableOpacity onPress={ handleSearchNow }>
                 <View className="h-[55px] w-[55px] ml-3 flex items-center justify-center rounded-xl bg-gold">
                   <SearchNormal1 className="text-baseGreen" />
+                </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity onPress={ handleOpenFilters }>
+                <View className="h-[55px] w-[55px] ml-2 flex items-center justify-center rounded-xl border border-gray-300 bg-gray-100">
+                  <Filter className="text-baseGreen" />
+                  { activeFilterCount > 0 && (
+                    <View className="h-5 w-5 absolute -top-1 -right-1 flex items-center justify-center rounded-full bg-baseGreen">
+                      <Text className="text-[10px] text-white">{ activeFilterCount }</Text>
+                    </View>
+                  ) }
                 </View>
               </TouchableOpacity>
             </View>
@@ -85,7 +105,7 @@ const SearchItemScreen = () => {
 
                   { !isFetching && !isUninitialized && results.length === 0 ? (
                     <View className="mt-6">
-                      <EmptyListComponent message="No matching products yet." />
+                      <EmptyListComponent message="No matching products yet." standalone />
                     </View>
                   ) : (
                     <View className="mt-3 flex-row flex-wrap justify-between">
@@ -139,7 +159,19 @@ const SearchItemScreen = () => {
               ) }
             </ScrollView>
           </View>
-          
+
+          <DynamicFilterBottomSheetComponent
+            bottomSheetModalRef={ bottomSheetModalRef }
+            snapPoints={ snapPoints }
+            setShowBottomSheetModal={ setShowBottomSheetModal }
+            selectedFilters={ selectedFilters }
+            toggleCheckboxOption={ toggleCheckboxOption }
+            clearAllFilters={ clearAllFilters }
+            dynamicFilterOptions={ dynamicFilterOptions }
+            isloading={ filtersLoading }
+            loadingMessage="Loading filters..."
+          />
+
         </SafeAreaView>
       </BottomSheetModalProvider>
     </GestureHandlerRootView>

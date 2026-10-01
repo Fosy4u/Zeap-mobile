@@ -2,9 +2,8 @@ import * as yup from "yup";
 import { Alert } from "react-native";
 
 
-// Coerce anything (string, object, Error, unknown) into a safe display string.
-// Alert.alert requires a string for `message` — passing an object crashes the
-// native DialogModule with "Value for message cannot be cast from ReadableNativeMap to String".
+/* Coerce anything into a safe display string — Alert.alert crashes the native
+   DialogModule when `message` isn't one. */
 const toMessageString = (value: any): string => {
     if (value == null) return "";
     if (typeof value === "string") return value;
@@ -43,15 +42,17 @@ const handleError = (error: any) => {
 
     const errorMessage = toMessageString(rawMessage) || "An unexpected error occurred.";
 
-    // "Basket not found" is the backend's way of telling us the user has no
-    // active basket (fresh account, basket cleared after a successful order,
-    // etc.). It can leak through from several silent background fetches
-    // (delivery method/date/summary, RTK auto-refetches when the Cart tag is
-    // invalidated) and isn't actionable for the user. The cart screen already
-    // renders its own empty-state design, so swallow this one globally
-    // instead of surfacing an Alert.
+    /* "Basket not found" just means an empty basket, it leaks out of silent
+       background fetches, and the cart screen has its own empty state. */
     if (errorMessage.toLowerCase().trim() === "basket not found") {
         console.log("Suppressed expected 'Basket not found' error (empty basket).");
+        return;
+    }
+
+    /* Same for "shop not found" — the vendor module now explains a missing shop
+       in its own modal, so an unactionable dialog on top of it is noise. */
+    if (errorMessage.toLowerCase().trim() === "shop not found") {
+        console.log("Suppressed expected 'Shop not found' error (no shop on this account).");
         return;
     }
 

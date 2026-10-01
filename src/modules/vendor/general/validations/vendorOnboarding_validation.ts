@@ -1,15 +1,9 @@
 import * as yup from "yup";
 
-// Nigerian NUBAN — bank account numbers are exactly 10 digits.
+// Bank account numbers: exactly 10 digits (Nigerian NUBAN). Anything other
+// than 10 digits is rejected.
 const accountNumberRegex = /^[0-9]{10}$/;
 
-// Per-country mobile-number rules. Scoped to the countries whose currencies
-// the platform actually supports (NGN, USD, GBP, CAD) — there's no point
-// strict-validating dial codes from markets we can't pay out to. The map is
-// keyed by dial code (the value stored in `businessPhoneCode`). `length` is
-// the number of digits after the country code; `prefixes` is the allow-listed
-// leading digits of mobile numbers in that country. Codes not in the map fall
-// through to the generic ITU E.164 length range below.
 interface IPhoneRule {
     length: number;
     prefixes: string[]; // 2-digit mobile prefixes (e.g. ["70", "80", "81", "90", "91"])
@@ -41,6 +35,12 @@ const PHONE_RULES: Record<string, IPhoneRule> = {
 // for the subscriber number; we keep the floor at 6 to weed out garbage.
 const GENERIC_PHONE_REGEX = /^[0-9]{6,15}$/;
 
+// Required digit count per dial code (mirrors PHONE_RULES); unmapped → E.164 max.
+export const phoneLengthForCode = (code?: string): number => {
+    const rule = PHONE_RULES[code ?? ""];
+    return rule ? rule.length : 15;
+};
+
 // Reject digit strings that are clearly placeholders / test data:
 //   • all-same-digit:   00000000, 1111111, 333333…
 //   • strictly ascending: 12345, 0123456789…
@@ -58,17 +58,49 @@ const isObviousFakeDigitPattern = (value?: string): boolean => {
     if (isDescending) { return true; }
     return false;
 };
-// Permissive URL check — accepts bare handles or full URLs since users paste
-// either; only fully empty strings or obvious whitespace get rejected. Each
-// social field is optional so the empty-string case still passes.
-const optionalUrl = yup
-    .string()
-    .trim()
-    .max(200, "Too long.")
-    .test("no-whitespace-only", "Invalid value.", (value) => {
-        if (!value) { return true; }
-        return value.trim().length > 0;
-    });
+
+// Detects a run of consecutive ascending OR descending digits longer than
+// `maxRun` ANYWHERE in the string (e.g. "12345", "98765"). Unlike
+// isObviousFakeDigitPattern (which only flags a string that is sequential
+// end-to-end), this catches a long ladder embedded in an otherwise normal
+// number — e.g. "0123456789" or "9123456780". Real account numbers don't
+// contain a 5+ digit ladder; placeholder/test data does. maxRun = 4 means a
+// run of 5 or more consecutive digits is rejected.
+const hasLongSequentialRun = (value: string, maxRun = 4): boolean => {
+    let ascending = 1;
+    let descending = 1;
+    for (let i = 1; i < value.length; i++) {
+        const diff = Number(value[i]) - Number(value[i - 1]);
+        ascending = diff === 1 ? ascending + 1 : 1;
+        descending = diff === -1 ? descending + 1 : 1;
+        if (ascending > maxRun || descending > maxRun) { return true; }
+    }
+    return false;
+};
+// Social-media fields are all OPTIONAL — an empty value always passes so the
+// step is skippable. But the moment the user types something, it must match
+// the format hinted in the placeholder. Each builder below short-circuits on
+// empty/whitespace and otherwise enforces the field's regex.
+const SOCIAL_MAX = 200;
+
+// Website: must begin with http://, https:// or www. and contain a domain.
+const WEBSITE_REGEX = /^(https?:\/\/|www\.)[^\s.]+(\.[^\s.]+)+.*$/i;
+// Handle: "@" followed by letters/numbers/dot/underscore (TikTok, Instagram, X).
+const HANDLE_REGEX = /^@[A-Za-z0-9._]{1,30}$/;
+// Facebook page: optional scheme/www, then facebook.com/<page>.
+const FACEBOOK_REGEX = /^(https?:\/\/)?(www\.)?facebook\.com\/[A-Za-z0-9._\-]+\/?$/i;
+// LinkedIn: optional scheme/www, then linkedin.com/<path>.
+const LINKEDIN_REGEX = /^(https?:\/\/)?(www\.)?linkedin\.com\/[A-Za-z0-9._\-\/]+\/?$/i;
+
+const optionalSocial = (regex: RegExp, message: string) =>
+    yup
+        .string()
+        .trim()
+        .max(SOCIAL_MAX, "Too long.")
+        .test("social-format", message, (value) => {
+            if (!value || value.trim().length === 0) { return true; } // optional → skip
+            return regex.test(value.trim());
+        });
 
 
 const stepOneSchema = yup.object().shape({
@@ -111,14 +143,14 @@ const stepThreeSchema = yup.object().shape({
 
             // Catch obviously fake inputs (all-same / sequential) on any country.
             if (isObviousFakeDigitPattern(digits)) {
-                return this.createError({ message: "Enter a real phone number — repeated or sequential digits aren't accepted." });
+                return this.createError({ message: "Enter a valid phone number." });
             }
 
             const rule = PHONE_RULES[code];
             if (rule) {
                 if (digits.length !== rule.length) {
                     return this.createError({
-                        message: `Phone must be ${ rule.length } digits for ${ code }.`,
+                        message: "Invalid phone Number",
                     });
                 }
                 const prefix = digits.slice(0, rule.prefixes[0].length);
@@ -167,11 +199,17 @@ const stepFiveSchema = yup.object().shape({
         .string()
         .trim()
         .required("Account number is required.")
-        .matches(accountNumberRegex, "Account number must be exactly 10 digits.")
+        .matches(accountNumberRegex, "Account number must be 10 digits.")
         .test(
-            "not-a-fake-digit-pattern",
+            "not-a-fake-account",
             "Enter a real account number — repeated or sequential digits aren't accepted.",
-            (value) => !isObviousFakeDigitPattern(value),
+            (value) => {
+                if (!value) { return true; }
+                const digits = value.trim();
+                if (/^(\d)\1+$/.test(digits)) { return false; }        // all identical, e.g. 0000000000
+                if (hasLongSequentialRun(digits, 4)) { return false; } // 5+ digit ladder, e.g. 0123456789
+                return true;
+            },
         ),
     confirmAccountNumber: yup
         .string()
@@ -181,12 +219,12 @@ const stepFiveSchema = yup.object().shape({
 });
 
 const stepSixSchema = yup.object().shape({
-    website: optionalUrl,
-    tiktok: optionalUrl,
-    instagram: optionalUrl,
-    facebook: optionalUrl,
-    twitter: optionalUrl,
-    linkedin: optionalUrl,
+    website: optionalSocial(WEBSITE_REGEX, "Enter a valid website starting with http://, https:// or www."),
+    tiktok: optionalSocial(HANDLE_REGEX, "Enter your TikTok handle, e.g. @yourhandle."),
+    instagram: optionalSocial(HANDLE_REGEX, "Enter your Instagram handle, e.g. @yourhandle."),
+    facebook: optionalSocial(FACEBOOK_REGEX, "Enter your Facebook page, e.g. facebook.com/yourpage."),
+    twitter: optionalSocial(HANDLE_REGEX, "Enter your X (Twitter) handle, e.g. @yourhandle."),
+    linkedin: optionalSocial(LINKEDIN_REGEX, "Enter your LinkedIn URL, e.g. linkedin.com/in/yourname."),
 });
 
 const stepSevenSchema = yup.object().shape({

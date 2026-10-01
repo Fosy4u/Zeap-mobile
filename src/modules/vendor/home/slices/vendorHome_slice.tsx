@@ -2,7 +2,6 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import IVendorHomeState, { IOverview, IPieData } from "../models/vendorHomeState_model";
 import IAnalytic from "../models/analytic_model";
 
-
 const initialState: IVendorHomeState = {
     showProductFilterBottomSheet: false,
     showOrderFilterBottomSheet: false,
@@ -38,17 +37,9 @@ const initialState: IVendorHomeState = {
             count: 0,
         },
     ],
-    weeklySalesChartData: [
-        { label: "Sun", value: 45 },
-        { label: "Mon", value: 60 },
-        { label: "Tue", value: 20 },
-        { label: "Wed", value: 90 },
-        { label: "Thu", value: 35 },
-        { label: "Fri", value: 70 },
-        { label: "Sat", value: 30 },
-    ],
+    weeklySalesChartData: [],
     salesCountPieData: [
-        {value: 0, color: "#133522", title: "Ready made"},
+        {value: 0, color: "#133522", title: "Ready to wear"},
         {value: 0, color: "#D5B07B", title: "Bespoke"},
     ],
     salesRevenuePieData: [

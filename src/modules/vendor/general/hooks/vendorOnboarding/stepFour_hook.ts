@@ -12,7 +12,7 @@ const useStepFourHook = () => {
     const { formData } = useSelector((state: RootState) => state.vendorOnboardingState);
     const dispatch = useDispatch();
 
-    const { control, handleSubmit, formState: { errors }, setValue, watch } = useForm<IStepFourForm>({
+    const { control, handleSubmit, formState: { errors, isValid }, setValue, watch } = useForm<IStepFourForm>({
         defaultValues: {
             address: formData.address,
             country: formData.country,
@@ -58,6 +58,7 @@ const useStepFourHook = () => {
         control,
         handleSubmit,
         errors,
+        isValid,
         onSubmit,
         setValue,
         countryOptions,

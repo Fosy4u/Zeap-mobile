@@ -1,6 +1,7 @@
 import React from "react";
 import { Dimensions, SafeAreaView, ScrollView, StatusBar, View } from "react-native";
 import SkeletonBlock from "../../../general/components/skeletonBlock_component";
+import AppStatusBar from "../../../general/components/appStatusBar";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const CONTENT_WIDTH = SCREEN_WIDTH - 40; // matches the dashboard's px-5 inset
@@ -21,7 +22,7 @@ const SkeletonRow: React.FC<ISkeletonRowProps> = ({ width, height, radius = 6, m
 const VendorDashboardSkeletonComponent: React.FC = () => {
     return (
         <SafeAreaView className="h-full w-screen flex-1 pb-[1px] bg-gray-50">
-            <StatusBar backgroundColor="#133522" barStyle="light-content" />
+            <AppStatusBar backgroundColor="#133522" barStyle="light-content" />
 
             {/*==== Hero ====*/}
             <View className="h-[290px] w-full px-5 pt-2 rounded-b-3xl bg-baseGreen">

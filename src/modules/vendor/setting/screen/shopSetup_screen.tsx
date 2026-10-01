@@ -100,7 +100,7 @@ const ShopSetupScreen = () => {
                     keyboardType="default"
                     placeholder="Enter buniness name"
                     placeholderTextColor="#9ca3af"
-                    className="text-base"
+                    className="h-[44px] text-base"
                     onChangeText={(value) => null}
                   />
                 </View>
@@ -113,7 +113,7 @@ const ShopSetupScreen = () => {
                     keyboardType="default"
                     placeholder="Enter business email"
                     placeholderTextColor="#9ca3af"
-                    className="text-base"
+                    className="h-[44px] text-base"
                     onChangeText={(value) => null}
                   />
                 </View>
@@ -140,7 +140,7 @@ const ShopSetupScreen = () => {
                     keyboardType="phone-pad"
                     placeholder="Enter phone number"
                     placeholderTextColor="#9ca3af"
-                    className="text-base"
+                    className="h-[44px] flex-1 text-base"
                     onChangeText={(value) => null}
                   />
                 </View>
@@ -177,7 +177,7 @@ const ShopSetupScreen = () => {
                     keyboardType="phone-pad"
                     placeholder="Enter phone number"
                     placeholderTextColor="#9ca3af"
-                    className="text-base"
+                    className="h-[44px] flex-1 text-base"
                     onChangeText={(value) => null}
                   />
                 </View>
@@ -190,7 +190,7 @@ const ShopSetupScreen = () => {
                     keyboardType="default"
                     placeholder="Enter business email"
                     placeholderTextColor="#9ca3af"
-                    className="text-base"
+                    className="h-[44px] text-base"
                     onChangeText={(value) => null}
                   />
                 </View>
@@ -249,7 +249,7 @@ const ShopSetupScreen = () => {
                         keyboardType="default"
                         placeholder="Enter url"
                         placeholderTextColor="#9ca3af"
-                        className="text-base"
+                        className="h-[44px] text-base"
                         onChangeText={(value) => null}
                       />
                     </View>

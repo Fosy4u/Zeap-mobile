@@ -7,23 +7,24 @@ import { RootState } from "../../../../redux/store/store";
 import { useState } from "react";
 import handleError from "../../../general/hooks/errorHandler_hook";
 import { useStripe } from "@stripe/stripe-react-native";
-import { setNewOrderId, setPaymentReference, setShowOrderSuccessModal } from "../slices/payment_slice";
+import { setGainedPoints, setNewOrderId, setPaymentReference, setShowOrderSuccessModal } from "../slices/payment_slice";
 import IPaymentReference from "../models/paymentReference_model";
+import IVerifyPaymentResponse from "../models/verifyPaymentResponse_model";
 import { setCart } from "../../cart/slices/cart_slice";
+import normalizeDeliveryCountry from "../../../../utils/normalizeDeliveryCountry";
 
 const usePaymentHook = () => {
     const { userData } = useSelector((state: RootState) => state.profileState );
     const { selectedDeliveryFee } = useSelector((state: RootState) => state.cartState);
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const dispatch = useDispatch();
-    const { initPaymentSheet, presentPaymentSheet } = useStripe();
+    const { initPaymentSheet, presentPaymentSheet, retrievePaymentIntent } = useStripe();
 
     const [loadingMessage, setLoadingMessage] = useState("");
     const[isLoading, setIsLoading] = useState(false);
 
     const [getPaymentReference] = useLazyGetPaymentReferenceQuery();
     const [verifyPayment] = useVerifyPaymentMutation();
-
 
     // Handle proceed to payment
     const handleProceedToPayment = async (formData: any) => {
@@ -36,14 +37,13 @@ const usePaymentHook = () => {
             email: userData.email!,
             address: formData.address,
             region: formData.region,
-            country: formData.country,
+            // SelectList returns keys such as "UK"/"USA", but the payment API
+            // accepts canonical names such as "United Kingdom"/"United States".
+            country: normalizeDeliveryCountry(formData.country),
             phoneNumber: formData.phoneNumber,
             method: selectedDeliveryFee?.method || "standard",
         };
 
-        // Progressive loading messages — the Render-hosted backend can cold
-        // start in 30-60s, so update the message after 10s/25s instead of
-        // leaving the user staring at a static spinner.
         const slowMessageTimer = setTimeout(() => {
             setLoadingMessage("Backend is waking up, please hold on…");
         }, 10000);
@@ -51,10 +51,6 @@ const usePaymentHook = () => {
             setLoadingMessage("Still waiting on the server… almost there.");
         }, 25000);
 
-        // Hard timeout — RTK Query has no built-in request timeout, and the
-        // server-side payment-reference call must not be retried (it creates
-        // a Paystack reference each call). Abort after 45s and surface a
-        // real error rather than appearing to hang indefinitely.
         let aborted = false;
         const promise = getPaymentReference(requestParams);
         const hardTimeout = setTimeout(() => {
@@ -64,7 +60,7 @@ const usePaymentHook = () => {
 
         try {
             const paymentReferenceResponse = await promise.unwrap();
-            console.log("PAYMENT REFERENCE RESPONSE::: ", paymentReferenceResponse);
+            console.log("PAYMENT REFERENCE::: ", paymentReferenceResponse?.reference, "status:", paymentReferenceResponse?.paymentStatus);
 
             if (paymentReferenceResponse) {
                 dispatch(setPaymentReference(paymentReferenceResponse));
@@ -98,12 +94,12 @@ const usePaymentHook = () => {
 
     // Handle Stripe payment
     const handleStripePayment = async (paymentReference?: IPaymentReference, clientSecret?: string) => {
-        // Initialize the payment sheet. Prefer the provided clientSecret (fresh), otherwise fallback to selector.
         const stripeClientSecret = clientSecret ?? paymentReference?.stripeClientSecret!;
-        console.log("STRIPE CLIENT SECRET::: ", stripeClientSecret);
+        console.log("STRIPE PAYMENT INTENT::: ", stripeClientSecret?.split("_secret_")[0]);
         const { error: paymentSheetError } = await initPaymentSheet({
             paymentIntentClientSecret: stripeClientSecret,
             merchantDisplayName: "Zeaper",
+            returnURL: "zeaper://stripe-redirect",
             defaultBillingDetails: {
                 name: paymentReference?.fullName || "N/A",
                 email: paymentReference?.email || "N/A",
@@ -124,25 +120,63 @@ const usePaymentHook = () => {
             return;
         }
 
-        // If everything went well, handle the successful payment
-        handlePaymentSuccess(paymentReference?.reference!);
+        // PaymentSheet returning without an error normally means confirmation
+        // completed. Retrieve the intent as an additional guard before asking
+        // our server to fulfil the order.
+        const { paymentIntent, error: retrieveError } = await retrievePaymentIntent(stripeClientSecret);
+        if (retrieveError) {
+            handleError(retrieveError);
+            return;
+        }
+
+        const stripeStatus = paymentIntent?.status;
+        console.log("STRIPE PAYMENT INTENT STATUS::: ", stripeStatus);
+        if (stripeStatus !== "Succeeded" && stripeStatus !== "Processing") {
+            handleError(new Error(`Stripe payment is not complete (status: ${ stripeStatus || "unknown" }).`));
+            return;
+        }
+
+        await handlePaymentSuccess(paymentReference?.reference!, true);
     };
 
     // Handle payment success
-    const handlePaymentSuccess = async (reference: string) => {
+    const handlePaymentSuccess = async (reference: string, retryPendingStripePayment = false) => {
         setLoadingMessage("Verifying payment...");
         setIsLoading(true);
         console.log("PAYMENT REFERENCE::: ", reference);
 
         // Verify payment
         try {
-            const verifyPaymentResponse = await verifyPayment({ reference }).unwrap();
+            const retryDelays = retryPendingStripePayment
+                ? [0, 1500, 3000, 6000, 10000]
+                : [0];
+            let verifyPaymentResponse: IVerifyPaymentResponse | undefined;
+
+            for (let attempt = 0; attempt < retryDelays.length; attempt += 1) {
+                if (retryDelays[attempt] > 0) {
+                    setLoadingMessage("Confirming your Stripe payment...");
+                    await new Promise(resolve => setTimeout(resolve, retryDelays[attempt]));
+                }
+
+                try {
+                    verifyPaymentResponse = await verifyPayment({ reference }).unwrap();
+                    break;
+                } catch (error: any) {
+                    const message = error?.data?.error ?? error?.data?.message ?? "";
+                    const isPendingStripeSync =
+                        error?.status === 500 &&
+                        String(message).toLowerCase().includes("payment not successful");
+                    const hasAnotherAttempt = attempt < retryDelays.length - 1;
+
+                    if (!retryPendingStripePayment || !isPendingStripeSync || !hasAnotherAttempt) {
+                        throw error;
+                    }
+                }
+            }
+
             console.log("VERIFY PAYMENT RESPONSE DATA SUCCESS::: ", verifyPaymentResponse);
 
             if (verifyPaymentResponse!) {
-                // Mirror the backend's cleared basket locally. The backend
-                // returns 404 "Basket not found" when the basket is empty,
-                // so fetching here would just produce a noisy error log/alert.
                 dispatch(setCart({
                     _id: "",
                     user: "",
@@ -152,16 +186,21 @@ const usePaymentHook = () => {
                     updatedAt: new Date(),
                 }));
 
-                // Surface the order-success modal. Receipt / View Order navigation
-                // is owned by the modal's CTAs so the user controls where they land.
-                const newOrderId = verifyPaymentResponse?.orderId ?? verifyPaymentResponse?.order?.orderId ?? "";
+                const newOrderId = verifyPaymentResponse?.order?.orderId ?? "";
                 if (newOrderId) {
                     dispatch(setNewOrderId(newOrderId));
                 }
+                const gainedPoints = verifyPaymentResponse?.addedPoints ?? verifyPaymentResponse?.order?.gainedPoints ?? 0;
+                dispatch(setGainedPoints(gainedPoints));
                 dispatch(setShowOrderSuccessModal(true));
             }
         } catch (error) {
             console.log("ERROR::: ", error);
+            /* Reaching here means the gateway already confirmed the charge, so
+               staying silent leaves the user paid with no order and no notice. */
+            handleError(new Error(
+                `We could not confirm your payment (ref: ${reference}). If you were charged, please contact support with this reference rather than paying again.`,
+            ));
         } finally {
             setIsLoading(false);
             setLoadingMessage("");

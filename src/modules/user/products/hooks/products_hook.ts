@@ -12,17 +12,6 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import RootNavigationStackModel from "../../../../routes/model/routes_model";
 
-
-/**
- * The useProductsHook
- * @returns {
- * defaultFeaturedImageAndThumbnails, setDefaultFeaturedImageAndThumbnails
- * featuredImage, setFeaturedImage,    const [searchProduct, { data: searchProductData, isLoading: searchProductLoading }] = useLazySearchProductQuery();
-
- * featuredColors, setFeaturedColors,
- * handleUpdateDefaultFeaturedImageAndThumbnails
- * }
- */
 const useProductsHook = () => {
 
     const { selectedColor, selectedSize, selectedQuantity } = useSelector((state: RootState) => state.productState);

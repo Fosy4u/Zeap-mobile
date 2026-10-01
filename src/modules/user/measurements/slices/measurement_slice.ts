@@ -2,7 +2,7 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import IMeasurementState from "../models/measurementState_model.ts";
 import IRequiredMeasurementFormFields from "../models/requiredMeasurementFormField_model.ts";
 import IBodyMeasurement from "../models/bodyMeasurement_model.ts";
-import IBodyMeasurementGuide from "../models/bodyMeasurementGuide_model.ts";
+import IBodyMeasurementGuide from "../../../general/models/bodyMeasurementGuide_model.ts";
 
 const initialState: IMeasurementState = {
     selectedCartID: "",

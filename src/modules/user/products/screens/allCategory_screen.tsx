@@ -15,14 +15,14 @@ const AllCategoryScreen = () => {
 
   return (
     <GestureHandlerRootView>
-      <SafeAreaView className="h-full w-full flex-1 px-[25px] pt-[20px]">
+      <SafeAreaView className="h-full w-full flex-1 pt-5">
         <StatusBar
           backgroundColor="transparent"
           barStyle="dark-content"
         />
 
         {/*==== Header ====*/}
-        <View className="h-auto w-full flex-row items-center justify-between">
+        <View className="h-auto w-full px-5 flex-row items-center justify-between">
           <TouchableOpacity onPress={ () => navigation.pop() }>
             <View className="h-[40px] w-[40px] flex items-center justify-center rounded-full bg-baseGreen">
               <ArrowLeft color="white" />
@@ -33,7 +33,11 @@ const AllCategoryScreen = () => {
         </View>
 
         {/*==== Category List ====*/}
-        <ScrollView showsVerticalScrollIndicator={false} className="mt-3">
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          className="mt-3"
+          contentContainerStyle={{ paddingHorizontal: 20 }}
+        >
           { categories.map((category) => (
             <TouchableOpacity key={ category.id }
               onPress={ () => {

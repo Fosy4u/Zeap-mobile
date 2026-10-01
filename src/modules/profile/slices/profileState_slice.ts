@@ -76,6 +76,7 @@ const initialState: IProfileState = {
     acceptMarketing: false,
     isLoading: false,
     loadingMessage: "",
+    currencyRefreshToken: 0,
 };
 
 
@@ -113,6 +114,9 @@ const profileSlice = createSlice({
         setLoadingMessage: (state: IProfileState, action: PayloadAction<string>) => {
             state.loadingMessage = action.payload;
         },
+        bumpCurrencyRefreshToken: (state: IProfileState) => {
+            state.currencyRefreshToken += 1;
+        },
     }
 });
 
@@ -128,5 +132,6 @@ export const {
     setAcceptMarketing,
     setIsLoading,
     setLoadingMessage,
+    bumpCurrencyRefreshToken,
 } = actions;
 export default reducer;

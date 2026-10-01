@@ -1,7 +1,7 @@
 import React from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
-import { SafeAreaView, StatusBar, Text, TouchableOpacity, View, Image, TextInput, ScrollView } from 'react-native';
+import { ActivityIndicator, SafeAreaView, StatusBar, Text, TouchableOpacity, View, Image, TextInput, ScrollView } from 'react-native';
 import { ArrowRight } from 'iconsax-react-native';
 import AppHeaderComp from '../../../vendor/general/components/appHeader_comp';
 import useReviewAndRatingHook from '../hooks/reviewAndRating_hook';
@@ -10,9 +10,14 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../../../../redux/store/store';
 
 const RateAndReviewScreen = () => {
-    const { reviewOrder } = useSelector((state: RootState) => state.reviewAndRatingState);
-    
-    const { control, handleSubmit, onSubmit } = useReviewAndRatingHook();
+    const { reviewOrder, isLoading, loadingMessage } = useSelector((state: RootState) => state.reviewAndRatingState);
+
+    const { control, handleSubmit, onSubmit, onInvalid, errors, isEditing } = useReviewAndRatingHook();
+
+    // Renders the message for a field that failed validation.
+    const fieldError = (message?: string) => (
+        message ? <Text className="mt-1.5 font-montserratRegular text-[12px] text-red-500">{ message }</Text> : null
+    );
 
     // Show loading or error state if reviewOrder is not available
     if (!reviewOrder) {
@@ -64,13 +69,13 @@ const RateAndReviewScreen = () => {
                     />
 
                     {/*==== Header ====*/}
-                    <AppHeaderComp title="Rate and Review" />
+                    <AppHeaderComp title={ isEditing ? "View or Edit Review" : "Rate and Review" } />
 
                     <ScrollView className="flex-1 px-5 py-6" showsVerticalScrollIndicator={false}>
                         {/*==== Rating Section ====*/}
                         <View className="mb-8">
                             <Text className="text-gray-700 font-montserratMedium text-[16px] mb-4">
-                                Select the stars to rate this product
+                                { isEditing ? "Update your rating for this product" : "Select the stars to rate this product" }
                             </Text>
                             
                             <View className="flex-row items-start mb-4">
@@ -92,6 +97,7 @@ const RateAndReviewScreen = () => {
                                             </View>
                                         )}
                                     />
+                                    { fieldError(errors.rating?.message) }
 
                                 </View>
                             </View>
@@ -100,13 +106,13 @@ const RateAndReviewScreen = () => {
                         {/*==== Review Form ====*/}
                         <View>
                             <Text className="text-gray-700 font-montserratMedium text-[16px] mb-4">
-                                Leave a review
+                                { isEditing ? "Your review" : "Leave a review" }
                             </Text>
 
                             {/* Review Title */}
                             <View className="mb-4">
                                 <Text className="text-gray-600 font-montserratMedium text-[14px] mb-2">
-                                    Review title
+                                    Title
                                 </Text>
                                 <Controller
                                     control={control}
@@ -117,10 +123,11 @@ const RateAndReviewScreen = () => {
                                             onChangeText={onChange}
                                             placeholder="E.g I like it, I don't like it"
                                             placeholderTextColor="#9CA3AF"
-                                            className="border border-gray-300 rounded-lg px-4 py-3 text-gray-800 font-montserratRegular text-[14px]"
+                                            className="h-[44px] border border-gray-300 rounded-lg px-4 py-3 text-gray-800 font-montserratRegular text-[14px]"
                                         />
                                     )}
                                 />
+                                { fieldError(errors.reviewTitle?.message) }
 
                             </View>
 
@@ -138,17 +145,18 @@ const RateAndReviewScreen = () => {
                                             onChangeText={onChange}
                                             placeholder="Enter your name"
                                             placeholderTextColor="#9CA3AF"
-                                            className="border border-gray-300 rounded-lg px-4 py-3 text-gray-800 font-montserratRegular text-[14px]"
+                                            className="h-[44px] border border-gray-300 rounded-lg px-4 py-3 text-gray-800 font-montserratRegular text-[14px]"
                                         />
                                     )}
                                 />
+                                { fieldError(errors.reviewerName?.message) }
 
                             </View>
 
-                            {/* Detailed Review */}
+                            {/* Review */}
                             <View className="mb-6">
                                 <Text className="text-gray-600 font-montserratMedium text-[14px] mb-2">
-                                    Detailed review
+                                    Review
                                 </Text>
                                 <Controller
                                     control={control}
@@ -166,11 +174,12 @@ const RateAndReviewScreen = () => {
                                         />
                                     )}
                                 />
+                                { fieldError(errors.detailedReview?.message) }
 
                             </View>
 
                             {/* Image Matches Product */}
-                            <View className="mb-6">
+                            <View className="mb-10">
                                 <Text className="text-gray-600 font-montserratMedium text-[14px] mb-3">
                                     Does the product image match the product?
                                 </Text>
@@ -213,6 +222,7 @@ const RateAndReviewScreen = () => {
                                         </View>
                                     )}
                                 />
+                                { fieldError(errors.imageMatch?.message) }
 
                             </View>
                         </View>
@@ -220,14 +230,19 @@ const RateAndReviewScreen = () => {
 
                     {/*==== Submit Button ====*/}
                     <View className="px-5 pb-6">
-                        <TouchableOpacity 
-                            onPress={handleSubmit(onSubmit)}
-                            className="bg-baseGreen rounded-lg py-4 flex-row items-center justify-center"
+                        {/* Disabled while the request is in flight so a second
+                            tap cannot post the review twice. */}
+                        <TouchableOpacity
+                            onPress={handleSubmit(onSubmit, onInvalid)}
+                            disabled={isLoading}
+                            className={`rounded-lg py-4 flex-row items-center justify-center ${ isLoading ? "bg-baseGreen/60" : "bg-baseGreen" }`}
                         >
                             <Text className="text-white font-montserratMedium text-[16px] mr-2">
-                                Submit Your Review
+                                { isLoading ? (loadingMessage || "Submitting...") : (isEditing ? "Update Review" : "Submit Review") }
                             </Text>
-                            <ArrowRight color="white" size={20} />
+                            { isLoading
+                                ? <ActivityIndicator size="small" color="white" />
+                                : <ArrowRight color="white" size={20} /> }
                         </TouchableOpacity>
                     </View>
                 </SafeAreaView>

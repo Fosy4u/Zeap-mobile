@@ -24,6 +24,8 @@ const initialState: IOrderState = {
         }
     },
     selectedOrderStatus: {} as IStatus,
+    selectedProductOrderID: "",
+    showCancelOrderModal: false,
     isLoading: false,
     loadingMessage: "",
 };
@@ -50,6 +52,12 @@ const orderSlice = createSlice({
         setSelectedOrderStatus: (state: IOrderState, action: PayloadAction<IStatus>) => {
             state.selectedOrderStatus = action.payload;
         },
+        setSelectedProductOrderID: (state: IOrderState, action: PayloadAction<string>) => {
+            state.selectedProductOrderID = action.payload;
+        },
+        setShowCancelOrderModal: (state: IOrderState, action: PayloadAction<boolean>) => {
+            state.showCancelOrderModal = action.payload;
+        },
         setIsLoading: (state: IOrderState, action: PayloadAction<boolean>) => {
             state.isLoading = action.payload;
         },
@@ -66,6 +74,8 @@ export const {
     setFilteredOrders,
     setOrderHistory,
     setSelectedOrderStatus,
+    setSelectedProductOrderID,
+    setShowCancelOrderModal,
     setIsLoading,
     setLoadingMessage,
 } = orderSlice.actions;

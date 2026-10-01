@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import AuthCheck from '../../auths/components/authCheck';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -12,6 +12,7 @@ import useNotificationHook from '../hooks/notification_hook';
 import formatDate from '../../../utils/formatDate';
 import handleNotificationNavigation from '../utils/notificationNavigation';
 import NotificationsSkeletonLoader from '../components/notificationsSkeletonLoader_component';
+import AppStatusBar from "../../general/components/appStatusBar";
 
 const UserNotificationsScreen = () => {
     const { notifications, isLoading } = useSelector((state: RootState) => state.notificationsState);
@@ -19,14 +20,27 @@ const UserNotificationsScreen = () => {
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
 
     // Call the Notification Hook
-    const { handleDeleteNotification } = useNotificationHook();
+    const { handleDeleteNotification, handleMarkAllAsRead, handleMarkNotificationAsSeen } = useNotificationHook();
+
+    // Mark the inbox as read once, the first time it has loaded — clears the
+    // dashboard bell badge. Guarded with a ref so it fires a single time.
+    const hasMarkedAsRead = useRef(false);
+    useEffect(() => {
+        if (!hasMarkedAsRead.current && notifications.length > 0) {
+            hasMarkedAsRead.current = true;
+            handleMarkAllAsRead();
+        }
+    }, [notifications]);
+
+    // Newest first — sort a copy so the redux array isn't mutated. The backend
+    // returns them oldest→newest, which read upside down on screen.
+    const sortedNotifications = [...notifications].sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
 
     return (
         <SafeAreaView className="h-auto w-full pb-1 flex-1 bg-lightGray">
-            <StatusBar
-                backgroundColor="#133522"
-                barStyle="light-content"
-            />
+            <AppStatusBar backgroundColor="#133522" barStyle="light-content" />
 
             {/* ==== Header ==== */}
             <AppHeaderComp title="Notifications" />
@@ -39,10 +53,14 @@ const UserNotificationsScreen = () => {
                 showsVerticalScrollIndicator={false}
                 className="h-auto w-full px-5 pt-[20px] flex-1"
             >
-                { notifications.length !== 0
-                    ? notifications.map((notification, index) => (
-                        <TouchableOpacity key={ index }
-                            onPress={ () => handleNotificationNavigation(notification.data) }
+                { sortedNotifications.length !== 0
+                    ? sortedNotifications.map((notification) => (
+                        <TouchableOpacity key={ notification._id }
+                            onPress={ () => {
+                                // Always fire — local seen:true is optimistic, so it can't gate the call.
+                                handleMarkNotificationAsSeen(notification._id);
+                                handleNotificationNavigation(notification.data);
+                            } }
                         >
                             <View className="h-auto w-full mt-4 p-4 rounded-xl border border-gray-200 bg-[#F8F9FE]">
                                 <View className="h-auto w-full flex-row items-start justify-start">
@@ -88,4 +106,17 @@ const UserNotificationsScreen = () => {
     );
 };
 
-export default AuthCheck(UserNotificationsScreen);
+// Loading fallback shown while AuthCheck runs its token refresh — mirrors the
+// real screen's chrome (status bar + header) with the notification-shaped
+// skeleton in the body, so the user never sees a blank white screen on the way
+// in. Once the auth check passes, the screen below shows the same skeleton
+// while the inbox fetch is in flight.
+const NotificationsLoadingScreen = () => (
+    <SafeAreaView className="h-auto w-full pb-1 flex-1 bg-lightGray">
+        <AppStatusBar backgroundColor="#133522" barStyle="light-content" />
+        <AppHeaderComp title="Notifications" />
+        <NotificationsSkeletonLoader />
+    </SafeAreaView>
+);
+
+export default AuthCheck(UserNotificationsScreen, NotificationsLoadingScreen);

@@ -12,7 +12,6 @@ import SkeletonBlock from "../../../general/components/skeletonBlock_component";
 // same FlatList of ProductListCard rows, so they share the same skeleton.
 
 interface IProps {
-    /** Number of card placeholders to render (default 5). */
     rows?: number;
 }
 

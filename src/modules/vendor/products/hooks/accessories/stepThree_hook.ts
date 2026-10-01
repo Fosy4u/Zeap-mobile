@@ -44,7 +44,7 @@ const useStepThreeHook = () => {
 
                 // Get the updated product data
                 const updatedProduct = await getProductByProductID(productId).unwrap();
-                console.log("UPDATED PRODUCT::: ", updatedProduct);
+                // console.log("UPDATED PRODUCT::: ", updatedProduct);
 
                 if (updatedProduct) {
                     dispatch(setProduct(updatedProduct));

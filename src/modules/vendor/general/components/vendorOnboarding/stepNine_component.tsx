@@ -63,9 +63,6 @@ const StepNineComponent: React.FC<IProps> = ({ formData, onJumpToStep }) => {
                 </Text>
             </View>
 
-            {/* Cards each carry an explicit `mt-3` because `gap-y-*` is not
-                honored reliably by NativeWind 2 — without this the Shop card
-                creeps up under the description. */}
             <View className="mt-8">
                 <ReviewCard
                     title="Shop"

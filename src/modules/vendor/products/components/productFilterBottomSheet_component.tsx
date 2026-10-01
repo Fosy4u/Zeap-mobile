@@ -15,9 +15,11 @@ import { setShowProductFilterBottomSheet } from '../../home/slices/vendorHome_sl
 import useVendorProductHook from '../hooks/vendorProduct_hook.ts';
 import Slider from '@react-native-community/slider';
 import { RootState } from '../../../../redux/store/store.ts';
+import useShopCurrency from '../../general/hooks/shopCurrency_hook.ts';
 
 
 const ProductFilterBottomSheetComponent = () => {
+  const { entrySymbol } = useShopCurrency();
   const { loadingMessage } = useSelector((state: RootState) => state.vendorProductState);
   const dispatch = useDispatch();
   const screenHeight = Dimensions.get('window').height;
@@ -509,7 +511,7 @@ const ProductFilterBottomSheetComponent = () => {
               {showPriceAdjustment && (
                 <View>
                   <View className="h-auto w-[50%] flex-row items-center justify-between space-x-2">
-                    <Text className="text-base">₦</Text>
+                    <Text className="text-base">{ entrySymbol }</Text>
                     <View className="h-auto px-3 flex-1 border border-gray-300 rounded-lg bg-gray-100">
                       <TextInput
                         keyboardType="number-pad"

@@ -9,7 +9,7 @@ const useStepTwoHook = () => {
     const { formData } = useSelector((state: RootState) => state.vendorOnboardingState);
     const dispatch = useDispatch();
 
-    const { control, handleSubmit, formState: { errors }, setValue } = useForm<IStepTwoForm>({
+    const { control, handleSubmit, formState: { errors, isValid }, setValue } = useForm<IStepTwoForm>({
         defaultValues: {
             isTailor: formData.isTailor as boolean,
             isShoeMaker: formData.isShoeMaker as boolean,
@@ -26,7 +26,7 @@ const useStepTwoHook = () => {
         dispatch(setSelectedOnboardingStep(3));
     };
 
-    return { control, handleSubmit, errors, onSubmit, setValue };
+    return { control, handleSubmit, errors, isValid, onSubmit, setValue };
 };
 
 export default useStepTwoHook;

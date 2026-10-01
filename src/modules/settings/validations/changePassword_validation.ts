@@ -9,10 +9,10 @@ const changePasswordSchema = yup.object().shape({
         .string()
         .required("New password is required.")
         .min(8, "New password must be at least 8 characters.")
-        .matches(
-            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,
-            "New password must contain at least one uppercase letter, one lowercase letter, one number, and one special character."
-        ),
+        .matches(/[A-Z]/, "New password must contain at least one uppercase letter.")
+        .matches(/[a-z]/, "New password must contain at least one lowercase letter.")
+        .matches(/\d/, "New password must contain at least one number.")
+        .matches(/[^A-Za-z\d]/, "New password must contain at least one special character."),
     confirmNewPassword: yup
         .string()
         .required("Confirm new password is required.")

@@ -7,6 +7,7 @@ const initialState: IPaymentState = {
     paymentReference: {},
     showOrderSuccessModal: false,
     newOrderId: "",
+    gainedPoints: 0,
 };
 
 const paymentSlice = createSlice({
@@ -22,6 +23,9 @@ const paymentSlice = createSlice({
         setNewOrderId: (state: IPaymentState, action: PayloadAction<string>) => {
             state.newOrderId = action.payload;
         },
+        setGainedPoints: (state: IPaymentState, action: PayloadAction<number>) => {
+            state.gainedPoints = action.payload;
+        },
     },
 });
 
@@ -31,5 +35,6 @@ export const {
     setPaymentReference,
     setShowOrderSuccessModal,
     setNewOrderId,
+    setGainedPoints,
 } = actions;
 export default reducer

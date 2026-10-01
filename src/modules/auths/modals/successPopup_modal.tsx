@@ -10,16 +10,13 @@ import { setShowSuccessModal } from '../slices/authState_slice';
 
 interface Props {
     bodyText: string;
+    title?: string;
     screenURL: keyof RootNavigationStackModel;
-    /** Override the action button text (default: `Proceed To <Setup|Login|Shop>`). */
     buttonLabel?: string;
-    /** Override the proceed action. Receives no args. When provided, the default
-     *  navigate-to-screenURL behavior is bypassed — the caller is responsible
-     *  for dismissing the modal and navigating wherever it wants. */
     onProceed?: () => void;
 };
 
-const SuccessPopupModal: React.FC<Props> = ({ bodyText, screenURL, buttonLabel, onProceed }) => {
+const SuccessPopupModal: React.FC<Props> = ({ bodyText, title, screenURL, buttonLabel, onProceed }) => {
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const dispatch = useDispatch();
 
@@ -38,7 +35,6 @@ const SuccessPopupModal: React.FC<Props> = ({ bodyText, screenURL, buttonLabel, 
         dispatch(setShowSuccessModal(false));
         navigation.navigate(url);
     };
-
 
     return (
         <SafeAreaView className="h-full w-full absolute inset-0 flex items-center justify-center">
@@ -61,7 +57,7 @@ const SuccessPopupModal: React.FC<Props> = ({ bodyText, screenURL, buttonLabel, 
                     />
                 </View>
                 <View className="flex-1 items-center justify-center">
-                    <Text className="font-semibold text-xl text-green-600">Congratulations</Text>
+                    <Text className="font-semibold text-xl text-green-600">{ title ?? "Congratulations" }</Text>
                     <Text className="mx-7 mt-2.5 text-center text-base leading-5">
                         { bodyText }
                     </Text>

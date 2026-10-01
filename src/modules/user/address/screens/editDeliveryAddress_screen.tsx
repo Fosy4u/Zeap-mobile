@@ -20,7 +20,7 @@ const EditDeliveryAddressScreen = () => {
     
     return (
         <GestureHandlerRootView>
-            <SafeAreaView className="h-full w-full flex-1 px-5 pt-2 pb-3">
+            <SafeAreaView className="h-full w-full flex-1">
 
                 <StatusBar
                     backgroundColor="transparent"
@@ -28,7 +28,7 @@ const EditDeliveryAddressScreen = () => {
                 />
 
                 {/*==== Header ====*/}
-                <View className="h-auto w-full py-3 flex-row items-center justify-between">
+                <View className="h-auto w-full px-5 pt-5 pb-3 flex-row items-center justify-between">
                     <TouchableOpacity onPress={ () => navigation.pop() }>
                         <View className="h-[40px] w-[40px] flex items-center justify-center rounded-full bg-baseGreen">
                         <TouchableOpacity onPress={ () => navigation.pop() }>
@@ -45,6 +45,7 @@ const EditDeliveryAddressScreen = () => {
 
                 <ScrollView
                     showsVerticalScrollIndicator={false}
+                    contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 12 }}
                 >
                     <View>
                         <Text aria-label="Name" nativeID="fullName" className="mt-5">Name</Text>
@@ -55,7 +56,7 @@ const EditDeliveryAddressScreen = () => {
                             keyboardType="name-phone-pad"
                             placeholder="Enter name"
                             placeholderTextColor="#9ca3af"
-                            className="text-base"
+                            className="h-[44px] text-base"
                             onChangeText={ () => {} }
                             />
                         </View>
@@ -68,7 +69,7 @@ const EditDeliveryAddressScreen = () => {
                             keyboardType="number-pad"
                             placeholder="Enter phone number"
                             placeholderTextColor="#9ca3af"
-                            className="text-base"
+                            className="h-[44px] text-base"
                             onChangeText={ () => {} }
                             />
                         </View>
@@ -81,7 +82,7 @@ const EditDeliveryAddressScreen = () => {
                             keyboardType="email-address"
                             placeholder="Enter email address"
                             placeholderTextColor="#9ca3af"
-                            className="text-base"
+                            className="h-[44px] text-base"
                             onChangeText={ () => {} }
                             />
                         </View>
@@ -110,7 +111,7 @@ const EditDeliveryAddressScreen = () => {
                             keyboardType="default"
                             placeholder="Enter your city"
                             placeholderTextColor="#9ca3af"
-                            className="text-base"
+                            className="h-[44px] text-base"
                             onChangeText={ () => {} }
                             />
                         </View>
@@ -123,7 +124,7 @@ const EditDeliveryAddressScreen = () => {
                             keyboardType="default"
                             placeholder="Enter your street address"
                             placeholderTextColor="#9ca3af"
-                            className="text-base"
+                            className="h-[44px] text-base"
                             onChangeText={ () => {} }
                             />
                         </View>
@@ -136,7 +137,7 @@ const EditDeliveryAddressScreen = () => {
                             keyboardType="numeric"
                             placeholder="Enter postal code"
                             placeholderTextColor="#9ca3af"
-                            className="text-base"
+                            className="h-[44px] text-base"
                             onChangeText={ () => {} }
                             />
                         </View>
@@ -146,6 +147,14 @@ const EditDeliveryAddressScreen = () => {
                                 value={ saveDefaultDeliveryAddress }
                                 onValueChange={ (newValue) => setSaveDefaultDeliveryAddress(newValue) }
                                 tintColors={{ true: "#133522", false: "#151518" }}
+                                boxType="square"
+                                lineWidth={1.5}
+                                tintColor="#151518"
+                                onCheckColor="#ffffff"
+                                onFillColor="#133522"
+                                onTintColor="#133522"
+                                animationDuration={0.15}
+                                style={{ height: 20, width: 20 }}
                             />
                             <Text className="ml-2 text-lg">Set as default delivery address</Text>
                         </View>

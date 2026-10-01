@@ -7,22 +7,19 @@ import { useDispatch, useSelector } from 'react-redux';
 import { ArrowRight, Receipt21 } from 'iconsax-react-native';
 import RootNavigationStackModel from '../../../../routes/model/routes_model';
 import { RootState } from '../../../../redux/store/store';
-import { setNewOrderId, setShowOrderSuccessModal } from '../slices/payment_slice';
+import { setGainedPoints, setNewOrderId, setShowOrderSuccessModal } from '../slices/payment_slice';
 
 const OrderSuccessPopupModal = () => {
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const dispatch = useDispatch();
-    const { newOrderId } = useSelector((state: RootState) => state.paymentState);
+    const { newOrderId, gainedPoints } = useSelector((state: RootState) => state.paymentState);
 
     const handleDismiss = () => {
         dispatch(setShowOrderSuccessModal(false));
         dispatch(setNewOrderId(""));
+        dispatch(setGainedPoints(0));
     };
 
-    // The order is placed, so the checkout + Paystack screens are spent and must
-    // not stay in the back stack — popping back into a finished Paystack WebView
-    // lands on a blank light-gray screen. Reset the stack so the receipt/orders
-    // screen sits directly on top of Home; "back" from it then returns Home.
     const handleViewReceipt = () => {
         const orderId = newOrderId;
         handleDismiss();
@@ -42,6 +39,17 @@ const OrderSuccessPopupModal = () => {
             routes: [
                 { name: "homeScreen", params: { screen: "Home" } },
                 { name: "ordersScreen" },
+            ],
+        });
+    };
+
+    const handleContinueShopping = () => {
+        handleDismiss();
+        navigation.reset({
+            index: 1,
+            routes: [
+                { name: "homeScreen", params: { screen: "Home" } },
+                { name: "productListScreen", params: { screenTitle: "All Products" } },
             ],
         });
     };
@@ -68,10 +76,25 @@ const OrderSuccessPopupModal = () => {
                 </View>
 
                 <View className="px-5 pt-5 pb-6 items-center">
-                    <Text className="font-semibold text-xl text-green-600">Order Placed!</Text>
+                    <Text className="font-semibold text-xl text-green-600">Congratulations</Text>
                     <Text className="mt-2.5 text-center text-base leading-5">
-                        Your order has been placed successfully. You can view your receipt or jump to your orders.
+                        Your order has been placed successfully.
+                        { newOrderId ? (
+                            <Text>
+                                {" "}Your order ID is <Text className="font-semibold text-baseGreen">{ newOrderId }</Text>.
+                            </Text>
+                        ) : null }
                     </Text>
+                    { gainedPoints > 0 ? (
+                        <Text className="mt-2.5 text-center text-base leading-5">
+                            You have gained <Text className="font-semibold text-baseGreen">{ gainedPoints }</Text> points from this order.
+                        </Text>
+                    ) : null }
+                    { newOrderId ? (
+                        <Text className="mt-2.5 text-center text-base leading-5">
+                            Take note of your order ID as it might be required for collection.
+                        </Text>
+                    ) : null }
 
                     <TouchableOpacity
                         onPress={ handleViewReceipt }
@@ -87,6 +110,13 @@ const OrderSuccessPopupModal = () => {
                     >
                         <Text className="text-base text-baseGreen mr-2">View Order</Text>
                         <ArrowRight color="#133522" size={ 18 } />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        onPress={ handleContinueShopping }
+                        className="h-[50px] w-full mt-3 px-5 flex flex-row items-center justify-center rounded-xl bg-lightGold"
+                    >
+                        <Text className="text-base text-baseGreen">Continue Shopping</Text>
                     </TouchableOpacity>
                 </View>
             </View>

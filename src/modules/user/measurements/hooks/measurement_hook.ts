@@ -1,7 +1,8 @@
 import { SubmitHandler, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { IRequiredMeasurementFormFieldsSchema, requiredMeasurementFormFieldsSchema } from "../validations/measurement_validation";
-import { useAddBodyMeasurementTemplateMutation, useDeleteBodyMeasurementTemplateMutation, useLazyGetAllSavedMeasurementsQuery, useLazyGetBodyMeasurementGuideQuery, useLazyGetRequiredMeasurementFormFieldsQuery } from "../apis/measurement_api";
+import { useAddBodyMeasurementTemplateMutation, useDeleteBodyMeasurementTemplateMutation, useLazyGetAllSavedMeasurementsQuery, useLazyGetRequiredMeasurementFormFieldsQuery } from "../apis/measurement_api";
+import { useLazyGetBodyMeasurementGuideQuery } from "../../../general/apis/general_api";
 import { RootState } from "../../../../redux/store/store";
 import { useDispatch, useSelector } from "react-redux";
 import { IMeasurementField } from "../models/requiredMeasurementFormField_model";
@@ -9,7 +10,7 @@ import { useAddProductToCartMutation } from "../../products/apis/product_api";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import RootNavigationStackModel from "../../../../routes/model/routes_model";
-import { setAllSavedMeasurements, setBodyMeasurementGuides, setIsLoading, setLoadingMessage, setRequiredMeasurementFormFields, setSelectedCartID, setSelectedGender, setSelectedMeasurementTemplate, setShowAddNewMeasurementBottomSheet } from "../slices/measurement_slice";
+import { setAllSavedMeasurements, setBodyMeasurementGuides, setIsLoading, setLoadingMessage, setRequiredMeasurementFormFields, setSaveMeasurementForNextTime, setSelectedCartID, setSelectedGender, setSelectedMeasurementTemplate, setShowAddNewMeasurementBottomSheet } from "../slices/measurement_slice";
 import handleError from "../../../general/hooks/errorHandler_hook";
 import IBodyMeasurement from "../models/bodyMeasurement_model";
 
@@ -43,8 +44,6 @@ const useMeasurementHook = () => {
     const { control, handleSubmit, formState: { errors }, getValues } = useForm<IRequiredMeasurementFormFieldsSchema>({
         defaultValues: {
             templateName: selectedMeasurementTemplate.templateName || "",
-            // Only the user-editable field values live in form state. Group
-            // names are stitched back in at submit time from the API source.
             measurements: requiredMeasurementFormFields?.measurements?.map((measurement: IMeasurementField) => ({
                 fields: measurement?.fields?.map((fieldName) => findSavedFieldValue(measurement?.name, fieldName))
             })) || [],
@@ -126,58 +125,31 @@ const useMeasurementHook = () => {
     };
 
 
-    // Handle Add Product To Cart from selectedMeasurementTemplate
-    const onSubmitFromSavedMeasurementTemplate = async () => {
-        dispatch(setLoadingMessage("Adding product to cart..."));
+    // Handle "Use This Measurement" for a selected saved template.
+    const handleUseSavedMeasurement = async () => {
+        dispatch(setLoadingMessage("Loading measurement form..."));
         dispatch(setIsLoading(true));
 
-        const rawTemplateMeasurements: any[] = selectedMeasurementTemplate.measurements ?? [];
-        const flatSavedMeasurements: any[] = rawTemplateMeasurements.length > 0 && rawTemplateMeasurements[0]?.field !== undefined
-            ? rawTemplateMeasurements
-            : rawTemplateMeasurements.flatMap((group: any) => group?.measurements ?? []);
-        const productGroupName = requiredMeasurementFormFields?.measurements?.[0]?.name ?? "";
+        dispatch(setSaveMeasurementForNextTime(false));
 
-        const cartRequestData = (product.productType === "readyMadeCloth" || product.productType === "readyMadeShoe" || product.productType === "accessory")
-            ? ({
-                productId: product.productId,
-                quantity: selectedQuantity,
-                sku: product.variations?.[0].sku!,
-            }) : ((product.productType === "bespokeCloth" || product.productType === "bespokeShoe") && (product.variations?.[0].sku === "BESPOKE")
-                ? {
-                    productId: product.productId,
-                    quantity: selectedQuantity,
-                    sku: "BESPOKE",
-                    bespokeColor: selectedColor.name,
-                    bespokeInstruction: "",
-                    bodyMeasurements: [
-                        {
-                            name: productGroupName,
-                            measurements: flatSavedMeasurements,
-                        },
-                    ],
-                } : {
-                    productId: product.productId,
-                    quantity: selectedQuantity,
-                    sku: "BESPOKE-MULTIPLE",
-                    bespokeInstruction: "",
-                    bodyMeasurements: (requiredMeasurementFormFields?.measurements ?? []).map((group) => ({
-                        name: group.name ?? "",
-                        measurements: flatSavedMeasurements,
-                    })),
-                }
-            );
-        // console.log("CART REQUEST DATA::: ", cartRequestData);
-    
+        const tplGender = (selectedMeasurementTemplate as any)?.gender as string | undefined;
+        if (tplGender) {
+            dispatch(setSelectedGender(tplGender.toLowerCase()));
+        }
+
         try {
-            const addProductToCartResponse = await addProductToCart(cartRequestData).unwrap();
-            // console.log("ADD PRODUCT TO CART RESPONSE::: ", addProductToCartResponse);
+            const tasks: Promise<any>[] = [];
+            if (requiredMeasurementFormFields?.productId !== product?.productId) {
+                tasks.push(handleGetRequiredMeasurementFormFields());
+            }
+            if (tplGender) {
+                tasks.push(handleGetBodyMeasurementGuides(tplGender.toLowerCase()));
+            }
+            if (tasks.length > 0) {
+                await Promise.all(tasks);
+            }
 
-            // Mirror the new-measurement path: stash the cart id, close any
-            // lingering measurement bottom sheet, and drop the user on the Cart
-            // tab so they have a clear sense that the item landed in cart.
-            dispatch(setSelectedCartID(addProductToCartResponse._id!));
-            dispatch(setShowAddNewMeasurementBottomSheet(false));
-            navigation.navigate("homeScreen", { screen: "Cart" });
+            dispatch(setShowAddNewMeasurementBottomSheet(true));
         } catch (error) {
             handleError(error);
         } finally {
@@ -193,7 +165,6 @@ const useMeasurementHook = () => {
 
         try {
             const allSavedMeasurementsResponse = await getAllSavedMeasurements().unwrap();
-            // console.log("ALL SAVED MEASUREMENTS RESPONSE::: ", allSavedMeasurementsResponse);
             
             if (allSavedMeasurementsResponse) {
                 dispatch(setAllSavedMeasurements(allSavedMeasurementsResponse));
@@ -213,7 +184,6 @@ const useMeasurementHook = () => {
 
         try {
             const requiredMeasurementFormFieldsResponse = await getRequiredMeasurementFormFields(product?.productId!).unwrap();
-            // console.log("REQUIRED MEASUREMENT FORM FIELDS RESPONSE::: ", requiredMeasurementFormFieldsResponse);
             
             if (requiredMeasurementFormFieldsResponse) {
                 dispatch(setRequiredMeasurementFormFields(requiredMeasurementFormFieldsResponse));
@@ -276,7 +246,7 @@ const useMeasurementHook = () => {
     return {
         control, handleSubmit, errors, getValues,
         onSubmitFromMeasurementForm,
-        onSubmitFromSavedMeasurementTemplate,
+        handleUseSavedMeasurement,
 
         handleGetAllSavedMeasurements,
         handleGetRequiredMeasurementFormFields,

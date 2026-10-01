@@ -94,7 +94,7 @@ const PointsComponent: React.FC<IProps> = (props: IProps) => {
                                     keyboardType="numeric"
                                     placeholder="Enter points"
                                     placeholderTextColor="#9ca3af"
-                                    className="text-base"
+                                    className="h-[44px] text-base"
                                     onChangeText={(value) => handleUpdatePointsToConvert(value)}
                                     value={ state.pointsToConvert.toString() }
                                 />

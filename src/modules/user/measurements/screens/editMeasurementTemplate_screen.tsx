@@ -23,7 +23,7 @@ import { setSelectedMeasurementTemplate } from "../slices/measurement_slice";
 import useMeasurementHook from "../hooks/measurement_hook";
 import { useUpdateBodyMeasurementTemplateMutation } from "../apis/measurement_api";
 import handleError from "../../../general/hooks/errorHandler_hook";
-import IBodyMeasurementGuide from "../models/bodyMeasurementGuide_model";
+import IBodyMeasurementGuide from "../../../general/models/bodyMeasurementGuide_model";
 import EditMeasurementTemplateSkeletonLoader from "../components/editMeasurementTemplateSkeletonLoader_component";
 
 // Edit a saved measurement template. Only the fields that already exist on
@@ -236,7 +236,7 @@ const EditMeasurementTemplateScreen = () => {
                                             keyboardType="number-pad"
                                             placeholder="0.00"
                                             placeholderTextColor="#9ca3af"
-                                            className="flex-1 font-montserratMedium text-base"
+                                            className="h-[44px] flex-1 font-montserratMedium text-base"
                                             value={ f.value }
                                             onChangeText={ (v) => handleChange(idx, v) }
                                         />
@@ -283,10 +283,6 @@ const EditMeasurementTemplateScreen = () => {
                     </View>
 
                     {/*==== Save CTA ====*/}
-                    {/* `disabled` blocks the underlying press handler; the
-                        opacity drop + spinner give the user a clear visual
-                        cue that the action is in-flight so they don't tap
-                        again. */}
                     <TouchableOpacity
                         onPress={ handleSave }
                         disabled={ isSaving }

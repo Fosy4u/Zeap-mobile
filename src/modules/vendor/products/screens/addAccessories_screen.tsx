@@ -1,5 +1,5 @@
 import React from 'react'
-import { SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../../../redux/store/store';
 import { useNavigation } from '@react-navigation/native';
@@ -25,6 +25,9 @@ import useStepSixHook from '../hooks/accessories/stepSix_hook';
 import StepSixComponent from '../components/addAccessories/stepSix_component';
 import PriceAdjustmentModal from '../modals/priceAdjustment_modal';
 import WarningPopupModal from '../modals/warningPopup_modal';
+import AppHeaderComp from '../../general/components/appHeader_comp';
+import UploadColorImageModal from '../modals/uploadColorImage_modal';
+import AppStatusBar from "../../../general/components/appStatusBar";
 
 const AddAccessoriesScreen = () => {
   const { selectedStep , productIsLoading, loadingMessage } = useSelector((state: RootState) => state.vendorProductState);
@@ -50,8 +53,10 @@ const AddAccessoriesScreen = () => {
   } = useStepThreeHook();
 
   const {
-    colorOptions, handleSelectColour, selectedColor: stepFourSelectedColor, setSelectedColor: stepFourSetSelectedColor,
-    selectedImages, uploadedColorAndImages, handleAddImage, handleRemoveImage, handleDeleteColor, handleDeleteImage, handleUploadImage,
+    colorOptions, handleSelectColour, selectedColor: stepFourSelectedColor,
+    selectedImages, uploadedColorAndImages, handleAddImage, handleRemoveImage, handleDeleteColor, handleDeleteUploadedImage, deletingColorName,
+    handleUploadColorAndImages, handleProceedToNextStep,
+    showImageUploadModal, handleCloseImageUploadModal, handleAddMoreImages,
     setSelectedDefaultImage, showDefaultImageModal, setShowDefaultImageModal, handleSetDefaultImage,
   } = useStepFourHook();
 
@@ -90,7 +95,7 @@ const AddAccessoriesScreen = () => {
       }
 
       if (selectedStep === 4) {
-        uploadedColorAndImages.length > 0 && dispatch(setSelectedStep(5));
+        handleProceedToNextStep();
       }
 
       if (selectedStep === 5) {
@@ -104,12 +109,12 @@ const AddAccessoriesScreen = () => {
 
   return (
     <SafeAreaView className="h-full w-full flex-1 bg-white">
-      <StatusBar
-          backgroundColor="#133522"
-          barStyle="light-content"
-      />
+      <AppStatusBar backgroundColor="#133522" barStyle="light-content" />
 
       {/*==== Header ====*/}
+      <AppHeaderComp title="Add Accessory" />
+
+      {/*==== Step Indicators ====*/}
       <View className="h-auto w-full px-5 pt-4 pb-2 flex-row gap-x-2">
         <View className={`h-1 w-full flex-1 border rounded ${ selectedStep === 1 ? "border-baseGreen bg-gray-50" : selectedStep > 1 ? "border-baseGreen bg-baseGreen" : "border-gray-200 bg-gray-50"}`} />
         <View className={`h-1 w-full flex-1 border rounded ${ selectedStep === 2 ? "border-baseGreen bg-gray-50" : selectedStep > 2 ? "border-baseGreen bg-baseGreen" : "border-gray-200 bg-gray-50"}`} />
@@ -135,18 +140,16 @@ const AddAccessoriesScreen = () => {
           <StepFourComponent
             colorOptions={ colorOptions }
             selectedColor={ stepFourSelectedColor }
-            setSelectedColor={ stepFourSetSelectedColor }
             handleGetTextColor={ handleGetTextColor }
             handleSelectColour={ handleSelectColour }
-            selectedImages={ selectedImages }
             uploadedColorAndImages={ uploadedColorAndImages }
-            handleAddImage={ handleAddImage }
-            handleRemoveImage={ handleRemoveImage }
             handleDeleteColor={ handleDeleteColor }
-            handleDeleteImage={ handleDeleteImage }
+            handleDeleteUploadedImage={ handleDeleteUploadedImage }
+            handleAddMoreImages={ handleAddMoreImages }
             setSelectedDefaultImage={ setSelectedDefaultImage }
             setShowDefaultImageModal={ setShowDefaultImageModal }
-            handleUploadImage={ handleUploadImage }
+            productIsLoading={ productIsLoading }
+            deletingColorName={ deletingColorName }
           />
         ) : (selectedStep === 5) ? (
           <StepFiveComponent propsData={{
@@ -172,12 +175,12 @@ const AddAccessoriesScreen = () => {
           /> 
         ) }
 
-        {/* ==== Cancel and Save & Continue ==== */}
         { selectedStep <= 5 ? (
             <View className="h-auto w-full mt-8 flex-row">
                 <TouchableOpacity
                     onPress={ () => navigation.goBack() }
-                    className="h-[55px] w-[35%] flex-row items-center justify-center rounded-xl bg-red-50"
+                    disabled={ productIsLoading }
+                    className={`h-[55px] w-[35%] flex-row items-center justify-center rounded-xl bg-red-50 ${ productIsLoading ? "opacity-50" : "" }`}
                 >
                     <Text className="font-montserratMedium text-base text-red-700">Cancel</Text>
                 </TouchableOpacity>
@@ -185,28 +188,41 @@ const AddAccessoriesScreen = () => {
 
                 <TouchableOpacity
                     onPress={ () => handleSaveAndContinue() }
-                    className="h-[55px] flex-1 flex-row items-center justify-center rounded-xl bg-baseGreen"
+                    disabled={ productIsLoading }
+                    className={`h-[55px] flex-1 flex-row items-center justify-center rounded-xl bg-baseGreen ${ productIsLoading ? "opacity-70" : "" }`}
                 >
-                    <Text className="mr-2 font-montserratRegular text-base text-white">Save & Continue</Text>
-                    <ArrowRight size={ 18 } className="text-white" />
+                    { productIsLoading ? (
+                        <ActivityIndicator color="#FFFFFF" />
+                    ) : (
+                        <>
+                            <Text className="mr-2 font-montserratRegular text-base text-white">Save & Continue</Text>
+                            <ArrowRight size={ 18 } className="text-white" />
+                        </>
+                    ) }
                 </TouchableOpacity>
             </View>
         ) : (
             <TouchableOpacity
-                onPress={ () => {
-                  setShowWarningModal(true)
-                } }
-                className="h-[55px] flex-1 mt-8 flex-row items-center justify-center rounded-xl bg-baseGreen"
+                onPress={ () => setShowWarningModal(true) }
+                disabled={ productIsLoading }
+                className={`h-[55px] flex-1 mt-8 flex-row items-center justify-center rounded-xl bg-baseGreen ${ productIsLoading ? "opacity-70" : "" }`}
             >
-                <Text className="mr-2 font-montserratRegular text-base text-white">Submit</Text>
-                <ArrowRight size={ 18 } className="text-white" />
+                { productIsLoading ? (
+                    <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                    <>
+                        <Text className="mr-2 font-montserratRegular text-base text-white">Submit</Text>
+                        <ArrowRight size={ 18 } className="text-white" />
+                    </>
+                ) }
             </TouchableOpacity>
         ) }
-        
+
         { selectedStep > 1 && selectedStep <= 5 && (
             <TouchableOpacity
                 onPress={ () => handleGoBack() }
-                className="h-[55px] w-full mt-5 flex-row items-center justify-center rounded-xl bg-lightGreen"
+                disabled={ productIsLoading }
+                className={`h-[55px] w-full mt-5 flex-row items-center justify-center rounded-xl bg-lightGreen ${ productIsLoading ? "opacity-50" : "" }`}
             >
                 <ArrowLeft size={ 18 } className="text-baseGreen" />
                 <Text className="ml-2 font-montserratMedium text-base text-baseGreen">Go Back</Text>
@@ -221,6 +237,7 @@ const AddAccessoriesScreen = () => {
                 <PriceAdjustmentModal 
                     priceAdjustmentModalType={ priceAdjustmentModalType }
                     autoPricePercentage={ autoPricePercentage }
+                    productIsLoading={ productIsLoading }
                     setAutoPricePercentage={ setAutoPricePercentage }
                     setShowPriceAdjustmentModal={ setShowPriceAdjustmentModal }
                     setIsAutoPriceAdjustment={ setIsAutoPriceAdjustment }
@@ -231,7 +248,6 @@ const AddAccessoriesScreen = () => {
 
             { showWarningModal &&
                 <WarningPopupModal 
-                  bodyText={"This will change the status of the product to \"under review\" and you will not be able to edit the product without contacting the admin." }
                   screenURL="profileSetupScreen" 
                   setShowWarningModal={setShowWarningModal}
                   handleSubmitProduct={handleSubmitProduct}
@@ -240,7 +256,6 @@ const AddAccessoriesScreen = () => {
 
             { showSuccessModal &&
                 <SuccessPopupModal
-                    bodyText="You have successfully uploaded your item. It will be reviewed before it is listed for customers."
                     setShowSuccessModal={ setShowSuccessModal }
                 />
             }
@@ -252,8 +267,26 @@ const AddAccessoriesScreen = () => {
                     handleSetDefaultImage={ handleSetDefaultImage }
                 />
             }
-            
-            { productIsLoading && 
+
+            {/* Per-colour image upload modal — opens when a colour is selected. */}
+            { showImageUploadModal && stepFourSelectedColor.length > 0 &&
+                <UploadColorImageModal
+                    colorName={ stepFourSelectedColor[0].colorName }
+                    colorCode={ stepFourSelectedColor[0].colorCode }
+                    selectedImages={ selectedImages }
+                    handleAddImage={ handleAddImage }
+                    handleRemoveImage={ handleRemoveImage }
+                    handleUploadColorAndImages={ handleUploadColorAndImages }
+                    isUploading={ productIsLoading }
+                    onClose={ handleCloseImageUploadModal }
+                />
+            }
+
+            {/* Steps 1–5 keep the user on the step with an in-button spinner;
+                only the final submit (step 6) uses the full-screen loader. The
+                price-adjustment modal handles its own in-button spinner, so the
+                full-screen loader is suppressed while that modal is open. */}
+            { productIsLoading && selectedStep > 5 && !showPriceAdjustmentModal &&
                 <AppLoader loadingAdditionalMessage={ loadingMessage } />
             }
     </SafeAreaView>

@@ -5,6 +5,8 @@ import useVendorProductHook from '../hooks/vendorProduct_hook';
 import IPromotion from '../models/promotion_model';
 import FastImage from 'react-native-fast-image';
 import { ArrowRight2 } from 'iconsax-react-native';
+import encodeMediaUri from '../../../../utils/encodeMediaUri';
+import AppStatusBar from "../../../general/components/appStatusBar";
 
 const PromotionScreen = () => {
     const { promotions, handleGetAvailablePromos, selectedPromo, setSelectedPromo, handleApplyPromo, handleFormatDate } = useVendorProductHook();
@@ -15,10 +17,7 @@ const PromotionScreen = () => {
 
     return (
         <SafeAreaView className="h-full w-full flex-1">
-            <StatusBar
-                backgroundColor="#133522"
-                barStyle="light-content"
-            />
+            <AppStatusBar backgroundColor="#133522" barStyle="light-content" />
 
             {/*==== Header ====*/}
             <AppHeaderComp title="Promotions" />
@@ -55,10 +54,10 @@ const PromotionScreen = () => {
                                 <View className="h-auto w-full mt-4 flex-row items-start space-x-3">
                                     <FastImage
                                         source={{
-                                            uri: promotion?.smallScreenImageUrl?.link!,
+                                            uri: encodeMediaUri(promotion?.smallScreenImageUrl?.link),
                                             priority: FastImage.priority.normal
                                         }}
-                                        defaultSource={ require("../../../../../assets/images/app_logo_green.png") }
+                                        defaultSource={ require("../../../../../assets/images/image_placeholder.png") }
                                         resizeMode={ FastImage.resizeMode.cover }
                                         fallback
                                         className="h-[100px] w-[100px] rounded-xl"

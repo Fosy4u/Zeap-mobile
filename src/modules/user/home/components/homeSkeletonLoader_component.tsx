@@ -1,6 +1,7 @@
 import React from "react";
 import { SafeAreaView, ScrollView, StatusBar, useWindowDimensions, View } from "react-native";
 import SkeletonBlock from "../../../general/components/skeletonBlock_component";
+import AppStatusBar from "../../../general/components/appStatusBar";
 
 // Skeleton loader for the Home tab (DashboardWrapper + MainDashboard).
 // Renders an at-a-glance shell that matches the production layout so the
@@ -26,7 +27,6 @@ interface IShimmerBlockProps {
     width: number;
     height: number;
     radius?: number;
-    /** Pass true to use the darker-green palette for the header band. */
     onHeader?: boolean;
     marginTop?: number;
     marginRight?: number;
@@ -61,7 +61,7 @@ const HomeSkeletonLoader = () => {
 
     return (
         <SafeAreaView className="flex-1 h-auto w-screen pb-20 bg-white">
-            <StatusBar backgroundColor="#112F1E" barStyle="light-content" />
+            <AppStatusBar backgroundColor="#112F1E" barStyle="light-content" />
 
             {/*==== Header band — real baseGreen, shimmer the data parts ====*/}
             <View className="px-5 py-6 bg-baseGreen">

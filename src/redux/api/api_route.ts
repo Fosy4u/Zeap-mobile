@@ -9,12 +9,12 @@ const baseURL = "https://zeap-api.onrender.com";
 const registerUserRoute = "/user/guest/create";
 const loginUserRoute = "/userByUid";
 const mergeUserDataRoute = "/user/guest/login/password/merge";
-const forgotPasswordRoute = "";
 
 //  Notification Routes
 const registerFCMToken = "/notification/pushToken/register";
 const getNotificationsRoute = "/notification/inbox";
 const markNotificationAsReadRoute = "/notifications/markAsRead";
+const markNotificationAsSeenRoute = "/notification/inbox/markAsSeen";
 const deleteNotificationRoute = "/notification/inbox/delete";
 
 
@@ -43,16 +43,15 @@ const sizeGuideRoute = "/bodyMeasurementGuide/readyMade";
 const dynamicFiltersRoute = "/products/list/dynamicFilters";
 
 // Wishlist Routes
-// `/wish/add` (POST { productId, color }) and `/wish/auth/user` (GET list) are
-// confirmed. The remove URL follows the same convention — CONFIRM/ADJUST.
-const wishAddRoute = "/wish/add";
+const wishAddRoute = "/wish/add";        // POST { productId, color }
 const wishListRoute = "/wish/auth/user"; // GET the auth user's wishlist
-const wishRemoveRoute = "/wish/remove";  // ASSUMED: POST { productId } to unsave
+const wishRemoveRoute = "/wish/remove";  // DELETE { wish_id } — POST is not routed
 
 // Order 
 const getOrdersRoute = "/orders/authUser/buyer";
 const getOrderDetailsRoute = "/order/authUser/buyer/orderId";
 const getOrderHistoryRoute = "/orders/product-order/status/history";
+const cancelOrderRoute = "/order/cancel";
 
 
 // Voucher Routes
@@ -64,6 +63,8 @@ const convertPointsRoute = "/point/convert/voucher";
 
 // Review Routes
 const getAllReviewsRoute = "/reviews/user";
+const createReviewRoute = "/review/create";
+const updateReviewRoute = "/review/update";
 
 
 
@@ -88,6 +89,7 @@ const uploadOnboardingDocumentRoute = "/shop/onboarding-document/add";
 const getVendorOrdersRoute = "/orders/authUser/vendor";
 const getVendorOrderDetailsRoute = "/orders/authUser/vendor/product";
 const updateOrderStatusRoute = "/order/status";
+const rejectOrderRoute = "/order/reject";
 const orderHistoryRoute = "/orders/product-order/status/history"
 // const updateOrderStatusRoute = "/orders/authUser/vendor/product/status";
 // const orderHistoryRoute = "/orders/authUser/vendor/product/status/history";
@@ -97,6 +99,10 @@ const orderHistoryRoute = "/orders/product-order/status/history"
 const getVendorPaymentsRoute = "/shop/revenues";
 const getVendorPaymentDetailsRoute = "/vendor/payment";
 // const updatePaymentStatusRoute = "/vendor/payment/status";
+
+// Product Routes
+// Permanent delete of a draft product (removes it entirely).
+const deleteDraftProductRoute = "/product/delete/absolute";
 
 
 
@@ -109,12 +115,12 @@ export {
     registerUserRoute,
     loginUserRoute,
     mergeUserDataRoute,
-    forgotPasswordRoute,
     
     // Notification Routes exports
     registerFCMToken,
     getNotificationsRoute,
     markNotificationAsReadRoute,
+    markNotificationAsSeenRoute,
     deleteNotificationRoute,
 
 
@@ -149,6 +155,7 @@ export {
     getOrdersRoute,
     getOrderDetailsRoute,
     getOrderHistoryRoute,
+    cancelOrderRoute,
 
     // Voucher Routes exports
     getPointsRoute,
@@ -159,6 +166,8 @@ export {
 
     // Review Routes exports
     getAllReviewsRoute,
+    createReviewRoute,
+    updateReviewRoute,
 
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -168,12 +177,16 @@ export {
     getVendorOrdersRoute,
     getVendorOrderDetailsRoute,
     updateOrderStatusRoute,
+    rejectOrderRoute,
     orderHistoryRoute,
 
     // Payment Routes exports
     getVendorPaymentsRoute,
     getVendorPaymentDetailsRoute,
     // updatePaymentStatusRoute,
+
+    // Product Routes exports
+    deleteDraftProductRoute,
 
     // Vendor Onboarding Routes exports
     registerVendorRoute,

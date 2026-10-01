@@ -6,6 +6,7 @@ import { SubmitHandler, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { getAuth, createUserWithEmailAndPassword, getIdToken, GoogleAuthProvider, signInWithCredential } from "@react-native-firebase/auth";
 import EncryptedStorage from "react-native-encrypted-storage";
+import { forgetSecureItem } from "../../../utils/secureStorage";
 import { GoogleSignin, statusCodes } from "@react-native-google-signin/google-signin";
 import { IRegisterUser, registerUserSchema } from "../validations/auths_validation";
 import { clearPendingDestination, setShowSuccessModal } from "../slices/authState_slice";
@@ -226,7 +227,7 @@ const useRegisterHook = () => {
                 } catch {
                     // Merge failure shouldn't block sign-up — proceed with the fetched profile.
                 }
-                await EncryptedStorage.removeItem(STORAGE_KEYS.GUEST_UID);
+                await forgetSecureItem(STORAGE_KEYS.GUEST_UID);
             }
 
             // Always normalize after fetch + merge — the backend writes `isGuest: true`

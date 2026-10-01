@@ -4,18 +4,18 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import RootNavigationStackModel from '../../../../routes/model/routes_model';
 import FastImage from 'react-native-fast-image';
-import formatCurrency from '../../../../utils/formatCurrency';
 import formatDate from '../../../../utils/formatDate';
 import IOrder from '../models/oder_model';
-import { IStatus } from '../hooks/order_hook';
+import useDisplayCurrency from '../../../general/hooks/displayCurrency_hook';
+import OrderStatusPillComponent from './orderStatusPill_component';
 
 interface IProps {
     order: IOrder;
-    status: IStatus;
 }
 
-const OrderCardComponent: React.FC<IProps> = ({ order, status }) => {
+const OrderCardComponent: React.FC<IProps> = ({ order }) => {
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
+    const { formatAmount } = useDisplayCurrency();
     // console.log("ORDER DATA::: ", order);
 
     return (
@@ -34,22 +34,12 @@ const OrderCardComponent: React.FC<IProps> = ({ order, status }) => {
                     <Text className="font-montserratSemiBold text-baseGreen">{order.orderId}</Text>
                     </View>
 
-                    {(() => {
-                    const statusName = order.status!.name!.charAt(0).toUpperCase() + order.status!.name!.slice(1);
-                    const Icon = status[statusName].icon;
-
-                    return (
-                        <View className={`p-2 ${status[statusName].bgColor} flex border ${status[statusName].borderColor} flex-row items-center justify-center rounded-lg`}>
-                        <Icon size={14} className={`${status[statusName].textColor} mr-1`} />
-                        <Text className={`${status[statusName].textColor} text-xs`}>{statusName}</Text>
-                        </View>
-                    );
-                    })()}
+                    <OrderStatusPillComponent statusName={ order.status?.name } />
                 </View>
                 <View className="flex-row items-center">
                     <FastImage
-                    source={{ uri: order.images![0].link! }}
-                    defaultSource={require('../../../../../assets/images/app_logo_green.png')}
+                    source={{ uri: order.images?.[0]?.link! }}
+                    defaultSource={require('../../../../../assets/images/image_placeholder.png')}
                     resizeMode="contain"
                     className="h-[70px] w-[50px] rounded-xl"
                     />
@@ -58,7 +48,7 @@ const OrderCardComponent: React.FC<IProps> = ({ order, status }) => {
                         {order.product?.title!}
                     </Text>
                     <Text className="font-montserratSemiBold text-baseGreen">
-                        {order.amount!.length > 0 ? formatCurrency(order.amount![0].value!, order.amount![0].currency) : "₦0.0"}
+                        { formatAmount(order.amount) }
                     </Text>
                     </View>
                 </View>

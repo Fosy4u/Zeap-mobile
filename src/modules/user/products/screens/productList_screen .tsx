@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useMemo, useRef} from 'react';
+import React, {useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState} from 'react';
 import { Image, SafeAreaView, StatusBar, Text, TextInput, View, FlatList, TouchableOpacity } from 'react-native';
 import {ArrowLeft, ArrowRight, SearchNormal1} from 'iconsax-react-native';
 import {useDispatch, useSelector} from 'react-redux';
@@ -11,25 +11,32 @@ import RootNavigationStackModel from '../../../../routes/model/routes_model.ts';
 import DynamicFilterBottomSheetComponent from '../components/dynamicFilterBottomSheet_component.tsx';
 import ProductListCard from '../components/productListCard_component';
 import useFilterAndSearchHook from '../hooks/filterAndSearch_hook.ts';
-import { setSearchPhrase } from '../slices/product_slice.ts';
+import { setAllProducts, setIsLoading, setSearchPhrase } from '../slices/product_slice.ts';
 import EmptyListComponent from '../../../general/components/emptyList_component.tsx';
 import ProductListSkeletonLoader from '../components/productListSkeletonLoader_component.tsx';
+import useDisplayCurrency from '../../../general/hooks/displayCurrency_hook.ts';
 
 interface IProps {
   route: RouteProp<RootNavigationStackModel, 'productListScreen'>;
 }
 
 const ProductListScreen: React.FC<IProps> = ({ route }) => {
-  const { searchPhrase, dynamicFilterOptions, allProducts, isLoading, loadingMessage } = useSelector((state: RootState) => state.productState);
+  const { searchPhrase, dynamicFilterOptions, allProducts, isLoading, loadingMessage, currentPage } = useSelector((state: RootState) => state.productState);
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
   const screenTitle: string = route.params?.screenTitle ?? "";
   const dispatch = useDispatch();
 
   // Import Hooks
   const { selectedFilters, selectedFiltersCount, toggleCheckboxOption, preselectCategoryFilters, handleSubmit, handleGetFilteredProducts, handleGetDynamicFilterOptions, handlePrevAndNextPagination, clearAllFilters } = useFilterAndSearchHook();
+  const { currencyRefreshToken } = useDisplayCurrency();
 
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+  const productListRef = useRef<FlatList>(null);
   const snapPoints = useMemo(() => ['100%'], []);
+
+  useEffect(() => {
+    productListRef.current?.scrollToOffset({ offset: 0, animated: true });
+  }, [currentPage]);
 
   const setShowBottomSheetModal = useCallback((value: boolean) => {
     if (value) {
@@ -39,21 +46,27 @@ const ProductListScreen: React.FC<IProps> = ({ route }) => {
     }
   }, []);
 
-  // Load the category/filtered list whenever the category or the user's selected
-  // filters change. The category filter (gender for Female/Male, main for
-  // Shoes/Accessories) is derived from screenTitle inside the hook — we no longer
-  // toggle a checkbox as a side-effect here. That side-effect double-ran (which
-  // cleared the gender filter) and was the reason returning from a product left
-  // the list empty.
-  useEffect(() => {
-    handleGetFilteredProducts({ screenTitle: screenTitle || "Products", setShowBottomSheetModal });
-    handleGetDynamicFilterOptions({});
-  }, [screenTitle, selectedFilters]);
+  useLayoutEffect(() => {
+    dispatch(setAllProducts([]));
+    dispatch(setIsLoading(true));
+  }, [screenTitle]);
 
-  // Once the dynamic filter options arrive for this category, pre-select its
-  // filter (e.g. Gender → Male) so the filter sheet highlights it on open.
-  // Guarded per screenTitle so it seeds exactly once and never fights the
-  // user's own toggles afterwards.
+  const [productsFetched, setProductsFetched] = useState(false);
+
+  // Load the category/filtered list whenever the category or the user's selected filters change.
+  useEffect(() => {
+    setProductsFetched(false);
+    (async () => {
+      try {
+        await handleGetFilteredProducts({ screenTitle: screenTitle || "Products", setShowBottomSheetModal });
+      } finally {
+        // Settled either way — a failed fetch must still reveal the empty state.
+        setProductsFetched(true);
+      }
+    })();
+    handleGetDynamicFilterOptions({});
+  }, [screenTitle, selectedFilters, currencyRefreshToken]);
+
   const seededTitleRef = useRef<string | null>(null);
   useEffect(() => {
     if (!dynamicFilterOptions || dynamicFilterOptions.length === 0) return;
@@ -65,11 +78,11 @@ const ProductListScreen: React.FC<IProps> = ({ route }) => {
   return (
     <GestureHandlerRootView>
       <BottomSheetModalProvider>
-        <SafeAreaView className="h-full w-full flex-1 px-[25px] pt-[20px] pb-3">
+        <SafeAreaView className="h-full w-full flex-1 pt-5 pb-3">
           <StatusBar backgroundColor="transparent" barStyle="dark-content" />
 
           {/*==== Header ====*/}
-          <View className="h-auto w-full flex-row items-center justify-between">
+          <View className="h-auto w-full px-5 flex-row items-center justify-between">
             <TouchableOpacity onPress={() => navigation.goBack()}>
               <View className="h-[40px] w-[40px] flex items-center justify-center rounded-full bg-baseGreen">
                 <ArrowLeft color="white" />
@@ -82,13 +95,13 @@ const ProductListScreen: React.FC<IProps> = ({ route }) => {
           </View>
 
           {/*==== Search Box ====*/}
-          <View className="h-auto w-full mt-8 flex-row items-center justify-center">
+          <View className="h-auto w-full mt-8 px-5 flex-row items-center justify-center">
             <View className="h-auto w-full px-3 py-1 flex-1 flex-row items-center border border-gray-300 rounded-xl bg-gray-100">
               <TextInput
                 value={searchPhrase}
                 placeholder="Search item"
                 placeholderTextColor="#9ca3af"
-                className="flex-1 text-base"
+                className="h-[44px] flex-1 text-base"
                 onChangeText={(value: string) => dispatch(setSearchPhrase(value))}
               />
               <TouchableOpacity onPress={() => handleSubmit("Search Products")}>
@@ -112,25 +125,25 @@ const ProductListScreen: React.FC<IProps> = ({ route }) => {
           </View>
 
           {/*==== Product List ====*/}
-          { (isLoading && allProducts.length === 0) ? (
-            <View className="mt-3 flex-1">
+          { (!productsFetched || (isLoading && allProducts.length === 0)) ? (
+            <View className="mt-3 px-5 flex-1">
               <ProductListSkeletonLoader />
             </View>
           ) : (
             <FlatList
+              ref={productListRef}
               data={allProducts}
               renderItem={({ item }) => <ProductListCard product={item} />}
               keyExtractor={(_, index) => `${index}-item.productId`}
               showsVerticalScrollIndicator={false}
               className="h-auto w-full mt-3"
-              ListEmptyComponent={<EmptyListComponent message={`No ${(screenTitle || "products").toLowerCase()} found.`} />}
-              contentContainerStyle={{ flexGrow: 1 }}
+              ListEmptyComponent={<EmptyListComponent standalone message={`No ${(screenTitle || "products").toLowerCase()} found.`} />}
+              contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 20 }}
             />
           ) }
 
-
           {/*==== Next and Previous Buttons ====*/}
-          <View className="h-auto w-full mt-3 flex-row">
+          <View className="h-auto w-full mt-3 px-5 flex-row">
             <TouchableOpacity
                 onPress={ () => handlePrevAndNextPagination({screenTitle: screenTitle || "Products", direction: "Prev"}) }
                 className="h-[50px] flex-1 flex-row items-center justify-center rounded-xl bg-lightGreen"

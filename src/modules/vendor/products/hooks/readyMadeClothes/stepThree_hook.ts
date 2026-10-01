@@ -11,13 +11,22 @@ const useStepThreeHook = () => {
 
     const { product } = useSelector((state: RootState) => state.vendorProductState );
     const { readyMadeClothesOptions } = useSelector((state: RootState) => state.generalState);
-    const [clotheSizes, setClotheSizes] = useState<string[]>([]);
+    const [selectedSizeStandard, setSelectedSizeStandard] = useState<string>("");
     const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
-    const dispatch = useDispatch();   
+    const [showSizesDropDown, setShowSizesDropDown] = useState(false);
+    const dispatch = useDispatch();
 
     const [updatedProduct] = useUpdateProductMutation();
     const [getProductByProductID] = useLazyGetProductByProductIDQuery();
-    
+
+    // The available size standards (AUS, CAN, EU, INTL, UK, US).
+    const sizeStandardOptions = readyMadeClothesOptions?.sizeStandardEnums ?? [];
+
+    // Sizes available for the chosen standard — empty until one is picked.
+    const clotheSizes = selectedSizeStandard
+        ? (readyMadeClothesOptions?.clothSizeEnumsByRegion?.[selectedSizeStandard] ?? [])
+        : [];
+
 
     // Handle submit
     const handleSubmit = async () => {
@@ -28,23 +37,21 @@ const useStepThreeHook = () => {
         try {
             const requestData = {
                 productId,
+                sizeStandard: selectedSizeStandard,
                 sizes: selectedSizes,
                 currentStep: 3,
             };
 
             // Validate request data
             const validatedRequestData = await stepThreeAddReadyMadeClothesSchema.validate(requestData);
-            // console.log("REQUEST DATA::: ", JSON.stringify(validatedRequestData));
 
             const updatedProductResponseData = await updatedProduct(validatedRequestData).unwrap();
-            // console.log("RESPONSE::: ", updateWithBodyMeasurementsResponseData);
 
             if (updatedProductResponseData) {
                 dispatch(setLoadingMessage("Getting product details..."));
 
                 // Get the updated product data
                 const updatedProduct = await getProductByProductID(productId).unwrap();
-                console.log("UPDATED PRODUCT::: ", updatedProduct);
 
                 if (updatedProduct) {
                     dispatch(setProduct(updatedProduct));
@@ -59,39 +66,33 @@ const useStepThreeHook = () => {
             handleError(error);
         };
     };
-    
-    // Handle get peoduct body measurements
-    const handleGetProductBodyMeasurements = async () => {
-        if (!readyMadeClothesOptions) return;
-        
-        const clotheSizes = readyMadeClothesOptions.clothSizeEnums!;
-        setClotheSizes(clotheSizes);
+
+    // Choosing a standard switches the size list — drop any previously-picked
+    // sizes that don't exist under the new standard.
+    const handleSelectSizeStandard = (standard: string) => {
+        setSelectedSizeStandard(standard);
+        const regionSizes = readyMadeClothesOptions?.clothSizeEnumsByRegion?.[standard] ?? [];
+        setSelectedSizes((prev) => prev.filter((size) => regionSizes.includes(size)));
     };
 
-    // Handle set selected sizes
+    // Pre-fill standard + sizes when editing a draft product.
     const handleSelectSizes = () => {
         if (!product) return;
-
-        const selectedSizes = product.sizes!;
-        setSelectedSizes(selectedSizes);
-        // console.log("SELECTED SIZES: ", selectedSizes);     
+        if ((product as any).sizeStandard) setSelectedSizeStandard((product as any).sizeStandard);
+        if (product.sizes) setSelectedSizes(product.sizes);
     };
 
 
-
-    useEffect(() => {
-        if (product) {
-            handleGetProductBodyMeasurements();
-        }
-    }, [readyMadeClothesOptions]);
     useEffect(() => {
         handleSelectSizes();
     }, [product]);
 
 
-
     return {
+        sizeStandardOptions,
+        selectedSizeStandard, handleSelectSizeStandard,
         clotheSizes, selectedSizes, setSelectedSizes,
+        showSizesDropDown, setShowSizesDropDown,
         handleSubmit,
     };
 };

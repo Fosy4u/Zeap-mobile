@@ -2,9 +2,10 @@ import React, { useEffect } from "react";
 import { StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
 import Animated, {
+    cancelAnimation,
     Easing,
+    makeMutable,
     useAnimatedStyle,
-    useSharedValue,
     withRepeat,
     withTiming,
 } from "react-native-reanimated";
@@ -13,11 +14,8 @@ interface ISkeletonBlockProps {
     width: number;
     height: number;
     radius?: number;
-    /** Base "filled" color of the placeholder block. */
     baseColor?: string;
-    /** Color of the shimmer pass that sweeps left-to-right across the block. */
     highlightColor?: string;
-    /** Sweep duration in ms (default 1500). */
     duration?: number;
     style?: StyleProp<ViewStyle>;
 }
@@ -32,6 +30,29 @@ interface ISkeletonBlockProps {
 // baseColor / highlightColor props.
 const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
 
+const sharedProgress = makeMutable(0);
+let activeBlocks = 0;
+
+const acquireShimmer = (duration: number) => {
+    activeBlocks += 1;
+    if (activeBlocks === 1) {
+        sharedProgress.value = withRepeat(
+            withTiming(1, { duration, easing: Easing.linear }),
+            -1,
+            false,
+        );
+    }
+};
+
+const releaseShimmer = () => {
+    activeBlocks -= 1;
+    if (activeBlocks <= 0) {
+        activeBlocks = 0;
+        cancelAnimation(sharedProgress);
+        sharedProgress.value = 0;
+    }
+};
+
 const SkeletonBlock: React.FC<ISkeletonBlockProps> = ({
     width,
     height,
@@ -41,18 +62,13 @@ const SkeletonBlock: React.FC<ISkeletonBlockProps> = ({
     duration = 1500,
     style,
 }) => {
-    const progress = useSharedValue(0);
-
     useEffect(() => {
-        progress.value = withRepeat(
-            withTiming(1, { duration, easing: Easing.linear }),
-            -1,
-            false,
-        );
+        acquireShimmer(duration);
+        return () => releaseShimmer();
     }, [duration]);
 
     const animatedStyle = useAnimatedStyle(() => ({
-        transform: [{ translateX: -width + progress.value * 2 * width }],
+        transform: [{ translateX: -width + sharedProgress.value * 2 * width }],
     }));
 
     return (

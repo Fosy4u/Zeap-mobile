@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
-import { Alert, PermissionsAndroid, Platform } from "react-native";
-import { ImageLibraryOptions, launchImageLibrary } from "react-native-image-picker";
+import { Alert } from "react-native";
+import DocumentPicker, { types as DocumentPickerTypes } from "react-native-document-picker";
 import { useSelector } from "react-redux";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -12,8 +12,10 @@ import {
     useUploadOnboardingDocumentMutation,
 } from "../../apis/general_api";
 
-const MAX_FILE_SIZE_BYTES = 1.5 * 1024 * 1024; // 1.5 MB
-const ALLOWED_MIME = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+const MAX_FILE_SIZE_BYTES = 1.5 * 1024 * 1024; /* 1.5 MB */
+/* Documents may be an image OR a PDF — vendors often hold scanned IDs and
+   registration papers as PDFs, so we accept both. */
+const ALLOWED_MIME = ["image/jpeg", "image/jpg", "image/png", "image/webp", "application/pdf"];
 
 export type DocStatus = "idle" | "selected" | "uploading" | "uploaded" | "failed";
 
@@ -78,75 +80,46 @@ const useVendorDocumentUploadHook = () => {
         [docs, slotState],
     );
 
-    const requestImagePermission = async (): Promise<boolean> => {
-        if (Platform.OS !== "android") { return true; }
-        try {
-            const permission = Platform.Version >= 33
-                ? PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES
-                : PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE;
-            const has = await PermissionsAndroid.check(permission);
-            if (has) { return true; }
-            const granted = await PermissionsAndroid.request(permission, {
-                title: "Gallery Permission",
-                message: "Zeaper needs access to your gallery to upload documents.",
-                buttonPositive: "OK",
-                buttonNegative: "Cancel",
-                buttonNeutral: "Ask Me Later",
-            });
-            return granted === PermissionsAndroid.RESULTS.GRANTED;
-        } catch {
-            return false;
-        }
-    };
-
     const handlePickFile = async (slug: string) => {
-        const hasPermission = await requestImagePermission();
-        if (!hasPermission) {
-            Alert.alert("Permission required", "Please allow gallery access to choose your document.");
-            return;
-        }
+        try {
+            const picked = await DocumentPicker.pickSingle({
+                type: [DocumentPickerTypes.images, DocumentPickerTypes.pdf],
+                copyTo: "cachesDirectory",
+                allowMultiSelection: false,
+            });
 
-        const options: ImageLibraryOptions = {
-            mediaType: "photo",
-            quality: 1,
-            includeBase64: false,
-            selectionLimit: 1,
-        };
+            const size = picked.size ?? 0;
+            const type = picked.type ?? "";
+            /* Prefer the local copy SAF made for us; fall back to the raw uri. */
+            const uri = picked.fileCopyUri || picked.uri;
 
-        launchImageLibrary(options, (response) => {
-            if (response.didCancel) { return; }
-            if (response.errorCode) {
-                Alert.alert("Couldn't pick file", response.errorMessage ?? "Please try again.");
-                return;
-            }
-
-            const asset = response.assets?.[0];
-            if (!asset?.uri) { return; }
-
-            const size = asset.fileSize ?? 0;
-            const type = asset.type ?? "";
+            if (!uri) { return; }
 
             if (size > MAX_FILE_SIZE_BYTES) {
                 Alert.alert("File too large", "Each document must be 1.5 MB or smaller.");
                 return;
             }
             if (!ALLOWED_MIME.includes(type)) {
-                Alert.alert("Unsupported file", "Use a PNG, JPEG, or WEBP image.");
+                Alert.alert("Unsupported file", "Use a PNG, JPEG, or WEBP image, or a PDF.");
                 return;
             }
 
-            const name = asset.fileName || asset.uri.split("/").pop() || `${ slug }.jpg`;
+            const name = picked.name || uri.split("/").pop() || `${ slug }${ type === "application/pdf" ? ".pdf" : ".jpg" }`;
 
             setSlotState((prev) => ({
                 ...prev,
                 [slug]: {
                     ...prev[slug],
-                    file: { uri: asset.uri!, name, type, size },
+                    file: { uri, name, type, size },
                     status: "selected",
                     errorMessage: undefined,
                 },
             }));
-        });
+        } catch (err: any) {
+            /* User dismissing the picker is not an error worth surfacing. */
+            if (DocumentPicker.isCancel(err)) { return; }
+            Alert.alert("Couldn't pick file", err?.message ?? "Please try again.");
+        }
     };
 
     const uploadOne = async (slug: string): Promise<boolean> => {

@@ -30,7 +30,8 @@ const SearchResultsScreen = () => {
   return (
     <GestureHandlerRootView>
       <BottomSheetModalProvider>
-        <SafeAreaView className="h-full w-full flex-1 px-[20px] pt-[20px]">
+        <SafeAreaView className="h-full w-full flex-1 pt-5">
+          <View className="flex-1 px-5">
           <StatusBar
             backgroundColor="transparent"
             barStyle="dark-content"
@@ -78,7 +79,7 @@ const SearchResultsScreen = () => {
               />
             </>
           ) }
-
+          </View>
         </SafeAreaView>
       </BottomSheetModalProvider>
     </GestureHandlerRootView>

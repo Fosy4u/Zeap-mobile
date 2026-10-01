@@ -8,6 +8,7 @@ import handleError from "./errorHandler_hook";
 import { useCreateReviewMutation, useLazyGetProductReviewsQuery } from "../apis/review_api";
 import { useEffect, useState } from "react";
 import IReviewIndicator from "../models/reviewIndicator_model";
+import ICreateReviewPayload from "../models/createReviewPayload_model";
 import { setReviewAndRating } from "../../vendor/products/slices/vendorProductState_slice";
 
 const useReviewHook = (productId?: string) => {
@@ -41,11 +42,17 @@ const useReviewHook = (productId?: string) => {
     });
 
     const onSubmit: SubmitHandler<IReviewProduct> =  async(data) => {
+        // The endpoint keys the review by product, so there is nothing to post without one.
+        if (!productId) {
+            handleError(new Error("This review is not linked to a product. Please reopen the product and try again."));
+            return;
+        }
+
         setLoadingMessage("Submitting review...");
         dispatch(setIsLoading(true));
 
-        const requestData = {
-            productId: productId,
+        const requestData: ICreateReviewPayload = {
+            productId,
             displayName: `${userData.firstName} ${userData.lastName}`,
             title: data.title,
             rating: data.rating,
@@ -86,7 +93,7 @@ const useReviewHook = (productId?: string) => {
                 dispatch(setLoadingMessage(""));
             }
         } catch (error) {
-            dispatch(setIsLoading(true));
+            dispatch(setIsLoading(false));
             dispatch(setLoadingMessage(""));
             handleError(error);
         }

@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../../../../redux/store/store";
 import { useCreateProductMutation, useUpdateProductMutation } from "../../apis/readyMadeProduct_api";
 import { setLoadingMessage, setProduct, setProductIsLoading, setSelectedStep } from "../../slices/vendorProductState_slice";
-import { IStepOneAddProduct, stepOneAddProductSchema } from "../../validations/addProduct_validation";
+import { IStepOneAddReadyMadeShoes, stepOneAddReadyMadeShoesSchema } from "../../validations/addProduct_validation";
 import IVendorProductDetails from "../../models/vendorProductDetails_model";
 import handleError from "../../../../general/hooks/errorHandler_hook";
 
@@ -17,7 +17,7 @@ const useStepOneHook = () => {
     const [createProduct] = useCreateProductMutation();
     const [updateProduct] = useUpdateProductMutation();
     
-    const { control, handleSubmit, formState: { errors } } = useForm<IStepOneAddProduct>({
+    const { control, handleSubmit, formState: { errors } } = useForm<IStepOneAddReadyMadeShoes>({
         
         defaultValues: {
             title: product?.title || "",
@@ -26,17 +26,17 @@ const useStepOneHook = () => {
             productType: "readyMadeShoe",
             shopId: product?.shopId || userData?.shopId || "",
         },
-        resolver: yupResolver(stepOneAddProductSchema),
+        resolver: yupResolver(stepOneAddReadyMadeShoesSchema),
         mode: "onChange" // Validate the form either "onChange" or "onBlur" or "onSubmit" or "all"
     });
 
-    const onSubmit: SubmitHandler<IStepOneAddProduct> = async (data) => {
+    const onSubmit: SubmitHandler<IStepOneAddReadyMadeShoes> = async (data) => {
         dispatch(setProductIsLoading(true));
 
         try {
             const requestData = {
                 title: data.title,
-                subTitle: data.subTitle,
+                subTitle: data.subTitle || "",
                 description: data.description,
                 productType: data.productType,
                 productId: product?.productId! || "",

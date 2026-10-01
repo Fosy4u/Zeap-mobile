@@ -3,18 +3,13 @@ import { Text, View } from "react-native";
 import FastImage from "react-native-fast-image";
 
 interface IUserAvatarProps {
-    /** Firebase / Google photo URL. If empty, missing, or fails to load, we fall back to initials. */
     photoURL?: string | null;
-    /** Used to build the initials fallback. */
     firstName?: string | null;
     lastName?: string | null;
     displayName?: string | null;
     email?: string | null;
-    /** When true, never render the photoURL (e.g. anonymous / guest sessions). */
     isGuest?: boolean;
-    /** Outer diameter in px. */
     size?: number;
-    /** Stable key (uid / email) used to pick a deterministic background color. */
     seed?: string;
 }
 

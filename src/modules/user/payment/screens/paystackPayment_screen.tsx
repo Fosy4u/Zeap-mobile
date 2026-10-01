@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Alert, SafeAreaView, Text, TouchableOpacity, View } from 'react-native'
+import { SafeAreaView, Text, TouchableOpacity, View } from 'react-native'
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import AppLoader from '../../../general/components/appLoader';
@@ -9,7 +9,6 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../../../../redux/store/store';
 import OrderSuccessPopupModal from '../modals/orderSuccessPopup_modal';
 import RootNavigationStackModel from '../../../../routes/model/routes_model';
-
 
 const PaystackPaymentScreen = () => {
     const { paymentReference, showOrderSuccessModal } = useSelector((state: RootState) => state.paymentState);
@@ -26,6 +25,8 @@ const PaystackPaymentScreen = () => {
     // back to false, causing Paystack to start a second transaction with the
     // same reference and throw "Duplicate transaction reference".
     const [paymentCompleted, setPaymentCompleted] = useState(false);
+
+    const [gatewayError, setGatewayError] = useState<string | null>(null);
 
     // If the backend reports the reference is already paid, jump straight to
     // the verify flow instead of leaving the user on a dead-end page.
@@ -71,8 +72,10 @@ const PaystackPaymentScreen = () => {
         );
     }
 
-    if (!hasKey || !isAmountValid) {
-        const reason = !hasKey
+    if (!hasKey || !isAmountValid || gatewayError) {
+        const reason = gatewayError
+            ? gatewayError
+            : !hasKey
             ? "Paystack publishable key is missing from the build. Add REACT_APP_PAYSTACK_PUBLIC_KEY to .env and rebuild (Metro: --reset-cache)."
             : `Paystack amount is invalid (${amountInMajorUnit}). Check the backend payment-reference response.`;
         console.log("PAYSTACK CONFIG ERROR::: ", {
@@ -82,7 +85,8 @@ const PaystackPaymentScreen = () => {
             paymentReference,
         });
         return (
-            <SafeAreaView className="flex-1 px-5 justify-center bg-lightGray">
+            <SafeAreaView className="flex-1 justify-center bg-lightGray">
+                <View className="px-5">
                 <Text className="text-center text-base text-red-600 mb-3">Payment cannot start</Text>
                 <Text className="text-center text-sm text-gray-700 mb-6">{ reason }</Text>
                 <TouchableOpacity
@@ -91,6 +95,7 @@ const PaystackPaymentScreen = () => {
                 >
                     <Text className="text-white">Back to Checkout</Text>
                 </TouchableOpacity>
+                </View>
             </SafeAreaView>
         );
     }
@@ -112,12 +117,14 @@ const PaystackPaymentScreen = () => {
                 // so the next hang surfaces a reason instead of being silent.
                 handleWebViewMessage={ (event: any) => {
                     console.log("PAYSTACK WEBVIEW MESSAGE::: ", event);
-                    if (event?.status === "error") {
-                        Alert.alert(
-                            "Payment error",
-                            typeof event?.data === "string" ? event.data : "The payment gateway returned an error. Please try again.",
-                        );
-                    }
+                    if (event?.status !== "error") { return; }
+
+                    const detail = typeof event?.data === "string" ? event.data : "";
+                    setGatewayError(
+                        detail.toLowerCase().includes("duplicate")
+                            ? "This payment was already started once and cannot be reopened. Go back to checkout and start the payment again to get a new reference."
+                            : detail || "The payment gateway returned an error. Please try again.",
+                    );
                 } }
 
                 onCancel={ () => {

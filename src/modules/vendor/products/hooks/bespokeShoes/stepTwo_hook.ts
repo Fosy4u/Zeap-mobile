@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../../../../redux/store/store";
-import { stepTwoAddShoesSchema } from "../../validations/addProduct_validation";
+import { stepTwoAddBespokeShoesSchema } from "../../validations/addProduct_validation";
 import { useUpdateProductMutation } from "../../apis/bespokeProduct_api";
 import { setLoadingMessage, setProduct, setProductIsLoading, setSelectedStep } from "../../slices/vendorProductState_slice";
 import { useLazyGetProductByProductIDQuery } from "../../apis/product_api";
@@ -80,18 +80,18 @@ const useStepTwoHook = () => {
             };
 
             // Validate categoriesData
-            const requestData = await stepTwoAddShoesSchema.validate(validatedCategoriesData);
-            console.log("REQUEST DATA::: ", requestData);
+            const requestData = await stepTwoAddBespokeShoesSchema.validate(validatedCategoriesData);
+            // console.log("REQUEST DATA::: ", requestData);
 
             const updateResponseData = await updatedProduct(requestData).unwrap();
-            console.log("RESPONSE::: ", updateResponseData);
+            // console.log("RESPONSE::: ", updateResponseData);
 
             if (updateResponseData) {
                 dispatch(setLoadingMessage("Getting product details..."));
 
                 // Get the updated product data
                 const updatedProduct = await getProductByProductID(productId).unwrap();
-                console.log("UPDATED PRODUCT::: ", updatedProduct);
+                // console.log("UPDATED PRODUCT::: ", updatedProduct);
 
                 if (updatedProduct) {
                     dispatch(setProduct(updatedProduct));

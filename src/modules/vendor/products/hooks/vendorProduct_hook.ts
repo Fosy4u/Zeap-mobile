@@ -18,17 +18,8 @@ import IPromotion from "../models/promotion_model";
 import handleError from "../../../general/hooks/errorHandler_hook";
 import useReviewHook from "../../../general/hooks/review_hook";
 
-
-
-/**
- * Vendor product hook
- *
- * This hook provides functions and data for use in the vendor product screen.
- *
- * @returns An object containing functions and data for use in the vendor product screen.
- */
 const useVendorProductHook = () => {
-    const { product, productIsLoading } = useSelector((state: RootState) => state.vendorProductState);
+    const { product, productIsLoading, products } = useSelector((state: RootState) => state.vendorProductState);
     const { productTypes, bespokeClothesOptions, bespokeShoesOptions, readyMadeClothesOptions, readyMadeShoesOptions, accessoriesOptions } = useSelector((state: RootState) => state.generalState);
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const dispatch = useDispatch();
@@ -101,21 +92,18 @@ const useVendorProductHook = () => {
     const [selectedPromo, setSelectedPromo] = useState<IPromotion>({});
     const [showDeleteProductWarningModal, setShowDeleteProductWarningModal] = useState(false);
 
-
-    const [getProducts] = useLazyGetProductsQuery();
+    const [getProducts, { isFetching: isLoadingProducts }] = useLazyGetProductsQuery();
     const [getProductByProductID] = useLazyGetProductByProductIDQuery();
     const [deleteProduct] = useDeleteProductMutation();
     // const [createReview, { isLoading: isLoadingAddReview }] = useCreateReviewMutation();
     const [likeReview] = useLikeReviewMutation();
     const [dislikeReview] = useDislikeReviewMutation();
-    const [getAvailablePromos, { data: promotions }] = useLazyGetAvailablePromosQuery();
+    const [getAvailablePromos, { data: promotions, isFetching: isFetchingPromotions, isUninitialized: isPromotionsUninitialized }] = useLazyGetAvailablePromosQuery();
     const [getProductPromotion] = useLazyGetProductPromotionQuery();
     const [applyPromotion] = useApplyPromotionMutation();
     const [turnOffPromotion] = useTurnOffPromotionMutation();
 
-
     const { handleGetProductReviews } = useReviewHook();
-
 
     const handleGetDefaultFeaturedImageAndThumbnails = () => {
         const defaultImageAndThumbnails = product?.colors?.find((eachColor: IColor) => eachColor.images?.some((eachImage: IImage) => eachImage.isDefault === true));
@@ -195,7 +183,6 @@ const useVendorProductHook = () => {
         setAccessoryTypeOptions(accessoriesOptions.accessoryTypeEnums!);
     };
 
-
     // Handle submit filter products
     const handleFetchFilteredProducts = async () => {
         dispatch(setIsLoading(true));
@@ -218,6 +205,15 @@ const useVendorProductHook = () => {
     };
 
     // Handle get product by product ID
+    const handleGetShopPricedProduct = async (productID: string) => {
+        try {
+            const products = await getProducts({ productId: productID, pageNumber: 1, limit: 1 }).unwrap();
+            return products?.[0];
+        } catch {
+            return undefined;
+        }
+    };
+
     const handleGetProductByProductID = async (productID: string) => {
         dispatch(setIsLoading(true));
         dispatch(setLoadingMessage("Fetching product..."));
@@ -418,8 +414,6 @@ const useVendorProductHook = () => {
         return `${dateString}${showTime ? divider + timeString : ""}`;
     };
 
-
-
     useEffect(() => {
         handleFormatProductTypes();
         handleFormatSearchOptions();
@@ -432,12 +426,25 @@ const useVendorProductHook = () => {
         }
     }, [product]);
 
+    // Pagination visibility — the products endpoint returns only the page
+    // array (no total count), so paging is inferred from page-fullness:
+    //   • current page is full (length === limit) → a next page likely exists
+    //   • we are past page 1                       → a previous page exists
+    // When neither holds (empty list, or everything fits on one page) the
+    // Previous/Next controls are hidden. Kept here (controller) rather than in
+    // the screen so the view stays presentation-only.
+    const pageSize = requestParams.limit ?? 20;
+    const hasNextPage = (products?.length ?? 0) === pageSize;
+    const hasPrevPage = selectedPageNumber > 1;
+    const showPagination = hasNextPage || hasPrevPage;
 
     return {
         requestParams, setRequestParams,
-        productIsLoading, handleFetchFilteredProducts,
+        productIsLoading, isLoadingProducts, handleFetchFilteredProducts,
         selectedPageNumber, setSelectedPageNumber,
+        hasNextPage, hasPrevPage, showPagination,
         handleGetProductByProductID,
+        handleGetShopPricedProduct,
         showDeleteProductWarningModal, setShowDeleteProductWarningModal,
         handleDeleteProduct,
          handleReviewLike, handleReviewDislike, handleGetProductReviews,
@@ -445,7 +452,9 @@ const useVendorProductHook = () => {
         featuredImage, setFeaturedImage,
         featuredColors,
         promotions, handleGetAvailablePromos, selectedPromo, setSelectedPromo, handleApplyPromo, handleTornOffPromo,
-
+        /* Uninitialized counts as loading: it covers the render between mount
+           and the screen's useEffect firing the request. */
+        isLoadingPromotions: isPromotionsUninitialized || isFetchingPromotions,
 
         productTypeOptions, selectedProductType,
         mainCategoryOptions, selectedMainCategory,

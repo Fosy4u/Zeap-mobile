@@ -34,7 +34,7 @@ const RegisterScreen = () => {
   return (
     <GestureHandlerRootView>
       <BottomSheetModalProvider>
-        <SafeAreaView className="flex-1 items-center">
+        <SafeAreaView className="flex-1">
           <StatusBar
               backgroundColor="transparent"
               barStyle="dark-content"
@@ -43,7 +43,8 @@ const RegisterScreen = () => {
           <ScrollView
               showsVerticalScrollIndicator={false}
               showsHorizontalScrollIndicator={false}
-              className="px-5"
+              className="flex-1 w-full"
+              contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 24 }}
           >
 
             <View className="h-[48px] w-auto mx-auto mt-12 relative">
@@ -74,7 +75,7 @@ const RegisterScreen = () => {
                             keyboardType="email-address"
                             placeholder="Enter email address"
                             placeholderTextColor="#9ca3af"
-                            className="text-base"
+                            className="h-[44px] text-base"
                             onBlur={ onBlur }
                             onChangeText={ onChange }
                             value={ value }
@@ -129,7 +130,7 @@ const RegisterScreen = () => {
                             secureTextEntry={ !showPassword }
                             placeholder="Enter password"
                             placeholderTextColor="#9ca3af"
-                            className="text-base"
+                            className="h-[44px] flex-1 text-base"
                             onBlur={ onBlur }
                             onChangeText={ onChange }
                             value={ value }
@@ -155,7 +156,7 @@ const RegisterScreen = () => {
                             secureTextEntry={ !showConfirmPassword }
                             placeholder="Repeat password"
                             placeholderTextColor="#9ca3af"
-                            className="text-base"
+                            className="h-[44px] flex-1 text-base"
                             onBlur={ onBlur }
                             onChangeText={ onChange }
                             value={ value }

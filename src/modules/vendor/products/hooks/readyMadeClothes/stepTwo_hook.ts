@@ -1,10 +1,11 @@
-import { stepTwoAddClothesSchema } from "../../validations/addProduct_validation";
+import { stepTwoAddReadyMadeClothesSchema } from "../../validations/addProduct_validation";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../../../../redux/store/store";
 import { setLoadingMessage, setProduct, setProductIsLoading, setSelectedStep } from "../../slices/vendorProductState_slice";
 import { useUpdateProductMutation, useLazyGetProductByProductIDQuery } from "../../apis/readyMadeProduct_api";
 import handleError from "../../../../general/hooks/errorHandler_hook";
+import useGeneralHook from "../../../../general/hooks/general_hook";
 
 
 const useStepTwoHook = () => {
@@ -12,6 +13,9 @@ const useStepTwoHook = () => {
     const { product } = useSelector((state: RootState) => state.vendorProductState );
     const { readyMadeClothesOptions } = useSelector((state: RootState) => state.generalState);
     const dispatch = useDispatch();
+
+    // Used to refresh the product options (incl. size standards) before step 3.
+    const { handleGetProductOptions } = useGeneralHook();
     
     const [mainOptions , setMainOptions] = useState<string[]>([]);
     const [styleOptions, setStyleOptions] = useState<string[]>([]);
@@ -83,7 +87,7 @@ const useStepTwoHook = () => {
             };
 
             // Validate categoriesData
-            const validatedCategoriesData = await stepTwoAddClothesSchema.validate(requestData);
+            const validatedCategoriesData = await stepTwoAddReadyMadeClothesSchema.validate(requestData);
             console.log("REQUEST DATA::: ", validatedCategoriesData);
 
             const updateResponseData = await updatedProduct(validatedCategoriesData).unwrap();
@@ -98,6 +102,12 @@ const useStepTwoHook = () => {
 
                 if (updatedProduct) {
                     dispatch(setProduct(updatedProduct));
+
+                    // Refresh product options before step 3 so its size
+                    // standards + per-standard sizes are current.
+                    dispatch(setLoadingMessage("Fetching options..."));
+                    await handleGetProductOptions();
+
                     dispatch(setProductIsLoading(false));
                     dispatch(setLoadingMessage(""));
                     dispatch(setSelectedStep(3));

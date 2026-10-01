@@ -7,7 +7,7 @@ import {NativeStackNavigationProp} from "@react-navigation/native-stack";
 import RootNavigationStackModel from "../../../../routes/model/routes_model.ts";
 import { RootState } from '../../../../redux/store/store.ts';
 import { useDispatch, useSelector } from 'react-redux';
-import { setClotheType, setProductMode, setShoeType, setShowProductTypeBottomSheet } from '../slices/vendorProductState_slice.ts';
+import { setClotheType, setProduct, setProductMode, setSelectedStep, setShoeType, setShowProductTypeBottomSheet } from '../slices/vendorProductState_slice.ts';
 
 
 const ProductTypeBottomSheetComponent = () => {
@@ -107,7 +107,7 @@ const ProductTypeBottomSheetComponent = () => {
                                         className="h-[25px] w-auto rounded-2xl"
                                     />
                                 </View>
-                                <Text className="mt-2 font-montserratMedium text-sm text-gray-700">Readymade</Text>
+                                <Text className="mt-2 font-montserratMedium text-sm text-gray-700">Ready to wear</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -116,6 +116,13 @@ const ProductTypeBottomSheetComponent = () => {
                         onPress={ () => {
                             dispatch(setShowProductTypeBottomSheet(false));
                             dispatch(setProductMode("New"));
+                            // Start from a clean slate. Without this, a `product`
+                            // left in state from a previously viewed/edited draft
+                            // leaks its productId into the step-1 create payload,
+                            // so the backend updates that old product (keeping its
+                            // type) instead of creating the freshly chosen one.
+                            dispatch(setProduct({}));
+                            dispatch(setSelectedStep(1));
                             (productType === "Clothes") ? (
                                 clotheType === "Bespoke" ? navigation.navigate("addBespokeClothesScreen") : navigation.navigate("addReadyMadeClothesScreen")
                             ) : (

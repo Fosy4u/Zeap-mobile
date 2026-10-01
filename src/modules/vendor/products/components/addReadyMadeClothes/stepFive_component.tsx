@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import {ScrollView, Text, TextInput, TouchableOpacity, View} from "react-native";
+import {ActivityIndicator, ScrollView, Text, TextInput, TouchableOpacity, View} from "react-native";
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../../../redux/store/store';
 import { Add, ArrowDown2, ArrowUp2 } from 'iconsax-react-native';
@@ -20,9 +20,9 @@ interface IProps {
         setSelectedVariation: (value: IVariation) => void;
         buttonActionType: string;
         setButtonActionType: (value: string) => void;
-        handleAddProductVariation: () => void;
-        handleUpdateProductVariation: () => void;
-        handleDeleteProductVariation: (variation: IVariation) => void;
+        handleAddProductVariation: () => Promise<void>;
+        handleUpdateProductVariation: () => Promise<void>;
+        handleDeleteProductVariation: (variation: IVariation) => Promise<void>;
     };
 };
 interface IColorOption {
@@ -31,7 +31,7 @@ interface IColorOption {
 };
 
 const StepFiveComponent: React.FC<IProps> = (props) => {
-    const { product } = useSelector((state: RootState) => state.vendorProductState);
+    const { product, productIsLoading } = useSelector((state: RootState) => state.vendorProductState);
     const {
         uploadedColorOptions, selectedColor, setSelectedColor,
         uploadedSizes, selectedSize, setSelectedSize,
@@ -46,7 +46,26 @@ const StepFiveComponent: React.FC<IProps> = (props) => {
     const [showAddVariations, setShowAddVariations] = useState(false);
     const [showColorsDropDown, setShowColorsDropDown] = useState(false);
     const [showSizesDropDown, setShowSizesDropDown] = useState(false);
+    // _id of the variation currently being deleted — drives a spinner on ONLY
+    // that row's Delete button. `productIsLoading` (set by the delete) disables
+    // every other action while it's in flight.
+    const [deletingVariationId, setDeletingVariationId] = useState<string | null>(null);
     const isVariationFormValid = selectedColor.colorName !== "" && selectedSize !== "" && price !== "" && quantity !== "";
+
+    // Prevent re-adding an existing colour+size combination.
+    const variations = product?.variations ?? [];
+    // Sizes already used for the colour currently chosen in the form.
+    const takenSizesForSelectedColor = variations
+        .filter((variation: IVariation) => variation.colorValue === selectedColor.colorName)
+        .map((variation: IVariation) => variation.size);
+    // A colour is "full" once every available size already has a variation.
+    const isColorFull = (colorName: string) => {
+        if (!uploadedSizes.length) return false;
+        const takenSizes = variations
+            .filter((variation: IVariation) => variation.colorValue === colorName)
+            .map((variation: IVariation) => variation.size);
+        return uploadedSizes.every((size: string) => takenSizes.includes(size));
+    };
 
     return (
         <View>
@@ -67,14 +86,14 @@ const StepFiveComponent: React.FC<IProps> = (props) => {
                     <View className="h-auto w-full mt-2 px-3 pt-2 rounded-lg border border-gray-200">
                         { product.variations?.map((variation: IVariation) => (
                             <View key={variation._id} className="h-auto w-full mt-4 pb-4 border-b border-b-gray-200">
-                                <View className="h-auto w-full flex-row items-center justify-start gap-x-4">
-                                    <View>
+                                <View className="h-auto w-full flex-row items-start justify-between gap-x-4">
+                                    <View className="flex-1">
                                         <Text className="font-montserratMedium text-xs">SKU</Text>
-                                        <Text className="font-montserratSemiBold text-sm">{ variation.sku! }</Text>
+                                        <Text numberOfLines={2} className="font-montserratSemiBold text-sm">{ variation.sku! }</Text>
                                     </View>
-                                    <View>
+                                    <View className="shrink-0 max-w-[90px] items-end">
                                         <Text className="font-montserratMedium text-xs">Size</Text>
-                                        <Text className="font-montserratSemiBold text-sm text-black">{ variation.size! }</Text>
+                                        <Text numberOfLines={1} className="font-montserratSemiBold text-sm text-black">{ variation.size! }</Text>
                                     </View>
                                 </View>
                         
@@ -95,12 +114,24 @@ const StepFiveComponent: React.FC<IProps> = (props) => {
 
                                 <View className="h-auto w-full mt-4 flex-row items-center justify-end gap-x-2">
                                     <TouchableOpacity
-                                        onPress={ () => handleDeleteProductVariation(variation) }
-                                        className="h-auto w-auto px-3 py-2 flex-row items-center justify-center rounded-lg bg-red-50"
+                                        onPress={ async () => {
+                                            setDeletingVariationId(variation._id ?? null);
+                                            try {
+                                                await handleDeleteProductVariation(variation);
+                                            } finally {
+                                                setDeletingVariationId(null);
+                                            }
+                                        } }
+                                        disabled={ productIsLoading }
+                                        className={`h-auto w-auto px-3 py-2 flex-row items-center justify-center rounded-lg bg-red-50 ${ productIsLoading ? "opacity-60" : "" }`}
                                     >
-                                        <Text className="font-montserratMedium text-xs text-red-700">Delete</Text>
+                                        { deletingVariationId === variation._id
+                                            ? <ActivityIndicator size="small" color="#b91c1c" />
+                                            : <Text className="font-montserratMedium text-xs text-red-700">Delete</Text>
+                                        }
                                     </TouchableOpacity>
                                     <TouchableOpacity
+                                        disabled={ productIsLoading }
                                         onPress={ () => {
                                             setButtonActionType("Edit");
                                             setSelectedVariation(variation);
@@ -114,7 +145,7 @@ const StepFiveComponent: React.FC<IProps> = (props) => {
                                             setQuantity(variation?.quantity!.toString());
                                             setShowAddVariations(true);
                                         } }
-                                        className="h-auto w-auto px-3 py-2 flex-row items-center justify-center rounded-lg bg-blue-50"
+                                        className={`h-auto w-auto px-3 py-2 flex-row items-center justify-center rounded-lg bg-blue-50 ${ productIsLoading ? "opacity-60" : "" }`}
                                     >
                                         <Text className="font-montserratMedium text-xs text-blue-700">Edit</Text>
                                     </TouchableOpacity>
@@ -157,19 +188,25 @@ const StepFiveComponent: React.FC<IProps> = (props) => {
                                             showsVerticalScrollIndicator={true}
                                             contentContainerStyle={{ flexGrow: 1, padding: 10 }}
                                         >
-                                            { uploadedColorOptions.map((color: IColorOption, index: number) => (
-                                                <View key={ index } className="flex-row items-center gap-x-2">
-                                                    <TouchableOpacity onPress={ () => {
-                                                        setSelectedColor(color);
-                                                        setShowColorsDropDown(false);
-                                                    } }
-                                                        className="h-auto w-full px-2 py-3 flex-row items-center justify-start space-x-2"
-                                                    >
-                                                        <View className="h-5 w-5 py-2.5 rounded-lg" style={{ backgroundColor: color.colorCode }} />
-                                                        <Text className="font-montserratMedium text-sm">{ color.colorName }</Text>
-                                                    </TouchableOpacity>
-                                                </View>
-                                            )) }
+                                            { uploadedColorOptions.map((color: IColorOption, index: number) => {
+                                                const colorDisabled = isColorFull(color.colorName);
+                                                return (
+                                                    <View key={ index } className="flex-row items-center gap-x-2">
+                                                        <TouchableOpacity
+                                                            disabled={ colorDisabled }
+                                                            onPress={ () => {
+                                                                setSelectedColor(color);
+                                                                setShowColorsDropDown(false);
+                                                            } }
+                                                            className={`h-auto w-full px-2 py-3 flex-row items-center justify-start space-x-2 ${ colorDisabled ? "opacity-40" : "" }`}
+                                                        >
+                                                            <View className="h-5 w-5 py-2.5 rounded-lg border border-gray-300" style={{ backgroundColor: color.colorCode }} />
+                                                            <Text className="font-montserratMedium text-sm">{ color.colorName }</Text>
+                                                            { colorDisabled && <Text className="font-montserratMedium text-[10px] text-gray-400">(all sizes added)</Text> }
+                                                        </TouchableOpacity>
+                                                    </View>
+                                                );
+                                            }) }
                                         </ScrollView>
                                     </View>
                                 </>
@@ -180,7 +217,7 @@ const StepFiveComponent: React.FC<IProps> = (props) => {
                                 >
                                     { selectedColor.colorName ? (
                                         <View className="h-auto w-full flex-1 flex-row items-center justify-start flex-wrap space-x-2 space-y-1">
-                                            <View className="h-5 w-5 py-2.5 rounded-lg" style={{ backgroundColor: selectedColor.colorCode }} />
+                                            <View className="h-5 w-5 py-2.5 rounded-lg border border-gray-300" style={{ backgroundColor: selectedColor.colorCode }} />
                                             <Text className="h-auto flex-1 text-base text-[#9ca3af]">{ selectedColor.colorName }</Text>
                                         </View>
                                     ) : (
@@ -215,18 +252,24 @@ const StepFiveComponent: React.FC<IProps> = (props) => {
                                             showsVerticalScrollIndicator={true}
                                             contentContainerStyle={{ flexGrow: 1, padding: 10 }}
                                         >
-                                            { uploadedSizes.map((item: string, index: number) => (
-                                                <View key={ index } className="flex-row items-center gap-x-2">
-                                                    <TouchableOpacity onPress={ () => {
-                                                        setSelectedSize(item);
-                                                        setShowSizesDropDown(false);
-                                                    } }
-                                                        className="h-auto w-full px-2 py-2"
-                                                    >
-                                                        <Text className="font-montserratMedium text-sm">{ item }</Text>
-                                                    </TouchableOpacity>
-                                                </View>
-                                            )) }
+                                            { uploadedSizes.map((item: string, index: number) => {
+                                                const sizeDisabled = takenSizesForSelectedColor.includes(item);
+                                                return (
+                                                    <View key={ index } className="flex-row items-center gap-x-2">
+                                                        <TouchableOpacity
+                                                            disabled={ sizeDisabled }
+                                                            onPress={ () => {
+                                                                setSelectedSize(item);
+                                                                setShowSizesDropDown(false);
+                                                            } }
+                                                            className={`h-auto w-full px-2 py-2 flex-row items-center justify-between ${ sizeDisabled ? "opacity-40" : "" }`}
+                                                        >
+                                                            <Text className="font-montserratMedium text-sm">{ item }</Text>
+                                                            { sizeDisabled && <Text className="font-montserratMedium text-[10px] text-gray-400">Added</Text> }
+                                                        </TouchableOpacity>
+                                                    </View>
+                                                );
+                                            }) }
                                         </ScrollView>
                                     </View>
                                 </>
@@ -257,7 +300,7 @@ const StepFiveComponent: React.FC<IProps> = (props) => {
                                 textContentType="givenName"
                                 placeholder="Enter amount"
                                 placeholderTextColor="#9ca3af"
-                                className="font-montserratMedium text-base"
+                                className="h-[44px] font-montserratMedium text-base"
                                 onChangeText={(value) => setPrice(value)}
                             />
                         </View>
@@ -275,22 +318,28 @@ const StepFiveComponent: React.FC<IProps> = (props) => {
                                 textContentType="givenName"
                                 placeholder="Enter amount"
                                 placeholderTextColor="#9ca3af"
-                                className="font-montserratMedium text-base"
+                                className="h-[44px] font-montserratMedium text-base"
                                 onChangeText={(value) => setQuantity(value)}
                             />
                         </View>
                     </View>
 
-                    {/* ==== Update Variations Button ==== */}
                     <TouchableOpacity
-                        onPress={ () => {
-                            (buttonActionType === "Add") ? handleAddProductVariation() : handleUpdateProductVariation();
+                        onPress={ async () => {
+                            if (buttonActionType === "Add") {
+                                await handleAddProductVariation();
+                            } else {
+                                await handleUpdateProductVariation();
+                            }
                             setShowAddVariations(false);
                         } }
-                        disabled={ !isVariationFormValid }
+                        disabled={ !isVariationFormValid || productIsLoading }
                         className={`h-[55px] w-full mt-8 flex-row items-center justify-center rounded-xl ${ isVariationFormValid ? "bg-baseGreen" : "bg-gray-200" }`}
                     >
-                        <Text className="font-montserratMedium text-base text-white">{ (buttonActionType === "Add") ? "Add Variation" : "Update Variation"}</Text>
+                        { productIsLoading
+                            ? <ActivityIndicator color="#FFFFFF" />
+                            : <Text className="font-montserratMedium text-base text-white">{ (buttonActionType === "Add") ? "Add Variation" : "Update Variation"}</Text>
+                        }
                     </TouchableOpacity>
                 </View>
             ) }
@@ -307,7 +356,8 @@ const StepFiveComponent: React.FC<IProps> = (props) => {
                         setQuantity("");
                         setShowAddVariations(!showAddVariations);
                     } }
-                    className="h-[55px] w-full mt-2 flex-row items-center justify-center rounded-xl bg-blue-50"
+                    disabled={ productIsLoading }
+                    className={`h-[55px] w-full mt-2 flex-row items-center justify-center rounded-xl bg-blue-50 ${ productIsLoading ? "opacity-60" : "" }`}
                 >
                     <Text className="font-montserratMedium text-base text-blue-700">Add Variation</Text>
                 </TouchableOpacity>

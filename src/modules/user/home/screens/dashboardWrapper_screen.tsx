@@ -17,63 +17,51 @@ import AccessoriesDashboardScreen from "./accessoriesDashboard_screen.tsx";
 import useGeneralHook from "../../../general/hooks/general_hook.ts";
 import useFilterAndSearchHook from "../../products/hooks/filterAndSearch_hook.ts";
 import UserAvatar from "../../../general/components/userAvatar_component";
-import HomeSkeletonLoader from "../components/homeSkeletonLoader_component";
 import { useGetWishlistQuery } from "../../saved/apis/saved_api";
-import { setSavedProductIds } from "../../saved/slices/saved_slice";
+import { setSavedWishEntries } from "../../saved/slices/saved_slice";
+import useDisplayCurrency from "../../../general/hooks/displayCurrency_hook";
+import useNotificationHook from "../../../notifications/hooks/notification_hook";
+import AppStatusBar from "../../../general/components/appStatusBar";
 
 const DashboardWrapperScreen = () => {
   const { dashboards, selectedDashboard, isMobileMenuOpen } = useSelector((state: RootState) => state.dashboardWrapperState);
   const { userData } = useSelector((state: RootState) => state.profileState);
-  const { promoProducts, popularProducts, newestPrpducts } = useSelector((state: RootState) => state.productState);
+  const { notifications } = useSelector((state: RootState) => state.notificationsState);
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
   const dispatch = useDispatch();
 
     const { handleGetProductOptions } = useGeneralHook();
     const { handleGetPromoProducts, handleGetFilteredProducts, handleGetPopularProducts, handleGetNewestProducts } = useFilterAndSearchHook();
+    const { currencyRefreshToken } = useDisplayCurrency();
+
+    useNotificationHook();
+    const unreadNotifications = notifications.filter((n) => n?.seen !== true).length;
 
     useEffect(() => {
       handleGetProductOptions();
       handleGetPromoProducts();
-      handleGetFilteredProducts({screenTitle: "All Products"});
+      handleGetFilteredProducts({ screenTitle: "All Products" });
       handleGetPopularProducts("Popular Products");
       handleGetNewestProducts("Newest Products");
-    }, []);
+    // Re-runs on a currency switch so every price on the home screen reloads.
+    }, [currencyRefreshToken]);
 
-    // Bootstrap the wishlist mirror as soon as the buyer lands on home, so
-    // every product card heart reflects the saved state from the FIRST render
-    // — previously it only hydrated when the user opened the Saved tab,
-    // leaving hearts gray on the home/popular/newest cards for previously
-    // saved items. Skip for guests since `/wish/auth/user` is authed-only.
-    const { data: wishItems = [] } = useGetWishlistQuery(undefined, {
+    const { data: wishItems } = useGetWishlistQuery(undefined, {
       skip: !userData?.uid || !!userData?.isGuest,
     });
     useEffect(() => {
-      dispatch(setSavedProductIds(
-        wishItems.map((item: any) => item.product?.productId).filter(Boolean) as string[],
+      if (!wishItems) { return; }
+      dispatch(setSavedWishEntries(
+        wishItems
+          .filter((item: any) => !!item.product?.productId)
+          .map((item: any) => ({ productId: item.product.productId, wishId: item._id })),
       ));
     }, [wishItems]);
 
-  // Show the full-screen skeleton only on first load — once any of the three
-  // home data slices has content, hand off to the real layout (its existing
-  // per-section shimmers handle subsequent refreshes). This keeps pull-to-
-  // refresh and tab re-focus from re-triggering the full skeleton.
-  const isInitiallyLoading =
-    promoProducts.length === 0 &&
-    popularProducts.length === 0 &&
-    newestPrpducts.length === 0;
-
-  if (isInitiallyLoading) {
-    return <HomeSkeletonLoader />;
-  }
-
-
   return (
     <GestureHandlerRootView>
+        <AppStatusBar backgroundColor="#112F1E" barStyle="light-content" />
         <SafeAreaView className="flex-1 h-auto w-screen pb-20 bg-white">
-            <StatusBar
-                backgroundColor="#112F1E"
-                barStyle="light-content"
-            />
 
             {/*==== Mobile Navigation ====*/}
             <Modal
@@ -105,15 +93,11 @@ const DashboardWrapperScreen = () => {
                   </TouchableOpacity>
                 ))}
 
-
                 {/*==== Sell on Zeaper Button ====*/}
                 <TouchableOpacity
                   className="mt-16 mx-auto px-6 py-3 flex-row items-center bg-baseGreen rounded-md"
                   onPress={() => {
                     dispatch(setIsMobileMenuOpen(false));
-                    // Same vendor entry point as the shop FAB — the onboarding
-                    // pitch branches by vendor/shop status from there. navigate
-                    // bubbles up to the root stack where this route lives.
                     navigation.navigate("vendorOnboardingScreen");
                   }}
                 >
@@ -150,10 +134,6 @@ const DashboardWrapperScreen = () => {
                           <TouchableOpacity
                             className="px-5 py-1 flex items-center justify-center rounded-lg bg-white/[.2]"
                             onPress={ () => {
-                              // Explicit login from the home header — drop any
-                              // stale pendingDestination so the user lands back
-                              // on Home after login, not on whatever protected
-                              // screen they bounced from earlier.
                               dispatch(clearPendingDestination());
                               navigation.navigate("loginScreen");
                             } }>
@@ -171,6 +151,19 @@ const DashboardWrapperScreen = () => {
                       onPress={ () => navigation.navigate("userNotificationsScreen") }
                     >
                       <Notification color="#133522" size={24} variant="Bold" />
+
+                      {/* Unread badge — hidden at 0, caps at "9+" so a long count
+                          can't break the circle. */}
+                      { unreadNotifications > 0 && (
+                        <View
+                          className="absolute -top-1 -right-1 px-1 items-center justify-center rounded-full bg-red-500"
+                          style={{ minWidth: 18, height: 18 }}
+                        >
+                          <Text className="font-montserratSemiBold text-[10px] text-white">
+                            { unreadNotifications > 9 ? "9+" : unreadNotifications }
+                          </Text>
+                        </View>
+                      ) }
                     </Pressable>
                     <Pressable
                       className="bg-lightGreen p-2.5 rounded-full"
@@ -187,12 +180,16 @@ const DashboardWrapperScreen = () => {
                     <TextInput
                         placeholder="Search item"
                         placeholderTextColor="#9ca3af"
-                        className="text-base flex-1"
+                        className="h-[44px] text-base flex-1"
                         onChangeText={() => null}
                         onFocus={ () => navigation.navigate("searchItemScreen") }
                     />
-                    <TouchableOpacity onPress={ () => null }>
-                        <SearchNormal1 color="#9ca3af" className="mr-1" />
+                    <TouchableOpacity
+                        onPress={ () => navigation.navigate("searchItemScreen") }
+                        hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                        className="h-[44px] w-[44px] mr-1 items-center justify-center"
+                    >
+                        <SearchNormal1 color="#9ca3af" size={ 24 } />
                     </TouchableOpacity>
                   </View>
                 ) }

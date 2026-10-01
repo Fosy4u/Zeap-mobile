@@ -25,6 +25,14 @@ const loginUserSchema = yup.object().shape({
         .required("Password is required."),
 });
 
+const forgotPasswordSchema = yup.object().shape({
+    email: yup
+        .string()
+        .required("Email is required.")
+        .email("Email must be a valid email."),
+});
+
 export type IRegisterUser = yup.InferType<typeof registerUserSchema>;
 export type ILoginUser = yup.InferType<typeof loginUserSchema>;
-export { registerUserSchema, loginUserSchema };
+export type IForgotPassword = yup.InferType<typeof forgotPasswordSchema>;
+export { registerUserSchema, loginUserSchema, forgotPasswordSchema };

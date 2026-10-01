@@ -1,8 +1,9 @@
-import { getOrderDetailsRoute, getOrderHistoryRoute, getOrdersRoute } from "../../../../redux/api/api_route";
+import { cancelOrderRoute, getOrderDetailsRoute, getOrderHistoryRoute, getOrdersRoute } from "../../../../redux/api/api_route";
 import rootAPI from "../../../../redux/api/rootAPI";
 import IOrder from "../models/order_model";
 import IOrderDetails from "../models/orderDetails_model";
 import IOrderHistory from "../models/orderHistory_model";
+import IOrderCancel from "../models/orderCancel_model";
 
 const orderAPI = rootAPI.injectEndpoints({
     endpoints: (builder) => ({
@@ -42,6 +43,23 @@ const orderAPI = rootAPI.injectEndpoints({
                 return response.data;
             },
         }),
+
+        /* Buyer-side cancellation of a single product order. Invalidates the
+           vendor tags too, so a vendor session sees the withdrawal immediately. */
+        cancelOrder: builder.mutation<IOrderDetails, IOrderCancel>({
+            query: (cancellation) => ({
+                url: cancelOrderRoute,
+                method: "PUT",
+                body: cancellation,
+            }),
+            invalidatesTags: [
+                "Orders", "Order", "OrderDetails", "OrderHistory",
+                "VendorOrders", "VendorOrderDetails", "VendorOrderHistory",
+            ],
+            transformResponse: (response: { data: IOrderDetails }) => {
+                return response.data;
+            },
+        }),
     }),
     overrideExisting: true,
 });
@@ -50,4 +68,5 @@ export const {
     useLazyGetOrdersQuery,
     useLazyGetOrderDetailsQuery,
     useLazyGetOrderHistoryQuery,
+    useCancelOrderMutation,
 } = orderAPI; 

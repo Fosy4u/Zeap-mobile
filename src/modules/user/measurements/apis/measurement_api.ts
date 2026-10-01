@@ -1,8 +1,7 @@
 import rootAPI from "../../../../redux/api/rootAPI.ts";
-import { allBodyMeasurementTemplateRoute, bodyMeasurementEnumsRoute, bodyMeasurementGuideRoute, deleteBodyMeasurementTemplateRoute, requiredMeasurementFormFieldsRoute, singleBodyMeasurementTemplateRoute, updateBodyMeasurementTemplateRoute } from "../../../../redux/api/api_route.ts";
+import { allBodyMeasurementTemplateRoute, bodyMeasurementEnumsRoute, deleteBodyMeasurementTemplateRoute, requiredMeasurementFormFieldsRoute, singleBodyMeasurementTemplateRoute, updateBodyMeasurementTemplateRoute } from "../../../../redux/api/api_route.ts";
 import IBodyMeasurement from "../models/bodyMeasurement_model.ts";
 import IBodyMeasurementEnumerations from "../models/bodyMeasurementEnumeration_model.ts";
-import IBodyMeasurementGuide from "../models/bodyMeasurementGuide_model.ts";
 import IRequiredMeasurementFormFields from "../models/requiredMeasurementFormField_model.ts";
 
 const measurementAPI = rootAPI.injectEndpoints({
@@ -100,19 +99,9 @@ const measurementAPI = rootAPI.injectEndpoints({
                 return response.data;
             },
         }),
-
-        // Get Body Measurement Guide
-        getBodyMeasurementGuide: builder.query<IBodyMeasurementGuide[], string>({
-            query: (gender: string) => ({
-                url: bodyMeasurementGuideRoute,
-                method: "GET",
-                params: { gender },
-            }),
-            providesTags: ["BodyMeasurementGuide"],
-            transformResponse: (response: { data: IBodyMeasurementGuide[] }) => {
-                return response.data;
-            },
-        })
+        // NOTE: getBodyMeasurementGuide moved to the general API
+        // (src/modules/general/apis/general_api.ts) as the single source of
+        // truth — shared by this buyer flow and the vendor bespoke step 3.
     }),
 });
 
@@ -124,6 +113,5 @@ export const {
     useGetSingleSavedMeasurementQuery,
     useLazyGetRequiredMeasurementFormFieldsQuery,
     useGetBodyMeasurementEnumerationsQuery,
-    useLazyGetBodyMeasurementGuideQuery
 } = measurementAPI;
 export default measurementAPI;

@@ -2,10 +2,6 @@ import { useDispatch } from "react-redux";
 import { setShop } from "../slices/general_slice";
 import { useLazyGetShopQuery } from "../apis/general_api";
 
-/**
- * The useGeneralHook
- * @returns {  }
- */
 const useVendorGeneralHook = () => {
     const dispatch = useDispatch();
     const [getShop] = useLazyGetShopQuery();

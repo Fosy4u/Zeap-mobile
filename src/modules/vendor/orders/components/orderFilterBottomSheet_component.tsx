@@ -16,7 +16,10 @@ import RootNavigationStackModel from '../../../../routes/model/routes_model.ts';
 import DatePicker from 'react-native-date-picker';
 import { useDispatch } from 'react-redux';
 import { setShowOrderFilterBottomSheet } from '../../home/slices/vendorHome_slice.tsx';
+import useOrderHook from '../hooks/order_hook.ts';
 
+// Date pickers hand back a Date; the API and the local filter both want yyyy-mm-dd.
+const toIsoDate = (date: Date): string => date.toISOString().split('T')[0];
 
 const OrderFilterBottomSheetComponent = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
@@ -25,12 +28,51 @@ const OrderFilterBottomSheetComponent = () => {
   const modalHeight = screenHeight / 1.3;
   const slideAnimation = useRef<Animatable.View>(null);
 
-  const [showStatusType, setShowStatusType] = useState(false);
-  const [showDate, setShowDate] = useState(false);
-  const [fromDate, setFromDate] = useState(new Date());
-  const [toDate, setToDate] = useState(new Date());
+  const { filters, statusOptions, handleApplyOrderFilters, handleClearOrderFilters } = useOrderHook();
+
+  /* Draft state — the sheet edits a copy and only commits on "Filter Result",
+     seeded from the filters already applied so reopening shows the current set. */
+  const [selectedStatuses, setSelectedStatuses] = useState<string[]>(filters.status ?? []);
+  const [itemName, setItemName] = useState(filters.itemName ?? "");
+  const [orderNumber, setOrderNumber] = useState(filters.orderId ?? "");
+
+  const [showStatusType, setShowStatusType] = useState((filters.status?.length ?? 0) > 0);
+  const [showDate, setShowDate] = useState(!!filters.fromDate || !!filters.toDate);
+  const [fromDate, setFromDate] = useState(filters.fromDate ? new Date(filters.fromDate) : new Date());
+  const [toDate, setToDate] = useState(filters.toDate ? new Date(filters.toDate) : new Date());
+  /* A date only filters once picked — otherwise today's default would silently
+     narrow the list to a single day. */
+  const [isFromDateSet, setIsFromDateSet] = useState(!!filters.fromDate);
+  const [isToDateSet, setIsToDateSet] = useState(!!filters.toDate);
   const [isFromDatePickerOpen, setFromDatePickerOpen] = useState(false);
   const [isToDatePickerOpen, setToDatePickerOpen] = useState(false);
+
+  const toggleStatus = (statusName: string) => {
+    setSelectedStatuses((current) =>
+      current.includes(statusName)
+        ? current.filter((value) => value !== statusName)
+        : [...current, statusName],
+    );
+  };
+
+  const handleFilterResult = () => {
+    handleApplyOrderFilters({
+      status: selectedStatuses,
+      itemName: itemName.trim(),
+      orderId: orderNumber.trim(),
+      fromDate: isFromDateSet ? toIsoDate(fromDate) : "",
+      toDate: isToDateSet ? toIsoDate(toDate) : "",
+    });
+  };
+
+  const handleClearAll = () => {
+    setSelectedStatuses([]);
+    setItemName("");
+    setOrderNumber("");
+    setIsFromDateSet(false);
+    setIsToDateSet(false);
+    handleClearOrderFilters();
+  };
 
   useEffect(() => {
     if (slideAnimation.current) {
@@ -114,23 +156,21 @@ const OrderFilterBottomSheetComponent = () => {
               </TouchableOpacity>
               {showStatusType && (
                 <View className="mb-2 flex-row  flex-wrap gap-4">
-                  <View className="p-[11px_16px] rounded-[8px] border-[1px] border-[#e0e2e8] bg-[#f8f9fe]">
-                    <Text className="text-[12px] text-gray-700">Confirmed</Text>
-                  </View>
-                  <View className="p-[11px_16px] rounded-[8px] border-[1px] border-solid border-[#e0e2e8] bg-[#f8f9fe]">
-                    <Text className="text-[12px] text-gray-700">
-                      Proccessing
-                    </Text>
-                  </View>
-                  <View className="p-[11px_16px] rounded-[8px] border-[1px] border-solid border-[#e0e2e8] bg-[#f8f9fe]">
-                    <Text className="text-[12px] text-gray-700">Shipped</Text>
-                  </View>
-                  <View className="p-[11px_16px] rounded-[8px] border-[1px] border-solid border-[#e0e2e8] bg-[#f8f9fe]">
-                    <Text className="text-[12px] text-gray-700">Pending</Text>
-                  </View>
-                  <View className="p-[11px_16px] rounded-[8px] border-[1px] border-solid border-[#e0e2e8] bg-[#f8f9fe]">
-                    <Text className="text-[12px] text-gray-700">Delivered</Text>
-                  </View>
+                  {statusOptions.map((statusName) => {
+                    const isSelected = selectedStatuses.includes(statusName);
+                    return (
+                      <TouchableOpacity
+                        key={statusName}
+                        onPress={() => toggleStatus(statusName)}
+                        className={`p-[11px_16px] rounded-[8px] border-[1px] border-solid ${
+                          isSelected ? "border-baseGreen bg-baseGreen" : "border-[#e0e2e8] bg-[#f8f9fe]"
+                        }`}>
+                        <Text className={`text-[12px] ${ isSelected ? "text-white" : "text-gray-700" }`}>
+                          {statusName}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
                 </View>
               )}
             </View>
@@ -157,8 +197,8 @@ const OrderFilterBottomSheetComponent = () => {
                     <TouchableOpacity
                       onPress={() => setFromDatePickerOpen(true)}
                       className="flex-row items-center px-3 py-4 border border-gray-300 rounded-lg bg-gray-100">
-                      <Text className="flex-1 text-[#9ca3af]">
-                        {fromDate.toDateString()}
+                      <Text className={`flex-1 ${ isFromDateSet ? "text-gray-800" : "text-[#9ca3af]" }`}>
+                        {isFromDateSet ? fromDate.toDateString() : "Any date"}
                       </Text>
                       <ArrowDown2 size={20} className="text-[#9ca3af]" />
                     </TouchableOpacity>
@@ -169,6 +209,7 @@ const OrderFilterBottomSheetComponent = () => {
                       mode="date"
                       onConfirm={date => {
                         setFromDate(date);
+                        setIsFromDateSet(true);
                         setFromDatePickerOpen(false);
                       }}
                       onCancel={() => setFromDatePickerOpen(false)}
@@ -181,8 +222,8 @@ const OrderFilterBottomSheetComponent = () => {
                     <TouchableOpacity
                       onPress={() => setToDatePickerOpen(true)}
                       className="flex-row items-center px-3 py-4 border border-gray-300 rounded-xl bg-gray-100">
-                      <Text className="flex-1 text-[#9ca3af]">
-                        {toDate.toDateString()}
+                      <Text className={`flex-1 ${ isToDateSet ? "text-gray-800" : "text-[#9ca3af]" }`}>
+                        {isToDateSet ? toDate.toDateString() : "Any date"}
                       </Text>
                       <ArrowDown2 size={20} className="text-[#9ca3af]" />
                     </TouchableOpacity>
@@ -193,6 +234,7 @@ const OrderFilterBottomSheetComponent = () => {
                       mode="date"
                       onConfirm={date => {
                         setToDate(date);
+                        setIsToDateSet(true);
                         setToDatePickerOpen(false);
                       }}
                       onCancel={() => setToDatePickerOpen(false)}
@@ -213,10 +255,12 @@ const OrderFilterBottomSheetComponent = () => {
                 <TextInput
                   aria-label="ItemName"
                   aria-labelledby="itemName"
-                  keyboardType="name-phone-pad"
+                  keyboardType="default"
                   placeholder="Enter name"
                   placeholderTextColor="#9ca3af"
-                  className="text-base"
+                  className="h-[44px] text-base"
+                  value={itemName}
+                  onChangeText={setItemName}
                 />
               </View>
 
@@ -230,19 +274,27 @@ const OrderFilterBottomSheetComponent = () => {
                 <TextInput
                   aria-label="OrderNumber"
                   aria-labelledby="orderNumber"
-                  keyboardType="name-phone-pad"
+                  keyboardType="default"
                   placeholder="Enter number"
                   placeholderTextColor="#9ca3af"
-                  className="text-base"
+                  className="h-[44px] text-base"
+                  value={orderNumber}
+                  onChangeText={setOrderNumber}
                 />
               </View>
             </View>
 
             <TouchableOpacity
-              // onPress={() => handleProceed()}
+              onPress={() => handleFilterResult()}
               className="h-[55px] w-auto mt-10 flex flex-row items-center justify-center rounded-xl bg-baseGreen">
               <Text className="text-lg text-white mr-2">Filter Result</Text>
               <ArrowRight className="text-white" />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => handleClearAll()}
+              className="h-[50px] w-auto mt-3 flex flex-row items-center justify-center rounded-xl bg-gray-100">
+              <Text className="text-base text-gray-700">Clear all filters</Text>
             </TouchableOpacity>
           </ScrollView>
         </View>

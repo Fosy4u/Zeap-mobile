@@ -2,7 +2,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../../../redux/store/store";
 import handleError from "../../../general/hooks/errorHandler_hook";
 import IProduct from "../../products/models/product_model";
-import { useAddToWishlistMutation, useRemoveFromWishlistMutation } from "../apis/saved_api";
+import { useAddToWishlistMutation, useLazyGetWishlistQuery, useRemoveFromWishlistMutation } from "../apis/saved_api";
 import { addSavedProductId, removeSavedProductId } from "../slices/saved_slice";
 
 // Lightweight wishlist controller for product cards: reads the optimistic
@@ -11,10 +11,11 @@ import { addSavedProductId, removeSavedProductId } from "../slices/saved_slice";
 // reconciliation lives in useSavedHook, used by the Saved screen.
 const useWishlistToggle = () => {
     const dispatch = useDispatch<AppDispatch>();
-    const { savedProductIds } = useSelector((state: RootState) => state.savedState);
+    const { savedProductIds, wishIdsByProductId } = useSelector((state: RootState) => state.savedState);
 
     const [addToWishlist] = useAddToWishlistMutation();
     const [removeFromWishlist] = useRemoveFromWishlistMutation();
+    const [fetchWishlist] = useLazyGetWishlistQuery();
 
     const isSaved = (productId?: string) => !!productId && savedProductIds.includes(productId);
 
@@ -25,6 +26,14 @@ const useWishlistToggle = () => {
         return product?.colors?.[0]?.value || product?.variations?.[0]?.colorValue || "Default";
     };
 
+    const resolveWishId = async (productId: string): Promise<string | undefined> => {
+        const knownWishId = wishIdsByProductId[productId];
+        if (knownWishId) { return knownWishId; }
+
+        const wishItems = await fetchWishlist().unwrap();
+        return wishItems.find((item) => item.product?.productId === productId)?._id;
+    };
+
     // Optimistic toggle with revert-on-failure.
     const toggleSave = async (product?: IProduct) => {
         const productId = product?.productId;
@@ -33,7 +42,10 @@ const useWishlistToggle = () => {
         if (savedProductIds.includes(productId)) {
             dispatch(removeSavedProductId(productId));
             try {
-                await removeFromWishlist({ productId }).unwrap();
+                const wishId = await resolveWishId(productId);
+                if (!wishId) { throw new Error("This item is no longer in your favorites."); }
+
+                await removeFromWishlist({ wish_id: wishId }).unwrap();
             } catch (error) {
                 dispatch(addSavedProductId(productId));
                 handleError(error);

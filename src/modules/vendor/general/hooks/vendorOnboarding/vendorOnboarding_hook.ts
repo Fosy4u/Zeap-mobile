@@ -26,23 +26,28 @@ const useVendorOnboardingHook = () => {
         }
     };
 
+    // Leave the onboarding stack reliably — goBack() is a no-op when this
+    // screen is the root of its stack, so fall back to the app home then.
+    const leaveOnboarding = () => {
+        if (navigation.canGoBack()) {
+            navigation.goBack();
+        } else {
+            navigation.reset({ index: 0, routes: [{ name: "homeScreen" }] });
+        }
+    };
+
     const handleClose = () => {
         Alert.alert(
-            "Exit onboarding?",
-            "Your progress will be kept and you can resume from where you left off.",
+            "Discard and exit?",
+            "Your progress won't be saved. You'll have to start over next time.",
             [
                 { text: "Continue editing", style: "cancel" },
-                {
-                    text: "Exit",
-                    style: "destructive",
-                    onPress: () => navigation.goBack(),
-                },
                 {
                     text: "Discard & exit",
                     style: "destructive",
                     onPress: () => {
                         dispatch(resetOnboarding());
-                        navigation.goBack();
+                        leaveOnboarding();
                     },
                 },
             ],

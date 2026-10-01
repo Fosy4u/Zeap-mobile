@@ -2,6 +2,7 @@ import rootAPI from "../../../../redux/api/rootAPI.ts";
 import IVendorProductDetails from "../models/vendorProductDetails_model";
 import IVendorProductQueryParams from "../models/vendorProductFilter_model";
 import IPromotion, { IPromotionPayload } from "../models/promotion_model";
+import { deleteDraftProductRoute } from "../../../../redux/api/api_route.ts";
 
 const productAPI = rootAPI.injectEndpoints({
     overrideExisting: true,
@@ -41,6 +42,19 @@ const productAPI = rootAPI.injectEndpoints({
                 body: productIds,
             }),
             invalidatesTags: ["Products", "Product"],
+            transformResponse: (response: { message: string }) => {
+                return response.message;
+            }
+        }),
+
+        // Permanently delete a draft product. Body: { productIds: [id] }.
+        deleteDraftProduct: builder.mutation<string, { productIds: string[]; }>({
+            query: (body) => ({
+                url: deleteDraftProductRoute,
+                method: "PUT",
+                body,
+            }),
+            invalidatesTags: ["DraftProducts", "Products", "Product"],
             transformResponse: (response: { message: string }) => {
                 return response.message;
             }
@@ -105,6 +119,7 @@ export const {
     useLazyGetProductsQuery,
     useLazyGetProductByProductIDQuery,
     useDeleteProductMutation,
+    useDeleteDraftProductMutation,
     useLazyGetAvailablePromosQuery,
     useLazyGetProductPromotionQuery,
     useApplyPromotionMutation,

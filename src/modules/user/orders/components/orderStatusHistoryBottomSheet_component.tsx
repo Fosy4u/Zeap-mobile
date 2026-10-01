@@ -3,10 +3,12 @@ import { BottomSheetModalMethods } from '@gorhom/bottom-sheet/lib/typescript/typ
 import React from 'react'
 import { Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../../../redux/store/store';
 import FormatWords from '../../../../utils/formatWords';
 import { timeAgo } from '../../../../utils/formatTime';
+import { setShowCancelOrderModal } from '../slices/order_slice';
+import { canCancelOrderStatus } from '../utils/orderCancellation';
 
 type IOrderStatusHistoryBottomSheetComponent = {
     bottomSheetModalRef: React.RefObject<BottomSheetModalMethods>;
@@ -16,11 +18,21 @@ type IOrderStatusHistoryBottomSheetComponent = {
 
 const OrderStatusHistoryBottomSheetComponent = ({ bottomSheetModalRef, snapPoints, setShowBottomSheetModal }: IOrderStatusHistoryBottomSheetComponent) => {
     const { orderHistory, selectedOrderStatus } = useSelector((state: RootState) => state.orderState);
+    const dispatch = useDispatch();
     const statusHistories = orderHistory.statusHistory;
 
     const currentStatusIndex = statusHistories.findIndex(
       (item) => item.name === selectedOrderStatus.name,
     );
+
+    const canCancel = canCancelOrderStatus(selectedOrderStatus);
+
+    /* The confirmation dialog cannot stack above the sheet's portal, so the
+       sheet stands down and hands the screen over to the modal. */
+    const handleOpenCancelModal = () => {
+        setShowBottomSheetModal(false);
+        dispatch(setShowCancelOrderModal(true));
+    };
 
     return (
         <BottomSheetModal
@@ -89,6 +101,17 @@ const OrderStatusHistoryBottomSheetComponent = ({ bottomSheetModalRef, snapPoint
                                 )}
                             ) }
                         </View>
+
+                        {/*==== Cancel Order ====*/}
+                        <TouchableOpacity
+                            disabled={ !canCancel }
+                            onPress={ handleOpenCancelModal }
+                            className={ `h-[55px] w-full mt-5 flex-row items-center justify-center rounded-xl ${ canCancel ? "bg-red-50 border border-red-200" : "bg-gray-100 border border-gray-200" }` }
+                        >
+                            <Text className={ `font-montserratMedium text-base ${ canCancel ? "text-red-700" : "text-gray-400" }` }>
+                                Cancel Order
+                            </Text>
+                        </TouchableOpacity>
                     </ScrollView>
                 </View>
             </BottomSheetView>

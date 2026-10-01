@@ -2,7 +2,6 @@ import rootAPI from "../../../../redux/api/rootAPI.ts";
 import IAddress from "../models/address_model";
 import { IAddressFormFieldsSchema } from "../validations/address_validation";
 
-
 const addressAPI = rootAPI.injectEndpoints({
     endpoints: (builder) => ({
 
@@ -14,6 +13,18 @@ const addressAPI = rootAPI.injectEndpoints({
                 body: requestData,
             }),
             invalidatesTags: ["DeliveryAddress"],
+            transformResponse: (response: { data: IAddress }) => {
+                return response.data;
+            },
+        }),
+
+        updateDeliveryAddress: builder.mutation<IAddress, IAddressFormFieldsSchema & { address_id: string }>({
+            query: (requestData) => ({
+                url: "/deliveryAddress/update",
+                method: "PUT",
+                body: requestData,
+            }),
+            invalidatesTags: ["DeliveryAddress", "DeliveryAddresses"],
             transformResponse: (response: { data: IAddress }) => {
                 return response.data;
             },
@@ -75,6 +86,7 @@ const addressAPI = rootAPI.injectEndpoints({
 
 export const {
     useAddDeliveryAddressMutation,
+    useUpdateDeliveryAddressMutation,
     useLazyGetDeliveryAddressesQuery,
     useLazyGetDeliveryAddressQuery,
     useSetAsDefaultAddressMutation,

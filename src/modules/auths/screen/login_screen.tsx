@@ -22,13 +22,17 @@ const LoginScreen = () => {
 
   return (
     <View className="flex-1">
-      <SafeAreaView className="flex-1 items-center px-5">
+      <SafeAreaView className="flex-1">
       <StatusBar
         backgroundColor="transparent"
         barStyle="dark-content"
       />
 
-      <ScrollView>
+      <ScrollView
+        className="flex-1 w-full"
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 24 }}
+        showsVerticalScrollIndicator={false}
+      >
 
         <View className="h-[48px] w-auto mx-auto mt-12 relative">
           <View className="h-[35px] w-auto mx-auto px-3.5 flex items-center justify-center rounded-lg bg-gold">
@@ -57,7 +61,7 @@ const LoginScreen = () => {
                   keyboardType="email-address"
                   placeholder="Enter email address"
                   placeholderTextColor="#9ca3af"
-                  className="text-base"
+                  className="h-[44px] text-base"
                   onBlur={onBlur}
                   onChangeText={onChange}
                   value={value}
@@ -79,7 +83,7 @@ const LoginScreen = () => {
                   secureTextEntry={!showPassword}
                   placeholder="Enter password"
                   placeholderTextColor="#9ca3af"
-                  className="flex-1 text-base"
+                  className="h-[44px] flex-1 text-base"
                   onBlur={onBlur}
                   onChangeText={onChange}
                   value={value}
@@ -98,6 +102,14 @@ const LoginScreen = () => {
                 value={rememberMe}
                 onValueChange={(newValue) => dispatch(setRememberMe(newValue))}
                 tintColors={{ true: "#133522", false: "#151518" }}
+                boxType="square"
+                lineWidth={1.5}
+                tintColor="#151518"
+                onCheckColor="#ffffff"
+                onFillColor="#133522"
+                onTintColor="#133522"
+                animationDuration={0.15}
+                style={{ height: 20, width: 20, marginRight: 8 }}
               />
               <Text>Remember me</Text>
             </View>

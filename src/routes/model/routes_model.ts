@@ -8,9 +8,6 @@ type RootNavigationStackModel = {
 
   loginScreen: undefined;
   forgotPasswordScreen: undefined;
-  resetPasswordScreen: undefined;
-  otpScreen: undefined;
-  resetPasswordSuccessPopupModal: undefined;
   signUpScreen: undefined;
   loginInfoScreen: undefined;
 
@@ -27,6 +24,7 @@ type RootNavigationStackModel = {
   productDetailScreen: undefined;
   measurementScreen: undefined;
   editMeasurementTemplateScreen: undefined;
+  savedMeasurementsScreen: undefined;
   reviewListScreen: {
     reviewAndRating: IReviewAndRating,
     reviewIndicators: IReviewIndicator[],
@@ -89,6 +87,9 @@ type RootNavigationStackModel = {
     shopId?: string;
   };
   shopSetupScreen: undefined;
+  shopInformationScreen: undefined;
+  bankDetailsScreen: undefined;
+  shopDocumentsScreen: undefined;
   vendorNotificationsScreen: undefined;
   overviewScreen: undefined;
   promoScreen: undefined;

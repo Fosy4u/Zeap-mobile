@@ -1,7 +1,11 @@
 import { getAuth, getIdToken, onAuthStateChanged } from '@react-native-firebase/auth';
 import EncryptedStorage from 'react-native-encrypted-storage';
+import { forgetSecureItem } from '../../utils/secureStorage';
 
 const TOKEN_KEY = 'auth_token';
+/* Last token we persisted — lets us skip redundant EncryptedStorage writes on
+   the hot path (getIdToken returns the same cached token for ~1h). */
+let lastStoredToken: string | null = null;
 
 // On cold start, getAuth().currentUser is null until Firebase finishes restoring
 // the persisted session (usually <1s). Wait briefly for it to appear so we don't
@@ -23,9 +27,6 @@ const waitForAuthRestore = (timeoutMs: number): Promise<any> => {
     });
 };
 
-/**
- * Prepares authorization headers for API requests
- */
 const AuthorizationHeader = async (headers: Headers): Promise<Headers> => {
     try {
         let currentUser = getAuth().currentUser;
@@ -36,14 +37,15 @@ const AuthorizationHeader = async (headers: Headers): Promise<Headers> => {
 
         let token: string;
         if (currentUser) {
-            // Always mint a fresh token — stored tokens go stale fast and
-            // Firebase rotates signing keys, invalidating the `kid` claim.
-            token = await getIdToken(currentUser, true);
-            await storeToken(token);
+            token = await getIdToken(currentUser);
+
+            /* Persist as a fallback for other readers, but never block the request
+               on disk I/O, and only write when the value actually changed. */
+            if (token !== lastStoredToken) {
+                lastStoredToken = token;
+                storeToken(token).catch(() => {});
+            }
         } else {
-            // No Firebase user even after waiting. The stored token would almost
-            // certainly be stale; surface the missing-auth state so the caller
-            // can react (splash will sign in anonymously and re-issue).
             throw new Error('No authentication token available');
         }
 
@@ -56,9 +58,6 @@ const AuthorizationHeader = async (headers: Headers): Promise<Headers> => {
     }
 };
 
-/**
- * Store authentication token
- */
 const storeToken = async (token: string): Promise<void> => {
     try {
         await EncryptedStorage.setItem(TOKEN_KEY, JSON.stringify(token));
@@ -67,9 +66,6 @@ const storeToken = async (token: string): Promise<void> => {
     }
 };
 
-/**
- * Get stored authentication token
- */
 const getToken = async (): Promise<string | null> => {
     try {
         const token = await EncryptedStorage.getItem(TOKEN_KEY);
@@ -79,15 +75,9 @@ const getToken = async (): Promise<string | null> => {
     }
 };
 
-/**
- * Clear stored authentication token
- */
 const clearToken = async (): Promise<void> => {
-    try {
-        await EncryptedStorage.removeItem(TOKEN_KEY);
-    } catch (error) {
-        throw new Error('Failed to clear token');
-    }
+    lastStoredToken = null;
+    await forgetSecureItem(TOKEN_KEY);
 };
 
 export { storeToken, getToken, clearToken };

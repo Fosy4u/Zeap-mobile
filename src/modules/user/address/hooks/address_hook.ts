@@ -1,17 +1,20 @@
 import { yupResolver } from "@hookform/resolvers/yup";
-import { useAddDeliveryAddressMutation, useLazyGetDeliveryAddressesQuery, useLazyGetDeliveryAddressQuery, useDeleteAddressMutation, useSetAsDefaultAddressMutation } from "../apis/address_api";
-import { SubmitHandler, useForm } from "react-hook-form";
+import { useAddDeliveryAddressMutation, useUpdateDeliveryAddressMutation, useLazyGetDeliveryAddressesQuery, useLazyGetDeliveryAddressQuery, useDeleteAddressMutation, useSetAsDefaultAddressMutation } from "../apis/address_api";
+import { SubmitHandler, useForm, useWatch } from "react-hook-form";
 import addressFormFieldsSchema, { IAddressFormFieldsSchema } from "../validations/address_validation";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import RootNavigationStackModel from "../../../../routes/model/routes_model";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../../../redux/store/store";
-import { setDeliveryAddresses, setIsLoading, setLoadingMessage, setSelectedAddress, setShowNewDeliveryAddressForm } from "../slices/address_slice";
+import { setDeliveryAddresses, setEditingAddressId, setIsLoading, setLoadingMessage, setSelectedAddress, setShowNewDeliveryAddressForm } from "../slices/address_slice";
 import handleError from "../../../general/hooks/errorHandler_hook";
 import IAddress from "../models/address_model";
 import { useEffect } from "react";
-
+import {
+    maxPhoneLengthForCountry, phoneErrorForCountry, phoneHintForCountry,
+    phonePlaceholderForCountry, sanitizePhoneInput,
+} from "../../../../utils/phoneNumberRules";
 
 // Map the user's preferred currency to a delivery-country key.
 // Matches the keys in src/utils/deliveryCountries.json.
@@ -26,12 +29,13 @@ const getDefaultCountryForCurrency = (currency?: string): string => {
 };
 
 const useAddressHook = () => {
-    const { selectedAddress } = useSelector((state: RootState) => state.addressState);
+    const { selectedAddress, editingAddressId, showNewDeliveryAddressForm } = useSelector((state: RootState) => state.addressState);
     const { userData } = useSelector((state: RootState) => state.profileState );
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const dispatch = useDispatch();
 
     const [addDeliveryAddress] = useAddDeliveryAddressMutation();
+    const [updateDeliveryAddress] = useUpdateDeliveryAddressMutation();
     const [getDeliveryAddresses] = useLazyGetDeliveryAddressesQuery();
     const [getDeliveryAddress, { data: deliveryAddress }] = useLazyGetDeliveryAddressQuery();
     const [setAsDefaultAddress] = useSetAsDefaultAddressMutation();
@@ -62,20 +66,41 @@ const useAddressHook = () => {
         }
     }, [userData?.prefferedCurrency]);
 
-    
+    /* Phone rules follow the selected country. Re-trim + re-validate whenever it
+       changes so a number left over from another country can't slip through. */
+    const phoneCountry = useWatch({ control, name: "country" }) as string | undefined;
+
+    useEffect(() => {
+        const current = getValues("phoneNumber");
+        if (!current) { return; }
+        const sanitized = sanitizePhoneInput(current, phoneCountry);
+        setValue("phoneNumber", sanitized, { shouldValidate: true });
+    }, [phoneCountry]);
+
+    const phoneRules = {
+        country: phoneCountry,
+        hint: phoneHintForCountry(phoneCountry),
+        placeholder: phonePlaceholderForCountry(phoneCountry),
+        maxLength: maxPhoneLengthForCountry(phoneCountry),
+        errorMessage: phoneErrorForCountry(phoneCountry),
+        sanitize: (text: string) => sanitizePhoneInput(text, phoneCountry),
+    };
 
     const onSubmit: SubmitHandler<IAddressFormFieldsSchema> = async (data) => {
-        dispatch(setLoadingMessage("Saving delivery address..."));
+        const isEditing = !!editingAddressId;
+        dispatch(setLoadingMessage(isEditing ? "Updating delivery address..." : "Saving delivery address..."));
         dispatch(setIsLoading(true));
         // console.log("FORM DATA::: ", data);
-        
-        try {
-            const addDeliveryAddressResponse = await addDeliveryAddress(data).unwrap();
-            console.log("RESPONSE DATA::: ", addDeliveryAddressResponse);
 
-            if (addDeliveryAddressResponse) {
-                dispatch(setSelectedAddress(addDeliveryAddressResponse));
+        try {
+            const savedAddress = isEditing
+                ? await updateDeliveryAddress({ ...data, address_id: editingAddressId }).unwrap()
+                : await addDeliveryAddress(data).unwrap();
+
+            if (savedAddress) {
+                dispatch(setSelectedAddress(savedAddress));
                 dispatch(setShowNewDeliveryAddressForm(false));
+                dispatch(setEditingAddressId(""));
 
                 // Get back the delivery addresses
                 await handleGetDeliveryAddresses();
@@ -88,8 +113,42 @@ const useAddressHook = () => {
         }
     };
 
+    const handleStartNewAddress = () => {
+        dispatch(setEditingAddressId(""));
+        dispatch(setSelectedAddress({} as IAddress));
+        reset({
+            firstName: "",
+            lastName: "",
+            address: "",
+            region: "",
+            country: getDefaultCountryForCurrency(userData?.prefferedCurrency),
+            postCode: "",
+            phoneNumber: "",
+        });
+        dispatch(setShowNewDeliveryAddressForm(true));
+    };
+
+    // Opens the form pre-filled, targeting that address for an update.
+    const handleStartEditAddress = (address: IAddress) => {
+        dispatch(setEditingAddressId(address._id ?? ""));
+        dispatch(setSelectedAddress(address));
+        dispatch(setShowNewDeliveryAddressForm(true));
+    };
+
+    const handleCancelAddressForm = () => {
+        dispatch(setShowNewDeliveryAddressForm(false));
+        dispatch(setEditingAddressId(""));
+    };
+
+    const handleViewAddresses = () => {
+        dispatch(setShowNewDeliveryAddressForm(false));
+        dispatch(setEditingAddressId(""));
+    };
+
     // Handle update address form fiels.
     const handleUpdateAddressFormFields = () => {
+        if (showNewDeliveryAddressForm && !editingAddressId) { return; }
+
         if (selectedAddress && Object.entries(selectedAddress).length > 0) {
             // Reset the address form fields with the selected address values.
             reset({
@@ -106,10 +165,16 @@ const useAddressHook = () => {
 
     // Get all delivery addresses
     const handleGetDeliveryAddresses = async () => {
+        const user_id = userData?._id;
+        if (userData?.isGuest || !user_id) {
+            dispatch(setDeliveryAddresses([]));
+            dispatch(setSelectedAddress({} as IAddress));
+            return;
+        }
+
         dispatch(setLoadingMessage("Fetching delivery addresses..."));
         dispatch(setIsLoading(true));
 
-        const user_id = userData._id!
         try {
             const deliveryAddressesResponse = await getDeliveryAddresses({ user_id }).unwrap();
 
@@ -198,14 +263,17 @@ const useAddressHook = () => {
       handleUpdateAddressFormFields();
     }, [selectedAddress, reset]);
 
-
-
     return {
-        control, handleSubmit, onSubmit, errors, getValues, setValue,
+        control, handleSubmit, onSubmit, errors, getValues, setValue, phoneRules,
         handleGetDeliveryAddresses,
         deliveryAddress, handleGetDeliveryAddress,
         handleSetAsDefaultAddress,
         handleDeleteAddress,
+        editingAddressId,
+        handleStartNewAddress,
+        handleStartEditAddress,
+        handleCancelAddressForm,
+        handleViewAddresses,
     };
 };
 

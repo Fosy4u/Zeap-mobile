@@ -1,8 +1,8 @@
 import React from "react";
 import { Text, TextInput, TouchableOpacity, View } from "react-native";
-import { Control, Controller, FieldErrors } from "react-hook-form";
+import { Control, Controller, FieldErrors, useWatch } from "react-hook-form";
 import { ArrowDown2, Sms } from "iconsax-react-native";
-import { IStepThreeForm } from "../../validations/vendorOnboarding_validation";
+import { IStepThreeForm, phoneLengthForCode } from "../../validations/vendorOnboarding_validation";
 
 interface IProps {
     control: Control<IStepThreeForm>;
@@ -11,6 +11,15 @@ interface IProps {
 }
 
 const StepThreeComponent: React.FC<IProps> = ({ control, errors, onOpenPhoneCodePicker }) => {
+    // Selected dial code drives both the input's digit cap and the hint.
+    const phoneCode = useWatch({ control, name: "businessPhoneCode" }) || "+234";
+    const maxDigits = phoneLengthForCode(phoneCode);
+
+    // Country-aware hint — the dial code is already applied, so drop the leading 0.
+    const phoneHint = phoneCode === "+234"
+        ? `${ phoneCode } is already added — drop the leading 0 and enter the remaining ${ maxDigits } digits (e.g. 8031234567, not 08031234567).`
+        : `${ phoneCode } is already added — enter your ${ maxDigits }-digit number without the country code.`;
+
     return (
         <View>
             <View className="px-5 pt-2">
@@ -76,20 +85,26 @@ const StepThreeComponent: React.FC<IProps> = ({ control, errors, onOpenPhoneCode
                             control={ control }
                             name="businessPhone"
                             render={ ({ field: { onChange, onBlur, value } }) => (
+                                // Digits only, hard-capped at the country's required length.
                                 <TextInput
                                     placeholder="Enter phone number"
                                     placeholderTextColor="#9ca3af"
                                     keyboardType="phone-pad"
+                                    maxLength={ maxDigits }
                                     className="flex-1 h-14 px-4 rounded-2xl bg-gray-50 border border-gray-100 font-montserratMedium text-base text-black"
                                     onBlur={ onBlur }
-                                    onChangeText={ onChange }
-                                    value={ value }
+                                    onChangeText={ (text) => onChange(text.replace(/\D/g, "").slice(0, maxDigits)) }
+                                    value={ (value ?? "").replace(/\D/g, "") }
                                 />
                             ) }
                         />
                     </View>
+
+                    {/* Formatting hint — always visible. */}
+                    <Text className="mt-2 text-xs text-gray-500 leading-4">{ phoneHint }</Text>
+
                     { errors.businessPhone && (
-                        <Text className="mt-2 text-xs text-red-600">{ errors.businessPhone.message }</Text>
+                        <Text className="mt-1.5 text-xs text-red-600">{ errors.businessPhone.message }</Text>
                     ) }
                 </View>
             </View>

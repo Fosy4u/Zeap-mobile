@@ -1,9 +1,10 @@
 import React, {useEffect} from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import {View, Text, TouchableOpacity, ScrollView, StatusBar, SafeAreaView, Image} from 'react-native';
+import {View, Text, TouchableOpacity, ScrollView, StatusBar, SafeAreaView, Image, Dimensions} from 'react-native';
 import AppHeaderComp from "../../general/components/appHeader_comp.tsx";
-import {ArrowRight} from "iconsax-react-native";
+import {ArrowRight, Trash} from "iconsax-react-native";
 import ProductTypeBottomSheetComponent from "../components/productTypeBottomSheet_component.tsx";
+import DeleteDraftWarningPopupModal from "../modals/deleteDraftWarningPopup_modal.tsx";
 import useAddBespokeClothesHook from '../hooks/bespokeClothes/addBespokeClothes_hook.ts';
 import SkeletonBlock from '../../../general/components/skeletonBlock_component';
 import { useNavigation } from '@react-navigation/native';
@@ -12,13 +13,22 @@ import RootNavigationStackModel from '../../../../routes/model/routes_model.ts';
 import { RootState } from '../../../../redux/store/store.ts';
 import { setProduct, setProductMode, setProductType, setSelectedStep, setShowProductTypeBottomSheet } from '../slices/vendorProductState_slice.ts';
 import IVendorProductDetails from '../models/vendorProductDetails_model.ts';
+import AppStatusBar from "../../../general/components/appStatusBar";
 
 const AddProductScreen = () => {
     const { draftProducts, showProductTypeBottomSheet } = useSelector((state: RootState) => state.vendorProductState);
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const dispatch = useDispatch();
 
-    const { handleResetProductMode, handleGetDraftProducts, isLoadingDraftProducts } = useAddBespokeClothesHook();
+    const {
+        handleResetProductMode, handleGetDraftProducts, isLoadingDraftProducts,
+        handleDeleteDraftProduct,
+        showDeleteDraftModal, setShowDeleteDraftModal,
+        draftToDeleteId, setDraftToDeleteId,
+    } = useAddBespokeClothesHook();
+
+    // The draft currently queued for deletion (for the confirmation modal title).
+    const draftToDelete = draftProducts?.find((draft) => draft.productId === draftToDeleteId);
 
     useEffect(() => {
         handleResetProductMode();
@@ -28,10 +38,7 @@ const AddProductScreen = () => {
 
     return (
         <SafeAreaView className="h-full w-full flex-1 bg-white">
-            <StatusBar
-                backgroundColor="#133522"
-                barStyle="light-content"
-            />
+            <AppStatusBar backgroundColor="#133522" barStyle="light-content" />
 
             {/*==== Header ====*/}
             <AppHeaderComp title="Add Product" />
@@ -46,13 +53,24 @@ const AddProductScreen = () => {
                         draftProducts?.map((product: IVendorProductDetails) => (
                             <TouchableOpacity key={ product._id } onPress={ () => null }
                                 className="h-auto w-full mt-3 p-4 rounded-xl border border-gray-200 bg-lightGray">
-                                <Text className="font-montserratMedium text-lg text-gray-700">{ product.title }</Text>
+                                <View className="flex-row items-center justify-between">
+                                    <Text className="flex-1 font-montserratMedium text-lg text-gray-700">{ product.title }</Text>
+                                    <TouchableOpacity
+                                        onPress={ () => {
+                                            setDraftToDeleteId(product.productId!);
+                                            setShowDeleteDraftModal(true);
+                                        } }
+                                        className="ml-2 p-1.5"
+                                    >
+                                        <Trash size={ 20 } color="#dc2626" variant="Bold" />
+                                    </TouchableOpacity>
+                                </View>
                                 <View className="mt-3 flex-row items-center justify-between">
                                     <Text className="mt-1 font-montserratMedium text-sm">{
                                         product.productType === "bespokeCloth" ? "Bespoke Clothes" :
                                         product.productType === "readyMadeCloth" ? "Ready to Wear Cloth" :
-                                        product.productType === "bespokeShoe" ? "Bespoke Shoes" :
-                                        product.productType === "readyMadeShoe" ? "Ready to Wear Shoe" :
+                                        product.productType === "bespokeShoe" ? "Bespoke Footwear" :
+                                        product.productType === "readyMadeShoe" ? "Ready to Wear Footwear" :
                                         "Accessories"
                                     }</Text>
 
@@ -60,8 +78,9 @@ const AddProductScreen = () => {
                                         onPress={ () => {
                                             dispatch(setProduct(product));
                                             dispatch(setProductMode("Draft"));
-                                            dispatch(setSelectedStep(product.currentStep! < 6 ? product.currentStep! + 1 : 6));
-                                            // dispatch(setSelectedStep(4));
+                                            // Resume on the step the draft was left on (not the next
+                                            // one). Clamp to the valid 1–6 range as a guard.
+                                            dispatch(setSelectedStep(Math.min(Math.max(product.currentStep ?? 1, 1), 6)));
                                             navigation.navigate(
                                                 product.productType === "bespokeCloth" ? "addBespokeClothesScreen" :
                                                 product.productType === "readyMadeCloth" ? "addReadyMadeClothesScreen" :
@@ -85,7 +104,7 @@ const AddProductScreen = () => {
                     )
                 ) : (
                     <View className="mt-3 w-full">
-                        <SkeletonBlock width={ 320 } height={ 100 } radius={ 10 } />
+                        <SkeletonBlock width={ Dimensions.get('window').width - 40 } height={ 100 } radius={ 10 } />
                     </View>
                 ) }
 
@@ -120,7 +139,7 @@ const AddProductScreen = () => {
                     {/* ==== Footwears ==== */}
                     <TouchableOpacity
                         onPress={ () => {
-                            dispatch(setProductType("Shoes"));
+                            dispatch(setProductType("Footwear"));
                             dispatch(setShowProductTypeBottomSheet(true));
                         } }
                         className="h-auto w-full px-5 py-5 flex-1 rounded-xl border border-gray-100 bg-gray-50"
@@ -178,6 +197,14 @@ const AddProductScreen = () => {
 
             { showProductTypeBottomSheet && (
                 <ProductTypeBottomSheetComponent />
+            ) }
+
+            { showDeleteDraftModal && (
+                <DeleteDraftWarningPopupModal
+                    productTitle={ draftToDelete?.title || "this product" }
+                    onCancel={ () => setShowDeleteDraftModal(false) }
+                    onConfirm={ () => handleDeleteDraftProduct(draftToDeleteId) }
+                />
             ) }
         </SafeAreaView>
     );

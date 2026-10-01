@@ -76,17 +76,17 @@ const useStepTwoHook = () => {
 
             // Validate categoriesData
             const validatedCategoriesData = await stepTwoAddAccessoriesSchema.validate(requestData);
-            console.log("REQUEST DATA::: ", validatedCategoriesData);
+            // console.log("REQUEST DATA::: ", validatedCategoriesData);
 
             const updateResponseData = await updatedProduct(validatedCategoriesData).unwrap();
-            console.log("RESPONSE::: ", updateResponseData);
+            // console.log("RESPONSE::: ", updateResponseData);
 
             if (updateResponseData) {
                 dispatch(setLoadingMessage("Getting product details..."));
 
                 // Get the updated product data
                 const updatedProduct = await getProductByProductID(productId).unwrap();
-                console.log("UPDATED PRODUCT::: ", updatedProduct);
+                // console.log("UPDATED PRODUCT::: ", updatedProduct);
 
                 if (updatedProduct) {
                     dispatch(setProduct(updatedProduct));
@@ -137,8 +137,10 @@ const useStepTwoHook = () => {
         const ageRangeData = product.categories?.age?.ageRange!;
         setSelectedAgeRange(ageRangeData);
 
-        // Format type
-        const typeData = product.categories?.type!;
+        // Format type — saved on the product as `accessoryType` (the payload key),
+        // not `type`, so read it back from there or it restores empty and the
+        // re-submit fails with "Accessory type is required".
+        const typeData = product.categories?.accessoryType!;
         setSelectedType(typeData);
 
         // Format brand

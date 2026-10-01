@@ -8,6 +8,11 @@ interface IProps {
   product: IProductDetails;
 }
 
+const joinValues = (values?: (string | undefined)[] | null): string => {
+  const filled = (values ?? []).filter(Boolean);
+  return filled.length > 0 ? filled.join(", ") : "N/A";
+};
+
 const DescriptionComponent: React.FC<IProps> = ({ product }) => {
   const { width } = useWindowDimensions();
 
@@ -26,104 +31,77 @@ const DescriptionComponent: React.FC<IProps> = ({ product }) => {
 
         <View className="h-auto w-full mt-3 flex-row items-start justify-between">
           <Text>Product name:</Text>
-          <Text className="w-[65%] font-montserratMedium text-right text-gray-700">{ product?.title! }</Text>
+          <Text className="flex-1 ml-3 font-montserratMedium text-right text-gray-700">{ product?.title! }</Text>
         </View>
 
         { !!product?.productId && (
           <View className="h-auto w-full mt-3 flex-row items-center justify-between">
             <Text>Product ID:</Text>
-            <Text className="font-montserratMedium text-gray-700">{ product?.productId }</Text>
+            <Text className="flex-1 ml-3 font-montserratMedium text-right text-gray-700">{ product?.productId }</Text>
           </View>
         ) }
 
         <View className="h-auto w-full mt-3 flex-row items-center justify-between">
           <Text>Group:</Text>
-          <Text className="font-montserratMedium text-gray-700">{ FormatWords.productGroupLabel(product?.categories?.productGroup, product?.productType) }</Text>
+          <Text className="flex-1 ml-3 font-montserratMedium text-right text-gray-700">{ FormatWords.productGroupLabel(product?.categories?.productGroup, product?.productType) }</Text>
         </View>
 
         { !!product?.categories?.main?.length && (
           <View className="h-auto w-full mt-3 flex-row items-start justify-between">
             <Text>Main:</Text>
-            <Text className="w-[65%] font-montserratMedium text-right text-gray-700">{ product.categories.main.join(", ") }</Text>
+            <Text className="flex-1 ml-3 font-montserratMedium text-right text-gray-700">{ product.categories.main.join(", ") }</Text>
           </View>
         ) }
 
         { !!product?.categories?.accessoryType && (
           <View className="h-auto w-full mt-3 flex-row items-center justify-between">
             <Text>Accessory:</Text>
-            <Text className="font-montserratMedium text-gray-700">{ product.categories.accessoryType }</Text>
+            <Text className="flex-1 ml-3 font-montserratMedium text-right text-gray-700">{ product.categories.accessoryType }</Text>
           </View>
         ) }
 
         <View className="h-auto w-full mt-3 flex-row items-start justify-between">
           <Text>Design:</Text>
-          <View className="flex-row justify-end">
-            {product.categories?.design && product.categories?.design.length > 0 ? (
-              product.categories.design.map((design: string, index: number) => (
-                <Text key={index} className="font-montserratMedium text-gray-700">
-                  {design}
-                  {index !== (product.categories?.design?.length ?? 0) - 1 && ', '}
-                </Text>
-              ))
-            ) : (
-              <Text className="font-montserratMedium">N/A</Text>
-            ) }
-          </View>
+          <Text className="flex-1 ml-3 font-montserratMedium text-right text-gray-700">
+            { joinValues(product.categories?.design) }
+          </Text>
         </View>
 
         <View className="h-auto w-full mt-3 flex-row items-start justify-between">
           <Text>Style:</Text>
-          <View className="flex-row justify-end">
-            {product.categories?.style &&
-              product.categories.style.map((style: string, index: number) => (
-                <Text key={index} className="font-montserratMedium text-gray-700">
-                  {style}
-                  {index !== (product.categories?.style?.length ?? 0) - 1 && ', '}
-                </Text>
-              ))}
-          </View>
+          <Text className="flex-1 ml-3 font-montserratMedium text-right text-gray-700">
+            { joinValues(product.categories?.style) }
+          </Text>
         </View>
 
         <View className="h-auto w-full mt-3 flex-row items-start justify-between">
           <Text>Occasion:</Text>
-          <View className="flex-row justify-end">
-            {product.categories?.occasion &&
-              product.categories.occasion.map((occasion: string, index: number) => (
-                <Text key={index} className="font-montserratMedium text-gray-700">
-                  {occasion}
-                  {index !== (product.categories?.occasion?.length ?? 0) - 1 && ', '}
-                </Text>
-              ))}
-          </View>
+          <Text className="flex-1 ml-3 font-montserratMedium text-right text-gray-700">
+            { joinValues(product.categories?.occasion) }
+          </Text>
         </View>
 
         <View className="h-auto w-full mt-3 flex-row items-start justify-between">
           <Text>Sleeve:</Text>
-          <Text className="font-montserratMedium text-gray-700">{ product?.categories?.sleeveLength || "N/A" }</Text>
+          <Text className="flex-1 ml-3 font-montserratMedium text-right text-gray-700">{ product?.categories?.sleeveLength || "N/A" }</Text>
         </View>
 
         <View className="h-auto w-full mt-3 flex-row items-start justify-between">
           <Text>Fastening:</Text>
-          <View className="flex-1 flex-row justify-end">
-            {product.categories?.fastening &&
-              product.categories.fastening.map((fastening: string, index: number) => (
-                <Text key={index} className="font-montserratMedium text-gray-700">
-                  {fastening || "N/A"}
-                  {index !== (product.categories?.fastening?.length ?? 0) - 1 && ', '}
-                </Text>
-              ))}
-          </View>
+          <Text className="flex-1 ml-3 font-montserratMedium text-right text-gray-700">
+            { joinValues(product.categories?.fastening) }
+          </Text>
         </View>
 
         <View className="h-auto w-full mt-3 flex-row items-center justify-between">
           <Text>Color:</Text>
           {/* <Text className="font-medium">{ product?.colors![0]?.value! }</Text> */}
-          <Text className="font-montserratMedium text-gray-700">{ product?.colors?.[0]?.value! }</Text>
+          <Text className="flex-1 ml-3 font-montserratMedium text-right text-gray-700">{ product?.colors?.[0]?.value! }</Text>
         </View>
 
         <View className="h-auto w-full mt-3 flex-row items-center justify-between">
           <Text>Brand:</Text>
-          <Text className="font-montserratMedium text-gray-700">{ product?.categories?.brand?.split("-").join(" ") }</Text>
+          <Text className="flex-1 ml-3 font-montserratMedium text-right text-gray-700">{ product?.categories?.brand?.split("-").join(" ") }</Text>
         </View>
       </View>
     </View>

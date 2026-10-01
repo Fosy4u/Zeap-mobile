@@ -1,6 +1,7 @@
 import rootAPI from "../../../../redux/api/rootAPI.ts";
 import IPaymentReference from "../models/paymentReference_model.ts";
 import IPaymentReferenceParams from "../models/paymentReferenceParams_model.ts";
+import IVerifyPaymentResponse from "../models/verifyPaymentResponse_model.ts";
 
 
 
@@ -26,16 +27,19 @@ const paymentAPI = rootAPI.injectEndpoints({
             },
         }),
 
-        // Verify Payment with Paystack.
-        verifyPayment: builder.mutation<any, { reference: string }>({
+        // Verify and fulfil a completed payment for either supported gateway.
+        verifyPayment: builder.mutation<IVerifyPaymentResponse, { reference: string }>({
             query: ({ reference }) => ({
                 url: `/payment/verify`,
                 method: "POST",
                 body: { reference },
             }),
             invalidatesTags: ["PaymentReference", "Cart"],
+            // Stripe verification is retried deliberately in the payment hook
+            // while its webhook catches up. Avoid stacking RTK's hidden retries.
+            extraOptions: { maxRetries: 0 },
 
-            transformResponse: (response: { data: any }) => {
+            transformResponse: (response: { data: IVerifyPaymentResponse }) => {
                 return response.data;
             },
         }),
