@@ -1,8 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import AuthCheck from '../../auths/components/authCheck';
-import { SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View } from 'react-native';
+import { LayoutAnimation, SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { Add, ArrowLeft, ArrowRight, Call, Location, Map } from 'iconsax-react-native';
+import { Add, ArrowDown2, ArrowLeft, ArrowRight, ArrowUp2, Call, Location, Map } from 'iconsax-react-native';
 import useAddressHook from '../../user/address/hooks/address_hook';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -24,6 +24,7 @@ const PersonalInformationScreen = () => {
     const { deliveryAddresses } = useSelector((state: RootState) => state.addressState);
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const { handleGetDeliveryAddresses, handleStartNewAddress, handleViewAddresses } = useAddressHook();
+    const [showAllUserInfo, setShowAllUserInfo] = useState(false);
 
     /* The screen previously read deliveryAddresses without ever fetching them, so
        arriving here directly showed an empty card. */
@@ -69,6 +70,12 @@ const PersonalInformationScreen = () => {
         { label: "Best colour", value: profile.bestColor ?? profile.bestColour },
         { label: "Preferred currency", value: userData.prefferedCurrency },
     ];
+    const visibleUserDetailRows = showAllUserInfo ? userDetailRows : userDetailRows.slice(0, 3);
+
+    const toggleUserInfo = () => {
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+        setShowAllUserInfo((value) => !value);
+    };
 
     return (
         <GestureHandlerRootView>
@@ -97,7 +104,7 @@ const PersonalInformationScreen = () => {
                     {/*==== Personal Info ====*/}
                     <View className="h-auto w-full mt-7 px-3 py-5 border border-gray-200 bg-[#F8F9FE] rounded-lg">
                         <View className="h-auto w-full flex-row justify-between">
-                            <Text className="font-medium text-lg text-baseGreen">User details</Text>
+                            <Text className="font-medium text-lg text-baseGreen">User info</Text>
                             <TouchableOpacity
                             onPress={ () => navigation.navigate("editAccountDetailsScreen") }
                                 className="flex-row items-center"
@@ -107,7 +114,7 @@ const PersonalInformationScreen = () => {
                             </TouchableOpacity>
                         </View>
 
-                        { userDetailRows.map((row, index) => (
+                        { visibleUserDetailRows.map((row, index) => (
                             <View
                                 key={ row.label }
                                 className={`h-auto w-full ${ index === 0 ? "mt-7" : "mt-5" } flex-row items-start justify-between`}
@@ -116,6 +123,15 @@ const PersonalInformationScreen = () => {
                                 <Text className="flex-1 text-right text-sm text-gray-600">{ display(row.value) }</Text>
                             </View>
                         )) }
+
+                        <TouchableOpacity
+                            onPress={ toggleUserInfo }
+                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                            className="mt-6 flex-row items-center justify-center"
+                        >
+                            <Text className="mr-1 font-medium text-baseGreen">{ showAllUserInfo ? "Show less" : "View more" }</Text>
+                            { showAllUserInfo ? <ArrowUp2 color="#133522" size={16} /> : <ArrowDown2 color="#133522" size={16} /> }
+                        </TouchableOpacity>
                     </View>
 
                     <View

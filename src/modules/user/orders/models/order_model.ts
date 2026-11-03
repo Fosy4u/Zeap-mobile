@@ -15,6 +15,9 @@ interface IOrder {
     progress?: Progress
     updatedAt: string
     user: string
+    channel?: string
+    gainedPoints?: number
+    storeLocation?: string
   }
 
   interface ProductOrder {

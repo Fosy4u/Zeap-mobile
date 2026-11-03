@@ -2,15 +2,17 @@ import React from 'react'
 import { ArrowRight, Eye, EyeSlash } from 'iconsax-react-native';
 import { Image, SafeAreaView, ScrollView, StatusBar, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import CheckBox from "@react-native-community/checkbox";
-import { useNavigation } from '@react-navigation/native';
+import { CommonActions, useNavigation } from '@react-navigation/native';
 import RootNavigationStackModel from '../../../routes/model/routes_model';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Controller } from 'react-hook-form';
 import useLoginHook from '../hooks/login_hook';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../../redux/store/store';
-import { setRememberMe, setShowPassword } from '../slices/authState_slice';
+import { clearPendingDestination, setRememberMe, setShowPassword } from '../slices/authState_slice';
 import AppLoader from '../../general/components/appLoader';
+
+const AUTH_FLOW_ROUTES = ["splashScreen", "onboardingOneScreen", "welcomeScreen", "signUpScreen", "forgotPasswordScreen", "profileSetupScreen"];
 
 const LoginScreen = () => {
   const { showPassword, rememberMe } = useSelector((state: RootState) => state.authState);
@@ -19,6 +21,25 @@ const LoginScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
 
   const { control, handleSubmit, onSubmit, handleGoogleSignIn, errors, isLoading, isGoogleLoading } = useLoginHook();
+
+  // Return a browsing user to where they were; anyone arriving from the onboarding/sign-up flow goes straight to Home.
+  const handleContinueShopping = () => {
+    dispatch(clearPendingDestination());
+
+    const navigationState = navigation.getState();
+    const previousRoute = navigationState?.routes?.[navigationState.index - 1]?.name;
+    if (previousRoute && !AUTH_FLOW_ROUTES.includes(previousRoute)) {
+      navigation.goBack();
+      return;
+    }
+
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: "homeScreen", state: { routes: [{ name: "Home" }] } }],
+      })
+    );
+  };
 
   return (
     <View className="flex-1">
@@ -59,6 +80,8 @@ const LoginScreen = () => {
                   aria-label="Email"
                   aria-labelledby="email"
                   keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
                   placeholder="Enter email address"
                   placeholderTextColor="#9ca3af"
                   className="h-[44px] text-base"
@@ -141,18 +164,9 @@ const LoginScreen = () => {
             >
               <Image source={require("../../../../assets/images/google_logo.png")} className="h-[20px] w-[20px] mr-1" />
               <View className="w-[5px]" />
-              <Text className="font-medium text-lg text-baseGreen">{isGoogleLoading ? "Please wait..." : "Google"}</Text>
+              <Text className="font-medium text-lg text-baseGreen">{isGoogleLoading ? "Please wait..." : "Continue with Google"}</Text>
             </TouchableOpacity>
 
-            <View className="w-[15px]" />
-
-            <TouchableOpacity
-              onPress={() => null}
-              className="h-[55px] w-full flex-1 flex-row items-center justify-center border border-gray-300 rounded-xl bg-transparent"
-            >
-              <Image source={require("../../../../assets/images/apple_logo.png")} className="h-[20px] w-[20px] mr-1" />
-              <Text className="font-medium text-lg text-baseGreen">Apple</Text>
-            </TouchableOpacity>
           </View>
 
           <View className="w-full mt-6 flex-1 flex-row justify-center">
@@ -164,6 +178,15 @@ const LoginScreen = () => {
               <Text className="text-baseGreen">Create New Account</Text>
             </TouchableOpacity>
           </View>
+
+          <TouchableOpacity
+            onPress={ handleContinueShopping }
+            className="mt-6 self-center flex-row items-center px-4 py-2"
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Text className="font-medium text-base text-baseGreen mr-1.5">Continue Shopping</Text>
+            <ArrowRight size={ 18 } className="text-baseGreen" />
+          </TouchableOpacity>
         </View>
       </ScrollView>
 

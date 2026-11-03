@@ -18,7 +18,9 @@ interface IOrderDetails {
     status?:                       IStatus;
     amount?:                       IAmount[];
     expectedVendorCompletionDate?: IExpectedDate;
+    expectedBuyerCompletionDate?:  IExpectedDate;
     expectedDeliveryDate?:         IExpectedDate;
+    pricing?:                      IOrderPricing;
     deliveryMethod?:               string;
     shopRevenue?:                  IShopRevenue;
     cancel?:                       ICancel;
@@ -60,14 +62,22 @@ interface IDeliveryCompany {
 };
 
 interface IDeliveryDetails {
-    address?:     string;
-    region?:      string;
-    country?:     string;
-    postCode?:    string;
-    phoneNumber?: string;
-    firstName?:   string;
-    lastName?:    string;
-    _id?:         string;
+    address?:      string;
+    region?:       string;
+    country?:      string;
+    postCode?:     string;
+    phoneNumber?:  string;
+    firstName?:    string;
+    lastName?:     string;
+    deliveryNote?: string;
+    _id?:          string;
+};
+
+interface IOrderPricing {
+    unitPrice?:       number;
+    basePrice?:       number;
+    discountApplied?: number;
+    pricingSource?:   string;
 };
 
 interface IExpectedDate {

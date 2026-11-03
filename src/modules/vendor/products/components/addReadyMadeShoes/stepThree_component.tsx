@@ -1,6 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Text, TouchableOpacity, View } from "react-native";
 import SearchableDropdownComponent from '../searchableDropdown_component';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../../../redux/store/store';
+import SizeGuideBottomSheet from '../../../../user/products/components/sizeGuideBottomSheet_component';
 
 interface IProps {
     sizeStandardOptions: string[];
@@ -23,6 +26,8 @@ const StepThreeComponent: React.FC<IProps> = ({
     showSizesDropDown,
     setShowSizesDropDown,
 }) => {
+    const [showSizeGuide, setShowSizeGuide] = useState(false);
+    const { product } = useSelector((state: RootState) => state.vendorProductState);
 
     return (
         <View>
@@ -33,6 +38,9 @@ const StepThreeComponent: React.FC<IProps> = ({
             <View className="h-auto w-full mt-4 px-3 py-3.5 border rounded-xl border-gray-200 bg-gray-50">
                 <Text className="font-montserratSemiBold text-base text-baseGreen">Size standard<Text className="text-red-600">*</Text></Text>
                 <Text className="mt-1 font-montserratMedium text-sm text-gray-500">Which size standard is used for this product?</Text>
+                <TouchableOpacity onPress={ () => setShowSizeGuide(true) } className="mt-1.5 self-start">
+                    <Text className="font-montserratMedium text-sm text-blue-600 underline">View Size guide</Text>
+                </TouchableOpacity>
 
                 <View className="mt-3">
                     { sizeStandardOptions.map((standard: string) => {
@@ -72,6 +80,14 @@ const StepThreeComponent: React.FC<IProps> = ({
                 <View className="mt-4 px-3 py-5 border border-gray-200 rounded-xl bg-gray-50 items-center">
                     <Text className="font-montserratMedium text-sm text-gray-500 text-center">Select a size standard above to choose the available sizes.</Text>
                 </View>
+            ) }
+
+            { showSizeGuide && (
+                <SizeGuideBottomSheet
+                    productOverride={ { ...product, productType: "readyMadeShoe" } }
+                    initialStandard={ selectedSizeStandard }
+                    onClose={ () => setShowSizeGuide(false) }
+                />
             ) }
         </View>
     );

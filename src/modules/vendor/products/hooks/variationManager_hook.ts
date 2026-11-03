@@ -10,7 +10,7 @@ import {
 } from "../apis/readyMadeProduct_api";
 import { useLazyGetProductByProductIDQuery } from "../apis/product_api";
 import { setLoadingMessage, setProduct, setProductIsLoading } from "../slices/vendorProductState_slice";
-import { stepFiveAddReadyMadeClothesSchema } from "../validations/addProduct_validation";
+import { stepFiveAddBespokeShoesSchema, stepFiveAddReadyMadeClothesSchema } from "../validations/addProduct_validation";
 import handleError from "../../../general/hooks/errorHandler_hook";
 
 export interface IColorOption {
@@ -29,11 +29,18 @@ export interface IVariationInput {
     quantity: number;
     sku?: string;
 }
+export interface IBespokeVariationInput {
+    price: number;
+    colorType: string;
+    availableColors: string[];
+}
 
-// Product types that carry per-colour/size variations (colour + size + price +
-// quantity). Bespoke uses a different single-variation model, so its cards get
-// no add/edit/delete controls.
+const BESPOKE_SKU = "BESPOKE";
+
 const READY_TO_WEAR = ["readyMadeCloth", "readyMadeShoe", "accessory"];
+
+const isBespokeType = (productType?: string): boolean =>
+    !!productType && productType.toLowerCase().startsWith("bespoke");
 
 const useVariationManagerHook = () => {
     const { product, productIsLoading } = useSelector((state: RootState) => state.vendorProductState);
@@ -48,10 +55,8 @@ const useVariationManagerHook = () => {
 
     const variations: IVariation[] = product?.variations ?? [];
     const isReadyToWear = READY_TO_WEAR.includes(product?.productType ?? "");
-    // Variations can be managed regardless of product status — a live product
-    // still needs price/stock updates as new stock arrives. Bespoke is excluded
-    // because it uses a different single-variation model.
-    const canManageVariations = isReadyToWear;
+    const isBespoke = isBespokeType(product?.productType);
+    const canManageVariations = isReadyToWear || isBespoke;
 
     // Colour enums for this product type — used to resolve each colour's hex.
     const colorEnumsForType: IColorEnum[] = useMemo(() => {
@@ -74,6 +79,17 @@ const useVariationManagerHook = () => {
         [product?.colors, colorEnumsForType],
     );
     const sizes: string[] = product?.sizes ?? [];
+
+    // Bespoke colours are the ones the vendor can source on request, so the
+    // picker offers the full enum for the product type rather than only the
+    // colours already uploaded against the product.
+    const bespokeColorOptions: IColorOption[] = useMemo(
+        () => colorEnumsForType.map((enumColor) => ({
+            colorName: enumColor.name ?? "",
+            colorCode: enumColor.hex ?? "#e5e7eb",
+        })),
+        [colorEnumsForType],
+    );
 
     // colour+size combinations that don't yet have a variation — the pool the
     // "Add Variation" quick picker offers.
@@ -167,6 +183,40 @@ const useVariationManagerHook = () => {
         }
     };
 
+    // Bespoke products carry exactly one variation: price plus the colour setup.
+    // Adds it on first save, edits it afterwards, mirroring the create flow.
+    const handleSaveBespokeVariation = async (input: IBespokeVariationInput): Promise<boolean> => {
+        const productId = product?.productId || "";
+        const existingSku = variations[0]?.sku ?? BESPOKE_SKU;
+        const isFirstSave = variations.length === 0;
+
+        dispatch(setLoadingMessage(isFirstSave ? "Adding product variation..." : "Updating product variation..."));
+        dispatch(setProductIsLoading(true));
+        try {
+            const requestData = await stepFiveAddBespokeShoesSchema.validate({
+                productId,
+                variation: {
+                    colorType: input.colorType,
+                    availableColors: input.availableColors,
+                    price: Number(input.price),
+                    ...(isFirstSave ? {} : { sku: existingSku }),
+                },
+                currentStep: 5,
+            });
+            const response = isFirstSave
+                ? await addProductVariation(requestData).unwrap()
+                : await updateProductVariation(requestData).unwrap();
+            if (response) await refreshProduct(productId);
+            return true;
+        } catch (error) {
+            handleError(error);
+            return false;
+        } finally {
+            dispatch(setProductIsLoading(false));
+            dispatch(setLoadingMessage(""));
+        }
+    };
+
     // Delete an existing variation by sku.
     const handleDeleteVariation = async (sku?: string): Promise<boolean> => {
         const productId = product?.productId || "";
@@ -188,12 +238,15 @@ const useVariationManagerHook = () => {
     return {
         productIsLoading,
         canManageVariations,
+        isBespoke,
         colorOptions,
+        bespokeColorOptions,
         sizes,
         availableCombos,
         previewSku,
         handleUpdateVariation,
         handleAddVariations,
+        handleSaveBespokeVariation,
         handleDeleteVariation,
     };
 };

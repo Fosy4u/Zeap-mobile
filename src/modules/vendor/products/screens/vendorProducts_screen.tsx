@@ -1,13 +1,12 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import {Dimensions, Image, RefreshControl, SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View} from "react-native";
-import {Add, ArrowLeft, ArrowRight, Edit2} from "iconsax-react-native";
+import {Dimensions, Image, RefreshControl, SafeAreaView, ScrollView, StatusBar, Text, TextInput, TouchableOpacity, View} from "react-native";
+import {Add, ArrowLeft, ArrowRight, CloseCircle, Edit2, SearchNormal1} from "iconsax-react-native";
 import {useNavigation} from "@react-navigation/native";
 import {NativeStackNavigationProp} from "@react-navigation/native-stack";
 import RootNavigationStackModel from "../../../../routes/model/routes_model.ts";
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { useDispatch, useSelector } from 'react-redux';
-import { setShowProductFilterBottomSheet } from '../../home/slices/vendorHome_slice.tsx';
 import useVendorProductHook from '../hooks/vendorProduct_hook.ts';
 import SkeletonBlock from '../../../general/components/skeletonBlock_component.tsx';
 import FastImage from 'react-native-fast-image';
@@ -20,6 +19,13 @@ import AppStatusBar from "../../../general/components/appStatusBar";
 
 
 
+const PRODUCT_STATUS_TABS = [
+    { label: "Live", value: "live" },
+    { label: "Draft", value: "draft" },
+    { label: "Under Review", value: "under review" },
+    { label: "Rejected", value: "rejected" },
+];
+
 const VendorProductsScreen = () => {
     const { products } = useSelector((state: RootState) => state.vendorProductState);
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
@@ -28,14 +34,19 @@ const VendorProductsScreen = () => {
 
     const {
         handleFetchFilteredProducts, isLoadingProducts,
+        searchPhrase, handleSearchProducts, visibleProducts,
+        selectedStatus, handleSelectProductStatus,
         selectedPageNumber, setSelectedPageNumber,
-        requestParams, setRequestParams,
         hasNextPage, hasPrevPage, showPagination,
     } = useVendorProductHook();
 
     useEffect(() => {
         handleFetchFilteredProducts();
     }, [selectedPageNumber, currencyRefreshToken]);
+
+    useEffect(() => {
+        handleFetchFilteredProducts();
+    }, [selectedStatus]);
 
     // Pull-to-refresh — re-fetches the current page's products. Driven by its
     // own flag so the spinner reflects the refresh gesture, independent of the
@@ -62,14 +73,46 @@ const VendorProductsScreen = () => {
                     <ModuleAppBarComponent
                         title="All Products"
                         variant="vendor"
-                        rightIcon={
-                            <Image
-                                source={ require("../../../../../assets/images/filter_gold.png") }
-                                className="h-[25px] w-[25px]"
-                            />
-                        }
-                        onRightPress={ () => dispatch(setShowProductFilterBottomSheet(true)) }
                     />
+
+                    {/*==== Status Tabs ====*/}
+                    <View className="h-auto w-full mt-5 px-5">
+                      <View className="h-auto w-full p-1 flex-row items-center border border-gray-400 rounded-2xl">
+                        { PRODUCT_STATUS_TABS.map((tab) => (
+                            <TouchableOpacity key={ tab.value }
+                                onPress={ () => handleSelectProductStatus(tab.value) }
+                                className={ `flex-1 px-1 py-2 rounded-xl ${ (selectedStatus === tab.value) ? "bg-baseGreen" : "" }` }
+                            >
+                                <Text
+                                    numberOfLines={ 1 }
+                                    className={ `text-center text-xs ${ (selectedStatus === tab.value) ? "text-white" : "text-gray-500" }` }
+                                >
+                                    { tab.label }
+                                </Text>
+                            </TouchableOpacity>
+                        )) }
+                      </View>
+                    </View>
+
+                    {/*==== Search Box ====*/}
+                    <View className="h-auto w-full mt-4 px-5">
+                        <View className="h-[55px] w-full px-3 py-1 flex-row items-center border border-gray-300 rounded-xl bg-gray-100">
+                            <SearchNormal1 color="#9ca3af" size={ 20 } />
+                            <TextInput
+                                placeholder="Search products"
+                                placeholderTextColor="#9ca3af"
+                                value={ searchPhrase }
+                                onChangeText={ handleSearchProducts }
+                                autoCorrect={ false }
+                                className="h-[44px] ml-2.5 flex-1 text-base text-baseGreen"
+                            />
+                            { !!searchPhrase && (
+                                <TouchableOpacity onPress={ () => handleSearchProducts("") } hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                                    <CloseCircle color="#9ca3af" size={ 20 } variant="Bold" />
+                                </TouchableOpacity>
+                            ) }
+                        </View>
+                    </View>
 
                     <ScrollView
                         showsVerticalScrollIndicator={false}
@@ -95,7 +138,7 @@ const VendorProductsScreen = () => {
 
                         {/* ==== Product List ==== */}
                         <View className="mb-5">
-                            { isLoadingProducts && (!products || products.length === 0) ? (
+                            { isLoadingProducts && (!visibleProducts || visibleProducts.length === 0) ? (
                                 [0, 1].map((i) => (
                                     <View key={ i } className="mt-5 mb-4">
                                         <SkeletonBlock
@@ -105,7 +148,16 @@ const VendorProductsScreen = () => {
                                         />
                                     </View>
                                 ))
-                            ) : products && products.map((product: IVendorProductDetails) => (
+                            ) : (!visibleProducts || visibleProducts.length === 0) ? (
+                                <View className="h-auto w-full mt-10 items-center justify-center">
+                                    <Text className="font-montserratSemiBold text-base text-gray-700">No products found</Text>
+                                    <Text className="mt-2 px-8 font-montserratMedium text-sm text-gray-500 text-center leading-6">
+                                        { searchPhrase
+                                            ? `We couldn't find a product matching "${ searchPhrase }".`
+                                            : `You have no ${ selectedStatus } products yet.` }
+                                    </Text>
+                                </View>
+                            ) : visibleProducts.map((product: IVendorProductDetails) => (
                                 <TouchableOpacity
                                     key={product._id}
                                     onPress={ () => navigation.navigate("vendorProductDetailsScreen", { productID: product?.productId! }) }
@@ -133,43 +185,6 @@ const VendorProductsScreen = () => {
                                                     <Text className="mt-2 font-montserratMedium text-xs text-gray-400">No image</Text>
                                                 </View>
                                             ) }
-
-                                            <View className="absolute top-5 left-2 right-2 flex-row justify-between">
-                                                {/* <View className="w-[110px] px-2 py-1 rounded-lg border border-white/60 backdrop-blur-lg bg-white/50">
-                                                    <View className="flex-row items-center">
-                                                    <Star1 color="#E4A01C" size={14} variant="Bold" className="mr-1" />
-                                                    <Text className="text-xs">{ `${reviewData ? reviewData?.averageRating!.toFixed(1) : 0}.0` }</Text>
-                                                    </View>
-                                                    <Text className="text-[11px]">
-                                                        { reviewData ? `${reviewData?.reviews?.length} ${ reviewData?.reviews?.length! > 1 ? "reviews" : "review" }` : "0 review" }
-                                                    </Text>
-                                                </View> */}
-                                                <View />
-
-                                                <View className="flex-row items-center gap-2">
-                                                    <View className={`p-2 flex items-center justify-center rounded-lg border backdrop-blur-lg ${
-                                                            product.status === "live" 
-                                                            ? "border-green-300 bg-green-50" 
-                                                            : product.status === "draft"
-                                                            ? "border-blue-300 bg-blue-50"
-                                                            : product.status === "under review"
-                                                            ? "border-orange/30 bg-orange/10"
-                                                            : "border-red-300 bg-red-50"
-                                                        }`}>
-                                                        <Text className={`font-montserratMedium text-xs ${
-                                                            product.status === "live" 
-                                                            ? "text-green-600" 
-                                                            : product.status === "draft"
-                                                            ? "text-blue-600"
-                                                            : product.status === "under review"
-                                                            ? "text-orange-800"
-                                                            : "text-red-600"
-                                                        }`}>
-                                                            {product.status!.charAt(0).toUpperCase() + product.status!.slice(1)}
-                                                        </Text>
-                                                    </View>
-                                                </View>
-                                            </View>
 
                                             <View className="h-auto w-full mt-4 flex-row items-center justify-between">
                                                 <View className="h-auto flex-row items-center">
@@ -228,7 +243,6 @@ const VendorProductsScreen = () => {
                                     <TouchableOpacity
                                         onPress={ () => {
                                             setSelectedPageNumber(selectedPageNumber - 1);
-                                            setRequestParams({ ...requestParams, "pageNumber": selectedPageNumber - 1 });
                                         } }
                                         disabled={ !hasPrevPage }
                                         className={`h-[45px] flex-1 flex-row items-center justify-center rounded-lg ${ !hasPrevPage ? "bg-gray-200" : "bg-lightGreen"}`}
@@ -240,7 +254,6 @@ const VendorProductsScreen = () => {
                                     <TouchableOpacity
                                         onPress={ () => {
                                             setSelectedPageNumber(selectedPageNumber + 1);
-                                            setRequestParams({ ...requestParams, "pageNumber": selectedPageNumber + 1 });
                                         } }
                                         disabled={ !hasNextPage }
                                         className={`h-[45px] flex-1 flex-row items-center justify-center rounded-lg ${ !hasNextPage ? "bg-gray-200" : "bg-baseGreen"}`}

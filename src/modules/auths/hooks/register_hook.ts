@@ -4,7 +4,7 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { getAuth, createUserWithEmailAndPassword, getIdToken, GoogleAuthProvider, signInWithCredential } from "@react-native-firebase/auth";
+import { getAuth, getIdToken, GoogleAuthProvider, signInWithCredential, signInWithEmailAndPassword } from "@react-native-firebase/auth";
 import EncryptedStorage from "react-native-encrypted-storage";
 import { forgetSecureItem } from "../../../utils/secureStorage";
 import { GoogleSignin, statusCodes } from "@react-native-google-signin/google-signin";
@@ -12,7 +12,9 @@ import { IRegisterUser, registerUserSchema } from "../validations/auths_validati
 import { clearPendingDestination, setShowSuccessModal } from "../slices/authState_slice";
 import { setIsLoading, setLoadingMessage } from "../../general/slices/general_slice";
 import { setUserData } from "../../profile/slices/profileState_slice";
-import { useLazyGetUserByIdQuery, useMergeUserDataMutation, useRegisterGuestUserMutation } from "../apis/auths_api";
+import { useConvertGuestToPasswordUserMutation, useLazyCheckUserEmailQuery, useLazyGetUserByIdQuery, useMergeUserDataMutation, useRegisterGuestUserMutation } from "../apis/auths_api";
+import encryptPassword from "../../../utils/encryptPassword";
+import { phoneCodeForCurrency } from "../../../utils/currencyToPhoneCode";
 import { storeToken } from "../../../redux/services/authorizationHeader";
 import handleError from "../../general/hooks/errorHandler_hook";
 import RootNavigationStackModel from "../../../routes/model/routes_model";
@@ -32,7 +34,14 @@ const useRegisterHook = () => {
     const [registerGuestUser] = useRegisterGuestUserMutation();
     const [getUserById] = useLazyGetUserByIdQuery();
     const [mergeUserData] = useMergeUserDataMutation();
+    const [checkUserEmail] = useLazyCheckUserEmailQuery();
+    const [convertGuestToPasswordUser] = useConvertGuestToPasswordUserMutation();
     const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+    const preferredCurrency = useSelector((state: RootState) => state.profileState.userData?.prefferedCurrency);
+    const [dialCode, setDialCode] = useState(() => phoneCodeForCurrency(preferredCurrency).dial_code);
+    const [step, setStep] = useState<"email" | "login" | "details">("email");
+    const [isCheckingEmail, setIsCheckingEmail] = useState(false);
+    const [existingFirstName, setExistingFirstName] = useState("");
     const authInstance = getAuth();
 
     // Return the user to wherever they were headed when the auth gate
@@ -50,44 +59,90 @@ const useRegisterHook = () => {
         navigation.navigate("homeScreen", { screen: "Home" });
     };
 
-    const { control, handleSubmit, formState: { errors } } = useForm<IRegisterUser>({
+    const { control, handleSubmit, formState: { errors }, trigger, getValues, clearErrors } = useForm<IRegisterUser>({
         defaultValues: {
+            firstName: "",
+            lastName: "",
             email: "",
             password: "",
-            confirmPassword: ""
+            confirmPassword: "",
+            phoneNumber: "",
         },
         resolver: yupResolver(registerUserSchema)
     });
 
-    // Shared: store Firebase auth data and create backend profile
-    const handleStoreAuthData = async (user: any) => {
-        const uid = user.uid;
-        const token = await getIdToken(user, true);
+    // Step one, as on the web: a registered email goes to the password step, a new one to the sign-up details.
+    const handleContinueWithEmail = async () => {
+        if (!(await trigger("email"))) return;
 
-        const firebaseUserData = { uid: user.uid, email: user.email, displayName: user.displayName, photoURL: user.photoURL };
-        await EncryptedStorage.setItem(STORAGE_KEYS.FIREBASE_USER, JSON.stringify(firebaseUserData));
-        await EncryptedStorage.setItem(STORAGE_KEYS.USER_ID, JSON.stringify(uid));
-        await storeToken(token);
-
-        const userData = await registerGuestUser({}).unwrap();
-        return userData;
+        setIsCheckingEmail(true);
+        try {
+            const guestUser = authInstance.currentUser;
+            if (guestUser) await storeToken(await getIdToken(guestUser));
+            const existingUser = await checkUserEmail(getValues("email").trim().toLowerCase()).unwrap().catch(() => null);
+            clearErrors();
+            if (existingUser?.firstName) {
+                setExistingFirstName(existingUser.firstName);
+                setStep("login");
+                return;
+            }
+            setStep("details");
+        } finally {
+            setIsCheckingEmail(false);
+        }
     };
 
+    const handleUseDifferentEmail = () => {
+        clearErrors();
+        setExistingFirstName("");
+        setStep("email");
+    };
+
+    // Same flow as the web: the current guest is converted into an email/password account,
+    // then signed in with those credentials so the cart and favourites carry over.
     const onSubmit: SubmitHandler<IRegisterUser> = async (data) => {
         dispatch(setLoadingMessage("Creating account..."));
         dispatch(setIsLoading(true));
 
-        try {
-            const { user } = await createUserWithEmailAndPassword(authInstance, data.email, data.password);
-            await handleStoreAuthData(user);
+        const email = data.email.trim().toLowerCase();
 
-            dispatch(setIsLoading(false));
-            dispatch(setLoadingMessage(""));
+        try {
+            const guestUser = authInstance.currentUser;
+            if (!guestUser) throw new Error("Your session has expired. Please restart the app and try again.");
+            await storeToken(await getIdToken(guestUser, true));
+
+            const existingUser = await checkUserEmail(email).unwrap().catch(() => null);
+            if (existingUser?.firstName) {
+                throw new Error("An account with this email already exists. Please log in instead.");
+            }
+
+            await convertGuestToPasswordUser({
+                email,
+                password: encryptPassword(data.password),
+                firstName: data.firstName.trim(),
+                lastName: data.lastName.trim(),
+                phoneNumber: `${ dialCode }${ data.phoneNumber.replace(/^0+/, "") }`,
+            }).unwrap();
+
+            const { user: authUser } = await signInWithEmailAndPassword(authInstance, email, data.password);
+            const token = await getIdToken(authUser, true);
+            await storeToken(token);
+
+            const firebaseUserData = { uid: authUser.uid, email: authUser.email, displayName: authUser.displayName, photoURL: authUser.photoURL };
+            await EncryptedStorage.setItem(STORAGE_KEYS.FIREBASE_USER, JSON.stringify(firebaseUserData));
+            await EncryptedStorage.setItem(STORAGE_KEYS.USER_ID, JSON.stringify(authUser.uid));
+
+            const userData: any = { ...(await getUserById(authUser.uid).unwrap()), isGuest: false };
+            await EncryptedStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(userData));
+            dispatch(setUserData(userData));
+            await forgetSecureItem(STORAGE_KEYS.GUEST_UID);
+
             dispatch(setShowSuccessModal(true));
         } catch (error: any) {
+            handleError(error);
+        } finally {
             dispatch(setIsLoading(false));
             dispatch(setLoadingMessage(""));
-            handleError(error);
         }
     };
 
@@ -255,7 +310,10 @@ const useRegisterHook = () => {
         }
     };
 
-    return { control, handleSubmit, onSubmit, handleGoogleSignUp, isGoogleLoading, errors };
+    return {
+        control, handleSubmit, onSubmit, handleGoogleSignUp, isGoogleLoading, errors, dialCode, setDialCode, redirectAfterAuth,
+        step, handleContinueWithEmail, handleUseDifferentEmail, isCheckingEmail, existingFirstName, getValues,
+    };
 };
 
 export default useRegisterHook;

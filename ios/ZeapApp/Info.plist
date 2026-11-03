@@ -47,8 +47,12 @@
 	<string>We use your location to recommend a currency and provide relevant services</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>We use your location to recommend a currency that suits your area</string>
+	<key>NSCameraUsageDescription</key>
+	<string>We use your camera so you can take a profile photo and photograph your shop verification documents</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>We save your order receipts to your photo library when you download them</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>We access your photo library so you can set a profile photo and attach product and shop verification images</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>Montserrat-Bold.ttf</string>

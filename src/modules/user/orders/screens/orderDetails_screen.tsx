@@ -5,7 +5,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import RootNavigationStackModel from '../../../../routes/model/routes_model';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../../../redux/store/store';
-import { ArrowLeft, ArrowRight, Call, Location, Receipt21, Sms } from 'iconsax-react-native';
+import { ArrowLeft, Call, Global, Location, Receipt21, Sms } from 'iconsax-react-native';
 import { timeAgo } from '../../../../utils/formatTime';
 import useGeneralHook from '../../../general/hooks/general_hook';
 import { setSelectedOrderStatus, setSelectedProductOrderID } from '../slices/order_slice';
@@ -138,6 +138,14 @@ const OrderDetailsScreen: React.FC<IProps> = ({ route }) => {
                                     <View style={{ height: 8, width: `${ orderDetails?.progress?.value ?? 0 }%`, backgroundColor: "#133522", borderRadius: 10 }} />
                                 </View>
                             </View>
+
+                            { !!orderDetails?.gainedPoints && (
+                                <View className="mt-4 p-3 rounded-xl bg-[#E6F7FB]">
+                                    <Text className="font-montserratMedium text-sm text-gray-700">
+                                        You have gained <Text className="font-montserratSemiBold text-gray-900">{ orderDetails.gainedPoints }</Text> points from this order.
+                                    </Text>
+                                </View>
+                            ) }
                         </View>
 
                         {/* ==== Items in  your Order ==== */}
@@ -170,7 +178,7 @@ const OrderDetailsScreen: React.FC<IProps> = ({ route }) => {
                                                 width: isSingle ? AVAILABLE_WIDTH : ITEM_WIDTH,
                                                 marginRight: isSingle || index === productOrders.length - 1 ? 0 : ITEM_GAP,
                                             }}
-                                            className="mt-2 p-4 rounded-xl border border-gray-200 bg-[#F7F8FC]"
+                                            className="mt-2 py-4 px-3 rounded-xl border border-gray-200 bg-[#F7F8FC]"
                                         >
                                             <View className="flex-row justify-between mb-2">
                                                 <View className={ `px-3 py-1 rounded ${ productOrder.status?.name === "delivered" ? "bg-green-600" : "bg-yellow-600" }` }>
@@ -200,18 +208,26 @@ const OrderDetailsScreen: React.FC<IProps> = ({ route }) => {
                                                     <Text className="mt-1.5 font-montserratMedium text-gray-500">{ formatPrice(amount?.value, amount?.currency) }</Text>
                                                 </View>
                                             </View>
-                                            <TouchableOpacity 
-                                                onPress={() => {
-                                                    dispatch(setSelectedOrderStatus(productOrder.status!))
-                                                    dispatch(setSelectedProductOrderID(productOrder._id!))
-                                                    setShowBottomSheetModal(true);
-                                                    handleGetOrderHistory(productOrder._id!);
-                                                }}
-                                                className="h-[55px] w-full mt-6 flex-row items-center justify-center rounded-xl bg-lightGold"
-                                            >
-                                                <Text className="font-montserratMedium text-base text-green-800">{historyIsLoading ? "Loading..." : "Show Status History"}</Text>
-                                                { !historyIsLoading && <ArrowRight size={ 18 } className="ml-2 text-green-800" /> }
-                                            </TouchableOpacity>
+                                            <View className="mt-6 flex-row items-center">
+                                                <TouchableOpacity
+                                                    onPress={() => navigation.navigate("orderItemDetailsScreen", { productOrderId: productOrder._id! })}
+                                                    className="h-[44px] flex-1 mr-1.5 flex-row items-center justify-center rounded-xl bg-baseGreen px-2"
+                                                >
+                                                    <Text numberOfLines={ 1 } className="font-montserratMedium text-xs text-white flex-shrink">View Details</Text>
+                                                </TouchableOpacity>
+
+                                                <TouchableOpacity
+                                                    onPress={() => {
+                                                        dispatch(setSelectedOrderStatus(productOrder.status!))
+                                                        dispatch(setSelectedProductOrderID(productOrder._id!))
+                                                        setShowBottomSheetModal(true);
+                                                        handleGetOrderHistory(productOrder._id!);
+                                                    }}
+                                                    className="h-[44px] flex-1 ml-1.5 flex-row items-center justify-center rounded-xl bg-lightGold px-2"
+                                                >
+                                                    <Text numberOfLines={ 1 } className="font-montserratMedium text-xs text-green-800 flex-shrink">{historyIsLoading ? "Loading..." : "View History"}</Text>
+                                                </TouchableOpacity>
+                                            </View>
                                         </View>
                                     );
                                 }}
@@ -240,7 +256,7 @@ const OrderDetailsScreen: React.FC<IProps> = ({ route }) => {
                                     </View>
                                 );
                                 return (
-                                    <View key={ productOrder._id } className="mt-2 p-4 rounded-xl border border-gray-200 bg-[#F7F8FC]">
+                                    <View key={ productOrder._id } className="mt-2 py-4 px-3 rounded-xl border border-gray-200 bg-[#F7F8FC]">
                                         <View className="flex-row justify-between mb-2">
                                             <View className={ `px-3 py-1 rounded ${ productOrder.status?.name === "delivered" ? "bg-green-600" : "bg-yellow-600" }` }>
                                                 <Text className="font-montserratMedium text-white text-xs">{(productOrder.status?.name?.charAt(0)?.toUpperCase() ?? "") + (productOrder.status?.name?.slice(1) ?? "")}</Text>
@@ -263,18 +279,26 @@ const OrderDetailsScreen: React.FC<IProps> = ({ route }) => {
                                                 <Text className="mt-1.5 font-montserratMedium text-gray-500">{ formatAmount(productOrder.amount) }</Text>
                                             </View>
                                         </View>
-                                        <TouchableOpacity 
-                                            onPress={() => {
-                                                dispatch(setSelectedOrderStatus(productOrder.status!))
-                                                dispatch(setSelectedProductOrderID(productOrder._id!))
-                                                setShowBottomSheetModal(true);
-                                                handleGetOrderHistory(productOrder._id!);
-                                            }}
-                                            className="h-[55px] w-full mt-6 flex-row items-center justify-center rounded-xl bg-lightGold"
-                                        >
-                                            <Text className="font-montserratMedium text-base text-green-800">{historyIsLoading ? "Loading..." : "Show Status History"}</Text>
-                                            { !historyIsLoading && <ArrowRight size={ 18 } className="ml-2 text-green-800" /> }
-                                        </TouchableOpacity>
+                                        <View className="mt-6 flex-row items-center">
+                                            <TouchableOpacity
+                                                onPress={() => navigation.navigate("orderItemDetailsScreen", { productOrderId: productOrder._id! })}
+                                                className="h-[44px] flex-1 mr-1.5 flex-row items-center justify-center rounded-xl bg-baseGreen px-2"
+                                            >
+                                                <Text numberOfLines={ 1 } className="font-montserratMedium text-xs text-white flex-shrink">View Details</Text>
+                                            </TouchableOpacity>
+
+                                            <TouchableOpacity
+                                                onPress={() => {
+                                                    dispatch(setSelectedOrderStatus(productOrder.status!))
+                                                    dispatch(setSelectedProductOrderID(productOrder._id!))
+                                                    setShowBottomSheetModal(true);
+                                                    handleGetOrderHistory(productOrder._id!);
+                                                }}
+                                                className="h-[44px] flex-1 ml-1.5 flex-row items-center justify-center rounded-xl bg-lightGold px-2"
+                                            >
+                                                <Text numberOfLines={ 1 } className="font-montserratMedium text-xs text-green-800 flex-shrink">{historyIsLoading ? "Loading..." : "View History"}</Text>
+                                            </TouchableOpacity>
+                                        </View>
                                     </View>
                                 );
                             })()
@@ -321,7 +345,11 @@ const OrderDetailsScreen: React.FC<IProps> = ({ route }) => {
                             </View>
                             <View className="mt-4 flex-row items-center">
                                 <Location size={18} color="#222" className="mr-2" />
-                                <Text className="ml-2 font-montserratMedium">{ orderDetails.deliveryDetails?.region }, { orderDetails.deliveryDetails?.country }</Text>
+                                <Text className="ml-2 font-montserratMedium">{ orderDetails.deliveryDetails?.region }</Text>
+                            </View>
+                            <View className="mt-4 flex-row items-center">
+                                <Global size={18} color="#222" className="mr-2" />
+                                <Text className="ml-2 font-montserratMedium">{ orderDetails.deliveryDetails?.country }</Text>
                             </View>
                         </View>
 

@@ -37,6 +37,10 @@ const productAPI = rootAPI.injectEndpoints({
                 ? `${filterProductsRoute}/recommended`
                 : (screenTitle === "Search Products")
                 ? `${filterProductsRoute}/searchProducts`
+                : (screenTitle === "Similar Products")
+                ? `${filterProductsRoute}/similar`
+                : (screenTitle === "Promo Products")
+                ? "/promo/products"
                 : (screenTitle === "Recently Viewed")
                 ? recentlyViewedProductsRoute
                 : filterProductsRoute; // Default to all products
@@ -144,7 +148,42 @@ const productAPI = rootAPI.injectEndpoints({
         }),
 
         // Get Dynamic Filter Options
-        getDynamicFilterOptions: builder.query<IDynamicFilter[], {queryParams: any}>({
+        getSimilarProducts: builder.query<IProduct[], { productId: string; limit?: number }>({
+            query: ({ productId, limit = 10 }) => ({
+                url: `${filterProductsRoute}/similar`,
+                method: "GET",
+                params: { productId, limit },
+            }),
+            providesTags: ["Products"],
+            transformResponse: (response: any): IProduct[] => {
+                if (Array.isArray(response?.data)) return response.data as IProduct[];
+                return (response?.data?.products as IProduct[]) ?? [];
+            },
+        }),
+
+        getProductBrands: builder.query<{ brand: string; count: number }[], void>({
+            query: () => ({
+                url: `${filterProductsRoute}/brand`,
+                method: "GET",
+            }),
+            providesTags: ["Products"],
+            transformResponse: (response: { data?: { brand: string; count: number }[] }) => response?.data ?? [],
+        }),
+
+        getCategoryProductCount: builder.query<number | null, Record<string, string>>({
+            query: (queryParams) => ({
+                url: dynamicFiltersRoute,
+                method: "GET",
+                params: queryParams,
+            }),
+            providesTags: ["DynamicFilterOptions"],
+            transformResponse: (response: { data?: { totalCount?: number } }) => {
+                const totalCount = response?.data?.totalCount;
+                return typeof totalCount === "number" ? totalCount : null;
+            },
+        }),
+
+        getDynamicFilterOptions: builder.query<{ dynamicFilters: IDynamicFilter[]; totalCount: number | null }, {queryParams: any}>({
             query: ({queryParams}) => {
                 // console.log("DYNAMIC FILTER QUERY::: ", queryParams);
 
@@ -155,14 +194,19 @@ const productAPI = rootAPI.injectEndpoints({
                 });
             },
             providesTags: ["DynamicFilterOptions"],
-            transformResponse: (response: { data: { dynamicFilters: IDynamicFilter[] } }) => {
-                return response.data.dynamicFilters;
+            transformResponse: (response: { data: { dynamicFilters: IDynamicFilter[]; totalCount?: number } }) => {
+                const totalCount = response?.data?.totalCount;
+                return {
+                    dynamicFilters: response.data.dynamicFilters,
+                    totalCount: typeof totalCount === "number" ? totalCount : null,
+                };
             },
         }),
     }),
 });
 
 export const {
+    useGetFilteredProductsQuery,
     useLazyGetFilteredProductsQuery,
     useGetProductByProductIDQuery,
     useLazyGetProductByProductIDQuery,
@@ -171,6 +215,10 @@ export const {
     useLazyGetProductPromotionQuery,
     useLazyGetSizeGuideQuery,
     useLazyGetDynamicFilterOptionsQuery,
+    useGetCategoryProductCountQuery,
+    useGetSimilarProductsQuery,
+    useGetProductBrandsQuery,
+    useGetPromoProductsQuery,
     useLazySearchProductsQuery,
     useSearchProductsQuery,
 } = productAPI;

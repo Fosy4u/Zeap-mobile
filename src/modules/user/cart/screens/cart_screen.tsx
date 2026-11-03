@@ -2,7 +2,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { View, Text, SafeAreaView, StatusBar, TouchableOpacity, Image, ScrollView, RefreshControl, ActivityIndicator } from 'react-native'
 import React, { useCallback, useState } from 'react'
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { ArrowRight, Notification, Trash } from 'iconsax-react-native';
+import { ArrowRight, Heart, Notification, Trash } from 'iconsax-react-native';
 import { RootState } from '../../../../redux/store/store';
 import AppLoader from '../../../general/components/appLoader';
 import NotificationBadgeComponent from '../../../notifications/components/notificationBadge_component';
@@ -18,10 +18,22 @@ import EmptyListComponent from '../../../general/components/emptyList_component'
 import CartSkeletonLoader from '../components/cartSkeletonLoader_component.tsx';
 import useDisplayCurrency from '../../../general/hooks/displayCurrency_hook';
 import ColorSwatchComponent from '../../../general/components/colorSwatch_component';
+import { useGetSimilarProductsQuery } from '../../products/apis/product_api';
+import useWishlistToggle from '../../saved/hooks/wishlistToggle_hook';
+import IProduct from '../../products/models/product_model';
 
 const CartScreen = () => {
   const { cart, isCartItemsLoading } = useSelector((state: RootState) => state.cartState);
   const { popularProducts } = useSelector((state: RootState) => state.productState);
+  const hasCartItems = !!cart?.basketItems && cart.basketItems.length > 0;
+  const firstCartProductId = cart?.basketItems?.[0]?.productId ?? "";
+  const { data: similarProducts = [] } = useGetSimilarProductsQuery(
+    { productId: firstCartProductId, limit: 10 },
+    { skip: !hasCartItems || !firstCartProductId },
+  );
+  const cartProductIds = new Set((cart?.basketItems ?? []).map((basketItem) => basketItem.productId));
+  const similarSuggestions = similarProducts.filter((product) => !cartProductIds.has(product.productId));
+  const suggestedProducts = (hasCartItems && similarSuggestions.length > 0) ? similarSuggestions : popularProducts;
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
   const dispatch = useDispatch();
   const { formatPrice, currencyRefreshToken } = useDisplayCurrency();
@@ -50,9 +62,9 @@ const CartScreen = () => {
     handleGetDeliveryDate,
     handleGetDeliveryMethod,
     handleGetOderSummary,
-    getItemDeliveryPeriod,
   } = useCartHook();
   const { handleGetDeliveryAddresses } = useAddressHook();
+  const { isSaved, toggleSave } = useWishlistToggle();
   const { getColorCode } = useGeneralHook();
 
   // Fire all data fetches in parallel on focus. Cart items drive the loader;
@@ -226,29 +238,37 @@ const CartScreen = () => {
 
                           <Text className="font-semibold text-lg text-baseGreen">{ formatPrice(basketItem.actualAmount, basketItem.currency) }</Text>
 
-                          <TouchableOpacity
-                            disabled={ removingId === basketItem._id }
-                            onPress={ async () => {
-                              setRemovingId(basketItem._id!);
-                              try {
-                                await handleRemoveProductFromCart(basketItem._id!);
-                              } finally {
-                                setRemovingId(null);
-                              }
-                            } }
-                          >
-                            { removingId === basketItem._id
-                              ? <ActivityIndicator size="small" color="#AA1F1F" />
-                              : <Trash color="#AA1F1F" size={18} variant="Bold" /> }
-                          </TouchableOpacity>
-                        </View>
+                          <View className="flex-row items-center">
+                            <TouchableOpacity
+                              onPress={ () => toggleSave({
+                                productId: basketItem.productId,
+                                productType: basketItem.sku?.startsWith("BESPOKE") ? "bespokeCloth" : undefined,
+                                colors: basketItem.color ? [{ value: basketItem.color }] : [],
+                              } as unknown as IProduct) }
+                              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                              className="mr-3"
+                              accessibilityLabel={ isSaved(basketItem.productId) ? "Remove from favourites" : "Add to favourites" }
+                            >
+                              <Heart color={ isSaved(basketItem.productId) ? "#e11d48" : "#9CA3AF" } size={ 18 } variant={ isSaved(basketItem.productId) ? "Bold" : "Linear" } />
+                            </TouchableOpacity>
 
-                        { getItemDeliveryPeriod(cart.basketItems?.[0].sku!, "Standard") && (
-                          <Text className="font-montserratMedium text-[10px] text-blue-400">Delivery period: { getItemDeliveryPeriod(cart.basketItems?.[0].sku!, "Standard") } working days</Text>
-                        ) }
-                        { getItemDeliveryPeriod(cart.basketItems?.[0].sku!, "Express") && (
-                          <Text className="font-montserratMedium text-[10px] text-blue-400">Delivery period: { getItemDeliveryPeriod(cart.basketItems?.[0].sku!, "Express") } working days</Text>
-                        ) }
+                            <TouchableOpacity
+                              disabled={ removingId === basketItem._id }
+                              onPress={ async () => {
+                                setRemovingId(basketItem._id!);
+                                try {
+                                  await handleRemoveProductFromCart(basketItem._id!);
+                                } finally {
+                                  setRemovingId(null);
+                                }
+                              } }
+                            >
+                              { removingId === basketItem._id
+                                ? <ActivityIndicator size="small" color="#AA1F1F" />
+                                : <Trash color="#AA1F1F" size={18} variant="Bold" /> }
+                            </TouchableOpacity>
+                          </View>
+                        </View>
                       </View>
                     </View>
 
@@ -262,7 +282,7 @@ const CartScreen = () => {
                 <Text className="text-base text-baseGreen">Subtotal</Text>
                 <Text className="font-semibold text-lg text-baseGreen">{ formatPrice(cart?.subTotal, cart?.currency) }</Text>
               </View>
-              <Text className="text-xs text-gray-500">Delivery fees not included yet.</Text>
+              <Text className="text-xs text-gray-500">Estimated delivery & handling, calculated on checkout</Text>
             </View>
           )
           : (
@@ -293,11 +313,13 @@ const CartScreen = () => {
           </TouchableOpacity>
 
           {/*==== Similar Items Section ====*/}
-          { popularProducts.length > 0 && (
+          { suggestedProducts.length > 0 && (
             <View className="mt-10 mb-10">
               <View className="flex-row justify-between items-center">
-                <Text className="font-medium text-base text-baseGreen">Similar items</Text>
-                <TouchableOpacity onPress={ () => navigation.navigate("productListScreen", { screenTitle: "Similar Products" }) }>
+                <Text className="font-medium text-base text-baseGreen">{ hasCartItems ? "Similar items" : "Popular items" }</Text>
+                <TouchableOpacity onPress={ () => navigation.navigate("productListScreen", (hasCartItems && similarSuggestions.length > 0)
+                  ? { screenTitle: "Similar Products", filters: { productId: firstCartProductId } }
+                  : { screenTitle: "Popular Products" }) }>
                   <Text className="text-sm text-baseGreen">See all</Text>
                 </TouchableOpacity>
               </View>
@@ -307,7 +329,7 @@ const CartScreen = () => {
                 showsHorizontalScrollIndicator={ false }
                 className="h-auto w-full my-3"
               >
-                { popularProducts.map((popularProduct) => (
+                { suggestedProducts.map((popularProduct) => (
                   <ProductCardComponent
                     key={ popularProduct.productId }
                     product={ popularProduct }

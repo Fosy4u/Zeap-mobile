@@ -1,9 +1,13 @@
-import { cancelOrderRoute, getOrderDetailsRoute, getOrderHistoryRoute, getOrdersRoute } from "../../../../redux/api/api_route";
+import { cancelOrderRoute, getOrderDetailsRoute, getOrderHistoryRoute, getOrdersRoute, getProductOrderRoute } from "../../../../redux/api/api_route";
+import IProductOrderDetails from "../models/productOrderDetails_model";
 import rootAPI from "../../../../redux/api/rootAPI";
 import IOrder from "../models/order_model";
 import IOrderDetails from "../models/orderDetails_model";
 import IOrderHistory from "../models/orderHistory_model";
 import IOrderCancel from "../models/orderCancel_model";
+
+const byNewestFirst = (orders: IOrder[] = []): IOrder[] =>
+    [...orders].sort((a, b) => Date.parse(b?.createdAt ?? "") - Date.parse(a?.createdAt ?? ""));
 
 const orderAPI = rootAPI.injectEndpoints({
     endpoints: (builder) => ({
@@ -14,8 +18,18 @@ const orderAPI = rootAPI.injectEndpoints({
             }),
             providesTags: ["Orders"],
             transformResponse: (response: { data: IOrder[] }) => {
-                return response.data;
+                return byNewestFirst(response.data);
             },
+        }),
+
+        getProductOrder: builder.query<IProductOrderDetails, { productOrderId: string }>({
+            query: ({ productOrderId }) => ({
+                url: getProductOrderRoute,
+                method: "GET",
+                params: { productOrder_id: productOrderId },
+            }),
+            providesTags: ["OrderDetails"],
+            transformResponse: (response: { data: IProductOrderDetails }) => response.data,
         }),
 
         // Get Order Details
@@ -65,6 +79,8 @@ const orderAPI = rootAPI.injectEndpoints({
 });
 
 export const {
+    useGetProductOrderQuery,
+    useLazyGetProductOrderQuery,
     useLazyGetOrdersQuery,
     useLazyGetOrderDetailsQuery,
     useLazyGetOrderHistoryQuery,

@@ -78,7 +78,7 @@ const OrderFilterBottomSheetComponent = ({ bottomSheetModalRef, snapPoints, setS
                         showsVerticalScrollIndicator={ false }
                         showsHorizontalScrollIndicator={ false }
                         stickyHeaderHiddenOnScroll={ true }
-                        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 60 }}
+                        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 160 }}
                     >
                         <View className="mt-6">
                             { filterItems.map((item, index) => (

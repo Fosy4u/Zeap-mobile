@@ -112,7 +112,7 @@ const AddAccessoriesScreen = () => {
       <AppStatusBar backgroundColor="#133522" barStyle="light-content" />
 
       {/*==== Header ====*/}
-      <AppHeaderComp title="Add Accessory" />
+      <AppHeaderComp title="Accessory" />
 
       {/*==== Step Indicators ====*/}
       <View className="h-auto w-full px-5 pt-4 pb-2 flex-row gap-x-2">
@@ -218,7 +218,7 @@ const AddAccessoriesScreen = () => {
             </TouchableOpacity>
         ) }
 
-        { selectedStep > 1 && selectedStep <= 5 && (
+        { selectedStep > 1 && (
             <TouchableOpacity
                 onPress={ () => handleGoBack() }
                 disabled={ productIsLoading }

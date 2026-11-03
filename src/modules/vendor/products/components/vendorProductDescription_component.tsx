@@ -12,8 +12,6 @@ interface IProps {
   product: IVendorProductDetails;
 }
 
-/* Turn a raw category value (string or string[]) into a readable, capitalised
-   label. Dashes act as word separators on the backend (e.g. "ready-made"). */
 const formatValue = (value?: string | string[]): string => {
   if (!value || (Array.isArray(value) && value.length === 0)) return "";
   const parts = Array.isArray(value) ? value : [value];
@@ -23,7 +21,6 @@ const formatValue = (value?: string | string[]): string => {
     .join(", ");
 };
 
-/* A single label / value row, matching the existing key-value layout. */
 const DetailRow: React.FC<{ label: string; value?: string }> = ({ label, value }) => {
   if (!value) return null;
   return (
@@ -38,20 +35,13 @@ const VendorProductDescriptionComponent: React.FC<IProps> = ({ product }) => {
   const categories = product?.categories;
   const { formatPrice } = useDisplayCurrency();
 
-  // Variations open in the full-screen "Manage Variations" modal. Shown only for
-  // ready-to-wear products (bespoke uses a different model); available in any
-  // status, since a live product still needs price/stock updates.
   const { canManageVariations } = useVariationManagerHook();
   const [showManageModal, setShowManageModal] = useState(false);
 
-  /* Bespoke products carry a single variation whose colours live under the
-     bespoke node; ready-to-wear products carry one variation per colour/size. */
   const variations: IVariation[] = product?.variations ?? [];
   const bespoke = variations?.[0]?.bespoke;
   const isBespoke = !!bespoke?.isBespoke;
 
-  /* Category rows, in the same order as the web product page. Empty fields are
-     dropped by DetailRow so drafts don't show a wall of blank rows. */
   const categoryRows: { label: string; value?: string }[] = [
     { label: "Product ID", value: product?.productId },
     { label: "Type", value: formatValue(categories?.type) },
@@ -68,6 +58,7 @@ const VendorProductDescriptionComponent: React.FC<IProps> = ({ product }) => {
     { label: "Brand", value: formatValue(categories?.brand) },
     { label: "Age Group", value: formatValue(categories?.age?.ageGroup) },
     { label: "Age Range", value: categories?.age?.ageRange },
+    { label: "Size Guide", value: (product as any)?.sizeStandard },
   ].filter((row) => !!row.value);
 
   return (
@@ -106,7 +97,6 @@ const VendorProductDescriptionComponent: React.FC<IProps> = ({ product }) => {
       {/*==== Variations ====*/}
       { (variations.length > 0 || canManageVariations) && (
         <View className="mt-6">
-          {/* Title row — "Manage Variations" opens the full-screen manager. */}
           <View className="flex-row items-center justify-between">
             <Text className="font-montserratSemiBold text-[15px] text-gray-700">
               Variation{ variations.length > 1 ? "s" : "" }
@@ -122,20 +112,17 @@ const VendorProductDescriptionComponent: React.FC<IProps> = ({ product }) => {
             ) }
           </View>
 
-          {/* Read-only cards here; add / edit / delete live in the manager. */}
           <View className="mt-2 gap-y-3">
             { variations.map((variation, index) => (
               <View
                 key={ variation._id ?? variation.sku ?? index }
                 className="h-auto w-full p-3 border border-gray-200 rounded-xl bg-lightGray"
               >
-                <View className="flex-row items-center justify-between">
-                  <Text className="font-montserratMedium text-xs text-gray-500">SKU</Text>
-                  <Text className="font-montserratSemiBold text-sm text-gray-700">{ variation.sku ?? "-" }</Text>
+                <View className="flex-row items-start justify-between">
+                  <Text className="mt-0.5 font-montserratMedium text-xs text-gray-500">SKU</Text>
+                  <Text className="flex-1 ml-3 text-right font-montserratSemiBold text-sm text-gray-700">{ variation.sku ?? "-" }</Text>
                 </View>
 
-                {/* Bespoke keeps its colours under the bespoke node; ready-to-wear
-                    uses the flat colorValue on each variation. */}
                 <DetailRow
                   label="Color"
                   value={
@@ -148,6 +135,10 @@ const VendorProductDescriptionComponent: React.FC<IProps> = ({ product }) => {
                 <DetailRow
                   label="Price"
                   value={ variation.price != null ? formatPrice(variation.price, variation.currency) : undefined }
+                />
+                <DetailRow
+                  label="Discount"
+                  value={ variation.discount ? formatPrice(variation.discount, variation.currency) : undefined }
                 />
                 <DetailRow
                   label="Quantity"

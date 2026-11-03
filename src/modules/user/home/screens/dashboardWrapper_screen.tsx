@@ -1,16 +1,15 @@
 import React, { useEffect } from "react";
-import { Text, View, Pressable, SafeAreaView, StatusBar, ScrollView, TextInput, TouchableOpacity, Modal } from "react-native";
+import { Text, View, Pressable, SafeAreaView, StatusBar, ScrollView, TouchableOpacity } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useNavigation } from "@react-navigation/native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { Notification, SearchNormal1, Menu, ArrowRight } from "iconsax-react-native";
+import { Notification, SearchNormal1 } from "iconsax-react-native";
 import { useDispatch, useSelector } from "react-redux";
 
 import { RootState } from "../../../../redux/store/store";
 import RootNavigationStackModel from "../../../../routes/model/routes_model";
 import MainDashboardScreen from "./mainDashboard_screen";
-import { setIsMobileMenuOpen, setSelectedDashboard } from "../slices/dashboardWrapper_slice";
-import { clearPendingDestination } from "../../../auths/slices/authState_slice";
+import { setSelectedDashboard } from "../slices/dashboardWrapper_slice";
 import BespokeDashboardScreen from "./bespokeDashboard_screen";
 import ReadyMadeDashboardScreen from './readyMadeDashboard_screen.tsx';
 import AccessoriesDashboardScreen from "./accessoriesDashboard_screen.tsx";
@@ -24,7 +23,7 @@ import useNotificationHook from "../../../notifications/hooks/notification_hook"
 import AppStatusBar from "../../../general/components/appStatusBar";
 
 const DashboardWrapperScreen = () => {
-  const { dashboards, selectedDashboard, isMobileMenuOpen } = useSelector((state: RootState) => state.dashboardWrapperState);
+  const { dashboards, selectedDashboard } = useSelector((state: RootState) => state.dashboardWrapperState);
   const { userData } = useSelector((state: RootState) => state.profileState);
   const { notifications } = useSelector((state: RootState) => state.notificationsState);
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
@@ -63,89 +62,42 @@ const DashboardWrapperScreen = () => {
         <AppStatusBar backgroundColor="#112F1E" barStyle="light-content" />
         <SafeAreaView className="flex-1 h-auto w-screen pb-20 bg-white">
 
-            {/*==== Mobile Navigation ====*/}
-            <Modal
-              visible={isMobileMenuOpen}
-              animationType="slide"
-              transparent
-              onRequestClose={() => dispatch(setIsMobileMenuOpen(false))}
+            <ScrollView
+              key={ (selectedDashboard.name === "Home") ? "home" : "category" }
+              contentContainerStyle={{ paddingBottom: 120 }}
+              stickyHeaderIndices={ (selectedDashboard.name === "Home") ? undefined : [0] }
             >
-              <View className="h-[60%] w-full bg-[#eafdf1] pt-24" style={{ zIndex: 100 }}>
-                {/*==== Close Button ====*/}
-                <TouchableOpacity
-                  onPress={() => dispatch(setIsMobileMenuOpen(false))}
-                  className="h-10 w-10 absolute top-4 right-4 flex-row items-center justify-center rounded-lg bg-lightGreen"
-                >
-                  <Text className="text-4xl text-baseGreen">&times;</Text>
-                </TouchableOpacity>
-
-                {/*==== Navigation Links ====*/}
-                {dashboards.map((dashboard) => (
-                  <TouchableOpacity
-                    key={dashboard.id}
-                    onPress={() => {
-                      dispatch(setSelectedDashboard(dashboard));
-                      dispatch(setIsMobileMenuOpen(false))
-                    }}
-                    className="mt-3 py-3"
-                  >
-                    <Text className="font-montserratSemiBold text-lg text-center text-green-700">{dashboard.name}</Text>
-                  </TouchableOpacity>
-                ))}
-
-                {/*==== Sell on Zeaper Button ====*/}
-                <TouchableOpacity
-                  className="mt-16 mx-auto px-6 py-3 flex-row items-center bg-baseGreen rounded-md"
-                  onPress={() => {
-                    dispatch(setIsMobileMenuOpen(false));
-                    navigation.navigate("vendorOnboardingScreen");
-                  }}
-                >
-                  <Text className="text-lg text-white">Sell On Zeaper</Text>
-                  <ArrowRight size={20} variant="Linear" color="#fff" style={{ marginLeft: 8 }} />
-                </TouchableOpacity>
-              </View>
-            </Modal>
-
-            <ScrollView className="pb-[120px]">
 
               {/*==== Header Section ==== */}
-              <View className="px-5 py-6 bg-baseGreen">
+              <View className="px-5 pt-6 bg-baseGreen">
                 {/*==== Top Header ====*/}
                 <View className="flex-row items-center justify-between">
-                  <View className="flex-row items-center">
+                  <TouchableOpacity
+                    className="flex-row items-center"
+                    onPress={ () => navigation.navigate("homeScreen", { screen: "Profile" } as any) }
+                  >
                     <UserAvatar
-                      photoURL={(userData as any).photoURL}
+                      photoURL={ userData.imageUrl?.link }
                       firstName={userData.firstName}
                       lastName={userData.lastName}
                       displayName={(userData as any).displayName}
                       email={userData.email}
                       isGuest={!!userData.isGuest}
                       seed={userData.uid || userData.email}
-                      size={60}
+                      size={50}
                     />
-                    <View className="ml-2">
-                      <Text className="text-gray-400 text-base">Welcome back,</Text>
-                      <View className="mt-1 flex-row items-center space-x-2">
-                        <Text className="font-medium text-base text-white">
-                          { (userData.isGuest) ? (userData.lastName) && userData.lastName : userData.firstName }
-                        </Text>
-                        { (userData.isGuest) && (
-                          <TouchableOpacity
-                            className="px-5 py-1 flex items-center justify-center rounded-lg bg-white/[.2]"
-                            onPress={ () => {
-                              dispatch(clearPendingDestination());
-                              navigation.navigate("loginScreen");
-                            } }>
-                            <Text className="text-sm text-white">
-                              { (userData.isGuest) && "Login" }
-                            </Text>
-                          </TouchableOpacity>
-                        )}
-                      </View>
-                    </View>
-                  </View>
-                  <View className="flex-row items-center space-x-3">
+                    { !userData.isGuest && (
+                      <Text className="ml-2 font-medium text-base text-white">{ userData.firstName }</Text>
+                    ) }
+                  </TouchableOpacity>
+                  <View className="flex-row items-center">
+                    <Pressable
+                      className="bg-lightGreen p-2.5 rounded-full"
+                      style={{ marginRight: 12 }}
+                      onPress={ () => navigation.navigate("searchItemScreen") }
+                    >
+                      <SearchNormal1 color="#133522" size={24} variant="Linear" />
+                    </Pressable>
                     <Pressable
                       className="bg-lightGreen p-2.5 rounded-full"
                       onPress={ () => navigation.navigate("userNotificationsScreen") }
@@ -165,38 +117,31 @@ const DashboardWrapperScreen = () => {
                         </View>
                       ) }
                     </Pressable>
-                    <Pressable
-                      className="bg-lightGreen p-2.5 rounded-full"
-                      onPress={ () => dispatch(setIsMobileMenuOpen(true)) }
-                    >
-                      <Menu color="#133522" size={24} variant="Linear" />
-                    </Pressable>
                   </View>
                 </View>
 
-                {/*==== Search Box ====*/}
-                { (selectedDashboard.name === "Home") && (
-                  <View className="h-auto w-full mt-8 px-3 py-1 flex-row items-center justify-between border border-gray-300 rounded-xl bg-gray-100">
-                    <TextInput
-                        placeholder="Search item"
-                        placeholderTextColor="#9ca3af"
-                        className="h-[44px] text-base flex-1"
-                        onChangeText={() => null}
-                        onFocus={ () => navigation.navigate("searchItemScreen") }
-                    />
-                    <TouchableOpacity
-                        onPress={ () => navigation.navigate("searchItemScreen") }
-                        hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                        className="h-[44px] w-[44px] mr-1 items-center justify-center"
-                    >
-                        <SearchNormal1 color="#9ca3af" size={ 24 } />
-                    </TouchableOpacity>
-                  </View>
-                ) }
+                {/*==== Section Tabs ====*/}
+                <View className="mt-8 flex-row justify-between" style={{ columnGap: 12 }}>
+                  { dashboards.map((dashboard) => {
+                    const isActive = selectedDashboard.name === dashboard.name;
+                    return (
+                      <TouchableOpacity
+                        key={ dashboard.id }
+                        onPress={ () => dispatch(setSelectedDashboard(dashboard)) }
+                        hitSlop={{ top: 8, bottom: 4, left: 6, right: 6 }}
+                      >
+                        <Text numberOfLines={ 1 } className={ `font-montserratSemiBold text-[11px] ${ isActive ? "text-white" : "text-white/60" }` }>
+                          { dashboard.name.toUpperCase() }
+                        </Text>
+                        <View className={ `h-[3px] mt-2 mb-3 rounded-full ${ isActive ? "bg-white" : "bg-transparent" }` } />
+                      </TouchableOpacity>
+                    );
+                  }) }
+                </View>
               </View>
 
               {/*==== Main Body Section ====*/}
-              <View className="w-[90%] px-5 py-6">
+              <View className="w-[90%] px-5 pt-5 pb-6">
                 { (selectedDashboard.name === "Home") ? (
                   <MainDashboardScreen />
                 ) : (selectedDashboard.name === "Bespoke") ? (

@@ -16,7 +16,7 @@ const StepOneComponent: React.FC<IProps> = ({ control, errors }) => {
     return (
         <View>
             <Text className="mt-5 font-montserratSemiBold text-base text-baseGreen">Step 1: Basic Details</Text>
-            <Text className="mt-2 font-montserratMedium">Enter all correct basid details for this product and proceed.</Text>
+            <Text className="mt-2 font-montserratMedium">Enter all correct basic details for this product and proceed.</Text>
 
             <Text aria-label="Product Title" nativeID="productTitle" className="mt-6 font-montserratMedium">Product title<Text className="text-red-600">*</Text></Text>
             <View className="h-auto w-full mt-1.5 px-3 py-0.5 border rounded-xl border-gray-200 bg-gray-50">
@@ -63,12 +63,12 @@ const StepOneComponent: React.FC<IProps> = ({ control, errors }) => {
             </View>
 
             <Text aria-label="Description" nativeID="description" className="mt-5 font-montserratMedium">Product description<Text className="text-red-600">*</Text></Text>
-            <View className="h-[170px] w-full mt-1.5  border rounded-xl border-gray-200 bg-white">
+            <View className="h-[170px] w-full mt-1.5 overflow-hidden border rounded-xl border-gray-200 bg-white">
                 <Controller
                     control={ control }
                     name="description"
                     render={ ({ field: { onChange, onBlur, value } }) => (
-                        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined}>
+                        <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
                             <RichToolbar
                                 editor={richTextEditorRef}
                                 actions={[
@@ -90,23 +90,26 @@ const StepOneComponent: React.FC<IProps> = ({ control, errors }) => {
                                 disabledIconTint="#ccc"
                                 className="rounded-tl-lg rounded-tr-lg bg-gray-200"
                             />
-                            <RichEditor
-                                ref={ richTextEditorRef }
-                                initialContentHTML={ value } // Bind value here
-                                placeholder='Enter description'
-                                onChange={(html) => onChange(html)} // Update React Hook Form state
-                                onBlur={ onBlur }
-                                editorStyle={{
-                                    backgroundColor: '#FFFFFF',
-                                    cssText: 'body { font-size: 14px !important; }',
-                                }}
-                                className="min-h-[115px] min-w-full"
-                            />
+                            <View className="flex-1 overflow-hidden">
+                                <RichEditor
+                                    ref={ richTextEditorRef }
+                                    initialContentHTML={ value } // Bind value here
+                                    placeholder='Enter description'
+                                    onChange={(html) => onChange(html)} // Update React Hook Form state
+                                    onBlur={ onBlur }
+                                    useContainer={ false }
+                                    editorStyle={{
+                                        backgroundColor: '#FFFFFF',
+                                        cssText: 'body { font-size: 14px !important; }',
+                                    }}
+                                    className="flex-1 min-w-full"
+                                />
+                            </View>
                         </KeyboardAvoidingView>
                     )}
                 />
-                {  errors.description && <Text className="text-red-600">{errors.description.message}</Text> }
             </View>
+            {  errors.description && <Text className="mt-1 text-red-600">{errors.description.message}</Text> }
         </View>
     )
 }

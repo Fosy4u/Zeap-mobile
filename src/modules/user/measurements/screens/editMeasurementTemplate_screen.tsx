@@ -238,7 +238,7 @@ const EditMeasurementTemplateScreen = () => {
                                             placeholderTextColor="#9ca3af"
                                             className="h-[44px] flex-1 font-montserratMedium text-base"
                                             value={ f.value }
-                                            onChangeText={ (v) => handleChange(idx, v) }
+                                            onChangeText={ (v) => handleChange(idx, v.replace(/[^0-9]/g, "")) }
                                         />
                                         <View className="w-[40px] flex-row items-center">
                                             <View className="h-[30px] w-[1] mr-2 bg-slate-300" />

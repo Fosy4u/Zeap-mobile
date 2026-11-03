@@ -1,7 +1,7 @@
 
 type IDateInput = string | number | Date;
 
-const formatDate = (dateString: IDateInput, isCompact: boolean = false, dateOnly: boolean = false): string => {
+const formatDate = (dateString: IDateInput, isCompact: boolean = false, dateOnly: boolean = false, shortMonth: boolean = false): string => {
     if (!dateString && dateString !== 0) return "";
 
     const date = new Date(dateString);
@@ -15,7 +15,7 @@ const formatDate = (dateString: IDateInput, isCompact: boolean = false, dateOnly
 
     return new Intl.DateTimeFormat('en-NG', {
         year: 'numeric',
-        month: 'long',
+        month: shortMonth ? 'short' : 'long',
         day: 'numeric',
         // e.g. "23 June 2026" when dateOnly, otherwise the time is appended.
         ...(dateOnly ? {} : { hour: '2-digit', minute: '2-digit', hour12: true }),

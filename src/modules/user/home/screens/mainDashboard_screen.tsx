@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Image, Text, View, SafeAreaView, StatusBar, ScrollView, TouchableOpacity, useWindowDimensions } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useNavigation } from "@react-navigation/native";
@@ -19,6 +19,25 @@ import SkeletonBlock from "../../../general/components/skeletonBlock_component";
 import encodeMediaUri from "../../../../utils/encodeMediaUri";
 import AppStatusBar from "../../../general/components/appStatusBar";
 
+// Mirrors the web's HOME category bar: same items, order, filters and list titles.
+const HOME_CATEGORY_LINKS: { label: string; title?: string; filters?: Record<string, string>; screen?: "brands" | "sales"; categoryName?: string }[] = [
+  { label: "Women", title: "All Women's Collections", filters: { gender: "Female", ageGroup: "Adults" }, categoryName: "Women" },
+  { label: "Men", title: "All Men Collections", filters: { gender: "Male", ageGroup: "Adults" }, categoryName: "Men" },
+  { label: "Kids", title: "All Kids Collections", filters: { ageGroup: "Kids" } },
+  { label: "Clothings", title: "All Clothings", filters: { ageGroup: "Adults", productType: "bespokeCloth,bespokeShoe,readyMadeCloth,readyMadeShoe" } },
+  { label: "Shoes", title: "All Shoes", filters: { ageGroup: "Adults", productType: "bespokeShoe,readyMadeShoe" }, categoryName: "Shoes" },
+  { label: "Accessories", title: "All Accessories", filters: { ageGroup: "Adults", productType: "Accessory" }, categoryName: "Accessories" },
+  { label: "Dresses", title: "All Dresses", filters: { ageGroup: "Adults", main: "Dress" } },
+  { label: "Bags", title: "All Bags", filters: { ageGroup: "Adults", accessoryType: "Bag" }, categoryName: "Bags" },
+  { label: "Weddings", title: "All Weddings", filters: { ageGroup: "Adults", occasion: "Wedding,Bride,Bridesmaid,Bride Shower,Groom,Groomsman" } },
+  { label: "Tops", title: "All Tops", filters: { ageGroup: "Adults", main: "Top" } },
+  { label: "Bottoms", title: "All Bottoms", filters: { ageGroup: "Adults", main: "Bottom" } },
+  { label: "Matching Sets", title: "All Matching Sets", filters: { ageGroup: "Adults", main: "Matching Set" } },
+  { label: "Jeans", title: "All Jeans", filters: { ageGroup: "Adults", style: "Jean" } },
+  { label: "Brands", screen: "brands" },
+  { label: "Sales", screen: "sales" },
+];
+
 const MainDashboardScreen = () => {
   const { promoProducts, categories, selectedCategory, popularProducts, newestPrpducts, promoProductsIsLoading, popularProductsIsLoading, newestProductsIsLoading } = useSelector((state: RootState) => state.productState);
   const { userData } = useSelector((state: RootState) => state.profileState);
@@ -26,6 +45,7 @@ const MainDashboardScreen = () => {
   const greetingName = userData?.firstName || (userData as any)?.displayName || "there";
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
   const dispatch = useDispatch();
+  const [activeCategoryLabel, setActiveCategoryLabel] = useState("Women");
   const width = useWindowDimensions().width - 40;
   // Promo slides now use the landscape (largeScreenImageUrl) artwork, so the
   // carousel takes a 16:9 landscape height instead of the old tall portrait box.
@@ -100,17 +120,27 @@ const MainDashboardScreen = () => {
                     showsHorizontalScrollIndicator={ false }
                     className="mt-3"
                   >
-                    { categories.map((category: ICategory) => (
-                      <TouchableOpacity
-                        key={ category.id }
-                        onPress={ () => dispatch(setSelectedCategory(category)) }
-                      >
-                        <View className={ `mr-3 px-4 py-2.5 rounded-lg ${ (selectedCategory.id === category.id) ? 'bg-baseGreen' : 'bg-gray-200' }` }>
-                          <Text className={ `text-sm ${ (selectedCategory.id === category.id) ? 'text-white' : 'text-gray-800' }` }>{ category.name }</Text>
-                        </View>
-                      </TouchableOpacity>
-                      
-                    )) }
+                    { HOME_CATEGORY_LINKS.map((link) => {
+                      const isActive = activeCategoryLabel === link.label;
+                      return (
+                        <TouchableOpacity
+                          key={ link.label }
+                          onPress={ () => {
+                            setActiveCategoryLabel(link.label);
+                            const matchingCategory = categories.find((category: ICategory) => category.name === link.categoryName);
+                            if (matchingCategory) dispatch(setSelectedCategory(matchingCategory));
+
+                            if (link.screen === "brands") navigation.navigate("brandsScreen");
+                            else if (link.screen === "sales") navigation.navigate("salesScreen");
+                            else navigation.navigate("productListScreen", { screenTitle: link.title!, filters: link.filters });
+                          } }
+                        >
+                          <View className={ `mr-3 px-4 py-2.5 rounded-lg ${ isActive ? 'bg-baseGreen' : 'bg-gray-200' }` }>
+                            <Text className={ `text-sm ${ isActive ? 'text-white' : (link.screen === "sales") ? 'font-montserratSemiBold text-[#B8862E]' : 'text-gray-800' }` }>{ link.label }</Text>
+                          </View>
+                        </TouchableOpacity>
+                      );
+                    }) }
                   </ScrollView>
 
                   <View className="h-[400px] w-full mt-4 pb-4 relative flex items-center justify-end overflow-hidden"
@@ -236,14 +266,14 @@ const MainDashboardScreen = () => {
 
                 { isGuest ? (
                   <View className="mt-6 px-5 pt-5 pb-14 rounded-2xl bg-lightGreen">
-                    <Text className="font-semibold text-base leading-tight text-gray-800">Sign up and earn 500 points</Text>
+                    <Text className="font-semibold text-base leading-tight text-gray-800">Join the Zeaper family</Text>
                     <View className="mt-2 flex-row items-center justify-start">
                       <View className="mr-4">
-                        <Text className="text-sm text-gray-600">Sign up now</Text>
-                        <Text className="text-sm text-gray-600">get free coupons</Text>
+                        <Text className="text-sm text-gray-600">Create your free account</Text>
+                        <Text className="text-sm text-gray-600">and shop faster</Text>
                       </View>
                       <TouchableOpacity
-                        onPress={ () => navigation.navigate("inviteFriendScreen") }
+                        onPress={ () => navigation.navigate("signUpScreen") }
                         className="px-4 py-2 rounded-lg bg-baseGreen"
                       >
                         <Text className="text-white text-sm font-medium">Sign Up</Text>

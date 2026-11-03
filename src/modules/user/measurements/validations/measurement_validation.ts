@@ -7,7 +7,7 @@ import * as yup from "yup";
 // keep the name synced, which violated the Rules of Hooks. Names are now
 // stitched back into the submit payload directly from the API source.
 const requiredMeasurementFormFieldsSchema = yup.object().shape({
-    templateName: yup.string().required("Template name is required"),
+    templateName: yup.string().optional(),
     measurements: yup.array().of(
       yup.object().shape({
         fields: yup.array().of(yup.string().required("Field is required")).required("Fields are required")

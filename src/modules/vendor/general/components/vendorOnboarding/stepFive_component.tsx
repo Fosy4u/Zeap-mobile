@@ -39,7 +39,7 @@ const Field: React.FC<IFieldProps> = ({ label, placeholder, name, keyboardType =
                         maxLength={ maxLength }
                         className={ `${ Icon ? "ml-3" : "" } flex-1 font-montserratMedium text-base text-black` }
                         onBlur={ onBlur }
-                        onChangeText={ onChange }
+                        onChangeText={ (text) => onChange(keyboardType === "number-pad" ? text.replace(/[^0-9]/g, "") : text) }
                         value={ value }
                     />
                 ) }
@@ -57,16 +57,13 @@ const StepFiveComponent: React.FC<IProps> = ({ control, errors }) => {
                 <Text className="font-montserratBold text-[28px] text-baseGreen leading-tight">
                     How Do You Want to Get Paid?
                 </Text>
-                <Text className="mt-3 font-montserratMedium text-sm text-gray-500 leading-5">
-                    We'll route your sales to the account you provide below.
-                </Text>
             </View>
 
             <View className="px-5 mt-6">
                 <View className="p-4 flex-row items-start rounded-2xl bg-blue-50 border-l-[3px] border-blue-500">
                     <InfoCircle size={ 18 } color="#1d4ed8" variant="Bold" />
                     <Text className="ml-2 flex-1 text-xs text-blue-900 leading-5">
-                        Your <Text className="font-montserratSemiBold">account name</Text> must match the full name or business name on your profile. Otherwise, payouts won't process.
+                        Your <Text className="font-montserratSemiBold">account name</Text> must match your full name or business name as it appears on your profile. Otherwise, your payments will not be processed.
                     </Text>
                 </View>
 

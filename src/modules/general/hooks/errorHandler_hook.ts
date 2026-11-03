@@ -23,6 +23,17 @@ const toMessageString = (value: any): string => {
     return String(value);
 };
 
+// Friendly wording for Firebase sign-in errors (matches the web).
+const FIREBASE_AUTH_MESSAGES: Record<string, string> = {
+    "auth/user-not-found": "Password is incorrect. Please try again.",
+    "auth/invalid-email": "Password is incorrect. Please try again.",
+    "auth/wrong-password": "Password is incorrect. Please try again.",
+    "auth/invalid-credential": "Password is incorrect. Please try again.",
+    "auth/too-many-requests": "Too many attempts. Please try again later.",
+    "auth/user-disabled": "This account has been disabled.",
+    "auth/network-request-failed": "Network error. Please check your connection and try again.",
+};
+
 //  Handle errors
 const handleError = (error: any) => {
     let rawMessage: any = "";
@@ -34,6 +45,9 @@ const handleError = (error: any) => {
     // Handle RTK Query API errors (assuming they follow a standard structure)
     else if (error?.status) {
         rawMessage = error?.data?.error ?? error?.data?.message ?? "An unexpected error occurred.";
+    }
+    else if (FIREBASE_AUTH_MESSAGES[error?.code]) {
+        rawMessage = FIREBASE_AUTH_MESSAGES[error.code];
     }
     // Handle other generic errors
     else {

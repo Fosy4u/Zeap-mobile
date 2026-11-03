@@ -15,16 +15,9 @@
     },
     {
         "code": "GBP",
-        "name": "Pound Sterling",
+        "name": "British Pound Sterling",
         "country": "United Kingdom",
         "symbol": "£",
         "flag": "🇬🇧"
-    },
-    {
-        "code": "CAD",
-        "name": "Canadian Dollar",
-        "country": "Canada",
-        "symbol": "$",
-        "flag": "🇨🇦"
     }
 ]

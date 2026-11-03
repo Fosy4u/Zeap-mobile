@@ -10,9 +10,15 @@ import RootNavigationStackModel from '../../../../routes/model/routes_model';
 import SavedProductCard from '../components/savedProductCard_component';
 import useSavedHook from '../hooks/saved_hook';
 import EmptyListComponent from '../../../general/components/emptyList_component';
+import FastImage from 'react-native-fast-image';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../../../../redux/store/store';
+import { clearPendingDestination } from '../../../auths/slices/authState_slice';
 
 const SavedScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>()
+  const dispatch = useDispatch();
+  const isGuest = useSelector((state: RootState) => !!state.profileState.userData?.isGuest);
   const { wishItems, isWishlistLoading, isWishlistFetching, refetch } = useSavedHook();
   const savedProducts = useMemo(() => wishItems.map((item) => item.product).filter(Boolean), [wishItems]);
 
@@ -102,7 +108,36 @@ const SavedScreen = () => {
               ? <Text className="mt-10 text-center font-montserratMedium text-gray-400">Loading your favorites…</Text>
               : searchPhrase
                 ? <EmptyListComponent standalone message={ `No saved item matches "${ searchPhrase }".` } />
-                : <EmptyListComponent standalone message="You haven't saved any items yet." />
+                : (
+                  <View className="h-auto w-full mt-1 px-6 py-10 bg-gray-50">
+                    <FastImage
+                      source={ require("../../../../../assets/images/empty_box.png") }
+                      resizeMode={ FastImage.resizeMode.contain }
+                      className="h-[70px] w-full"
+                    />
+                    <Text className="mt-4 text-center font-montserratMedium text-base text-gray-500">Your wish list is empty</Text>
+
+                    { isGuest && (
+                      <>
+                        <Text className="mt-3 text-center text-sm text-gray-500">
+                          Have an account? Sign in to share your wish list and sync across all your devices..
+                        </Text>
+                        <Text className="mt-3 text-center text-sm text-[#E0A42C]">
+                          Note that we can only save your wish list for 30 days if you are not signed in.
+                        </Text>
+                        <TouchableOpacity
+                          onPress={ () => {
+                            dispatch(clearPendingDestination());
+                            navigation.navigate("loginScreen");
+                          } }
+                          className="mt-5 self-center px-4 py-2"
+                        >
+                          <Text className="font-montserratSemiBold text-base text-baseGreen">Sign In</Text>
+                        </TouchableOpacity>
+                      </>
+                    ) }
+                  </View>
+                )
           }
         />
 

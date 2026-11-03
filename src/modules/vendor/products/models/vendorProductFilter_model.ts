@@ -13,11 +13,14 @@ interface IVendorProductQueryParams {
     ageRange?: string;
     style?: string;
     main?: string;
-    sleeveLength?: number;
+    sleeveLength?: string;
     fastening?: string;
     fit?: string;
     occasion?: string;
     productId?: string;
+    status?: string;
+    noCurrencyConversion?: boolean;
+    currency?: string;
     limit: number; // Required with default value
     pageNumber: number; // Required with default value
 };

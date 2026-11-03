@@ -60,8 +60,9 @@ const useSearchHook = () => {
 
     const [selectedFilters, setSelectedFilters] = useState<Record<string, (string | number)[]>>({});
     const [showBottomSheetModal, setShowBottomSheetModal] = useState(false);
-    const [getDynamicFilterOptions, { data: dynamicFilterOptions = [], isFetching: filtersLoading }] =
+    const [getDynamicFilterOptions, { data: dynamicFilterData, isFetching: filtersLoading }] =
         useLazyGetDynamicFilterOptionsQuery();
+    const dynamicFilterOptions = useMemo(() => dynamicFilterData?.dynamicFilters ?? [], [dynamicFilterData]);
 
     const formattedFilters = useMemo(
         () => buildFilterParams(selectedFilters, dynamicFilterOptions),

@@ -274,12 +274,12 @@ const OrderFilterBottomSheetComponent = () => {
                 <TextInput
                   aria-label="OrderNumber"
                   aria-labelledby="orderNumber"
-                  keyboardType="default"
+                  keyboardType="number-pad"
                   placeholder="Enter number"
                   placeholderTextColor="#9ca3af"
                   className="h-[44px] text-base"
                   value={orderNumber}
-                  onChangeText={setOrderNumber}
+                  onChangeText={(text) => setOrderNumber(text.replace(/[^0-9]/g, ""))}
                 />
               </View>
             </View>

@@ -22,13 +22,14 @@ const AppBottomBarComponent = ({ state, descriptors, navigation }: any) => {
   const isCartLoading = useSelector(
     (rootState: RootState) => !!rootState.cartState?.isCartItemsLoading,
   );
-  // The shop FAB always lands on the vendor onboarding pitch — the pitch's
-  // own CTA branches the user from there: "Become a vendor" if they have no
-  // shop, "My shop" if they already do (routing to welcome / dashboard based
-  // on the shop's status). Keeping one entry point makes the buyer FAB
-  // behavior uniform regardless of `userData.isVendor`.
+  const userData = useSelector((rootState: RootState) => rootState.profileState.userData);
+  const hasShop = !userData?.isGuest && !!userData?.uid && (!!userData?.isVendor || !!userData?.shopId);
   const handleShopFabPress = () => {
     const parent = navigation.getParent() ?? navigation;
+    if (hasShop) {
+      parent.navigate("vendorHomeScreen", { screen: "Dashboard" });
+      return;
+    }
     parent.navigate("vendorOnboardingScreen");
   };
   const getPath = () => {

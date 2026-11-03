@@ -9,6 +9,7 @@ interface IAddress {
     country?:     string;
     postCode?:    string;
     phoneNumber?: string;
+    deliveryNote?: string;
     isDefault?:   boolean;
     disabled?:    boolean;
     createdAt?:   Date;

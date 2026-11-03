@@ -8,6 +8,14 @@ import { TouchableOpacity } from '@gorhom/bottom-sheet';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import RootNavigationStackModel from '../../../../routes/model/routes_model';
+import { useGetCategoryProductCountQuery } from '../apis/product_api';
+import { categoryFilterFor } from '../hooks/filterAndSearch_hook';
+
+const CategoryItemCount = ({ name }: { name: string }) => {
+  const { data: totalCount } = useGetCategoryProductCountQuery(categoryFilterFor(name));
+  if (typeof totalCount !== "number") return null;
+  return <Text className="mt-1 text-xs text-gray-600">{ totalCount.toLocaleString() } { totalCount === 1 ? "item" : "items" }</Text>;
+};
 
 const AllCategoryScreen = () => {
   const { categories } = useSelector((state: RootState) => state.productState);
@@ -50,8 +58,8 @@ const AllCategoryScreen = () => {
                 }}
               >
                 <View>
-                  <Text className="h-auto w-[125px] text-[22px] text-gray-800">{ category.name }</Text>
-                  {/* <Text className="text-xs text-gray-600">{ category.totalCount } items</Text> */}
+                  <Text className="h-auto w-[155px] text-[22px] text-gray-800">{ category.name }</Text>
+                  <CategoryItemCount name={ category.name } />
                 </View>
 
                 <Image

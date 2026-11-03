@@ -9,6 +9,8 @@ const baseURL = "https://zeap-api.onrender.com";
 const registerUserRoute = "/user/guest/create";
 const loginUserRoute = "/userByUid";
 const mergeUserDataRoute = "/user/guest/login/password/merge";
+const checkUserEmailRoute = "/user/checkEmail";
+const convertGuestToPasswordUserRoute = "/user/guest/convert/emailPassword";
 
 //  Notification Routes
 const registerFCMToken = "/notification/pushToken/register";
@@ -51,6 +53,7 @@ const wishRemoveRoute = "/wish/remove";  // DELETE { wish_id } — POST is not r
 const getOrdersRoute = "/orders/authUser/buyer";
 const getOrderDetailsRoute = "/order/authUser/buyer/orderId";
 const getOrderHistoryRoute = "/orders/product-order/status/history";
+const getProductOrderRoute = "/orders/product";
 const cancelOrderRoute = "/order/cancel";
 
 
@@ -60,6 +63,14 @@ const getActiveVouchersRoute = "/vouchers/authUser/active";
 const getInactiveVouchersRoute = "/vouchers/authUser/inactive";
 const getVoucherByCodeRoute = "/voucher";
 const convertPointsRoute = "/point/convert/voucher";
+const applyVoucherRoute = "/voucher/apply";
+const removeVoucherRoute = "/voucher/remove";
+
+// Help Routes
+const getHelpArticlesRoute = "/help/articles";
+const getPopularHelpArticlesRoute = "/help/articles/popular";
+const getHelpArticleRoute = "/help/article";
+const markHelpArticleHelpfulRoute = "/help/article/update/markHelpful";
 
 // Review Routes
 const getAllReviewsRoute = "/reviews/user";
@@ -103,6 +114,7 @@ const getVendorPaymentDetailsRoute = "/vendor/payment";
 // Product Routes
 // Permanent delete of a draft product (removes it entirely).
 const deleteDraftProductRoute = "/product/delete/absolute";
+const productCommissionRoute = "/products/commission";
 
 
 
@@ -115,6 +127,8 @@ export {
     registerUserRoute,
     loginUserRoute,
     mergeUserDataRoute,
+    checkUserEmailRoute,
+    convertGuestToPasswordUserRoute,
     
     // Notification Routes exports
     registerFCMToken,
@@ -155,6 +169,7 @@ export {
     getOrdersRoute,
     getOrderDetailsRoute,
     getOrderHistoryRoute,
+    getProductOrderRoute,
     cancelOrderRoute,
 
     // Voucher Routes exports
@@ -162,6 +177,12 @@ export {
     getActiveVouchersRoute,
     getInactiveVouchersRoute,
     getVoucherByCodeRoute,
+    applyVoucherRoute,
+    removeVoucherRoute,
+    getHelpArticlesRoute,
+    getPopularHelpArticlesRoute,
+    getHelpArticleRoute,
+    markHelpArticleHelpfulRoute,
     convertPointsRoute,
 
     // Review Routes exports
@@ -187,6 +208,7 @@ export {
 
     // Product Routes exports
     deleteDraftProductRoute,
+    productCommissionRoute,
 
     // Vendor Onboarding Routes exports
     registerVendorRoute,

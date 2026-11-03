@@ -7,6 +7,15 @@ import IOrderReject from "../models/orderReject_model";
 import IOrderDetails from "../models/orderDetails_model";
 import IVendorOrderFilter from "../models/orderFilter_model";
 
+const toTime = (value?: string | Date): number => {
+    if (!value) { return 0; }
+    const ms = value instanceof Date ? value.getTime() : Date.parse(value);
+    return Number.isNaN(ms) ? 0 : ms;
+};
+
+const byNewestFirst = (orders: IOrder[] = []): IOrder[] =>
+    [...orders].sort((a, b) => toTime(b?.createdAt) - toTime(a?.createdAt));
+
 const orderAPI = rootAPI.injectEndpoints({
     overrideExisting: true,
     endpoints: (builder) => ({
@@ -29,7 +38,7 @@ const orderAPI = rootAPI.injectEndpoints({
             },
             providesTags: ["VendorOrders"],
             transformResponse: (response: { data: IOrder[] }) => {
-                return response.data;
+                return byNewestFirst(response.data);
             }
         }),
 

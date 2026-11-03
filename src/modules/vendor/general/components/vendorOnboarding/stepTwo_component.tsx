@@ -71,7 +71,7 @@ const StepTwoComponent: React.FC<IProps> = ({ control, errors }) => {
                 <View className="p-4 flex-row items-start rounded-2xl bg-blue-50 border-l-[3px] border-blue-500">
                     <InfoCircle size={ 18 } color="#1d4ed8" variant="Bold" />
                     <Text className="ml-2 flex-1 text-xs text-blue-900 leading-5">
-                        Regardless of your answers below, you can sell <Text className="font-montserratSemiBold">Ready-to-wear</Text> items and <Text className="font-montserratSemiBold">Accessories</Text> by default.
+                        By default, you are allowed to sell <Text className="font-montserratSemiBold">Ready-to-wear Items</Text> and <Text className="font-montserratSemiBold">Accessories</Text> regardless of your responses below.
                     </Text>
                 </View>
 
@@ -80,8 +80,8 @@ const StepTwoComponent: React.FC<IProps> = ({ control, errors }) => {
                     name="isTailor"
                     render={ ({ field: { value, onChange } }) => (
                         <Question
-                            heading={ <>Do you offer <Text className="font-montserratBold">bespoke</Text> tailoring?</> }
-                            caption="No means you won't be verified for tailoring services."
+                            heading={ <>Do you offer <Text className="font-montserratBold">bespoke</Text> tailoring services?</> }
+                            caption="Selecting No means you won't be verified to render tailoring services."
                             value={ value }
                             onChange={ onChange }
                             error={ errors.isTailor?.message }
@@ -94,8 +94,8 @@ const StepTwoComponent: React.FC<IProps> = ({ control, errors }) => {
                     name="isShoeMaker"
                     render={ ({ field: { value, onChange } }) => (
                         <Question
-                            heading={ <>Do you offer <Text className="font-montserratBold">bespoke</Text> shoe making?</> }
-                            caption="No means you won't be verified for shoe making services."
+                            heading={ <>Do you offer <Text className="font-montserratBold">bespoke</Text> shoe making services?</> }
+                            caption="Selecting No means you won't be verified to render shoe making services."
                             value={ value }
                             onChange={ onChange }
                             error={ errors.isShoeMaker?.message }

@@ -6,9 +6,33 @@ import { Add, CloseCircle, Edit2, InfoCircle, Trash } from "iconsax-react-native
 import { RootState } from "../../../../redux/store/store";
 import { IVariation } from "../models/vendorProductDetails_model";
 import useVariationManagerHook from "../hooks/variationManager_hook";
+import IProductCommission from "../models/productCommission_model";
+import { useGetProductCommissionQuery } from "../apis/product_api";
 import VariationFormModal from "./variationForm_modal";
 import AddVariationModal from "./addVariation_modal";
 import useDisplayCurrency from "../../../general/hooks/displayCurrency_hook";
+
+const isBespokeType = (productType?: string): boolean =>
+    !!productType && productType.toLowerCase().startsWith("bespoke");
+
+const commissionRateFor = (
+    productType?: string,
+    commission?: IProductCommission,
+): number | null => {
+    if (!productType || !commission) { return null; }
+    const rate = isBespokeType(productType) ? commission.bespoke : commission.readyToWear;
+    return Number.isFinite(rate) ? rate : null;
+};
+
+const BESPOKE_INFO_MESSAGE =
+    "Bespoke products support a single variation. You can manage its price and bespoke colour setup here.";
+
+const READY_MADE_INFO_MESSAGE =
+    "You can add multiple variations to your product. For example, if you are selling a T-shirt, you can add "
+    + "different sizes and colours as variations. Start by selecting one of the selected colours and then add "
+    + "the sizes, price and quantity.";
+
+const infoMessageFor = (productType?: string): string => isBespokeType(productType) ? BESPOKE_INFO_MESSAGE : READY_MADE_INFO_MESSAGE;
 
 interface IProps {
     visible: boolean;
@@ -16,25 +40,29 @@ interface IProps {
 }
 
 const Row: React.FC<{ label: string; value?: string }> = ({ label, value }) => (
-    <View className="mt-1 flex-row items-center">
-        <Text className="font-montserratSemiBold text-sm text-gray-700">{ label }: </Text>
-        <Text className="font-montserratMedium text-sm text-gray-500">{ value ?? "-" }</Text>
-    </View>
+    <Text className="mt-1 font-montserratMedium text-sm text-gray-500">
+        <Text className="font-montserratSemiBold text-gray-700">{ label }: </Text>
+        { value ?? "-" }
+    </Text>
 );
 
 const ManageVariationsModal: React.FC<IProps> = ({ visible, onClose }) => {
     const { product } = useSelector((state: RootState) => state.vendorProductState);
     const { formatPrice } = useDisplayCurrency();
     const {
-        productIsLoading, colorOptions, sizes, availableCombos, previewSku,
-        handleAddVariations, handleUpdateVariation, handleDeleteVariation,
+        productIsLoading, isBespoke, colorOptions, bespokeColorOptions, sizes, availableCombos, previewSku,
+        handleAddVariations, handleUpdateVariation, handleDeleteVariation, handleSaveBespokeVariation,
     } = useVariationManagerHook();
 
     const variations: IVariation[] = product?.variations ?? [];
+    const { data: commission } = useGetProductCommissionQuery(undefined, { skip: !visible });
+    const commissionRate = commissionRateFor(product?.productType, commission);
+    const infoMessage = infoMessageFor(product?.productType);
 
     const [showInfo, setShowInfo] = useState(true);
     const [showAddModal, setShowAddModal] = useState(false);
     const [editingVariation, setEditingVariation] = useState<IVariation | null>(null);
+    const [editingBespoke, setEditingBespoke] = useState(false);
 
     const confirmDelete = (variation: IVariation) => {
         Alert.alert(
@@ -87,14 +115,24 @@ const ManageVariationsModal: React.FC<IProps> = ({ visible, onClose }) => {
                             <View className="flex-1 ml-3">
                                 <Text className="font-montserratSemiBold text-sm text-blue-700">Info alert!</Text>
                                 <Text className="mt-1 font-montserratMedium text-xs text-gray-600 leading-5">
-                                    You can add multiple variations to your product. For example, if you are selling a T-shirt,
-                                    you can add different sizes and colours as variations. Start by selecting one of the selected
-                                    colours and then add the sizes, price and quantity.
+                                    { infoMessage }
                                 </Text>
                             </View>
                             <TouchableOpacity onPress={ () => setShowInfo(false) } className="ml-2">
                                 <CloseCircle size={ 20 } color="#2563eb" />
                             </TouchableOpacity>
+                        </View>
+                    ) }
+
+                    { commissionRate !== null && (
+                        <View className="mt-4 p-4 flex-row rounded-2xl bg-amber-50">
+                            <InfoCircle size={ 22 } color="#d97706" variant="Bold" />
+                            <View className="flex-1 ml-3">
+                                <Text className="font-montserratMedium text-xs text-amber-900 leading-5">
+                                    <Text className="font-montserratSemiBold text-amber-900">Pricing heads-up. </Text>
+                                    Zeaper commission for this product type is { commissionRate }%. You keep { 100 - commissionRate }% for each sale.
+                                </Text>
+                            </View>
                         </View>
                     ) }
 
@@ -110,22 +148,41 @@ const ManageVariationsModal: React.FC<IProps> = ({ visible, onClose }) => {
                             { variations.map((variation, index) => (
                                 <View key={ variation._id ?? variation.sku ?? index } className="p-4 rounded-2xl border border-gray-200 bg-lightGray">
                                     <Row label="SKU" value={ variation.sku } />
-                                    <Row label="Colour" value={ variation.colorValue } />
-                                    <Row label="Size" value={ variation.size } />
-                                    <Row label="Price" value={ variation.price != null ? formatPrice(variation.price, variation.currency) : undefined } />
-                                    <Row label="Quantity" value={ variation.quantity != null ? String(variation.quantity) : undefined } />
+                                    { isBespoke ? (
+                                        <>
+                                            <Row label="Colour Type" value={ variation.bespoke?.colorType === "multiple" ? "Multi-Color Design" : "Plain Single Color" } />
+                                            <Row
+                                                label="Available Colours"
+                                                value={ variation.bespoke?.colorType === "multiple"
+                                                    ? "Any colour on request"
+                                                    : (variation.bespoke?.availableColors?.join(", ") || undefined) }
+                                            />
+                                            <Row label="Size" value="Custom" />
+                                            <Row label="Price" value={ variation.price != null ? formatPrice(variation.price, variation.currency) : undefined } />
+                                            <Row label="Quantity" value="N/A" />
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Row label="Colour" value={ variation.colorValue } />
+                                            <Row label="Size" value={ variation.size } />
+                                            <Row label="Price" value={ variation.price != null ? formatPrice(variation.price, variation.currency) : undefined } />
+                                            <Row label="Quantity" value={ variation.quantity != null ? String(variation.quantity) : undefined } />
+                                        </>
+                                    ) }
 
                                     <View className="mt-3 flex-row items-center justify-end gap-x-2">
+                                        { !isBespoke && (
+                                            <TouchableOpacity
+                                                onPress={ () => confirmDelete(variation) }
+                                                disabled={ productIsLoading }
+                                                className={ `px-4 py-2 flex-row items-center gap-x-1 rounded-lg bg-red-50 ${ productIsLoading ? "opacity-60" : "" }` }
+                                            >
+                                                <Trash size={ 15 } color="#b91c1c" variant="Bold" />
+                                                <Text className="font-montserratMedium text-xs text-red-700">Delete</Text>
+                                            </TouchableOpacity>
+                                        ) }
                                         <TouchableOpacity
-                                            onPress={ () => confirmDelete(variation) }
-                                            disabled={ productIsLoading }
-                                            className={ `px-4 py-2 flex-row items-center gap-x-1 rounded-lg bg-red-50 ${ productIsLoading ? "opacity-60" : "" }` }
-                                        >
-                                            <Trash size={ 15 } color="#b91c1c" variant="Bold" />
-                                            <Text className="font-montserratMedium text-xs text-red-700">Delete</Text>
-                                        </TouchableOpacity>
-                                        <TouchableOpacity
-                                            onPress={ () => setEditingVariation(variation) }
+                                            onPress={ () => isBespoke ? setEditingBespoke(true) : setEditingVariation(variation) }
                                             disabled={ productIsLoading }
                                             className={ `px-5 py-2 flex-row items-center gap-x-1 rounded-lg bg-baseGreen ${ productIsLoading ? "opacity-60" : "" }` }
                                         >
@@ -139,26 +196,31 @@ const ManageVariationsModal: React.FC<IProps> = ({ visible, onClose }) => {
                     ) }
 
                     {/*==== Add variation ====*/}
-                    <TouchableOpacity
-                        onPress={ () => setShowAddModal(true) }
-                        disabled={ productIsLoading }
-                        className={ `h-[55px] mt-6 flex-row items-center justify-center gap-x-2 rounded-xl bg-baseGreen ${ productIsLoading ? "opacity-60" : "" }` }
-                    >
-                        <Add size={ 20 } color="#ffffff" />
-                        <Text className="font-montserratSemiBold text-base text-white">Add Variation</Text>
-                    </TouchableOpacity>
+                    { !(isBespoke && variations.length > 0) && (
+                        <TouchableOpacity
+                            onPress={ () => isBespoke ? setEditingBespoke(true) : setShowAddModal(true) }
+                            disabled={ productIsLoading }
+                            className={ `h-[55px] mt-6 flex-row items-center justify-center gap-x-2 rounded-xl bg-baseGreen ${ productIsLoading ? "opacity-60" : "" }` }
+                        >
+                            <Add size={ 20 } color="#ffffff" />
+                            <Text className="font-montserratSemiBold text-base text-white">Add Variation</Text>
+                        </TouchableOpacity>
+                    ) }
                 </ScrollView>
 
                 {/*==== Edit (reusable form) ====*/}
                 <VariationFormModal
-                    visible={ !!editingVariation }
-                    onClose={ () => setEditingVariation(null) }
+                    visible={ isBespoke ? editingBespoke : !!editingVariation }
+                    onClose={ () => { setEditingVariation(null); setEditingBespoke(false); } }
                     mode="edit"
-                    variation={ editingVariation }
+                    variation={ isBespoke ? (variations[0] ?? null) : editingVariation }
                     colorOptions={ colorOptions }
                     sizes={ sizes }
                     isLoading={ productIsLoading }
                     onSubmit={ handleUpdateVariation }
+                    isBespoke={ isBespoke }
+                    bespokeColorOptions={ bespokeColorOptions }
+                    onSubmitBespoke={ handleSaveBespokeVariation }
                 />
 
                 {/*==== Add (quick picker + manual) ====*/}

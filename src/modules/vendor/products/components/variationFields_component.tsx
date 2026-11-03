@@ -3,6 +3,10 @@ import { ScrollView, Text, TextInput, TouchableOpacity, View } from "react-nativ
 import { ArrowDown2, ArrowUp2 } from "iconsax-react-native";
 import { IColorOption } from "../hooks/variationManager_hook";
 import useShopCurrency from "../../general/hooks/shopCurrency_hook";
+import { useSelector } from "react-redux";
+import { RootState } from "../../../../redux/store/store";
+import { useCommissionRate } from "./pricingHeadsUp_component";
+import { formatAmount, groupDigits, sanitizePrice } from "./priceInput_component";
 
 interface IProps {
     colorOptions: IColorOption[];
@@ -29,6 +33,8 @@ const VariationFieldsComponent: React.FC<IProps> = ({
     isColorDisabled, isSizeDisabled,
 }) => {
     const { entrySymbol } = useShopCurrency();
+    const { product } = useSelector((state: RootState) => state.vendorProductState);
+    const commissionRate = useCommissionRate(product?.productType);
     const [showColors, setShowColors] = useState(false);
     const [showSizes, setShowSizes] = useState(false);
 
@@ -114,14 +120,19 @@ const VariationFieldsComponent: React.FC<IProps> = ({
                     <Text className="font-montserratSemiBold text-gold text-base">{ entrySymbol }</Text>
                 </View>
                 <TextInput
-                    value={ price }
-                    keyboardType="number-pad"
+                    value={ groupDigits(price) }
+                    keyboardType="decimal-pad"
                     placeholder="Enter price"
                     placeholderTextColor="#9ca3af"
                     className="h-[44px] flex-1 px-3 font-montserratMedium text-base text-black"
-                    onChangeText={ (text) => setPrice(text.replace(/[^0-9]/g, "")) }
+                    onChangeText={ (text) => setPrice(sanitizePrice(text)) }
                 />
             </View>
+            { commissionRate !== null && price !== "" && (
+                <Text className="mt-1.5 ml-1 font-montserratMedium text-xs text-gray-500">
+                    Zeaper takes { formatAmount(Number(price) * commissionRate / 100, entrySymbol) }. You keep about { formatAmount(Number(price) * (100 - commissionRate) / 100, entrySymbol) }.
+                </Text>
+            ) }
 
             {/*==== Quantity (with steppers) ====*/}
             <Text className="mt-5 ml-1 font-montserratMedium text-gray-700">Quantity</Text>

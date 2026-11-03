@@ -1,5 +1,5 @@
 // fcm_hook.ts
-import { AuthorizationStatus, getInitialNotification, getMessaging, getToken, onMessage, onNotificationOpenedApp, onTokenRefresh, registerDeviceForRemoteMessages, requestPermission } from "@react-native-firebase/messaging";
+import { AuthorizationStatus, getAPNSToken, getInitialNotification, getMessaging, getToken, isDeviceRegisteredForRemoteMessages, onMessage, onNotificationOpenedApp, onTokenRefresh, registerDeviceForRemoteMessages, requestPermission } from "@react-native-firebase/messaging";
 import { useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../redux/store/store";
@@ -78,11 +78,23 @@ const useFCMNotificationHook = () => {
         }
     };
 
+    const waitForAPNSToken = async (attempts = 10) => {
+        for (let i = 0; i < attempts; i++) {
+            if (await getAPNSToken(messagingInstance)) return true;
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
+        return false;
+    };
+
     // Get Firebase Cloud Messaging (FCM) token (STEP 2)
     const handleGetFCMToken = async () => {
         try {
-            if (Platform.OS === "ios") {
+            if (Platform.OS === "ios" && !isDeviceRegisteredForRemoteMessages(messagingInstance)) {
                 await registerDeviceForRemoteMessages(messagingInstance);
+            }
+
+            if (Platform.OS === "ios" && !(await waitForAPNSToken())) {
+                return;
             }
 
             const fcmToken = await getToken(messagingInstance);

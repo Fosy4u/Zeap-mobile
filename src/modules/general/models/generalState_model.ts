@@ -10,6 +10,16 @@ interface IGeneralStateModel {
 
     isLoading: boolean;
     loadingMessage: string;
+
+    appToast: IAppToast | null;
 };
+
+interface IAppToast {
+    id: number;
+    title: string;
+    message: string;
+}
+
+export type { IAppToast };
 
 export default IGeneralStateModel;

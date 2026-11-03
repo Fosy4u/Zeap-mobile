@@ -10,6 +10,7 @@ import AppLoader from './appLoader';
 import useReviewHook from '../hooks/review_hook';
 import IReviewAndRating from '../models/review_model';
 import RatingCardComponent from './ratingCard_component';
+import UserAvatar from './userAvatar_component';
 import { timeAgo } from '../../../utils/formatTime';
 
 interface IProps {
@@ -40,15 +41,16 @@ const ReviewComponent: React.FC<IProps> = ({ reviewAndRating, productID, loading
           <View key={ review._id } className="mt-2 px-2 py-3 rounded-md border-b border-gray-300">
             <View className="h-auto w-full flex-row items-start justify-between">
               <View className="flex-row items-center justify-start">
-                <Image
-                  className="h-[45px] w-[45px] mr-3 rounded-full"
-                  resizeMode="cover"
-                  source={
-                    review.user!.imageUrl!?.link!
-                    ? { uri: review.user!.imageUrl!?.link! }
-                    : require("../../../../assets/images/app_logo_green.png")
-                  }
-                />
+                <View className="mr-3">
+                  <UserAvatar
+                    photoURL={ review.user?.imageUrl?.link }
+                    firstName={ review.user?.firstName }
+                    lastName={ review.user?.lastName }
+                    displayName={ review.displayName ?? review.user?.displayName }
+                    seed={ review.user?.userId || review._id }
+                    size={ 45 }
+                  />
+                </View>
 
                 <View>
                   <Text className="font-medium">{ review.displayName! }</Text>
@@ -159,7 +161,7 @@ const ReviewComponent: React.FC<IProps> = ({ reviewAndRating, productID, loading
                     placeholderTextColor="#9ca3af"
                     className="h-[44px] text-base"
                     onBlur={ onBlur }
-                    onChangeText={ onChange }
+                    onChangeText={ (text) => onChange(text.replace(/[^0-9.]/g, "")) }
                     value={ value.toString() }
                   />
                 ) }

@@ -272,7 +272,7 @@ const VendorRegistrationScreen = () => {
                             ) : (
                                 <>
                                     <Text className="font-montserratBold text-base text-white">
-                                        { selectedStep === TOTAL_ONBOARDING_STEPS ? "Submit" : "Continue" }
+                                        { selectedStep === TOTAL_ONBOARDING_STEPS ? "Submit" : "Next" }
                                     </Text>
                                     <View className="w-2" />
                                     <ArrowRight size={ 16 } color="#ffffff" />

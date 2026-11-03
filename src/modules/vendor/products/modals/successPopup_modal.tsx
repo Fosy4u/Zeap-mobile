@@ -61,6 +61,24 @@ const SuccessPopupModal: React.FC<Props> = ({bodyText, setShowSuccessModal, prod
                         ))
                     ) }
 
+                    { !bodyText && !!productID && (
+                        <View className="w-full mt-5 px-3 py-4 items-center rounded-xl bg-green-50">
+                            <Text className="text-center font-medium text-sm text-gray-800">🚀 Want to boost your new product’s visibility?</Text>
+                            <Text className="mt-1 text-center text-xs text-gray-600 leading-4">Join our latest promotional campaign to reach more customers and drive early sales!</Text>
+                            <TouchableOpacity
+                                onPress={ () => {
+                                    setShowSuccessModal(false);
+                                    handleRefreshNotificationCount();
+                                    handleRefreshProductList();
+                                    navigation.navigate("promoScreen");
+                                } }
+                                className="h-[40px] mt-3 px-6 items-center justify-center rounded-xl bg-green-600"
+                            >
+                                <Text className="text-sm text-white">Join Promo</Text>
+                            </TouchableOpacity>
+                        </View>
+                    ) }
+
                     <View className="h-auto w-full mt-5 flex-row items-center justify-center space-x-2">
                         <TouchableOpacity
                             onPress={ () => {

@@ -51,7 +51,7 @@ const StepSixComponent: React.FC<IProps> = ({
                     onValueChange={ () => {
                         setShowPriceAdjustmentModal(true);
 
-                        if (autoPricePercentage === "" || autoPricePercentage === "0") {
+                        if (!(Number(autoPricePercentage) > 0)) {
                             setPriceAdjustmentModalType("Activate");
                             setIsAutoPriceAdjustment(false);
                         } else {

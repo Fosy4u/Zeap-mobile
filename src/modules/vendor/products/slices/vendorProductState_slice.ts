@@ -3,6 +3,7 @@ import IVendorProductState from "../models/vendorProductState_model.ts";
 import IVendorProductDetails from "../models/vendorProductDetails_model.ts";
 import IPromotion from "../models/promotion_model.ts";
 import IReviewAndRating from "../../../general/models/review_model.ts";
+import IVendorProductQueryParams from "../models/vendorProductFilter_model.ts";
 
 const initialState: IVendorProductState = {
     productMode: "New",
@@ -28,6 +29,8 @@ const initialState: IVendorProductState = {
     },
 
     showProductTypeBottomSheet: false,
+
+    productFilterParams: { pageNumber: 1, limit: 20, status: "live" },
 
     productIsLoading: false,
     loadingMessage: "Please wait...",
@@ -70,6 +73,9 @@ export const vendorProductSlice = createSlice({
         setReviewAndRating: (state: IVendorProductState, action: PayloadAction<IReviewAndRating>) => {
             state.reviewAndRating = action.payload;
         },
+        setProductFilterParams: (state: IVendorProductState, action: PayloadAction<IVendorProductQueryParams>) => {
+            state.productFilterParams = action.payload;
+        },
         setShowProductTypeBottomSheet: (state: IVendorProductState, action: PayloadAction<boolean>) => {
             state.showProductTypeBottomSheet = action.payload;
         },
@@ -96,6 +102,7 @@ export const {
     setDraftProducts,
     setProductPromotion,
     setReviewAndRating,
+    setProductFilterParams,
     setShowProductTypeBottomSheet,
     setProductIsLoading,
     setLoadingMessage,

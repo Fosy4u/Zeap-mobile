@@ -20,7 +20,9 @@ type RootNavigationStackModel = {
   inviteFriendScreen: undefined;
 
   allCategoryScreen: undefined;
-  productListScreen: { screenTitle: string } | undefined;
+  productListScreen: { screenTitle: string; filters?: Record<string, string>; source?: string } | undefined;
+  brandsScreen: undefined;
+  salesScreen: undefined;
   productDetailScreen: undefined;
   measurementScreen: undefined;
   editMeasurementTemplateScreen: undefined;
@@ -75,6 +77,7 @@ type RootNavigationStackModel = {
     itemNumber?: string | undefined,
   } | undefined;
   receiptScreen: { orderId: string };
+  orderItemDetailsScreen: { productOrderId: string };
 
   // VENDORS
   vendorOnboardingScreen: undefined;
@@ -82,6 +85,9 @@ type RootNavigationStackModel = {
   vendorWelcomeScreen: undefined;
   vendorDocumentUploadScreen: undefined;
   contactSupportScreen: undefined;
+  webViewScreen: { url: string; title?: string };
+  helpCenterScreen: undefined;
+  helpArticleScreen: { articleId?: string; category?: string; subCategory?: string };
   vendorHomeScreen: {
     screen?: "Dashboard" | "Products" | "Orders" | "Profile" | "Market";
     shopId?: string;
@@ -90,6 +96,7 @@ type RootNavigationStackModel = {
   shopInformationScreen: undefined;
   bankDetailsScreen: undefined;
   shopDocumentsScreen: undefined;
+  policiesScreen: undefined;
   vendorNotificationsScreen: undefined;
   overviewScreen: undefined;
   promoScreen: undefined;

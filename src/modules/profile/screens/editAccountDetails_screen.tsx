@@ -149,12 +149,12 @@ const EditAccountDetailsScreen = () => {
                                     <TextInput
                                         aria-label="PhoneNumber"
                                         aria-labelledby="phoneNumber"
-                                        keyboardType="phone-pad"
+                                        keyboardType="number-pad"
                                         placeholder="Enter phone number"
                                         placeholderTextColor="#9ca3af"
                                         className="h-[44px] flex-1 text-base"
                                         onBlur={ onBlur }
-                                        onChangeText={ onChange }
+                                        onChangeText={ (text) => onChange(text.replace(/[^0-9]/g, "")) }
                                         value={ value }
                                     />
                                 ) }
@@ -280,7 +280,7 @@ const EditAccountDetailsScreen = () => {
                             <TextInput
                                 aria-label="Height"
                                 aria-labelledby="height"
-                                keyboardType="phone-pad"
+                                keyboardType="number-pad"
                                 placeholder="Enter your height"
                                 placeholderTextColor="#9ca3af"
                                 className="h-[44px] flex-1 text-base"
@@ -305,7 +305,7 @@ const EditAccountDetailsScreen = () => {
                             <TextInput
                                 aria-label="Weight"
                                 aria-labelledby="weight"
-                                keyboardType="phone-pad"
+                                keyboardType="number-pad"
                                 placeholder="Enter your weight"
                                 placeholderTextColor="#9ca3af"
                                 className="h-[44px] flex-1 text-base"

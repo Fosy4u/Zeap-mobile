@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
-import { Alert } from "react-native";
+import { ActionSheetIOS, Alert, PermissionsAndroid, Platform } from "react-native";
 import DocumentPicker, { types as DocumentPickerTypes } from "react-native-document-picker";
+import { ImageLibraryOptions, launchCamera, launchImageLibrary } from "react-native-image-picker";
 import { useSelector } from "react-redux";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -12,10 +13,91 @@ import {
     useUploadOnboardingDocumentMutation,
 } from "../../apis/general_api";
 
-const MAX_FILE_SIZE_BYTES = 1.5 * 1024 * 1024; /* 1.5 MB */
-/* Documents may be an image OR a PDF — vendors often hold scanned IDs and
-   registration papers as PDFs, so we accept both. */
-const ALLOWED_MIME = ["image/jpeg", "image/jpg", "image/png", "image/webp", "application/pdf"];
+const MAX_FILE_SIZE_BYTES = 1.5 * 1024 * 1024;
+const ALLOWED_MIME = [
+    "image/jpeg",
+    "image/jpg",
+    "image/png",
+    "image/webp",
+    "image/heic",
+    "image/heif",
+    "application/pdf",
+];
+
+const IMAGE_PICKER_OPTIONS: ImageLibraryOptions = {
+    mediaType: "photo",
+    quality: 0.8,
+    maxWidth: 1600,
+    maxHeight: 1600,
+    includeBase64: false,
+    selectionLimit: 1,
+};
+
+const mimeFromName = (value: string): string => {
+    const extension = value.split("?")[0].split(".").pop()?.toLowerCase() ?? "";
+    switch (extension) {
+        case "png": return "image/png";
+        case "webp": return "image/webp";
+        case "heic": return "image/heic";
+        case "heif": return "image/heif";
+        case "pdf": return "application/pdf";
+        case "jpg":
+        case "jpeg": return "image/jpeg";
+        default: return "";
+    }
+};
+
+const extensionForMime = (mime: string): string => {
+    switch (mime) {
+        case "application/pdf": return "pdf";
+        case "image/png": return "png";
+        case "image/webp": return "webp";
+        case "image/heic": return "heic";
+        case "image/heif": return "heif";
+        default: return "jpg";
+    }
+};
+
+const requestGalleryPermission = async (): Promise<boolean> => {
+    if (Platform.OS !== "android") { return true; }
+    try {
+        const permission = Number(Platform.Version) >= 33
+            ? PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES
+            : PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE;
+
+        if (await PermissionsAndroid.check(permission)) { return true; }
+
+        const granted = await PermissionsAndroid.request(permission, {
+            title: "Gallery Permission",
+            message: "App needs access to your gallery to select document images.",
+            buttonNeutral: "Ask Me Later",
+            buttonNegative: "Cancel",
+            buttonPositive: "OK",
+        });
+        return granted === PermissionsAndroid.RESULTS.GRANTED;
+    } catch {
+        return false;
+    }
+};
+
+const requestCameraPermission = async (): Promise<boolean> => {
+    if (Platform.OS !== "android") { return true; }
+    try {
+        const permission = PermissionsAndroid.PERMISSIONS.CAMERA;
+        if (await PermissionsAndroid.check(permission)) { return true; }
+
+        const granted = await PermissionsAndroid.request(permission, {
+            title: "Camera Permission",
+            message: "App needs access to your camera to photograph your documents.",
+            buttonNeutral: "Ask Me Later",
+            buttonNegative: "Cancel",
+            buttonPositive: "OK",
+        });
+        return granted === PermissionsAndroid.RESULTS.GRANTED;
+    } catch {
+        return false;
+    }
+};
 
 export type DocStatus = "idle" | "selected" | "uploading" | "uploaded" | "failed";
 
@@ -30,7 +112,6 @@ export interface IDocSlotState {
     file?: IPickedFile;
     status: DocStatus;
     errorMessage?: string;
-    // Set when the backend already has an uploaded doc on first fetch.
     remoteLink?: string | null;
 }
 
@@ -39,8 +120,6 @@ const useVendorDocumentUploadHook = () => {
     const { userData } = useSelector((state: RootState) => state.profileState);
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
 
-    // shop.shopId is populated by the welcome flow; fall back to userData.shopId
-    // for resilience (in case the user reopens this screen after a refresh).
     const shopId = shop?.shopId || userData?.shopId || "";
 
     const {
@@ -51,14 +130,10 @@ const useVendorDocumentUploadHook = () => {
 
     const [uploadOnboardingDocument] = useUploadOnboardingDocumentMutation();
 
-    // Keyed by slug. Seeds remoteLink from the API response so docs already
-    // uploaded in a prior session show as "uploaded".
     const [slotState, setSlotState] = useState<Record<string, IDocSlotState>>({});
 
     const docs = useMemo<IOnboardingDocumentRequirement[]>(() => documents ?? [], [documents]);
 
-    // When the API responds, hydrate any slot that has a remote link as
-    // "uploaded" so the user sees their existing state.
     useMemo(() => {
         if (!documents) { return; }
         setSlotState((prev) => {
@@ -80,7 +155,70 @@ const useVendorDocumentUploadHook = () => {
         [docs, slotState],
     );
 
-    const handlePickFile = async (slug: string) => {
+    const applyPickedFile = (slug: string, uri: string, rawType: string, rawName: string, size: number) => {
+        const type = ALLOWED_MIME.includes(rawType) ? rawType : (mimeFromName(rawName) || mimeFromName(uri));
+
+        if (!ALLOWED_MIME.includes(type)) {
+            Alert.alert("Unsupported file", "Use a PNG, JPEG, HEIC, or WEBP image, or a PDF.");
+            return;
+        }
+        if (size > MAX_FILE_SIZE_BYTES) {
+            Alert.alert("File too large", "Each document must be 1.5 MB or smaller.");
+            return;
+        }
+
+        const name = rawName || uri.split("/").pop() || `${ slug }.${ extensionForMime(type) }`;
+
+        setSlotState((prev) => ({
+            ...prev,
+            [slug]: {
+                ...prev[slug],
+                file: { uri, name, type, size },
+                status: "selected",
+                errorMessage: undefined,
+            },
+        }));
+    };
+
+    const pickFromGallery = async (slug: string) => {
+        if (!(await requestGalleryPermission())) {
+            Alert.alert("Permission Required", "Please allow access to your gallery to select document images.");
+            return;
+        }
+
+        const response = await launchImageLibrary(IMAGE_PICKER_OPTIONS);
+        if (response.didCancel) { return; }
+        if (response.errorCode) {
+            Alert.alert("Couldn't open gallery", response.errorMessage ?? "Please try again.");
+            return;
+        }
+
+        const asset = response.assets?.[0];
+        if (!asset?.uri) { return; }
+
+        applyPickedFile(slug, asset.uri, asset.type ?? "", asset.fileName ?? "", asset.fileSize ?? 0);
+    };
+
+    const pickFromCamera = async (slug: string) => {
+        if (!(await requestCameraPermission())) {
+            Alert.alert("Permission Required", "Please allow access to your camera to photograph your documents.");
+            return;
+        }
+
+        const response = await launchCamera({ ...IMAGE_PICKER_OPTIONS, saveToPhotos: false });
+        if (response.didCancel) { return; }
+        if (response.errorCode) {
+            Alert.alert("Couldn't open camera", response.errorMessage ?? "Please try again.");
+            return;
+        }
+
+        const asset = response.assets?.[0];
+        if (!asset?.uri) { return; }
+
+        applyPickedFile(slug, asset.uri, asset.type ?? "", asset.fileName ?? "", asset.fileSize ?? 0);
+    };
+
+    const pickFromFiles = async (slug: string) => {
         try {
             const picked = await DocumentPicker.pickSingle({
                 type: [DocumentPickerTypes.images, DocumentPickerTypes.pdf],
@@ -88,38 +226,38 @@ const useVendorDocumentUploadHook = () => {
                 allowMultiSelection: false,
             });
 
-            const size = picked.size ?? 0;
-            const type = picked.type ?? "";
-            /* Prefer the local copy SAF made for us; fall back to the raw uri. */
             const uri = picked.fileCopyUri || picked.uri;
-
             if (!uri) { return; }
 
-            if (size > MAX_FILE_SIZE_BYTES) {
-                Alert.alert("File too large", "Each document must be 1.5 MB or smaller.");
-                return;
-            }
-            if (!ALLOWED_MIME.includes(type)) {
-                Alert.alert("Unsupported file", "Use a PNG, JPEG, or WEBP image, or a PDF.");
-                return;
-            }
-
-            const name = picked.name || uri.split("/").pop() || `${ slug }${ type === "application/pdf" ? ".pdf" : ".jpg" }`;
-
-            setSlotState((prev) => ({
-                ...prev,
-                [slug]: {
-                    ...prev[slug],
-                    file: { uri, name, type, size },
-                    status: "selected",
-                    errorMessage: undefined,
-                },
-            }));
+            applyPickedFile(slug, uri, picked.type ?? "", picked.name ?? "", picked.size ?? 0);
         } catch (err: any) {
-            /* User dismissing the picker is not an error worth surfacing. */
             if (DocumentPicker.isCancel(err)) { return; }
             Alert.alert("Couldn't pick file", err?.message ?? "Please try again.");
         }
+    };
+
+    const handlePickFile = (slug: string) => {
+        const labels = ["Choose from Gallery", "Take a Photo", "Browse Files (PDF)", "Cancel"];
+        const actions = [
+            () => pickFromGallery(slug),
+            () => pickFromCamera(slug),
+            () => pickFromFiles(slug),
+        ];
+
+        if (Platform.OS === "ios") {
+            ActionSheetIOS.showActionSheetWithOptions(
+                { options: labels, cancelButtonIndex: labels.length - 1, title: "Upload document" },
+                (index) => { actions[index]?.(); },
+            );
+            return;
+        }
+
+        Alert.alert("Upload document", "Where would you like to pick this document from?", [
+            { text: labels[0], onPress: actions[0] },
+            { text: labels[1], onPress: actions[1] },
+            { text: labels[2], onPress: actions[2] },
+            { text: "Cancel", style: "cancel" },
+        ]);
     };
 
     const uploadOne = async (slug: string): Promise<boolean> => {
@@ -130,7 +268,6 @@ const useVendorDocumentUploadHook = () => {
 
         try {
             const formData = new FormData();
-            // RN's FormData expects this shape — uri/name/type — for file fields.
             formData.append("file", {
                 uri: slot.file.uri,
                 name: slot.file.name,
@@ -161,11 +298,8 @@ const useVendorDocumentUploadHook = () => {
     };
 
     const handleUploadAll = async () => {
-        // Run sequentially so users get clear per-card progress and we don't
-        // hammer the backend with parallel multipart streams on cellular.
         for (const doc of docs) {
             const slot = slotState[doc.slug];
-            // Skip docs that are already uploaded or have no file selected.
             if (slot?.status === "uploaded") { continue; }
             if (!slot?.file) { continue; }
             await uploadOne(doc.slug);
@@ -173,9 +307,6 @@ const useVendorDocumentUploadHook = () => {
     };
 
     const handleFinish = () => {
-        // Land on the vendor dashboard regardless of upload completeness —
-        // the under-review state is reflected on the dashboard. Users can
-        // come back to finish uploads from there (future: add a banner CTA).
         navigation.reset({
             index: 0,
             routes: [{ name: "vendorHomeScreen", params: { screen: "Dashboard" } }],

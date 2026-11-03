@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ArrowLeft, ArrowRight } from 'iconsax-react-native';
+import { ArrowLeft, ShoppingBag } from 'iconsax-react-native';
 import { SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View } from 'react-native'
 import RootNavigationStackModel from '../../../../routes/model/routes_model';
 import DescriptionComponent from '../components/description_component';
@@ -23,6 +23,7 @@ import useDisplayCurrency from '../../../general/hooks/displayCurrency_hook';
 
 const ProductDetailScreen = () => {
   const { product, productID, reviewAndRating, selectedTab, tabs, popularProducts, showSizedGuideBottomSheet, isLoading } = useSelector((state: RootState) => state.productState);
+  const cartCount = useSelector((state: RootState) => state.cartState?.cart?.basketItems?.length ?? 0);
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
   const dispatch = useDispatch<AppDispatch>();
   
@@ -61,7 +62,21 @@ const ProductDetailScreen = () => {
             </View>
           </TouchableOpacity>
           <Text className="font-semibold text-lg text-baseGreen">Product Details</Text>
-          <View className="h-[40px] w-[40px]" />
+          <TouchableOpacity onPress={ () => navigation.navigate("homeScreen", { screen: "Cart" }) } accessibilityLabel="Cart">
+            <View className="h-[40px] w-[40px] flex items-center justify-center rounded-full bg-baseGreen">
+              <ShoppingBag size={ 20 } color="white" variant="Linear" />
+              { cartCount > 0 && (
+                <View
+                  className="absolute -top-1 -right-1 px-1 items-center justify-center rounded-full bg-red-500 border border-white"
+                  style={{ minWidth: 18, height: 18 }}
+                >
+                  <Text className="font-montserratSemiBold text-[10px] text-white">
+                    { cartCount > 9 ? "9+" : cartCount }
+                  </Text>
+                </View>
+              ) }
+            </View>
+          </TouchableOpacity>
         </View>
 
 
@@ -113,26 +128,6 @@ const ProductDetailScreen = () => {
             ) }
           </View>
 
-
-          {/*==== Sellers' Information Section ====*/}
-          { (product?.productType === "readyMadeCloth" || product?.productType === "readyMadeShoe" || product?.productType === "accessory") && (
-            <View className="mt-12 px-5">
-              <View className="flex-row justify-between items-center">
-                <Text className="font-montserratSemiBold text-base text-baseGreen">Sellers' Information</Text>
-                <TouchableOpacity 
-                  className="flex-row items-center justify-center"
-                  onPress={ () => navigation.navigate("productListScreen", { screenTitle: "Popular Products" }) }
-                >
-                  <Text className="mr-1 text-sm text-baseGreen">See more</Text>
-                  <ArrowRight size={20} className="text-baseGreen" />
-                </TouchableOpacity>
-              </View>
-
-              <Text className="mt-5 font-montserratMedium text-base text-baseGreen">Zona Fashion Store</Text>
-              <Text className="mt-2 font-montserratMedium text-sm text-baseGreen">90% seller score</Text>
-              <Text className="mt-2 font-montserratMedium text-sm text-baseGreen">200 complete deliveries</Text>
-            </View>
-          )}
 
           {/*==== Similar Items Section ====*/}
           <View className="my-12 px-5">

@@ -12,6 +12,7 @@ import {
 } from "../../slices/vendorOnboardingState_slice";
 import { useLazyGetAuthShopQuery, useRegisterVendorMutation } from "../../apis/general_api";
 import { setUserData } from "../../../../profile/slices/profileState_slice";
+import { setPendingDestination } from "../../../../auths/slices/authState_slice";
 import { setShop } from "../../slices/general_slice";
 
 const useStepNineHook = () => {
@@ -64,7 +65,17 @@ const useStepNineHook = () => {
         if (!userData?.uid || userData?.isGuest) {
             Alert.alert(
                 "Sign in required",
-                "Please sign in to your Zeaper account before registering your shop. Your details are saved — finish signing in and come back.",
+                "Please sign in to your Zeaper account before registering your shop. Your details are saved — you'll come straight back here after signing in.",
+                [
+                    { text: "Cancel", style: "cancel" },
+                    {
+                        text: "Sign In",
+                        onPress: () => {
+                            dispatch(setPendingDestination({ name: "vendorRegistrationScreen" }));
+                            navigation.navigate("loginScreen");
+                        },
+                    },
+                ],
             );
             return;
         }

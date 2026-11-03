@@ -81,8 +81,6 @@ const DocCard: React.FC<IDocCardProps> = ({ doc, slot, onPickFile, onUpload }) =
     const isUploaded = status === "uploaded";
 
     const previewUri = slot?.file?.uri || slot?.remoteLink || null;
-    /* A PDF can't render in <Image>, so we detect it from the picked file's
-       mime type (or a .pdf remote link) and show a document tile instead. */
     const isPdf = slot?.file?.type === "application/pdf"
         || (!slot?.file && !!slot?.remoteLink && /\.pdf(\?|$)/i.test(slot.remoteLink));
 
@@ -250,7 +248,7 @@ const VendorDocumentUploadScreen = () => {
                     ) }
 
                     <Text className="mt-5 text-[11px] text-gray-400 leading-5">
-                        Files must be images (PNG / JPEG / WEBP) or PDF, max 1.5 MB each. You can upload them in any order. Editing is only available until your shop has been verified.
+                        Files must be images (PNG / JPEG / HEIC / WEBP) or PDF, max 1.5 MB each. You can upload them in any order. Editing is only available until your shop has been verified.
                     </Text>
                 </ScrollView>
 

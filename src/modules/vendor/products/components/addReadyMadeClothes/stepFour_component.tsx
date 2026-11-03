@@ -16,6 +16,7 @@ interface UploadedImageFile {
     type: string | undefined;
     size: number | undefined;
     isDefault: boolean | undefined;
+    colorName?: string;
 };
 interface UploadedColorAndImage {
     color: IColorOption | undefined;
@@ -100,28 +101,39 @@ const StepFourComponent: React.FC<IProps> = (props) => {
                                     className="h-auto w-full pr-2"
                                 >
                                     { colorAndImage.images.map((image, index) => (
+                                        <View key={ index } className="mt-3 mr-3 items-center">
                                         <TouchableOpacity
                                             onLongPress={ () => {
-                                                setSelectedDefaultImage(image);
+                                                setSelectedDefaultImage({ ...image, colorName: colorAndImage.color?.colorName } as UploadedImageFile);
                                                 setShowDefaultImageModal(true);
                                             } }
-                                            key={ index }
-                                            className="h-16 w-20 mt-3 mr-3 p-0 relative flex items-center justify-center rounded-lg border border-gray-400 bg-gray-200"
+                                            className="h-16 w-20 p-0 relative flex items-center justify-center rounded-lg border border-gray-400 bg-gray-200"
                                         >
                                             <FastImage
                                                 source={ { uri: image.uri! } }
                                                 resizeMode="contain"
                                                 className="h-[63px] w-[79px] absolute inset-0 border border-transparent rounded-lg"
                                             />
-                                            { image?.isDefault &&         
-                                                <View className="absolute bottom-0 right-0 bg-lightGreen rounded-tl-md rounded-br-md px-1.5 py-0.5">
-                                                <Text className="font-montserratMedium text-baseGreen text-[10px]">Default</Text>
-                                                </View>
-                                            }
                                             <TouchableOpacity onPress={ () => handleDeleteUploadedImage(colorAndImage.color?.colorName!, image.name!) } className="h-[22px] w-[22px] absolute -top-2 -right-2 text-baseGreen rounded-full bg-gray-200 rotate-45 z-10">
                                                 <Add size={22} className="text-baseGreen" />
                                             </TouchableOpacity>
                                         </TouchableOpacity>
+                                        { image?.isDefault ? (
+                                            <View className="w-20 mt-1.5 py-1 items-center rounded-md bg-baseGreen">
+                                                <Text className="font-montserratMedium text-[10px] text-white">Default</Text>
+                                            </View>
+                                        ) : (
+                                            <TouchableOpacity
+                                                onPress={ () => {
+                                                    setSelectedDefaultImage({ ...image, colorName: colorAndImage.color?.colorName } as UploadedImageFile);
+                                                    setShowDefaultImageModal(true);
+                                                } }
+                                                className="w-20 mt-1.5 py-1 items-center rounded-md border border-baseGreen bg-white"
+                                            >
+                                                <Text className="font-montserratMedium text-[10px] text-baseGreen">Set Default</Text>
+                                            </TouchableOpacity>
+                                        ) }
+                                        </View>
                                     )) }
                                 </ScrollView>
                             </View>

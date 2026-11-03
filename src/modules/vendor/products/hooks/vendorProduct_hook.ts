@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
+import { Alert } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../../../redux/store/store";
 import { useApplyPromotionMutation, useDeleteProductMutation, useLazyGetAvailablePromosQuery, useLazyGetProductByProductIDQuery, useLazyGetProductPromotionQuery, useLazyGetProductsQuery, useTurnOffPromotionMutation } from "../apis/product_api";
 import IVendorProductQueryParams from "../models/vendorProductFilter_model";
-import { setProduct, setProductPromotion, setProducts } from "../slices/vendorProductState_slice";
+import { setProduct, setProductFilterParams, setProductPromotion, setProducts } from "../slices/vendorProductState_slice";
 import { setProductID } from "../../../user/products/slices/product_slice";
 import { IColor, IImage, IVariation } from "../models/vendorProductDetails_model";
 import { IColorEnum } from "../../../general/models/productOptions_model";
@@ -17,6 +18,11 @@ import { setIsLoading, setLoadingMessage } from "../../../general/slices/general
 import IPromotion from "../models/promotion_model";
 import handleError from "../../../general/hooks/errorHandler_hook";
 import useReviewHook from "../../../general/hooks/review_hook";
+
+export type FilterKey = "productType" | "main" | "style" | "gender" | "ageGroup" | "ageRange"
+    | "brand" | "design" | "occasion" | "sleeveLength" | "fastening" | "fit";
+
+const NON_FILTER_KEYS: (keyof IVendorProductQueryParams)[] = ["pageNumber", "limit", "productId", "shopId"];
 
 const useVendorProductHook = () => {
     const { product, productIsLoading, products } = useSelector((state: RootState) => state.vendorProductState);
@@ -56,27 +62,71 @@ const useVendorProductHook = () => {
     const [showFit, setShowFit] = useState(false);
     const [showPriceAdjustment, setShowPriceAdjustment] = useState(false);
 
-    const [selectedProductType, setSelectedProductType] = useState<string>("");
-    const [selectedMainCategory, setSelectedMainCategory] = useState<string>("");
-    const [selectedStyle, setSelectedStyle] = useState<string>("");
-    const [selectedGender, setSelectedGender] = useState<string>("");
-    const [selectedAgeGroup, setSelectedAgeGroup] = useState<string>("");
-    const [selectedAgeRange, setSelectedAgeRange] = useState<string>("");
-    const [selectedBrand, setSelectedBrand] = useState<string>("");
     // const [selectedSize, setSelectedSize] = useState<string[]>([]);
     // const [selectedColor, setSelectedColor] = useState<string[]>([]);
-    const [selectedDesign, setSelectedDesign] = useState<string>("");
-    const [selectedOccasion, setSelectedOccasion] = useState<string>("");
-    const [selectedSleeveLength, setSelectedSleeveLength] = useState<string>("");
-    const [selectedFastening, setSelectedFastening] = useState<string>("");
-    const [selectedFit, setSelectedFit] = useState<string>("");
-    const [selectedPrice, setSelectedPrice] = useState<number>(0);
     const [selectedLimit] = useState<number>(20);
-    const [selectedPageNumber, setSelectedPageNumber] = useState<number>(1);
-    const [requestParams, setRequestParams] = useState<IVendorProductQueryParams>({
-        pageNumber: selectedPageNumber,
-        limit: selectedLimit,
-    });
+
+    const requestParams = useSelector((state: RootState) => state.vendorProductState.productFilterParams);
+    const selectedPageNumber = requestParams.pageNumber ?? 1;
+    const [searchPhrase, setSearchPhrase] = useState<string>("");
+    const selectedStatus = requestParams.status ?? "live";
+
+    const handleSearchProducts = (phrase: string) => setSearchPhrase(phrase);
+
+    const handleSelectProductStatus = (status: string) => {
+        setSearchPhrase("");
+        dispatch(setProductFilterParams({ ...requestParams, status, pageNumber: 1 }));
+    };
+
+    const setRequestParams = (params: IVendorProductQueryParams) => {
+        dispatch(setProductFilterParams(params));
+    };
+
+    const setSelectedPageNumber = (pageNumber: number) => {
+        dispatch(setProductFilterParams({ ...requestParams, pageNumber }));
+    };
+
+    const toggleFilter = (key: FilterKey, value: string) => {
+        const next: IVendorProductQueryParams = { ...requestParams, pageNumber: 1 };
+        if (next[key] === value) {
+            delete next[key];
+        } else {
+            next[key] = value;
+        }
+        dispatch(setProductFilterParams(next));
+    };
+
+    const setSelectedPrice = (value: number) => {
+        const next: IVendorProductQueryParams = { ...requestParams, pageNumber: 1 };
+        if (!value || isNaN(value)) {
+            delete next.price;
+        } else {
+            next.price = value;
+        }
+        dispatch(setProductFilterParams(next));
+    };
+
+    const handleClearFilters = () => {
+        dispatch(setProductFilterParams({ pageNumber: 1, limit: selectedLimit }));
+    };
+
+    const activeFilterCount = (Object.keys(requestParams) as (keyof IVendorProductQueryParams)[])
+        .filter((key) => !NON_FILTER_KEYS.includes(key) && requestParams[key] !== undefined && requestParams[key] !== "")
+        .length;
+
+    const selectedProductType = requestParams.productType ?? "";
+    const selectedMainCategory = requestParams.main ?? "";
+    const selectedStyle = requestParams.style ?? "";
+    const selectedGender = requestParams.gender ?? "";
+    const selectedAgeGroup = requestParams.ageGroup ?? "";
+    const selectedAgeRange = requestParams.ageRange ?? "";
+    const selectedBrand = requestParams.brand ?? "";
+    const selectedDesign = requestParams.design ?? "";
+    const selectedOccasion = requestParams.occasion ?? "";
+    const selectedSleeveLength = requestParams.sleeveLength ?? "";
+    const selectedFastening = requestParams.fastening ?? "";
+    const selectedFit = requestParams.fit ?? "";
+    const selectedPrice = requestParams.price ?? 0;
     const [featuredImage, setFeaturedImage] = useState<IImage>({
         link: "",
         name: "",
@@ -89,7 +139,26 @@ const useVendorProductHook = () => {
         _id: "",
     });
     const [featuredColors, setFeaturedColors] = useState<IColorEnum[]>([]);
-    const [selectedPromo, setSelectedPromo] = useState<IPromotion>({});
+    const [selectedPromo, setSelectedPromoState] = useState<IPromotion>({});
+    const [discountPercentage, setDiscountPercentage] = useState<string>("");
+
+    const isFixedPromo = (promo?: IPromotion) => promo?.discount?.type === "fixed";
+
+    const promoRange = (promo?: IPromotion) => ({
+        min: promo?.discount?.rangePercentage?.min ?? 0,
+        max: promo?.discount?.rangePercentage?.max ?? 0,
+    });
+
+    // Fixed promos lock to their own percentage; range promos open at the
+    // minimum the vendor is allowed to pick.
+    const setSelectedPromo = (promo: IPromotion) => {
+        setSelectedPromoState(promo);
+        if (isFixedPromo(promo)) {
+            setDiscountPercentage(String(promo?.discount?.fixedPercentage ?? 0));
+        } else {
+            setDiscountPercentage(String(promoRange(promo).min));
+        }
+    };
     const [showDeleteProductWarningModal, setShowDeleteProductWarningModal] = useState(false);
 
     const [getProducts, { isFetching: isLoadingProducts }] = useLazyGetProductsQuery();
@@ -322,12 +391,25 @@ const useVendorProductHook = () => {
 
     // Handle apply promotion
     const handleApplyPromo = async () => {
+        if (!selectedPromo?.promoId) {
+            Alert.alert("Error", "Please select a promo to join.");
+            return;
+        }
+
+        const percentage = Number(discountPercentage);
+        const { min, max } = promoRange(selectedPromo);
+
+        if (!isFixedPromo(selectedPromo) && (isNaN(percentage) || percentage < min || percentage > max)) {
+            Alert.alert("Error", `Enter a discount percentage between ${ min }% and ${ max }%.`);
+            return;
+        }
+
         dispatch(setLoadingMessage("Applying promotion..."));
         dispatch(setIsLoading(true));
 
         try {
             const requestData = {
-                discountPercentage: selectedPromo?.discount?.fixedPercentage!,
+                discountPercentage: Number(discountPercentage),
                 productId: product?.productId!,
                 promoId: selectedPromo?.promoId!,
             };
@@ -433,6 +515,22 @@ const useVendorProductHook = () => {
     // When neither holds (empty list, or everything fits on one page) the
     // Previous/Next controls are hidden. Kept here (controller) rather than in
     // the screen so the view stays presentation-only.
+    const visibleProducts = useMemo(() => {
+        const phrase = searchPhrase.trim().toLowerCase();
+        if (!phrase) { return products; }
+
+        const matches = (value: any): boolean => {
+            if (value == null) { return false; }
+            if (typeof value === "string") { return value.toLowerCase().includes(phrase); }
+            if (typeof value === "number") { return String(value).includes(phrase); }
+            if (Array.isArray(value)) { return value.some(matches); }
+            if (typeof value === "object") { return Object.values(value).some(matches); }
+            return false;
+        };
+
+        return products.filter(matches);
+    }, [products, searchPhrase]);
+
     const pageSize = requestParams.limit ?? 20;
     const hasNextPage = (products?.length ?? 0) === pageSize;
     const hasPrevPage = selectedPageNumber > 1;
@@ -440,6 +538,8 @@ const useVendorProductHook = () => {
 
     return {
         requestParams, setRequestParams,
+        searchPhrase, handleSearchProducts, visibleProducts,
+        selectedStatus, handleSelectProductStatus,
         productIsLoading, isLoadingProducts, handleFetchFilteredProducts,
         selectedPageNumber, setSelectedPageNumber,
         hasNextPage, hasPrevPage, showPagination,
@@ -452,6 +552,7 @@ const useVendorProductHook = () => {
         featuredImage, setFeaturedImage,
         featuredColors,
         promotions, handleGetAvailablePromos, selectedPromo, setSelectedPromo, handleApplyPromo, handleTornOffPromo,
+        discountPercentage, setDiscountPercentage, isFixedPromo, promoRange,
         /* Uninitialized counts as loading: it covers the render between mount
            and the screen's useEffect firing the request. */
         isLoadingPromotions: isPromotionsUninitialized || isFetchingPromotions,
@@ -484,18 +585,7 @@ const useVendorProductHook = () => {
         showFit, setShowFit,
         showPriceAdjustment, setShowPriceAdjustment,
 
-        setSelectedProductType,
-        setSelectedMainCategory,
-        setSelectedStyle,
-        setSelectedGender,
-        setSelectedAgeGroup,
-        setSelectedAgeRange,
-        setSelectedBrand,
-        setSelectedDesign,
-        setSelectedOccasion,
-        setSelectedSleeveLength,
-        setSelectedFastening,
-        setSelectedFit,
+        toggleFilter, handleClearFilters, activeFilterCount,
 
         handleFormatDate,
     };

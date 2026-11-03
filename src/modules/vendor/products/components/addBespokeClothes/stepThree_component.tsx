@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Dimensions, Image, Text, TextInput, TouchableOpacity, View } from "react-native";
-import { ArrowDown2, ArrowRight2 } from "iconsax-react-native";
+import { ArrowDown2, ArrowRight2, InfoCircle } from "iconsax-react-native";
 import CheckBox from '@react-native-community/checkbox';
 import IBodyMeasurementGuide, { IField } from '../../../../general/models/bodyMeasurementGuide_model';
 import SkeletonBlock from '../../../../general/components/skeletonBlock_component';
@@ -104,8 +104,13 @@ const StepThreeComponent: React.FC<IProps> = ({
 
     return (
         <View>
-            <Text className="mt-5 font-montserratSemiBold text-base text-baseGreen">Step 3: Body Measurements</Text>
-            <Text className="mt-2 font-montserratMedium">Provide the applicable body measurements for this product.</Text>
+            <Text className="mt-5 font-montserratSemiBold text-base text-baseGreen">Step 3: Body Measurement</Text>
+            <View className="h-auto w-full mt-3 p-4 flex-row rounded-xl bg-blue-50">
+                <InfoCircle size={ 20 } color="#2563eb" variant="Bold" />
+                <Text className="flex-1 ml-3 font-montserratMedium text-xs text-blue-700 leading-5">
+                    Please provide the applicable body measurements you would expect from the customer for this product.
+                </Text>
+            </View>
 
             {/* ==== Gender Tabs (enabled per step-2 selection) ==== */}
             <View className="h-auto w-full mt-5 flex-row">
@@ -139,6 +144,7 @@ const StepThreeComponent: React.FC<IProps> = ({
                 activeGuides.map((guide: IBodyMeasurementGuide) => {
                     const isCollapsed = !!collapsedGuides[guide.name];
                     const allChecked = isGuideFullyChecked(guide);
+                    const checkedFields = (guide.fields ?? []).filter((field: IField) => isFieldChecked(guide.name, field.field));
                     return (
                     <View key={ guide._id } className="h-auto w-full mt-1.5 px-3 py-3.5 border rounded-xl border-gray-200 bg-gray-50">
                         {/* Section header — tap anywhere to collapse/expand the group. */}
@@ -152,6 +158,16 @@ const StepThreeComponent: React.FC<IProps> = ({
                                 : <ArrowDown2 size={ 18 } color="#133522" />
                             }
                         </TouchableOpacity>
+
+                        { isCollapsed && checkedFields.length > 0 && (
+                            <View className="mt-3 flex-row flex-wrap" style={{ columnGap: 6, rowGap: 6 }}>
+                                { checkedFields.map((field: IField) => (
+                                    <View key={ field._id } className="px-2.5 py-1 rounded-full bg-lightGreen">
+                                        <Text className="font-montserratMedium text-xs text-baseGreen">{ titleCase(field.field) }</Text>
+                                    </View>
+                                )) }
+                            </View>
+                        ) }
 
                         {/* Select All / Clear All — mirrors the web bulk controls. */}
                         { !isCollapsed && (

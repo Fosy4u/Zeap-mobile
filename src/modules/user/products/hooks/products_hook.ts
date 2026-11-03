@@ -5,6 +5,8 @@ import { IColorEnum } from "../../../general/models/productOptions_model";
 import { useEffect, useState } from "react";
 import { useLazyGetProductByProductIDQuery, useLazyGetProductPromotionQuery, useAddProductToCartMutation, useLazyGetSizeGuideQuery } from "../apis/product_api";
 import { setFeaturedPrice, setIsLoading, setLoadingMessage, setProduct, setProductPromotion, setReviewAndRating, setSelectedColor, setSelectedSize, setSizeGuide } from "../slices/product_slice";
+import { showAppToast } from "../../../general/slices/general_slice";
+import useCartHook from "../../cart/hooks/cart_hook";
 import handleError from "../../../general/hooks/errorHandler_hook";
 import { useLazyGetProductReviewsQuery } from "../../../general/apis/review_api";
 import { addBespokeMultipleColorProduct, addBespokeSingleColorProduct, addReadyMadeProduct } from "../models/addProduct_model";
@@ -18,6 +20,7 @@ const useProductsHook = () => {
     const { readyMadeClothesOptions, readyMadeShoesOptions, bespokeClothesOptions, bespokeShoesOptions, accessoriesOptions } = useSelector((state: RootState) => state.generalState);
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const dispatch = useDispatch();
+    const { handleGetCarts } = useCartHook();
 
     const [featuredImage, setFeaturedImage] = useState<IImage>({
         link: "",
@@ -259,7 +262,8 @@ const useProductsHook = () => {
             console.log("ADD PRODUCT RESPONSE::: ", addProductResponse);
 
             if (addProductResponse) {
-                navigation.navigate("homeScreen", { screen: "Cart" });
+                dispatch(showAppToast({ title: "Congratulations", message: `You have successfully added ${ selectedQuantity } ${ selectedQuantity === 1 ? "item" : "items" } to your cart` }));
+                handleGetCarts(true);
             }
         } catch (error) {
             handleError(error);

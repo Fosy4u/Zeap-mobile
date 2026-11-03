@@ -2,18 +2,19 @@ import rootAPI from "../../../../redux/api/rootAPI.ts";
 import IVendorProductDetails from "../models/vendorProductDetails_model";
 import IVendorProductQueryParams from "../models/vendorProductFilter_model";
 import IPromotion, { IPromotionPayload } from "../models/promotion_model";
-import { deleteDraftProductRoute } from "../../../../redux/api/api_route.ts";
+import { deleteDraftProductRoute, productCommissionRoute } from "../../../../redux/api/api_route.ts";
+import IProductCommission from "../models/productCommission_model";
 
 const productAPI = rootAPI.injectEndpoints({
     overrideExisting: true,
     endpoints: (builder) => ({
         // Get all products
         getProducts: builder.query<IVendorProductDetails[], IVendorProductQueryParams>({
-            query: ({ shopId, productType, accessoryType, price, sizes, title, colors, brand, design, gender, ageGroup, ageRange, style, main, sleeveLength, fastening, fit, occasion, productId, limit, pageNumber }) => ({
+            query: ({ shopId, productType, accessoryType, price, sizes, title, colors, brand, design, gender, ageGroup, ageRange, style, main, sleeveLength, fastening, fit, occasion, productId, status, noCurrencyConversion, currency, limit, pageNumber }) => ({
                 url: "/products/auth/shop",
                 method: "GET",
                 params: {
-                    shopId, productType, accessoryType, price, sizes, title, colors, brand, design, gender, ageGroup, ageRange, style, main, sleeveLength, fastening, fit, occasion, productId, limit, pageNumber
+                    shopId, productType, accessoryType, price, sizes, title, colors, brand, design, gender, ageGroup, ageRange, style, main, sleeveLength, fastening, fit, occasion, productId, status, noCurrencyConversion, currency, limit, pageNumber
                 }
             }),
             providesTags: ["Products"],
@@ -61,6 +62,14 @@ const productAPI = rootAPI.injectEndpoints({
         }),
 
         // Get available promotions
+        getProductCommission: builder.query<IProductCommission, void>({
+            query: () => ({
+                url: productCommissionRoute,
+                method: "GET",
+            }),
+            transformResponse: (response: { data: IProductCommission }) => response.data,
+        }),
+
         getAvailablePromos: builder.query<IPromotion[], void>({
             query: () => ({
                 url: "/promos/available",
@@ -116,6 +125,7 @@ const productAPI = rootAPI.injectEndpoints({
 });
 
 export const {
+    useGetProductCommissionQuery,
     useLazyGetProductsQuery,
     useLazyGetProductByProductIDQuery,
     useDeleteProductMutation,

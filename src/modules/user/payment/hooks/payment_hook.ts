@@ -41,6 +41,7 @@ const usePaymentHook = () => {
             // accepts canonical names such as "United Kingdom"/"United States".
             country: normalizeDeliveryCountry(formData.country),
             phoneNumber: formData.phoneNumber,
+            deliveryNote: formData.deliveryNote?.trim() || "",
             method: selectedDeliveryFee?.method || "standard",
         };
 

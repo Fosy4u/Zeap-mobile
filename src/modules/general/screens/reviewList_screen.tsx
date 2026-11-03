@@ -9,6 +9,7 @@ import useGeneralHook from '../hooks/general_hook';
 import formatDate from '../../../utils/formatDate';
 import AppHeaderComp from '../../vendor/general/components/appHeader_comp';
 import RatingCardComponent from '../components/ratingCard_component';
+import UserAvatar from '../components/userAvatar_component';
 
 interface IProps {
     route: RouteProp<RootNavigationStackModel, "reviewListScreen">
@@ -44,15 +45,16 @@ const ReviewListScreen: React.FC<IProps> = ({ route }) => {
                         <View key={ review._id } className="mt-6">
                             <View className="h-auto w-full flex-row items-end justify-between">
                             <View className="flex-row items-center justify-start">
-                                <Image
-                                    className="h-[45px] w-[45px] mr-3 rounded-full"
-                                    resizeMode="cover"
-                                    source={ 
-                                        review.user!.imageUrl!?.link!
-                                        ? { uri: review.user!.imageUrl!?.link! }
-                                        : require("../../../../assets/images/app_logo_green.png")
-                                    }
-                                />
+                                <View className="mr-3">
+                                    <UserAvatar
+                                        photoURL={ review.user?.imageUrl?.link }
+                                        firstName={ review.user?.firstName }
+                                        lastName={ review.user?.lastName }
+                                        displayName={ review.displayName ?? review.user?.displayName }
+                                        seed={ review.user?.userId || review._id }
+                                        size={ 45 }
+                                    />
+                                </View>
 
                                 <View>
                                     <Text className="font-medium">{ review.user!.firstName! + " " + review.user!.lastName! }</Text>

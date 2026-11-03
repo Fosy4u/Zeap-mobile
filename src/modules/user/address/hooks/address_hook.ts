@@ -22,7 +22,6 @@ const getDefaultCountryForCurrency = (currency?: string): string => {
     switch (currency) {
         case "USD": return "USA";
         case "GBP": return "UK";
-        case "CAD": return "Canada";
         case "NGN":
         default:    return "Nigeria";
     }
@@ -49,6 +48,7 @@ const useAddressHook = () => {
             region: selectedAddress?.region! || "",
             country: selectedAddress?.country || getDefaultCountryForCurrency(userData?.prefferedCurrency),
             postCode: selectedAddress?.postCode || "",
+            deliveryNote: selectedAddress?.deliveryNote || "",
             phoneNumber: selectedAddress?.phoneNumber! || ""
         },
         resolver: yupResolver(addressFormFieldsSchema)
@@ -123,6 +123,7 @@ const useAddressHook = () => {
             region: "",
             country: getDefaultCountryForCurrency(userData?.prefferedCurrency),
             postCode: "",
+            deliveryNote: "",
             phoneNumber: "",
         });
         dispatch(setShowNewDeliveryAddressForm(true));
@@ -158,6 +159,7 @@ const useAddressHook = () => {
                 region: selectedAddress?.region! || "",
                 country: selectedAddress?.country || getDefaultCountryForCurrency(userData?.prefferedCurrency),
                 postCode: selectedAddress?.postCode || "",
+            deliveryNote: selectedAddress?.deliveryNote || "",
                 phoneNumber: selectedAddress?.phoneNumber! || ""
             });
         }

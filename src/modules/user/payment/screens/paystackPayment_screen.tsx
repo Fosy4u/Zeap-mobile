@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { SafeAreaView, Text, TouchableOpacity, View } from 'react-native'
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import AppLoader from '../../../general/components/appLoader';
-import { Paystack } from 'react-native-paystack-webview';
+import { usePaystack } from 'react-native-paystack-webview';
 import usePaymentHook from '../hooks/payment_hook';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../../redux/store/store';
@@ -19,17 +19,10 @@ const PaystackPaymentScreen = () => {
         handlePaymentSuccess, handlePaymentCancel,
     } = usePaymentHook();
 
-    // Once verify has been kicked off (or completed), never re-mount Paystack.
-    // A ref wouldn't work here because it doesn't drive renders — the screen
-    // would briefly re-render `<Paystack autoStart>` while isLoading flips
-    // back to false, causing Paystack to start a second transaction with the
-    // same reference and throw "Duplicate transaction reference".
     const [paymentCompleted, setPaymentCompleted] = useState(false);
 
     const [gatewayError, setGatewayError] = useState<string | null>(null);
 
-    // If the backend reports the reference is already paid, jump straight to
-    // the verify flow instead of leaving the user on a dead-end page.
     const status = paymentReference?.paymentStatus?.toLowerCase();
     const referenceCode = paymentReference?.reference;
     useEffect(() => {
@@ -39,17 +32,44 @@ const PaystackPaymentScreen = () => {
         }
     }, [status, referenceCode, paymentCompleted]);
 
-    // Resolve config up-front so we can guard against the "indicator hangs
-    // forever" failure mode — that happens when the inline JS inside the
-    // Paystack WebView never finishes initializing (almost always because the
-    // publishable key is empty, the amount is NaN, or the reference is
-    // missing). Without these guards the WebView's onLoadEnd never fires, so
-    // the activity indicator spins indefinitely with no error surfaced.
+    const { popup } = usePaystack();
+    const checkoutStartedRef = useRef(false);
+
     const paystackKey = process.env.REACT_APP_PAYSTACK_PUBLIC_KEY;
     const amountInMajorUnit = (paymentReference?.amount ?? 0) / 100;
     const isAmountValid = Number.isFinite(amountInMajorUnit) && amountInMajorUnit > 0;
     const hasReference = Boolean(paymentReference?.reference);
     const hasKey = Boolean(paystackKey && paystackKey.trim().length > 0);
+
+    useEffect(() => {
+        if (checkoutStartedRef.current || paymentCompleted) { return; }
+        if (!hasKey || !isAmountValid || !hasReference) { return; }
+        if (status === "success") { return; }
+
+        checkoutStartedRef.current = true;
+        popup.checkout({
+            email: paymentReference?.email!,
+            amount: amountInMajorUnit,
+            reference: paymentReference?.reference!,
+            onSuccess: () => {
+                if (paymentCompleted) { return; }
+                setPaymentCompleted(true);
+                handlePaymentSuccess(paymentReference?.reference!);
+            },
+            onCancel: () => {
+                if (paymentCompleted) { return; }
+                handlePaymentCancel();
+            },
+            onError: (err: any) => {
+                const detail = typeof err?.message === "string" ? err.message : "";
+                setGatewayError(
+                    detail.toLowerCase().includes("duplicate")
+                        ? "This payment was already started once and cannot be reopened. Go back to checkout and start the payment again to get a new reference."
+                        : detail || "The payment gateway returned an error. Please try again.",
+                );
+            },
+        });
+    }, [hasKey, isAmountValid, hasReference, status, paymentCompleted]);
 
     if (isLoading) {
         return <AppLoader loadingAdditionalMessage={ loadingMessage } />;
@@ -102,45 +122,7 @@ const PaystackPaymentScreen = () => {
 
     return (
         <SafeAreaView className="h-full w-full flex-1 bg-lightGray">
-            <Paystack
-                paystackKey={ paystackKey! }
-                amount={ amountInMajorUnit }
-                currency={ paymentReference?.currency!  || "NGN" }
-                refNumber={ paymentReference?.reference! }
-                billingEmail={ paymentReference?.email! }
-                billingName={ paymentReference?.fullName! }
-                activityIndicatorColor="green"
-                autoStart={ true }
-                channels={['card']}
-
-                // Forward any error message the WebView reports up to logcat
-                // so the next hang surfaces a reason instead of being silent.
-                handleWebViewMessage={ (event: any) => {
-                    console.log("PAYSTACK WEBVIEW MESSAGE::: ", event);
-                    if (event?.status !== "error") { return; }
-
-                    const detail = typeof event?.data === "string" ? event.data : "";
-                    setGatewayError(
-                        detail.toLowerCase().includes("duplicate")
-                            ? "This payment was already started once and cannot be reopened. Go back to checkout and start the payment again to get a new reference."
-                            : detail || "The payment gateway returned an error. Please try again.",
-                    );
-                } }
-
-                onCancel={ () => {
-                    // Paystack's webview also fires onCancel after a successful
-                    // charge when it closes itself — skip the cancel path if
-                    // success has already been handled.
-                    if (paymentCompleted) return;
-                    handlePaymentCancel();
-                } }
-
-                onSuccess={ () => {
-                    if (paymentCompleted) return;
-                    setPaymentCompleted(true);
-                    handlePaymentSuccess(paymentReference?.reference!);
-                } }
-            />
+            <AppLoader loadingAdditionalMessage="Opening secure checkout..." />
         </SafeAreaView>
     );
 };

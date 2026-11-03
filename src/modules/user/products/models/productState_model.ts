@@ -19,6 +19,7 @@ interface IProductState {
     popularProducts: IProduct[];
     newestPrpducts: IProduct[];
     currentPage: number;
+    productsTotalCount: number | null;
     selectedCategory: ICategory;
     promoProducts: IPromoProduct[];
     productPromotion: IPromoProduct;

@@ -91,11 +91,11 @@ const PointsComponent: React.FC<IProps> = (props: IProps) => {
                                 <TextInput
                                     aria-label="Points"
                                     aria-labelledby="points"
-                                    keyboardType="numeric"
+                                    keyboardType="number-pad"
                                     placeholder="Enter points"
                                     placeholderTextColor="#9ca3af"
                                     className="h-[44px] text-base"
-                                    onChangeText={(value) => handleUpdatePointsToConvert(value)}
+                                    onChangeText={(value) => handleUpdatePointsToConvert(value.replace(/[^0-9]/g, ""))}
                                     value={ state.pointsToConvert.toString() }
                                 />
                             </View>

@@ -24,8 +24,7 @@ import RootNavigationStackModel from "../../../routes/model/routes_model";
 const NIGERIA_PHONE = "+2347075374026";
 const UK_PHONE = "+447518465207";
 const WHATSAPP_NUMBER = "+447518465207";
-const ADMIN_EMAIL = "Admin@zeaper.com";
-const HELP_CENTER_URL = "https://zeaper.com/help";
+const ADMIN_EMAIL = "admin@zeaper.com";
 
 const openUrl = (url: string, fallbackMessage?: string) => {
     Linking.openURL(url).catch(() => {
@@ -108,7 +107,7 @@ const ContactSupportScreen = () => {
                             title="Help Center"
                             rows={ [{
                                 value: "Visit our Help Center",
-                                onPress: () => openUrl(HELP_CENTER_URL, "Help Center isn't reachable right now."),
+                                onPress: () => navigation.navigate("helpCenterScreen"),
                             }] }
                         />
 
@@ -169,9 +168,6 @@ const ContactSupportScreen = () => {
     );
 };
 
-// Re-exported icon to keep iconsax import surface contained — silences the
-// "imported but not used" lint if Call ever loses its sole reference in a
-// future trim of this file (we keep the icon library accessible).
 export { Call };
 
 export default ContactSupportScreen;

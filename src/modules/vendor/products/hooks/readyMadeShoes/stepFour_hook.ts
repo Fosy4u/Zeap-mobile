@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Alert, PermissionsAndroid, Platform } from "react-native";
 import { ImageLibraryOptions, launchImageLibrary } from "react-native-image-picker";
 import { useDispatch, useSelector } from "react-redux";
@@ -26,6 +26,7 @@ interface UploadedImageFile {
     type: string | undefined;
     size: number | undefined;
     isDefault: boolean | undefined;
+    colorName?: string;
 };
 interface UploadedColorAndImage {
     color: IColorOption | undefined;
@@ -391,7 +392,7 @@ const useStepFourHook = () => {
 
         const productId = product?.productId || "";
         const imageName = selectedDefaultImage.name || "";
-        const color = selectedColor[0].colorName || "";
+        const color = selectedDefaultImage.colorName || selectedColor[0]?.colorName || "";
         console.log("REQUEST DATA: ", { productId, imageName, color });
 
         try {
@@ -421,6 +422,28 @@ const useStepFourHook = () => {
         handleSetUploadedImagesFromDraftProduct();
     }, [product, colorOptions]);
 
+
+
+    // A colour with a single image has nothing to choose between, so that image
+    // becomes the colour's default automatically (each colour tried once).
+    const autoDefaultAttempted = useRef<Set<string>>(new Set());
+    useEffect(() => {
+        const productId = product?.productId;
+        if (!productId) return;
+        const pendingColor = (product?.colors ?? []).find((color) =>
+            color.value !== "Bespoke"
+            && color.images?.length === 1
+            && !color.images[0]?.isDefault
+            && !autoDefaultAttempted.current.has(`${ productId }::${ color.value }::${ color.images[0]?.name }`)
+        );
+        if (!pendingColor) return;
+        const imageName = pendingColor.images![0]?.name || "";
+        autoDefaultAttempted.current.add(`${ productId }::${ pendingColor.value }::${ imageName }`);
+        setDefaultProductImage({ productId, imageName, color: pendingColor.value })
+            .unwrap()
+            .then((updatedProduct) => updatedProduct && dispatch(setProduct(updatedProduct)))
+            .catch((error) => console.log("AUTO DEFAULT IMAGE ERROR: ", error));
+    }, [product]);
 
     return {
         colorOptions, handleSelectColour, selectedColor,

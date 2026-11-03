@@ -13,6 +13,12 @@ import RootNavigationStackModel from '../../../../routes/model/routes_model.ts';
 import { BottomSheetModal, BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import formatDate from '../../../../utils/formatDate.ts';
+
+const formatOrderDateTime = (value?: Date | string) => {
+  if (!value) return "N/A";
+  const time = new Date(value).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+  return `${ formatDate(value, false, true, true) } - ${ time }`;
+};
 import FastImage from 'react-native-fast-image';
 import useOrderHook from '../hooks/order_hook.ts';
 import { useDispatch, useSelector } from 'react-redux';
@@ -92,6 +98,7 @@ const VendorOrderDetailsScreen: React.FC<IProps> = ({route}) => {
     { label: "Post Code", value: deliveryDetails?.postCode || notProvided },
     { label: "Country", value: deliveryDetails?.country || notProvided },
     { label: "Contact No", value: deliveryDetails?.phoneNumber || notProvided },
+    { label: "Delivery Note", value: deliveryDetails?.deliveryNote || notProvided },
   ];
 
   return (
@@ -143,48 +150,52 @@ const VendorOrderDetailsScreen: React.FC<IProps> = ({route}) => {
               <Text className="font-montserratSemiBold text-lg text-baseGreen">Item Details</Text>
               <View className="h-auto w-full mt-5 flex-row justify-between">
                 <View className="flex-row items-center gap-x-2">
-                  <Text className="font-montserratRegular text-gray-700">Order#:</Text>
+                  <Text className="font-montserratRegular text-[13px] text-gray-700">Order#:</Text>
                   <Text className="font-montserratSemiBold text-baseGreen">{order.orderId}</Text>
                 </View>
 
                 <OrderStatusPillComponent statusName={ order.status?.name } />
               </View>
               <View className="h-auto w-full mt-5 flex-row items-center justify-between">
-                <Text className="font-montserratRegular text-gray-700">SKU:</Text>
-                <Text className="font-montserratMedium text-sm text-gray-800">{ order.sku! }</Text>
+                <Text className="font-montserratRegular text-[13px] text-gray-700">SKU:</Text>
+                <Text className="font-montserratMedium text-[13px] text-gray-800">{ order.sku! }</Text>
               </View>
               <View className="h-auto w-full mt-5 flex-row items-center justify-between">
-                <Text className="font-montserratRegular text-gray-700">Order date:</Text>
-                <Text className="font-montserratMedium text-sm text-gray-800">{ formatDate(order.createdAt!, false) }</Text>
+                <Text className="font-montserratRegular text-[13px] text-gray-700">Ordered on</Text>
+                <Text className="flex-1 ml-3 text-right font-montserratMedium text-[13px] text-gray-800">{ formatOrderDateTime(order.createdAt) }</Text>
+              </View>
+              <View className="h-auto w-full mt-5 flex-row items-center justify-between">
+                <Text className="font-montserratRegular text-[13px] text-gray-700">Last Updated on</Text>
+                <Text className="flex-1 ml-3 text-right font-montserratMedium text-[13px] text-gray-800">{ formatOrderDateTime(order.updatedAt) }</Text>
               </View>
               <View className="h-auto w-full mt-5 flex-row justify-between">
-                <Text className="font-montserratRegular text-gray-700">Product type</Text>
-                <Text className="font-montserratMedium text-sm text-gray-800">{order.product?.categories?.main![0]}</Text>
+                <Text className="font-montserratRegular text-[13px] text-gray-700">Product type</Text>
+                <Text className="font-montserratMedium text-[13px] text-gray-800">{order.product?.categories?.main![0]}</Text>
               </View>
               <View className="h-auto w-full mt-5 flex-row justify-between">
-                <Text className="font-montserratRegular text-gray-700">Product group</Text>
-                <Text className="font-montserratMedium text-sm text-gray-800">{ FormatWords.productGroupLabel(order.product?.categories?.productGroup, order.product?.productType) }</Text>
+                <Text className="font-montserratRegular text-[13px] text-gray-700">Product group</Text>
+                <Text className="font-montserratMedium text-[13px] text-gray-800">{ FormatWords.productGroupLabel(order.product?.categories?.productGroup, order.product?.productType) }</Text>
               </View>
               <View className="h-auto w-full mt-5 flex-row justify-between">
-                <Text className="font-montserratRegular text-gray-700">Size</Text>
-                <Text className="font-montserratMedium text-sm text-gray-800">{order.size}</Text>
+                <Text className="font-montserratRegular text-[13px] text-gray-700">Size</Text>
+                <Text className="font-montserratMedium text-[13px] text-gray-800">{order.size}</Text>
               </View>
               <View className="h-auto w-full mt-5 flex-row justify-between">
-                <Text className="font-montserratRegular text-gray-700">Quantity</Text>
-                <Text className="font-montserratMedium text-sm text-gray-800">{order.quantity}</Text>
+                <Text className="font-montserratRegular text-[13px] text-gray-700">Quantity</Text>
+                <Text className="font-montserratMedium text-[13px] text-gray-800">{order.quantity}</Text>
               </View>
               <View className="h-auto w-full mt-5 flex-row justify-between">
-                <Text className="font-montserratRegular text-gray-700">Colour</Text>
-                <Text className="font-montserratMedium text-sm text-gray-800">{order.color}</Text>
+                <Text className="font-montserratRegular text-[13px] text-gray-700">Colour</Text>
+                <Text className="font-montserratMedium text-[13px] text-gray-800">{order.color}</Text>
               </View>
 
               <View className="h-auto w-full mt-5">
-                <Text className="font-montserratRegular text-gray-700">Expected Vendor Completion Date</Text>
-                <Text className="mt-1 font-montserratSemiBold text-sm text-gray-800">{ formatDate(order.expectedVendorCompletionDate?.min!, true) } - { formatDate(order.expectedVendorCompletionDate?.max!, true) }</Text>
+                <Text className="font-montserratRegular text-[13px] text-gray-700">Expected Vendor Completion Date</Text>
+                <Text className="mt-1 font-montserratSemiBold text-[13px] text-gray-800">{ formatDate((order.expectedVendorCompletionDate ?? order.expectedBuyerCompletionDate)?.min!, true) } - { formatDate((order.expectedVendorCompletionDate ?? order.expectedBuyerCompletionDate)?.max!, true) }</Text>
               </View>
               <View className="h-auto w-full mt-5">
-                <Text className="font-montserratRegular text-gray-700">Expected Delivery Date</Text>
-                <Text className="mt-1 font-montserratSemiBold text-sm text-gray-800">{ formatDate(order.expectedDeliveryDate?.min!, true) } - { formatDate(order.expectedDeliveryDate?.max!, true) }</Text>
+                <Text className="font-montserratRegular text-[13px] text-gray-700">Expected Delivery Date</Text>
+                <Text className="mt-1 font-montserratSemiBold text-[13px] text-gray-800">{ formatDate(order.expectedDeliveryDate?.min!, true) } - { formatDate(order.expectedDeliveryDate?.max!, true) }</Text>
               </View>
             </View>
 

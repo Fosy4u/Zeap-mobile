@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Animated, Dimensions, Image, Pressable, SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View } from "react-native"
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../../../redux/store/store";
-import { Add, ArrowRight, ArrowUp, Calendar, Edit2, Notification, Shop } from "iconsax-react-native";
+import { Add, ArrowRight, Edit2, Notification } from "iconsax-react-native";
 import VendorDashboardSkeletonComponent from "../components/vendorDashboardSkeleton_component";
 import useShopGuardHook from "../../general/hooks/shopGuard_hook";
 import NoShopPopupModal from "../../general/modals/noShopPopup_modal";
@@ -10,7 +10,6 @@ import { useNavigation } from "@react-navigation/native";
 import SkeletonBlock from '../../../general/components/skeletonBlock_component';
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import RootNavigationStackModel from "../../../../routes/model/routes_model";
-import { BarChart } from "react-native-gifted-charts";
 import useVendorHomeHook from "../hooks/vendorHome_hook";
 import useGeneralHook from "../../../general/hooks/general_hook";
 import FastImage from "react-native-fast-image";
@@ -42,6 +41,13 @@ const VendorDashboardScreen = () => {
 
   const product = productIndex !== null ? products?.[productIndex] : undefined;
 
+  const shopBadges = [
+    shop?.disabled ? { label: "Disabled", className: "bg-red-500" } : { label: "Active", className: "bg-[#207043]" },
+    ...(shop?.isTailor ? [{ label: "Tailor", className: "bg-white/[.2]" }] : []),
+    ...(shop?.isShoeMaker ? [{ label: "Shoe Maker", className: "bg-white/[.2]" }] : []),
+    ...(shop?.isMakeUpArtist ? [{ label: "MakeUp Artist", className: "bg-white/[.2]" }] : []),
+  ];
+
   const recentPayments = React.useMemo(
     () => [...(payments ?? [])]
       .sort((a, b) => new Date(b.purchaseDate ?? 0).getTime() - new Date(a.purchaseDate ?? 0).getTime())
@@ -52,26 +58,6 @@ const VendorDashboardScreen = () => {
   const scrollY = useRef(new Animated.Value(0)).current;
   const [headerHeight, setHeaderHeight] = useState(0);
   const isLoadingPayments = paymentIsLoading || !paymentsHaveFetched;
-
-  const weeklySales = React.useMemo(() => {
-    const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    const today = new Date();
-
-    return Array.from({ length: 7 }, (_, offset) => {
-      const day = new Date(today);
-      day.setDate(today.getDate() - (6 - offset));
-
-      const total = (payments ?? [])
-        .filter((payment) => {
-          if (!/^(success|paid)$/i.test(payment.shopRevenue?.status ?? "")) return false;
-          const paidOn = new Date(payment.purchaseDate ?? 0);
-          return paidOn.toDateString() === day.toDateString();
-        })
-        .reduce((sum, payment) => sum + (payment.shopRevenue?.value ?? 0), 0);
-
-      return { label: dayLabels[day.getDay()], value: Number((total / 1000).toFixed(1)) };
-    });
-  }, [payments]);
 
   useNotificationHook();
   const unreadNotifications = notifications.filter((n) => n?.seen !== true).length;
@@ -186,34 +172,6 @@ const VendorDashboardScreen = () => {
            </ScrollView>
           </View>
           
-          {/* ==== Weekly Sales Chart ==== */}
-          <View className="h-auto w-full mt-5 px-2.5 py-3.5 border border-gray-200 rounded-xl bg-lightGray">
-            <View className="flex-row items-center justify-between">
-              <Text className="font-normal text-base text-baseGreen">Weekly Sales</Text>
-              <View className="px-2 py-1.5 flex-row items-center border border-gray-200 rounded-lg bg-gray-50">
-                <Text className="mr-2 text-xs text-gray-600">12-18, Aug</Text>
-                <Calendar color="#6b7280" size={ 14 } />
-              </View>
-            </View>
-
-            <View className="h-auto w-full mt-2 overflow-hidden">
-              <BarChart
-                data={ weeklySales }
-                barWidth={ 20 }
-                cappedBars
-                capColor={ "rgb(17, 47, 30)" }
-                capRadius={ 2 }
-                capThickness={ 4 }
-                showGradient
-                gradientColor={ "rgba(17, 47, 30, 0.7)" }
-                frontColor={ "rgba(17, 47, 30, 0.1)" }
-                yAxisTextStyle={{ color: "#6b7280", fontSize: 12 }}
-                xAxisLabelTextStyle={{ color: "#6b7280", fontSize: 12 }}
-                yAxisLabelSuffix="K"
-              />
-            </View>
-          </View>
-
           {/* ==== Recent Payment ==== */}
           <View className="h-auto w-full mt-5 p-3 border border-gray-200 rounded-xl bg-lightGray">
             <View className="mb-3 flex-row items-center justify-between">
@@ -397,21 +355,9 @@ const VendorDashboardScreen = () => {
         onHeaderHeightChange={ setHeaderHeight }
         appBarContent={
           <View className="flex-row items-center justify-between">
-            <Image
-              className="h-[60px] w-[90px] rounded-sm"
-              resizeMode="contain"
-              source={require("../../../../../assets/images/app_logo_gold.png")}
-            />
+            <Text className="flex-1 mr-3 font-montserratSemiBold text-lg text-white" numberOfLines={ 1 }>{ shop?.shopName ?? "" }</Text>
 
             <View className="flex-row items-center gap-x-2">
-              <TouchableOpacity
-                onPress={ () => navigation.navigate("homeScreen", { screen: "Home" }) }
-                className="px-3 py-2 flex-row items-center rounded-full bg-gold/20"
-              >
-                <Shop color="#D5B07B" size={ 16 } variant="Bold" />
-                <Text className="ml-1.5 font-montserratSemiBold text-xs text-gold">Marketplace</Text>
-              </TouchableOpacity>
-
               <Pressable
                 className="bg-[#20704329] p-2.5 rounded-xl"
                 onPress={ () => navigation.navigate("vendorNotificationsScreen") }
@@ -436,23 +382,22 @@ const VendorDashboardScreen = () => {
         }
         collapsibleContent={
           <>
-            <View className="mt-1">
-              <Text className="text-gray-300 text-sm">{ shop?.shopName ?? "" }</Text>
-              <Text className="mt-1  text-white">{ (userData.firstName) ? `Hello, ${userData.firstName} ${userData.lastName} ✌🏽` : "User" }</Text>
-              <Text className="text-gray-400 text-xs">Let’s sell something today</Text>
+            <View>
+              { !!shop?.phoneNumber && (
+                <Text className="font-montserratMedium text-sm text-gray-300">{ shop.phoneNumber }</Text>
+              ) }
+              <View className="mt-3 flex-row flex-wrap" style={{ columnGap: 8, rowGap: 8 }}>
+                { shopBadges.map((badge) => (
+                  <View key={ badge.label } className={ `px-3 py-1 rounded-full ${ badge.className }` }>
+                    <Text className="font-montserratSemiBold text-xs text-white">{ badge.label }</Text>
+                  </View>
+                )) }
+              </View>
             </View>
 
-            <View className="mt-5 p-5 py-6 rounded-3xl flex-row justify-between items-center bg-[#20704329]">
-              <View>
-                <Text className="text-white text-sm">Total revenue</Text>
-                <Text className="text-white text-xl">{ formatPrice(analytics.shopRevenuesByPaymentStatus?.paid?.value, analytics.shopRevenuesByPaymentStatus?.paid?.currency) }</Text>
-                <Text className="mt-2 text-white text-[10px]">{ `Last month’s revenue = N/A`}</Text>
-              </View>
-
-              <View className="flex-row items-center">
-                <ArrowUp color="#FFFFFF" size={13} className="mr-1" />
-                <Text className="text-white text-xs">{ `0%`}</Text>
-              </View>
+            <View className="mt-5 p-5 py-6 rounded-3xl bg-[#20704329]">
+              <Text className="text-white text-sm">Paid revenue</Text>
+              <Text className="text-white text-xl">{ formatPrice(analytics.shopRevenuesByPaymentStatus?.paid?.value, analytics.shopRevenuesByPaymentStatus?.paid?.currency) }</Text>
             </View>
           </>
         }

@@ -7,7 +7,6 @@ import { useLazyGetUserByIdQuery, useRegisterGuestUserMutation } from "../../aut
 import { useDispatch } from "react-redux";
 import { setUserData } from "../../profile/slices/profileState_slice";
 import { setIsLoading, setLoadingMessage } from "../../general/slices/general_slice";
-import { withTiming, withDelay } from 'react-native-reanimated';
 import { readSecureItem, readSecureJSON, writeSecureItem } from "../../../utils/secureStorage";
 import { storeToken } from "../../../redux/services/authorizationHeader";
 
@@ -23,13 +22,9 @@ const SPLASH_ANIMATION_DURATION_MS = 4000;
 
 const SPLASH_WATCHDOG_MS = 10000;
 
-const useSplashHook = (props: any) => {
+const useSplashHook = () => {
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const dispatch = useDispatch();
-    const {
-        height, zoomInValue, zoomInTwoValue, fadeOutValue, fadeOutCounterValue, slideUpValue,
-        slideUpTwoValue,
-    } = props;
 
     const [registerGuestUser] = useRegisterGuestUserMutation();
     const [getUserById] = useLazyGetUserByIdQuery();
@@ -56,15 +51,6 @@ const useSplashHook = (props: any) => {
         }
     };
 
-    const startSplashAnimation = () => {
-        zoomInValue.value = withTiming(0, { duration: 2000 });
-        zoomInTwoValue.value = withTiming(80, { duration: 2000 });
-        fadeOutValue.value = withDelay(1000, withTiming(1, { duration: 1600 }));
-        fadeOutCounterValue.value = withDelay(3500, withTiming(1, { duration: 2000 }));
-        slideUpValue.value = withTiming(300, { duration: 2000 });
-        slideUpTwoValue.value = withDelay(2000, withTiming(height / 1.5, { duration: 2000 }));
-    };
-
     const handleCheckForFirstTimer = async () => {
         try {
             const [storedUser, hasLaunchedBefore] = await Promise.all([
@@ -82,7 +68,6 @@ const useSplashHook = (props: any) => {
                 await checkIsUserLoggedInAnonymously();
             } else {
                 await writeSecureItem(STORAGE_KEYS.HAS_LAUNCHED, JSON.stringify(true));
-                startSplashAnimation();
                 checkIsUserLoggedInAnonymously({ navigateHome: false });
 
                 setTimeout(() => leaveSplash("onboarding"), SPLASH_ANIMATION_DURATION_MS);

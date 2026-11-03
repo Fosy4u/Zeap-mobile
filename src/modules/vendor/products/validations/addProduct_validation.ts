@@ -240,6 +240,7 @@ const stepFiveAddBespokeShoesSchema = yup.object().shape({
         colorType: yup.string().required("Color type is required."),
         availableColors: yup.array().of(yup.string()),
         price: yup.number().required("Price is required."),
+        sku: yup.string().optional(),
     }),
     currentStep: yup.number().required("Current step is required."),
 });

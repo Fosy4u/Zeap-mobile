@@ -1,5 +1,5 @@
 
-import { View, Text, ImageBackground, TouchableOpacity } from 'react-native'
+import { View, Text, Image, ImageBackground, TouchableOpacity } from 'react-native'
 import React from 'react'
 import { ArrowLeft } from 'iconsax-react-native';
 import { useDispatch, useSelector } from 'react-redux';
@@ -49,6 +49,14 @@ const VoucherComponent: React.FC<VoucherComponentProps> = ({ setShowBottomSheetM
             imageStyle={{ borderTopRightRadius: 16, borderBottomRightRadius: 16 }}
             className="h-[145px] px-8 py-6 flex-1 justify-between "
           >
+            <View pointerEvents="none" style={{ position: "absolute", right: 18, bottom: 14 }}>
+              <Image
+                source={ require('../../../../../assets/images/app_logo_green.png') }
+                resizeMode="contain"
+                style={{ height: 54, width: 78, opacity: 0.07 }}
+              />
+            </View>
+
             <Text className="font-montserratSemiBold text-2xl text-[#0E2B1B]">{ formatCurrency(item.amount, item.currency) }</Text>
             <Text className="mt-2 font-montserratMedium text-xs">Expiry Date:</Text>
             <Text className="font-montserratSemiBold text-sm text-gray-600">{ formatDate(item.expiryDate, true) }</Text>

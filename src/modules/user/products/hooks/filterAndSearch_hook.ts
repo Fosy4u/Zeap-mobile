@@ -1,9 +1,8 @@
 
-import { Alert } from "react-native";
 import { useLazyGetDynamicFilterOptionsQuery, useLazyGetFilteredProductsQuery, useLazyGetPromoProductsQuery } from "../apis/product_api";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../../../redux/store/store";
-import {setAllProducts, setDynamicFilterOptions, setIsLoading, setLoadingMessage, setNewestProductsIsLoading, setNewestProducts, setPopularPeoductsIsLoading, setPopularProducts, setPromoProductsIsLoading, setPromoProducts, setRecentlyViewedProducts, setRecentlyViewedProductsIsLoading, setRecommendedProductsIsLoading, setRecommendedProducts, setSearchPhrase, setCurrentPage} from "../slices/product_slice";
+import {setAllProducts, setDynamicFilterOptions, setIsLoading, setLoadingMessage, setNewestProductsIsLoading, setNewestProducts, setPopularPeoductsIsLoading, setPopularProducts, setPromoProductsIsLoading, setPromoProducts, setRecentlyViewedProducts, setRecentlyViewedProductsIsLoading, setRecommendedProductsIsLoading, setRecommendedProducts, setSearchPhrase, setCurrentPage, setProductsTotalCount} from "../slices/product_slice";
 import {useState} from "react";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -11,8 +10,32 @@ import RootNavigationStackModel from "../../../../routes/model/routes_model";
 import handleError from "../../../general/hooks/errorHandler_hook";
 import buildFilterParams from "../utils/buildFilterParams";
 
+// Map a category screen to its backend filter. Female/Male filter by the
+// dedicated `gender` param (a product's gender lives in categories.gender —
+// filtering by `main` matched nothing and leaked the whole catalogue).
+// Shoes/Accessories are real `main` categories.
+export const categoryFilterFor = (screenTitle: string): Record<string, string> => {
+    switch (screenTitle) {
+        case "Women":             return { gender: "Female" };
+        case "Men":               return { gender: "Male" };
+        case "Shoes":             return { main: "Footwear" };
+        case "Accessories":       return { main: "Accessories" };
+        case "Bags":              return { accessoryType: "Bag" };
+        // Bespoke vs ready-to-wear are distinguished by productType, not a
+        // category/gender. Sent as a CSV the backend filters on.
+        case "Bespoke Collection": return { productType: "bespokeCloth,bespokeShoe" };
+        case "Ready to Wear":      return { productType: "readyMadeCloth,readyMadeShoe,accessory" };
+        default:                   return {};
+    }
+};
+
+export const PAGE_SIZE = 20;
+
+export const getTotalPages = (totalCount: number | null) =>
+    totalCount === null ? null : Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+
 const useFilterAndSearchHook = () => {
-      const { searchPhrase, currentPage, dynamicFilterOptions } = useSelector((state: RootState) => state.productState);
+      const { searchPhrase, currentPage, dynamicFilterOptions, allProducts, productsTotalCount } = useSelector((state: RootState) => state.productState);
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const dispatch = useDispatch<AppDispatch>();
     const [selectedFilters, setSelectedFilters] = useState<Record<string, (string | number)[]>>({});
@@ -46,15 +69,18 @@ const useFilterAndSearchHook = () => {
     };
 
     // Handle get dynamic filter options
-    const handleGetDynamicFilterOptions = async (queryParams: any) => {
+    const handleGetDynamicFilterOptions = async (queryParams: any, trackTotalCount = false) => {
         dispatch(setLoadingMessage("Getting filter options..."));
         dispatch(setIsLoading(true));
         
         try {
-            const dynamicFilterOptions = await getDynamicFilterOptions({queryParams}).unwrap();
+            const { dynamicFilters, totalCount } = await getDynamicFilterOptions({queryParams}).unwrap();
 
-            if (dynamicFilterOptions) {
-                dispatch(setDynamicFilterOptions(dynamicFilterOptions));
+            if (dynamicFilters) {
+                dispatch(setDynamicFilterOptions(dynamicFilters));
+            }
+            if (trackTotalCount) {
+                dispatch(setProductsTotalCount(totalCount));
             }
         } catch (error) {
             handleError(error);
@@ -69,25 +95,6 @@ const useFilterAndSearchHook = () => {
             selectedFilters as Record<string, (string | number)[]>,
             (dynamicFilterOptions as any) || [],
         );
-
-    // Map a category screen to its backend filter. Female/Male filter by the
-    // dedicated `gender` param (a product's gender lives in categories.gender —
-    // filtering by `main` matched nothing and leaked the whole catalogue).
-    // Shoes/Accessories are real `main` categories.
-    const categoryFilterFor = (screenTitle: string): Record<string, string> => {
-        switch (screenTitle) {
-            case "Female Clothings":  return { gender: "Female" };
-            case "Male Clothings":    return { gender: "Male" };
-            case "Shoes":             return { main: "Footwear" };
-            case "Accessories":
-            case "Bags":              return { main: "Accessories" };
-            // Bespoke vs ready-to-wear are distinguished by productType, not a
-            // category/gender. Sent as a CSV the backend filters on.
-            case "Bespoke Collection": return { productType: "bespokeCloth,bespokeShoe" };
-            case "Ready to Wear":      return { productType: "readyMadeCloth,readyMadeShoe,accessory" };
-            default:                   return {};
-        }
-    };
 
     // Normalize a dynamic-filter group name to its API param key — mirrors the
     // transform in buildFormattedFilters (lowercase first char, strip spaces).
@@ -129,14 +136,15 @@ const useFilterAndSearchHook = () => {
     );
 
     // Handle get filtered products
-    const handleGetFilteredProducts = async({ screenTitle, setShowBottomSheetModal }: { screenTitle: string; setShowBottomSheetModal?: (value: boolean) => void }) => {
+    const handleGetFilteredProducts = async({ screenTitle, filters = {}, source, setShowBottomSheetModal }: { screenTitle: string; filters?: Record<string, string>; source?: string; setShowBottomSheetModal?: (value: boolean) => void }) => {
         dispatch(setLoadingMessage(`Getting ${screenTitle.toLowerCase()}...`));
         dispatch(setIsLoading(true));
         dispatch(setAllProducts([]));
         // Any new filter/category load starts from page 1.
         dispatch(setCurrentPage(1));
+        dispatch(setProductsTotalCount(null));
 
-        const formattedFilters = { ...buildFormattedFilters(), ...categoryFilterFor(screenTitle) };
+        const formattedFilters = { ...buildFormattedFilters(), ...categoryFilterFor(screenTitle), ...filters };
 
         const queryParams = {
             ...formattedFilters,
@@ -145,11 +153,11 @@ const useFilterAndSearchHook = () => {
         };
 
         try {
-            const productResponse = await getFilteredProducts({queryParams, screenTitle }).unwrap();
+            const productResponse = await getFilteredProducts({queryParams, screenTitle: source ?? screenTitle }).unwrap();
 
             if (productResponse) {
                 dispatch(setAllProducts(productResponse));
-                await handleGetDynamicFilterOptions({...formattedFilters});
+                await handleGetDynamicFilterOptions({...formattedFilters}, true);
 
                 if (setShowBottomSheetModal) {
                     setShowBottomSheetModal(false);
@@ -295,6 +303,8 @@ const useFilterAndSearchHook = () => {
         /* Clear the old results so the skeleton loader shows while the search
            runs, rather than the previous list. */
         dispatch(setAllProducts([]));
+        dispatch(setCurrentPage(1));
+        dispatch(setProductsTotalCount(null));
 
         const queryParams = {
             search: searchPhrase,
@@ -309,7 +319,7 @@ const useFilterAndSearchHook = () => {
 
             if (productResponse) {
                 dispatch(setAllProducts(productResponse));
-                await handleGetDynamicFilterOptions({search: searchPhrase});
+                await handleGetDynamicFilterOptions({search: searchPhrase}, true);
             }
         } catch (error) {
             handleError(error);
@@ -321,9 +331,14 @@ const useFilterAndSearchHook = () => {
     };
 
     // Handle prev and next pagination
-    const handlePrevAndNextPagination = async({screenTitle, direction}: {screenTitle: string, direction: string}) => {
+    const handlePrevAndNextPagination = async({screenTitle, direction, filters = {}, source}: {screenTitle: string, direction: string, filters?: Record<string, string>, source?: string}) => {
         // Already at the first page — nothing before it.
-        if (direction === "Prev" && currentPage <= 1) return;
+        if (direction === "Prev" && currentPage <= 1) return { pageChanged: false, reachedEnd: false };
+        // The dynamic filter's totalCount tells us how many pages the list has.
+        const totalPages = getTotalPages(productsTotalCount);
+        if (direction === "Next" && totalPages !== null && currentPage >= totalPages) {
+            return { pageChanged: false, reachedEnd: true };
+        }
 
         const newPageNumber = direction === "Next" ? currentPage + 1 : currentPage - 1;
 
@@ -336,27 +351,37 @@ const useFilterAndSearchHook = () => {
         const queryParams = {
             ...buildFormattedFilters(),
             ...categoryFilterFor(screenTitle),
-            limit: 20,
+            ...filters,
+            limit: PAGE_SIZE,
             pageNumber: newPageNumber,
         };
 
         try {
-            const productResponse = await getFilteredProducts({queryParams, screenTitle}).unwrap();
+            const productResponse = await getFilteredProducts({queryParams, screenTitle: source ?? screenTitle}).unwrap();
 
             // End-of-list guard: an empty Next means there's no further page.
             // Keep the current list/page instead of blanking the screen with a
             // misleading "no product" empty state.
             if (direction === "Next" && (!productResponse || productResponse.length === 0)) {
-                Alert.alert("End of list", "You've reached the last page of products.");
-                return;
+                return { pageChanged: false, reachedEnd: true };
+            }
+
+            // Some feeds (e.g. Popular) repeat their last page instead of returning
+            // an empty one, so the same products coming back also means the end.
+            const currentIds = (allProducts ?? []).map((product) => product.productId).join("|");
+            const nextIds = productResponse.map((product) => product.productId).join("|");
+            if (direction === "Next" && currentIds === nextIds) {
+                return { pageChanged: false, reachedEnd: true };
             }
 
             dispatch(setCurrentPage(newPageNumber));
             if (productResponse) {
                 dispatch(setAllProducts(productResponse));
             }
+            return { pageChanged: true, reachedEnd: false };
         } catch (error) {
             handleError(error);
+            return { pageChanged: false, reachedEnd: false };
         } finally {
             dispatch(setIsLoading(false));
             dispatch(setLoadingMessage(""));
@@ -366,7 +391,7 @@ const useFilterAndSearchHook = () => {
     // Clear all filters
     const clearAllFilters = () => {
         setSelectedFilters({});
-        navigation.setParams({screenTitle: 'All Products'});
+        navigation.setParams({screenTitle: 'All Products', filters: undefined, source: undefined});
     };
 
     return {

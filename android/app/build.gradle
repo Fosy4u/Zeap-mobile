@@ -89,6 +89,16 @@ android {
             abiFilters "armeabi-v7a", "arm64-v8a"
         }
     }
+    /* Per-ABI APKs: a universal build carries both 32- and 64-bit native
+       libraries. universalApk stays on as an install fallback. */
+    splits {
+        abi {
+            enable true
+            reset()
+            include "armeabi-v7a", "arm64-v8a"
+            universalApk true
+        }
+    }
     signingConfigs {
         debug {
             storeFile file('debug.keystore')

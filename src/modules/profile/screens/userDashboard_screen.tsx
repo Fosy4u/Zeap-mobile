@@ -52,7 +52,7 @@ const UserDashboardScreen = () => {
                         </Text>
                     </View>
                     <UserAvatar
-                        photoURL={(userData as any).photoURL}
+                        photoURL={ userData.imageUrl?.link }
                         firstName={userData.firstName}
                         lastName={userData.lastName}
                         displayName={(userData as any).displayName}

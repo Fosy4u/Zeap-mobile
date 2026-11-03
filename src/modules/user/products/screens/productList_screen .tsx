@@ -1,5 +1,5 @@
 import React, {useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState} from 'react';
-import { Image, SafeAreaView, StatusBar, Text, TextInput, View, FlatList, TouchableOpacity } from 'react-native';
+import { ActivityIndicator, Image, SafeAreaView, StatusBar, Text, TextInput, View, FlatList, TouchableOpacity } from 'react-native';
 import {ArrowLeft, ArrowRight, SearchNormal1} from 'iconsax-react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {RootState} from '../../../../redux/store/store.ts';
@@ -10,20 +10,23 @@ import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import RootNavigationStackModel from '../../../../routes/model/routes_model.ts';
 import DynamicFilterBottomSheetComponent from '../components/dynamicFilterBottomSheet_component.tsx';
 import ProductListCard from '../components/productListCard_component';
-import useFilterAndSearchHook from '../hooks/filterAndSearch_hook.ts';
+import useFilterAndSearchHook, { PAGE_SIZE, getTotalPages } from '../hooks/filterAndSearch_hook.ts';
 import { setAllProducts, setIsLoading, setSearchPhrase } from '../slices/product_slice.ts';
 import EmptyListComponent from '../../../general/components/emptyList_component.tsx';
 import ProductListSkeletonLoader from '../components/productListSkeletonLoader_component.tsx';
 import useDisplayCurrency from '../../../general/hooks/displayCurrency_hook.ts';
+
 
 interface IProps {
   route: RouteProp<RootNavigationStackModel, 'productListScreen'>;
 }
 
 const ProductListScreen: React.FC<IProps> = ({ route }) => {
-  const { searchPhrase, dynamicFilterOptions, allProducts, isLoading, loadingMessage, currentPage } = useSelector((state: RootState) => state.productState);
+  const { searchPhrase, dynamicFilterOptions, allProducts, isLoading, loadingMessage, currentPage, productsTotalCount } = useSelector((state: RootState) => state.productState);
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
   const screenTitle: string = route.params?.screenTitle ?? "";
+  const routeFilters = route.params?.filters;
+  const source = route.params?.source;
   const dispatch = useDispatch();
 
   // Import Hooks
@@ -34,9 +37,27 @@ const ProductListScreen: React.FC<IProps> = ({ route }) => {
   const productListRef = useRef<FlatList>(null);
   const snapPoints = useMemo(() => ['100%'], []);
 
-  useEffect(() => {
-    productListRef.current?.scrollToOffset({ offset: 0, animated: true });
-  }, [currentPage]);
+  const [paginatingDirection, setPaginatingDirection] = useState<"Prev" | "Next" | null>(null);
+  const [reachedEnd, setReachedEnd] = useState(false);
+  const isPrevDisabled = !!paginatingDirection || currentPage <= 1;
+  const totalPages = getTotalPages(productsTotalCount);
+  const isLastPage = totalPages !== null ? currentPage >= totalPages : allProducts.length < PAGE_SIZE;
+  const isNextDisabled = !!paginatingDirection || reachedEnd || isLastPage;
+
+  const handlePaginate = async (direction: "Prev" | "Next") => {
+    if (paginatingDirection) return;
+    setPaginatingDirection(direction);
+    try {
+      const { pageChanged, reachedEnd: hitEnd } = await handlePrevAndNextPagination({ screenTitle: screenTitle || "Products", direction, filters: routeFilters, source });
+      if (hitEnd) setReachedEnd(true);
+      if (pageChanged) {
+        if (direction === "Prev") setReachedEnd(false);
+        productListRef.current?.scrollToOffset({ offset: 0, animated: false });
+      }
+    } finally {
+      setPaginatingDirection(null);
+    }
+  };
 
   const setShowBottomSheetModal = useCallback((value: boolean) => {
     if (value) {
@@ -47,25 +68,27 @@ const ProductListScreen: React.FC<IProps> = ({ route }) => {
   }, []);
 
   useLayoutEffect(() => {
+    setReachedEnd(false);
     dispatch(setAllProducts([]));
     dispatch(setIsLoading(true));
-  }, [screenTitle]);
+  }, [screenTitle, routeFilters]);
 
   const [productsFetched, setProductsFetched] = useState(false);
 
   // Load the category/filtered list whenever the category or the user's selected filters change.
   useEffect(() => {
     setProductsFetched(false);
+    setReachedEnd(false);
     (async () => {
       try {
-        await handleGetFilteredProducts({ screenTitle: screenTitle || "Products", setShowBottomSheetModal });
+        await handleGetFilteredProducts({ screenTitle: screenTitle || "Products", filters: routeFilters, source, setShowBottomSheetModal });
       } finally {
         // Settled either way — a failed fetch must still reveal the empty state.
         setProductsFetched(true);
       }
     })();
     handleGetDynamicFilterOptions({});
-  }, [screenTitle, selectedFilters, currencyRefreshToken]);
+  }, [screenTitle, routeFilters, source, selectedFilters, currencyRefreshToken]);
 
   const seededTitleRef = useRef<string | null>(null);
   useEffect(() => {
@@ -88,7 +111,7 @@ const ProductListScreen: React.FC<IProps> = ({ route }) => {
                 <ArrowLeft color="white" />
               </View>
             </TouchableOpacity>
-            <Text className="font-semibold text-lg text-baseGreen">
+            <Text className="flex-1 mx-3 text-center font-semibold text-lg text-baseGreen" numberOfLines={ 1 }>
               { !screenTitle ? "Products" : screenTitle }
             </Text>
             <View className="h-[40px] w-[40px]" />
@@ -137,7 +160,9 @@ const ProductListScreen: React.FC<IProps> = ({ route }) => {
               keyExtractor={(_, index) => `${index}-item.productId`}
               showsVerticalScrollIndicator={false}
               className="h-auto w-full mt-3"
-              ListEmptyComponent={<EmptyListComponent standalone message={`No ${(screenTitle || "products").toLowerCase()} found.`} />}
+              ListEmptyComponent={ (source === "Promo Products")
+                ? <EmptyListComponent standalone title="No Product Found" message="No product matches your search criteria, please try again later." />
+                : <EmptyListComponent standalone message={`No ${(screenTitle || "products").toLowerCase()} found.`} /> }
               contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 20 }}
             />
           ) }
@@ -145,20 +170,34 @@ const ProductListScreen: React.FC<IProps> = ({ route }) => {
           {/*==== Next and Previous Buttons ====*/}
           <View className="h-auto w-full mt-3 px-5 flex-row">
             <TouchableOpacity
-                onPress={ () => handlePrevAndNextPagination({screenTitle: screenTitle || "Products", direction: "Prev"}) }
+                onPress={ () => handlePaginate("Prev") }
+                disabled={ isPrevDisabled }
                 className="h-[50px] flex-1 flex-row items-center justify-center rounded-xl bg-lightGreen"
             >
-                <ArrowLeft size={ 18 } className="text-baseGreen" />
-                <Text className="ml-2 font-montserratSemiBold text-sm text-baseGreen">Prev</Text>
+                { paginatingDirection === "Prev" ? (
+                  <ActivityIndicator size="small" color="#112F1E" />
+                ) : (
+                  <View className="flex-row items-center" style={{ opacity: isPrevDisabled ? 0.4 : 1 }}>
+                    <ArrowLeft size={ 18 } className="text-baseGreen" />
+                    <Text className="ml-2 font-montserratSemiBold text-sm text-baseGreen">Prev</Text>
+                  </View>
+                ) }
             </TouchableOpacity>
             <View className="w-[10px]" />
 
             <TouchableOpacity
-                onPress={ () => handlePrevAndNextPagination({screenTitle: screenTitle || "Products", direction: "Next"}) }
+                onPress={ () => handlePaginate("Next") }
+                disabled={ isNextDisabled }
                 className="h-[50px] flex-1 flex-row items-center justify-center rounded-xl bg-lightGreen"
             >
-                <Text className="mr-2 font-montserratSemiBold text-sm text-baseGreen">Next</Text>
-                <ArrowRight size={ 18 } className="text-baseGreen" />
+                { paginatingDirection === "Next" ? (
+                  <ActivityIndicator size="small" color="#112F1E" />
+                ) : (
+                  <View className="flex-row items-center" style={{ opacity: isNextDisabled ? 0.4 : 1 }}>
+                    <Text className="mr-2 font-montserratSemiBold text-sm text-baseGreen">Next</Text>
+                    <ArrowRight size={ 18 } className="text-baseGreen" />
+                  </View>
+                ) }
             </TouchableOpacity>
           </View>
 

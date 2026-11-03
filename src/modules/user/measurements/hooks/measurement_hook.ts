@@ -11,6 +11,8 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import RootNavigationStackModel from "../../../../routes/model/routes_model";
 import { setAllSavedMeasurements, setBodyMeasurementGuides, setIsLoading, setLoadingMessage, setRequiredMeasurementFormFields, setSaveMeasurementForNextTime, setSelectedCartID, setSelectedGender, setSelectedMeasurementTemplate, setShowAddNewMeasurementBottomSheet } from "../slices/measurement_slice";
+import { showAppToast } from "../../../general/slices/general_slice";
+import useCartHook from "../../cart/hooks/cart_hook";
 import handleError from "../../../general/hooks/errorHandler_hook";
 import IBodyMeasurement from "../models/bodyMeasurement_model";
 
@@ -19,6 +21,7 @@ const useMeasurementHook = () => {
     const { product, selectedQuantity, selectedColor } = useSelector((state: RootState) => state.productState);
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const dispatch = useDispatch();
+    const { handleGetCarts } = useCartHook();
     
     const [addProductToCart] = useAddProductToCartMutation();
     const [addBodyMeasurementTemplate] = useAddBodyMeasurementTemplateMutation();
@@ -32,16 +35,20 @@ const useMeasurementHook = () => {
         if (!tpl || tpl.length === 0) return "";
         const first: any = tpl[0];
         const isFlat = first?.field !== undefined && first?.measurements === undefined;
-        const target = fieldName.toLowerCase();
-        const pool: any[] = isFlat
-            ? tpl
-            : (tpl.find((g: any) => (g?.name ?? "").toLowerCase() === (categoryName ?? "").toLowerCase())?.measurements
-                ?? tpl.flatMap((g: any) => g?.measurements ?? []));
-        const match = pool.find((m: any) => (m?.field ?? "").toLowerCase() === target);
+        const target = fieldName.trim().toLowerCase();
+        const isTarget = (m: any) => (m?.field ?? "").trim().toLowerCase() === target;
+        // The backend regroups saved fields under its own guide categories, so a
+        // field can live in a different group than the product's form expects.
+        // Prefer the same-named group, then fall back to any group.
+        const sameGroup = isFlat
+            ? undefined
+            : tpl.find((g: any) => (g?.name ?? "").trim().toLowerCase() === (categoryName ?? "").trim().toLowerCase())?.measurements;
+        const allFields: any[] = isFlat ? tpl : tpl.flatMap((g: any) => g?.measurements ?? []);
+        const match = (sameGroup as any[] | undefined)?.find(isTarget) ?? allFields.find(isTarget);
         return match?.value !== undefined && match?.value !== null ? String(match.value) : "";
     };
 
-    const { control, handleSubmit, formState: { errors }, getValues } = useForm<IRequiredMeasurementFormFieldsSchema>({
+    const { control, handleSubmit, formState: { errors }, getValues, watch } = useForm<IRequiredMeasurementFormFieldsSchema>({
         defaultValues: {
             templateName: selectedMeasurementTemplate.templateName || "",
             measurements: requiredMeasurementFormFields?.measurements?.map((measurement: IMeasurementField) => ({
@@ -52,11 +59,8 @@ const useMeasurementHook = () => {
         resolver: yupResolver(requiredMeasurementFormFieldsSchema)
     });
 
-    const onSubmitFromMeasurementForm: SubmitHandler<IRequiredMeasurementFormFieldsSchema> = async (data) => {
-        dispatch(setLoadingMessage(saveMeasurementForNextTime ? "Saving measurement template..." : "Adding product to cart..."));
-        dispatch(setIsLoading(true));
-
-        const measurements = data.measurements?.map((measurement, measurementIndex: number) => {
+    const buildMeasurementGroups = (data: IRequiredMeasurementFormFieldsSchema) =>
+        data.measurements?.map((measurement, measurementIndex: number) => {
             const apiMeasurement = requiredMeasurementFormFields.measurements?.[measurementIndex];
             const fieldNames = apiMeasurement?.fields || [];
             const measurementData = measurement?.fields?.map((value, fieldIndex) => ({
@@ -70,17 +74,39 @@ const useMeasurementHook = () => {
             };
         });
 
-        const flatTemplateMeasurements = measurements?.flatMap((group) => group.measurements ?? []) ?? [];
-
+    const buildTemplateRequest = (templateName: string, measurements: ReturnType<typeof buildMeasurementGroups>) => {
         const normalizedGender = selectedGender
             ? selectedGender.charAt(0).toUpperCase() + selectedGender.slice(1).toLowerCase()
             : selectedGender;
 
-        const templateRequestData = {
-            templateName: (data.templateName ?? "").trim(),
+        return {
+            templateName: templateName.trim(),
             gender: normalizedGender,
-            measurements: flatTemplateMeasurements,
+            measurements: measurements?.flatMap((group) => group.measurements ?? []) ?? [],
         };
+    };
+
+    // Saves the measurements entered so far as a reusable template, independent of adding to cart.
+    const handleSaveMeasurementTemplate = async (templateName: string): Promise<boolean> => {
+        try {
+            const measurements = buildMeasurementGroups(getValues());
+            await addBodyMeasurementTemplate(buildTemplateRequest(templateName, measurements)).unwrap();
+            getAllSavedMeasurements().unwrap()
+                .then((allSavedMeasurements) => allSavedMeasurements && dispatch(setAllSavedMeasurements(allSavedMeasurements)))
+                .catch(() => {});
+            return true;
+        } catch (error) {
+            handleError(error);
+            return false;
+        }
+    };
+
+    const onSubmitFromMeasurementForm: SubmitHandler<IRequiredMeasurementFormFieldsSchema> = async (data) => {
+        dispatch(setLoadingMessage(saveMeasurementForNextTime ? "Saving measurement template..." : "Adding product to cart..."));
+        dispatch(setIsLoading(true));
+
+        const measurements = buildMeasurementGroups(data);
+        const templateRequestData = buildTemplateRequest(data.templateName ?? "", measurements);
 
         const cartRequestData = (product.productType === "readyMadeCloth" || product.productType === "readyMadeShoe" || product.productType === "accessory")
             ? ({
@@ -113,9 +139,9 @@ const useMeasurementHook = () => {
 
             dispatch(setSelectedCartID(addProductToCartResponse._id!));
             dispatch(setShowAddNewMeasurementBottomSheet(false));
-            navigation.navigate("homeScreen", {
-                screen: "Cart"
-            });
+            if (navigation.canGoBack()) navigation.goBack();
+            dispatch(showAppToast({ title: "Congratulations", message: `You have successfully added ${ selectedQuantity } ${ selectedQuantity === 1 ? "item" : "items" } to your cart` }));
+            handleGetCarts(true);
         } catch (error) {
             handleError(error);
         } finally {
@@ -244,8 +270,9 @@ const useMeasurementHook = () => {
     };
 
     return {
-        control, handleSubmit, errors, getValues,
+        control, handleSubmit, errors, getValues, watch,
         onSubmitFromMeasurementForm,
+        handleSaveMeasurementTemplate,
         handleUseSavedMeasurement,
 
         handleGetAllSavedMeasurements,

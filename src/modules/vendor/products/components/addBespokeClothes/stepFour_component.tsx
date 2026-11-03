@@ -1,6 +1,6 @@
 import React from 'react';
 import {Text, TouchableOpacity, View} from "react-native";
-import {Add, DocumentUpload} from "iconsax-react-native";
+import {Add, DocumentUpload, InfoCircle} from "iconsax-react-native";
 import FastImage from 'react-native-fast-image';
 
 interface ImageFile {
@@ -32,7 +32,14 @@ const StepFourComponent: React.FC<IProps> = (IProps) => {
     return (
         <View>
             <Text className="mt-5 font-montserratSemiBold text-base text-baseGreen">Step 4: Product Image(s)</Text>
-            <Text className="mt-2 font-montserratMedium">Provide the product image(s) for this clothe.</Text>
+            { uploadedImages.length === 0 && (
+                <View className="h-auto w-full mt-3 p-4 flex-row rounded-xl bg-blue-50">
+                    <InfoCircle size={ 20 } color="#2563eb" variant="Bold" />
+                    <Text className="flex-1 ml-3 font-montserratMedium text-xs text-blue-700 leading-5">
+                        No images found for this product. You can start by adding one below.
+                    </Text>
+                </View>
+            ) }
 
             <Text aria-label="ColourName" nativeID="colourName" className="mt-6 font-montserratMedium">Upload clothe images</Text>
             <TouchableOpacity
@@ -83,12 +90,12 @@ const StepFourComponent: React.FC<IProps> = (IProps) => {
                     </View>
                     <View className="h-auto w-full mt-2 flex-row flex-wrap items-center gap-x-7">
                         { uploadedImages.map((image, index) => (
+                            <View key={ index } className="items-center">
                             <TouchableOpacity
                                 onLongPress={ () => {
                                     setSelectedDefaultImage(image);
                                     setShowDefaultImageModal(true);
                                 } }
-                                key={ index }
                                 className="h-16 w-20 mt-3 p-0 relative flex items-center justify-center rounded-lg border border-gray-400 bg-gray-200"
                             >
                                 <FastImage
@@ -96,15 +103,26 @@ const StepFourComponent: React.FC<IProps> = (IProps) => {
                                     resizeMode="contain"
                                     className="h-[63px] w-[79px] absolute inset-0 border border-transparent rounded-lg"
                                 />
-                               { image?.isDefault &&         
-                                    <View className="absolute bottom-0 right-0 bg-lightGreen rounded-tl-md rounded-br-md px-1.5 py-0.5">
-                                    <Text className="font-montserratMedium text-baseGreen text-[10px]">Default</Text>
-                                    </View>
-                                }
                                 <TouchableOpacity onPress={ () => handleDeleteImage(index) } className="h-[22px] w-[22px] absolute -top-2 -right-2 text-baseGreen rounded-full bg-gray-200 rotate-45 z-10">
                                     <Add size={22} className="text-baseGreen" />
                                 </TouchableOpacity>
                             </TouchableOpacity>
+                            { image?.isDefault ? (
+                                <View className="w-20 mt-1.5 py-1 items-center rounded-md bg-baseGreen">
+                                    <Text className="font-montserratMedium text-[10px] text-white">Default</Text>
+                                </View>
+                            ) : (
+                                <TouchableOpacity
+                                    onPress={ () => {
+                                        setSelectedDefaultImage(image);
+                                        setShowDefaultImageModal(true);
+                                    } }
+                                    className="w-20 mt-1.5 py-1 items-center rounded-md border border-baseGreen bg-white"
+                                >
+                                    <Text className="font-montserratMedium text-[10px] text-baseGreen">Set Default</Text>
+                                </TouchableOpacity>
+                            ) }
+                            </View>
                         )) }
                     </View>
                 </View>

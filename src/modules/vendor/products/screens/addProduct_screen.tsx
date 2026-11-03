@@ -3,7 +3,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import {View, Text, TouchableOpacity, ScrollView, StatusBar, SafeAreaView, Image, Dimensions} from 'react-native';
 import AppHeaderComp from "../../general/components/appHeader_comp.tsx";
 import {ArrowRight, Trash} from "iconsax-react-native";
-import ProductTypeBottomSheetComponent from "../components/productTypeBottomSheet_component.tsx";
 import DeleteDraftWarningPopupModal from "../modals/deleteDraftWarningPopup_modal.tsx";
 import useAddBespokeClothesHook from '../hooks/bespokeClothes/addBespokeClothes_hook.ts';
 import SkeletonBlock from '../../../general/components/skeletonBlock_component';
@@ -11,12 +10,20 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import RootNavigationStackModel from '../../../../routes/model/routes_model.ts';
 import { RootState } from '../../../../redux/store/store.ts';
-import { setProduct, setProductMode, setProductType, setSelectedStep, setShowProductTypeBottomSheet } from '../slices/vendorProductState_slice.ts';
+import { setProduct, setProductMode, setProductType, setSelectedStep } from '../slices/vendorProductState_slice.ts';
 import IVendorProductDetails from '../models/vendorProductDetails_model.ts';
 import AppStatusBar from "../../../general/components/appStatusBar";
 
+const PRODUCT_CATEGORIES: { title: string; note?: string; icon: any; productType: string; screen: "addBespokeClothesScreen" | "addReadyMadeClothesScreen" | "addBespokeShoesScreen" | "addReadyMadeShoesScreen" | "addAccessoriesScreen" }[] = [
+    { title: "Bespoke Clothes", note: "Seller must be a tailor", icon: require("../../../../../assets/images/clothe.png"), productType: "Clothes", screen: "addBespokeClothesScreen" },
+    { title: "Ready-To-Wear Clothes", icon: require("../../../../../assets/images/clothe.png"), productType: "Clothes", screen: "addReadyMadeClothesScreen" },
+    { title: "Bespoke Footwears", note: "Seller must be a shoemaker", icon: require("../../../../../assets/images/shoe.png"), productType: "Footwear", screen: "addBespokeShoesScreen" },
+    { title: "Ready-To-Wear Footwears", icon: require("../../../../../assets/images/shoe.png"), productType: "Footwear", screen: "addReadyMadeShoesScreen" },
+    { title: "Accessories", icon: require("../../../../../assets/images/watch.png"), productType: "Accessories", screen: "addAccessoriesScreen" },
+];
+
 const AddProductScreen = () => {
-    const { draftProducts, showProductTypeBottomSheet } = useSelector((state: RootState) => state.vendorProductState);
+    const { draftProducts } = useSelector((state: RootState) => state.vendorProductState);
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const dispatch = useDispatch();
 
@@ -29,6 +36,14 @@ const AddProductScreen = () => {
 
     // The draft currently queued for deletion (for the confirmation modal title).
     const draftToDelete = draftProducts?.find((draft) => draft.productId === draftToDeleteId);
+
+    const handleSelectCategory = (category: typeof PRODUCT_CATEGORIES[number]) => {
+        dispatch(setProductType(category.productType));
+        dispatch(setProductMode("New"));
+        dispatch(setProduct({}));
+        dispatch(setSelectedStep(1));
+        navigation.navigate(category.screen);
+    };
 
     useEffect(() => {
         handleResetProductMode();
@@ -114,74 +129,27 @@ const AddProductScreen = () => {
                 <Text className="font-montserratMedium text-lg text-gray-700">Add a new product</Text>
                 <Text className="mt-1 font-montserratMedium text-sm">Select the product type you want to add</Text>
 
-                <View className="h-auto w-full mt-5 flex-row">
-                    {/* ==== Clothes ==== */}
-                    <TouchableOpacity
-                        onPress={ () => {
-                            dispatch(setProductType("Clothes"));
-                            dispatch(setShowProductTypeBottomSheet(true));
-                        } }
-                        className="h-auto w-full px-5 py-5 flex-1 rounded-xl border border-gray-100 bg-gray-50"
-                    >
-                        <View className="w-[50px] h-[50px] flex-row items-center justify-center rounded-xl bg-gray-100">
-                            <Image
-                                source={
-                                    require("../../../../../assets/images/clothe.png")
-                                }
-                                resizeMode="contain"
-                                className="h-[25px] w-auto rounded-2xl"
-                            />
-                        </View>
-                        <Text className="mt-2 font-montserratMedium text-sm text-gray-700">Clothes</Text>
-                    </TouchableOpacity>
-                    <View className="w-[20px]" />
-
-                    {/* ==== Footwears ==== */}
-                    <TouchableOpacity
-                        onPress={ () => {
-                            dispatch(setProductType("Footwear"));
-                            dispatch(setShowProductTypeBottomSheet(true));
-                        } }
-                        className="h-auto w-full px-5 py-5 flex-1 rounded-xl border border-gray-100 bg-gray-50"
-                    >
-                        <View className="w-[50px] h-[50px] flex-row items-center justify-center rounded-xl bg-gray-100">
-                            <Image
-                                source={
-                                    require("../../../../../assets/images/shoe.png")
-                                }
-                                resizeMode="contain"
-                                className="h-[25px] w-auto rounded-2xl"
-                            />
-                        </View>
-                        <Text className="mt-2 font-montserratMedium text-sm text-gray-700">Footwears</Text>
-                    </TouchableOpacity>
-                </View>
-                
-
-                <View className="h-auto w-full mt-5 flex-row">
-                    {/* ==== Accessories ==== */}
-                    <TouchableOpacity
-                        onPress={ () => {
-                            dispatch(setProductType("Accessories"));
-                            dispatch(setProductMode("New"));
-                            navigation.navigate("addAccessoriesScreen");
-                        } }
-                        className="h-auto w-full px-5 py-5 flex-1 rounded-xl border border-gray-100 bg-gray-50"
-                    >
-                        <View className="w-[50px] h-[50px] flex-row items-center justify-center rounded-xl bg-gray-100">
-                            <Image
-                                source={
-                                    require("../../../../../assets/images/watch.png")
-                                }
-                                resizeMode="contain"
-                                className="h-[25px] w-auto rounded-2xl"
-                            />
-                        </View>
-                        <Text className="mt-2 font-montserratMedium text-sm text-gray-700">Accessories</Text>
-                    </TouchableOpacity>
-                    <View className="w-[20px]" />
-
-                    <View className="px-5 flex-1" />
+                <View className="h-auto w-full mt-5 flex-row flex-wrap justify-between" style={{ rowGap: 16 }}>
+                    { PRODUCT_CATEGORIES.map((category) => (
+                        <TouchableOpacity
+                            key={ category.title }
+                            onPress={ () => handleSelectCategory(category) }
+                            className="h-auto px-4 py-5 rounded-xl border border-gray-100 bg-gray-50"
+                            style={{ width: "48%" }}
+                        >
+                            <View className="w-[50px] h-[50px] flex-row items-center justify-center rounded-xl bg-gray-100">
+                                <Image
+                                    source={ category.icon }
+                                    resizeMode="contain"
+                                    className="h-[25px] w-auto rounded-2xl"
+                                />
+                            </View>
+                            <Text className="mt-2 font-montserratMedium text-sm text-gray-700">{ category.title }</Text>
+                            { category.note && (
+                                <Text className="mt-1 font-montserratMedium text-[10px] text-red-600">{ category.note }</Text>
+                            ) }
+                        </TouchableOpacity>
+                    )) }
                 </View>
 
 
@@ -194,10 +162,6 @@ const AddProductScreen = () => {
                     <ArrowRight className="text-white" />
                 </TouchableOpacity>
             </ScrollView>
-
-            { showProductTypeBottomSheet && (
-                <ProductTypeBottomSheetComponent />
-            ) }
 
             { showDeleteDraftModal && (
                 <DeleteDraftWarningPopupModal

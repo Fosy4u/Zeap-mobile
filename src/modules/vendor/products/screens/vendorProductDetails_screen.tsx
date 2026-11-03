@@ -15,6 +15,8 @@ import VendorProductDescriptionComponent from '../components/vendorProductDescri
 import ReviewComponent from '../../../general/components/review_component.tsx';
 import VendorProductTimelineComponent from '../components/vendorProductTimeline_component.tsx';
 import VendorProductRejectionReasonsComponent from '../components/vendorProductRejectionReasons_component.tsx';
+import VendorProductMeasurementsComponent from '../components/vendorProductMeasurements_component.tsx';
+import VendorAutoPriceAdjustmentComponent from '../components/vendorAutoPriceAdjustment_component.tsx';
 import { setProduct, setProductMode, setSelectedStep, setSelectedTab } from '../slices/vendorProductState_slice.ts';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import DeleteProducWarningPopupModal from '../modals/deleteProductWarningPopup_modal.tsx';
@@ -69,20 +71,35 @@ const VendorProductDetailsScreen: React.FC<IProps> = ({ route }) => {
         }
     }, [productID, currencyRefreshToken]);
 
-    const [shopPricedVariation, setShopPricedVariation] = useState<IVariation | undefined>();
+    const [shopPricedVariations, setShopPricedVariations] = useState<IVariation[]>([]);
+    const [selectedSize, setSelectedSize] = useState<string>("");
+
+    useEffect(() => {
+        const colorVariations = (product?.variations ?? []).filter((variation) =>
+            variation.colorValue?.toLowerCase() === (selectedColorName ?? "").toLowerCase()
+        );
+        const defaultVariation = colorVariations.find((variation) => (variation.quantity ?? 0) > 0) ?? colorVariations[0];
+        setSelectedSize(defaultVariation?.size ?? "");
+    }, [selectedColorName, product?.productId]);
 
     useEffect(() => {
         if (!productID) { return; }
         let active = true;
         (async () => {
             const shopPriced = await handleGetShopPricedProduct(productID);
-            if (active) { setShopPricedVariation(shopPriced?.variations?.[0]); }
+            if (active) { setShopPricedVariations(shopPriced?.variations ?? []); }
         })();
         return () => { active = false; };
     }, [productID]);
 
     // Falls back to the converted payload only if the shop lookup returned nothing.
-    const priceVariation = shopPricedVariation ?? product?.variations?.[0];
+    const findVariation = (variations: IVariation[], size?: string) =>
+        variations.find((variation) =>
+            variation.colorValue?.toLowerCase() === (selectedColorName ?? "").toLowerCase() && (!size || variation.size === size)
+        );
+    const variationFor = (size?: string) =>
+        findVariation(shopPricedVariations, size) ?? findVariation(product?.variations ?? [], size);
+    const priceVariation = variationFor(selectedSize || undefined) ?? shopPricedVariations[0] ?? product?.variations?.[0];
     
 
     return (
@@ -135,14 +152,15 @@ const VendorProductDetailsScreen: React.FC<IProps> = ({ route }) => {
                     <View className="h-auto flex-row items-end space-x-3">
                         <Text className="font-montserratSemiBold text-xl text-baseGreen">
                             { formatPrice(
-                                (productPromotion?.discount?.fixedPercentage!) ? priceVariation?.discount : priceVariation?.price,
+                                priceVariation?.discount ? priceVariation.discount : priceVariation?.price,
                                 priceVariation?.currency
                             ) }
                         </Text>
-                        <Text className={`font-montserratNormal text-sm text-gray-400 line-through ${ (productPromotion?.discount?.fixedPercentage!) ? "flex" : "hidden" }`}>
+                        <Text className={`font-montserratNormal text-sm text-gray-400 line-through ${ priceVariation?.discount ? "flex" : "hidden" }`}>
                             { formatPrice(priceVariation?.price, priceVariation?.currency) }
                         </Text>
                     </View>
+                    {/*
                     <View className="mt-2.5 flex-row items-center space-x-3">
                         <View className="flex-row items-center">
                             <Star1 color="#E4A01C" size={18} variant="Bold" className="mr-0.5" />
@@ -153,7 +171,7 @@ const VendorProductDetailsScreen: React.FC<IProps> = ({ route }) => {
                         </View>
 
                         <View className="flex-row items-center">
-                            <Text className={`font-montserratMedium ${ (product?.variations?.[0]?.quantity ?? 0) >= 10 ? "text-green-600" : "text-red-600" }`}>{ product?.variations?.[0]?.quantity ?? 0 }</Text>
+                            <Text className={`font-montserratMedium ${ (priceVariation?.quantity ?? 0) >= 10 ? "text-green-600" : "text-red-600" }`}>{ priceVariation?.quantity ?? 0 }</Text>
                             <Text className="ml-1 font-montserratMedium text-xs text-black">In stock</Text>
                         </View>
 
@@ -167,6 +185,7 @@ const VendorProductDetailsScreen: React.FC<IProps> = ({ route }) => {
                             <Text className="ml-[1px] font-montserratMedium text-xs text-black">% Discount</Text>
                         </View>
                     </View>
+                    */}
                 </View>
 
                 {/*==== Rejection Reasons — shown until the product goes live again ====*/}
@@ -268,19 +287,45 @@ const VendorProductDetailsScreen: React.FC<IProps> = ({ route }) => {
                 {/*==== Available Sizes (for the selected colour) ====*/}
                 <View className="mt-7">
                     <View className="h-auto w-full ">
-                        <Text className="font-montserratSemiBold text-[16px] text-gray-700">Available Sizes</Text>
+                        <Text className="font-montserratSemiBold text-[16px] text-gray-700">
+                            Available Sizes
+                            { !!(product as any)?.sizeStandard && (
+                                <Text className="font-montserratMedium text-gray-500 text-[11px]"> ({ (product as any).sizeStandard })</Text>
+                            ) }
+                        </Text>
 
-                        <View className="h-auto w-full mt-2 flex-row items-center flex-wrap gap-x-3">
-                            { displaySizes.map((eachSize: string) => (
-                                <View key={ eachSize } className="px-4 py-2 border border-gray-300 rounded-xl">
-                                    <Text className="font-montserratMedium">{ eachSize }</Text>
-                                </View>
-                            )) }
+                        <View className="h-auto w-full mt-2 flex-row items-center flex-wrap" style={{ columnGap: 10, rowGap: 10 }}>
+                            { displaySizes.map((eachSize: string) => {
+                                const sizeVariation = variationFor(eachSize);
+                                const isSelected = selectedSize === eachSize;
+                                const sizePrice = sizeVariation?.discount || sizeVariation?.price;
+                                return (
+                                    <TouchableOpacity
+                                        key={ eachSize }
+                                        onPress={ () => setSelectedSize(eachSize) }
+                                        className={ `min-w-[64px] px-3 py-2 items-center border rounded-xl ${ isSelected ? "border-baseGreen bg-lightGreen" : "border-gray-300" }` }
+                                    >
+                                        <Text className="font-montserratMedium">{ eachSize }</Text>
+                                        { sizePrice != null && (
+                                            <Text className="mt-0.5 font-montserratMedium text-[10px] text-gray-500">{ formatPrice(sizePrice, sizeVariation?.currency) }</Text>
+                                        ) }
+                                    </TouchableOpacity>
+                                );
+                            }) }
                         </View>
                     </View>
                 </View>
 
                 <View className="h-[1.5px] w-full mt-5 bg-gray-200" />
+
+                {/*==== Auto Price Adjustment ====*/}
+                { product?.status === "live" && !!product?.productId && (
+                    <>
+                        <Text className="mt-7 font-montserratSemiBold text-[16px] text-gray-700">Auto Price Adjustment</Text>
+                        <VendorAutoPriceAdjustmentComponent product={ product } onUpdated={ () => handleGetProductByProductID(product.productId!) } />
+                        <View className="h-[1.5px] w-full mt-5 bg-gray-200" />
+                    </>
+                ) }
 
                 {/*==== Product Promo ====*/}
                 <Text className="mt-7 font-montserratSemiBold text-[16px] text-gray-700">Promo</Text>
@@ -345,6 +390,10 @@ const VendorProductDetailsScreen: React.FC<IProps> = ({ route }) => {
                     </View>
                 )}
 
+                { (product?.productType === "bespokeCloth" || product?.productType === "bespokeShoe") && !!product?.productId && (
+                    <VendorProductMeasurementsComponent productId={ product.productId } />
+                ) }
+
                 <View className="h-[1.5px] w-full mt-7 bg-gray-200" />
 
                 {/*==== Tab View ====*/}
@@ -408,6 +457,7 @@ const VendorProductDetailsScreen: React.FC<IProps> = ({ route }) => {
             { showDeleteProductWarningModal &&
                 <DeleteProducWarningPopupModal
                     productID={ product?.productId! }
+                    productTitle={ product?.title }
                     setShowDeleteProductWarningModal={ setShowDeleteProductWarningModal }
                     handleDeleteProduct={ handleDeleteProduct }
                 />

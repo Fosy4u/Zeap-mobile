@@ -16,6 +16,7 @@ import {
     bumpCurrencyRefreshToken,
 } from "../slices/profileState_slice";
 import handleError from "../../general/hooks/errorHandler_hook";
+import { showAppToast } from "../../general/slices/general_slice";
 import { useUpdateUserDetailsMutation } from "../apis/profile_api";
 import ICurrencyUpdate from "../models/currencyUpdate_model";
 import IProfileUpdate from "../models/profileUpdate_model";
@@ -232,7 +233,8 @@ const useEditAccountDetailsHook = () => {
 
     // Submit handler used by checkout and other reuse sites — pure save, no UX.
     const onSubmit: SubmitHandler<IEditAccountDetailsSchema> = async (data) => {
-        await saveAccountDetails(data);
+        const updated = await saveAccountDetails(data);
+        if (updated) dispatch(showAppToast({ title: "Success", message: "User successfully updated." }));
     };
 
     const handleProceed = handleSubmit(async (data) => {

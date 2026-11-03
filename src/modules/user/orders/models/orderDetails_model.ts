@@ -8,6 +8,8 @@ interface IOrderDetails {
     deliveryDetails?: IDeliveryDetails;
     progress?: IProgress;
     gainedPoints?:    number;
+    channel?:         string;
+    storeLocation?:   string;
     updatedAt?:       Date;
     createdAt?:       Date;
     __v?:             number;
@@ -21,6 +23,7 @@ interface IDeliveryDetails {
     firstName?:   string;
     lastName?:    string;
     _id?:         string;
+    deliveryNote?: string;
 };
 
 interface IProgress {
@@ -136,6 +139,13 @@ interface ICard {
     request_three_d_secure?: string;
 };
 
+interface IOrderPricing {
+    unitPrice?:       number;
+    basePrice?:       number;
+    discountApplied?: number;
+    pricingSource?:   string;
+};
+
 interface IProductOrder {
     _id?:                          string;
     order?:                        string;
@@ -161,6 +171,9 @@ interface IProductOrder {
     updatedAt?:                    Date;
     createdAt?:                    Date;
     __v?:                          number;
+    channel?:                      string;
+    pricing?:                      IOrderPricing;
+    expectedBuyerCompletionDate?:  IExpectedDate;
 };
 
 interface IAmount {

@@ -88,6 +88,8 @@ const initialState: IGeneralStateModel = {
 
     isLoading: false,
     loadingMessage: "",
+
+    appToast: null,
 };
 
 export const generalSlice = createSlice({
@@ -119,6 +121,12 @@ export const generalSlice = createSlice({
         setLoadingMessage: (state: IGeneralStateModel, action: PayloadAction<string>) => {
             state.loadingMessage = action.payload;
         },
+        showAppToast: (state: IGeneralStateModel, action: PayloadAction<{ title: string; message: string }>) => {
+            state.appToast = { ...action.payload, id: Date.now() };
+        },
+        hideAppToast: (state: IGeneralStateModel) => {
+            state.appToast = null;
+        },
     }
 });
 
@@ -134,5 +142,7 @@ export const {
 
     setIsLoading,
     setLoadingMessage,
+    showAppToast,
+    hideAppToast,
 } = actions;
 export default reducer;

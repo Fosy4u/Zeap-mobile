@@ -72,6 +72,31 @@ const MeasurementScreen = () => {
     setShowSelectExistingSheet(false);
   };
 
+  const formHeader = (
+    <View>
+      <Text className="pt-[24px] pb-1 font-montserratMedium text-xl text-gray-700">
+        Kindly provide us your measurements
+      </Text>
+
+      {/*==== Actions — sit directly under the caption ====*/}
+      <View className="mt-4">
+        <TouchableOpacity
+          onPress={ handleAddNewMeasurement }
+          className="h-[55px] w-full flex-row items-center justify-center rounded-xl bg-baseGreen"
+        >
+          <Text className="font-montserratMedium text-base text-white">Add New Measurement</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={ () => setShowSelectExistingSheet(true) }
+          className="h-[55px] w-full mt-3 flex-row items-center justify-center rounded-xl bg-lightGold"
+        >
+          <Text className="font-montserratMedium text-base text-green-800">Select Existing Measurement</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaView className="h-full w-full relative flex-1 bg-white">
@@ -81,35 +106,18 @@ const MeasurementScreen = () => {
         <AppHeaderComp title="Measurement" />
 
         <View className="flex-1 px-[20px]">
-          <Text className="pt-[24px] pb-1 font-montserratMedium text-xl text-gray-700">
-            Kindly provide us your measurements
-          </Text>
-
-          {/*==== Actions — sit directly under the caption ====*/}
-          <View className="mt-4">
-            <TouchableOpacity
-              onPress={ handleAddNewMeasurement }
-              className="h-[55px] w-full flex-row items-center justify-center rounded-xl bg-baseGreen"
-            >
-              <Text className="font-montserratMedium text-base text-white">Add New Measurement</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={ () => setShowSelectExistingSheet(true) }
-              className="h-[55px] w-full mt-3 flex-row items-center justify-center rounded-xl bg-lightGold"
-            >
-              <Text className="font-montserratMedium text-base text-green-800">Select Existing Measurement</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/*==== Required measurement form (inline) ====*/}
+          {/*==== Required measurement form (inline) — caption and actions scroll with it ====*/}
           { isBusy ? (
-            <View className="pt-[20px]">
-              <MeasurementSkeletonLoader />
+            <View>
+              { formHeader }
+              <View className="pt-[20px]">
+                <MeasurementSkeletonLoader />
+              </View>
             </View>
           ) : (
             <SavedMeasurementsBottomSheet
               embedded
+              header={ formHeader }
               key={ selectedMeasurementTemplate?._id ?? "blank" }
             />
           ) }

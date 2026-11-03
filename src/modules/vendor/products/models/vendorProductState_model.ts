@@ -1,6 +1,7 @@
 import IReviewAndRating from "../../../general/models/review_model";
 import IPromotion from "./promotion_model";
 import IVendorProductDetails from "./vendorProductDetails_model";
+import IVendorProductQueryParams from "./vendorProductFilter_model";
 
 interface IVendorProductState {
     productMode: string;
@@ -22,6 +23,8 @@ interface IVendorProductState {
     reviewAndRating: IReviewAndRating;
 
     showProductTypeBottomSheet: boolean;
+
+    productFilterParams: IVendorProductQueryParams;
 
     productIsLoading: boolean;
     loadingMessage: string;

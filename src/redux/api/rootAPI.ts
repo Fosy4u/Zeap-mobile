@@ -53,6 +53,7 @@ const rootAPI = createApi({
         "Points",
         "Vouchers",
         "Wishlist",
+        "Help",
 
         // Vebdor
         "VendorAnalytics",

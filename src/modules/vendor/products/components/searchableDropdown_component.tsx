@@ -7,6 +7,7 @@ interface ISearchableDropdownProps {
     label: string;
     required?: boolean;
     placeholder: string;
+    hint?: string;
     options: string[];
     isOpen: boolean;
     onToggleOpen: () => void;
@@ -31,6 +32,7 @@ const SearchableDropdownComponent: React.FC<ISearchableDropdownProps> = ({
     label,
     required = false,
     placeholder,
+    hint,
     options,
     isOpen,
     onToggleOpen,
@@ -71,6 +73,9 @@ const SearchableDropdownComponent: React.FC<ISearchableDropdownProps> = ({
             <Text aria-label={ label } className="mt-5 font-montserratMedium">
                 { label }{ required && <Text className="text-red-600">*</Text> }
             </Text>
+            { !!hint && (
+                <Text className="mt-0.5 font-montserratMedium text-xs text-gray-500">{ hint }</Text>
+            ) }
             <View className="h-auto w-full mt-1.5 px-3 py-2.5 border rounded-xl border-gray-200 bg-gray-50 z-50">
                 { isOpen ? (
                     <>

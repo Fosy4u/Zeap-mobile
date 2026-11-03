@@ -23,7 +23,7 @@ const initialState: IProductState = {
     wishListProducts: [],
     selectedCategory:{
         id: 1,
-        name: "Female Clothings",
+        name: "Women",
         totalCount: 0,
         color: ["#FFF4DF", "#FFE9BC"],
         image: require("../../../../../assets/images/home/category_one.png"),
@@ -31,14 +31,14 @@ const initialState: IProductState = {
     categories: [
         {
             id: 1,
-            name: "Female Clothings",
+            name: "Women",
             totalCount: 0,
             color: ["#FFF4DF", "#FFE9BC"],
             image: require("../../../../../assets/images/home/category_one.png"),
         },
         {
             id: 2,
-            name: "Male Clothings",
+            name: "Men",
             totalCount: 0,
             color: ["#FEF4E6", "#FDD8A5"],
             image: require("../../../../../assets/images/home/category_four.png"),
@@ -73,6 +73,7 @@ const initialState: IProductState = {
     popularProducts: [],
     newestPrpducts: [],
     currentPage: 1,
+    productsTotalCount: null,
 
     featuredPrice: 0,
     selectedColor: {
@@ -151,6 +152,9 @@ export const productSlice = createSlice({
         },
         setCurrentPage: (state: IProductState, action: PayloadAction<number>) => {
             state.currentPage = action.payload;
+        },
+        setProductsTotalCount: (state: IProductState, action: PayloadAction<number | null>) => {
+            state.productsTotalCount = action.payload;
         },
         setFemaleClothing: (state: IProductState, action: PayloadAction<IProduct[]>) => {
             state.femaleClothing = action.payload;
@@ -249,6 +253,7 @@ export const {
     setSelectedTab,
     setNewestProducts,
     setCurrentPage,
+    setProductsTotalCount,
     setFemaleClothing,
     setMaleClothing,
     setShoes,

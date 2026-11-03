@@ -8,6 +8,14 @@ interface ICart {
     user?:        string;
     currency?:    string;
     subTotal?:    number;
+    voucher?:     CartVoucher;
+}
+
+interface CartVoucher {
+    _id?:      string;
+    code?:     string;
+    amount?:   number;
+    currency?: string;
 }
 
 interface BasketItem {

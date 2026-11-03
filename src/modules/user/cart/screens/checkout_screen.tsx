@@ -1,4 +1,4 @@
-import { View, Text, SafeAreaView, StatusBar, TouchableOpacity, ScrollView, TextInput } from 'react-native'
+import { View, Text, SafeAreaView, StatusBar, TouchableOpacity, ScrollView, TextInput, Switch } from 'react-native'
 import React, { useEffect } from 'react'
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -20,6 +20,7 @@ import { SelectList } from 'react-native-dropdown-select-list';
 import usePaymentHook from '../../payment/hooks/payment_hook.ts';
 import useDisplayCurrency from '../../../general/hooks/displayCurrency_hook.ts';
 import OrderSuccessPopupModal from '../../payment/modals/orderSuccessPopup_modal.tsx';
+import useVoucherHook from '../hooks/voucher_hook.ts';
 
 const CheckoutScreen = () => {
   const { orderSummary, selectedDeliveryFee, isLoading: isCartLoading, loadingMessage: cartLoadingMessage } = useSelector((state: RootState) => state.cartState);
@@ -35,13 +36,17 @@ const CheckoutScreen = () => {
   // Guests have no email on file. They must provide + save a contact email
   // (persisted via `/user/update`) before the delivery/payment step unlocks.
   // Once saved, `userData.email` is populated and this flips to false.
-  const guestNeedsEmail = isGuest && !userData?.email;
+  const guestNeedsEmail = isGuest && !userData?.email?.trim();
 
   const { showOrderSuccessModal } = useSelector((state: RootState) => state.paymentState);
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
   const dispatch = useDispatch();
 
   const { handleProceedToPayment, isLoading: isPaymentLoading, loadingMessage: paymentLoadingMessage } = usePaymentHook();
+  const {
+    voucherCode, setVoucherCode, isVoucherApplied, isVoucherLoading,
+    handleApplyVoucher, handleRemoveVoucher,
+  } = useVoucherHook();
   const { resolveCurrency } = useDisplayCurrency();
   const isLoading = isCartLoading || isAddressLoading || isProfileLoading || isPaymentLoading;
   const loadingMessage = paymentLoadingMessage || cartLoadingMessage || addressLoadingMessage;
@@ -157,7 +162,7 @@ const CheckoutScreen = () => {
                     disabled={ isProfileLoading }
                     className="h-[55px] w-full mt-5 flex-row items-center justify-center rounded-xl bg-baseGreen"
                   >
-                    <Text className="text-lg text-white mr-2">{ isProfileLoading ? "Please wait..." : (guestNeedsEmail ? "Save & continue to delivery" : "Update email") }</Text>
+                    <Text className="text-lg text-white mr-2">{ isProfileLoading ? "Please wait..." : (guestNeedsEmail ? "Save and go to shipping" : "Update email") }</Text>
                     { isProfileLoading ? null : <ArrowRight className="text-white" /> }
                   </TouchableOpacity>
                 </View>
@@ -230,10 +235,6 @@ const CheckoutScreen = () => {
             
           </View>
 
-          {/* Delivery, payment, and the order summary stay hidden until a guest
-              has saved a contact email. Logged-in users always see them. */}
-          { !guestNeedsEmail && (
-            <>
           {/*==== Saved Delivery Address Summary ====*/}
           { (selectedAddress && Object.keys(selectedAddress).length > 0) && (
             <View className="h-auto w-full mt-6 px-5 py-5 border border-[#D5B07B] rounded-xl bg-[#FFFAF2]">
@@ -273,6 +274,8 @@ const CheckoutScreen = () => {
             <Text className="font-montserratSemiBold text-base text-gray-700">
               { (selectedAddress && Object.keys(selectedAddress).length > 0) ? "Add New Delivery Address" : "Delivery Address" }
             </Text>
+            {/* Address fields stay hidden until a guest has saved a contact email. */}
+            { !guestNeedsEmail && (
             <View>
                 <Text aria-label="FirstName" nativeID="firstName" className="mt-5 font-montserratMedium">First Name <Text className="text-red-500">*</Text></Text>
                 <View className="h-auto w-full mt-1.5 px-3 py-1 border border-gray-300 rounded-xl bg-gray-100">
@@ -468,15 +471,42 @@ const CheckoutScreen = () => {
                       ) }
                     />
                 </View>
-                { errors.phoneNumber ? (
+                { errors.phoneNumber && (
                   <Text className="mt-1 text-red-500 text-xs">{ errors.phoneNumber.message }</Text>
+                ) }
+
+                <Text aria-label="DeliveryNote" nativeID="deliveryNote" className="mt-5 font-montserratMedium">Delivery note</Text>
+                <View className={`h-auto w-full mt-1.5 px-3 py-1 border rounded-xl bg-gray-100 ${ errors.deliveryNote ? "border-red-400" : "border-gray-300" }`}>
+                    <Controller
+                      control={ control }
+                      name="deliveryNote"
+                      render={ ({ field: { onChange, onBlur, value } }) => (
+                        <TextInput
+                          aria-label="DeliveryNote"
+                          aria-labelledby="deliveryNote"
+                          multiline
+                          numberOfLines={ 3 }
+                          maxLength={ 300 }
+                          textAlignVertical="top"
+                          placeholder="Add any special delivery instructions for this order"
+                          placeholderTextColor="#9ca3af"
+                          className="min-h-[72px] py-2 text-base"
+                          onBlur={ onBlur }
+                          onChangeText={ onChange }
+                          value={ value ?? "" }
+                        />
+                      ) }
+                    />
+                </View>
+                { errors.deliveryNote ? (
+                  <Text className="mt-1 text-red-500 text-xs">{ errors.deliveryNote.message }</Text>
                 ) : (
-                  <Text className="mt-1 text-gray-500 text-xs">{ phoneRules.hint }</Text>
+                  <Text className="mt-1 text-gray-500 text-xs">Optional. Share gate codes, preferred handoff details, or timing notes.</Text>
                 ) }
 
                 
-                <View className="mt-5 flex-row items-center">
-                    <CheckBox
+                <View className="mt-5 flex-row items-start">
+                    <Switch
                       value={ saveAddressForNextTime && !isGuest }
                       disabled={ isGuest }
                       onValueChange={ (newValue) => {
@@ -484,20 +514,22 @@ const CheckoutScreen = () => {
                           dispatch(setSaveAddressForNextTime(newValue));
                         }
                       }}
-                      tintColors={{ true: "#133522", false: "#151518" }}
-                      boxType="square"
-                      lineWidth={1.5}
-                      tintColor="#151518"
-                      onCheckColor="#ffffff"
-                      onFillColor="#133522"
-                      onTintColor="#133522"
-                      animationDuration={0.15}
-                      style={{ height: 20, width: 20 }}
+                      trackColor={{ false: "#d1d5db", true: "#133522" }}
+                      thumbColor="#ffffff"
+                      ios_backgroundColor="#d1d5db"
+                      style={{ transform: [{ scaleX: 0.75 }, { scaleY: 0.75 }], marginLeft: -6, marginRight: -4, marginTop: 4 }}
                     />
-                    <Text className={ `ml-2 font-montserratMedium text-base ${ isGuest ? "text-gray-400" : "" }` }>Save my address for next time.</Text>
+                    <View className="ml-2 flex-1">
+                      <Text className="leading-5">
+                        <Text className={ `font-montserratMedium text-[15px] ${ isGuest ? "text-gray-400" : "" }` }>Save for next time </Text>
+                        <Text className="font-montserratNormal text-xs text-gray-500">(Optional)</Text>
+                      </Text>
+                      { isGuest && <Text className="font-montserratMedium text-[10px] leading-3 text-yellow-600">(login to enable)</Text> }
+                    </View>
                 </View>
-                { isGuest && <Text className="mt-1 ml-1 font-montserratMedium text-xs text-gray-400">You need to be logged in to save your address for next time.</Text> }
+                { isGuest && <Text className="mt-1 ml-1 font-montserratMedium text-[11px] text-blue-500">You need to login to save delivery details for next time</Text> }
               </View>
+            ) }
             </View>
 
           {/*==== Delivery Method ====*/}
@@ -518,29 +550,39 @@ const CheckoutScreen = () => {
                 aria-label="Voucher Code"
                 aria-labelledby="voucherCode"
                 keyboardType="default"
+                autoCapitalize="none"
+                autoCorrect={ false }
                 placeholder="Enter voucher code"
                 placeholderTextColor="#9ca3af"
                 className="h-[44px] flex-1 text-base"
-                // onBlur={ onBlur }
-                // onChangeText={ onChange }
-                // value={ value }
-                
+                editable={ !isVoucherApplied && !isVoucherLoading }
+                value={ voucherCode }
+                onChangeText={ setVoucherCode }
               />
               <TouchableOpacity
-              onPress={ () => {} }
-                className="px-4 py-2 bg-baseGreen rounded-lg"
-                disabled={ isLoading }
+                onPress={ () => isVoucherApplied ? handleRemoveVoucher() : handleApplyVoucher() }
+                className={ `px-4 py-2 rounded-lg ${ isVoucherApplied ? "bg-red-600" : "bg-baseGreen" } ${ isVoucherLoading ? "opacity-60" : "" }` }
+                disabled={ isLoading || isVoucherLoading }
               >
-                <Text className="font-Montserrat font-medium text-xs text-white">Apply</Text>
+                <Text className="font-Montserrat font-medium text-xs text-white">
+                  { isVoucherLoading ? "Please wait..." : isVoucherApplied ? "Remove" : "Apply" }
+                </Text>
               </TouchableOpacity>
             </View>
-                               
+
             <View className="h-[1px] w-full mt-4 bg-gray-200" />
 
             <View className="h-auto w-full mt-5 flex-row items-center justify-between">
               <Text className="text-base text-baseGreen">Item Subtotal ({ cart.basketItems?.length })</Text>
               <Text className="font-semibold text-base text-baseGreen">{ formatCurrency(Number(orderSummary.subTotal || 0), resolveCurrency(orderSummary.currency)) }</Text>
             </View>
+
+            { Number(orderSummary.appliedVoucherAmount || 0) > 0 && (
+              <View className="h-auto w-full mt-2 flex-row items-center justify-between">
+                <Text className="text-base text-baseGreen">Voucher Discount</Text>
+                <Text className="font-semibold text-base text-red-600">-{ formatCurrency(Number(orderSummary.appliedVoucherAmount || 0), resolveCurrency(orderSummary.currency)) }</Text>
+              </View>
+            ) }
             <View className="h-auto w-full mt-2 flex-row items-center justify-between">
               <Text className="text-base text-baseGreen">Delivery Fee</Text>
               <Text className="font-semibold text-base text-baseGreen">{ orderSummary.deliveryFee !== "0.00" ? formatCurrency(Number(orderSummary.deliveryFee || 0), resolveCurrency(orderSummary.currency)) : "Free" }</Text>
@@ -558,13 +600,12 @@ const CheckoutScreen = () => {
                 addressHandleSubmit(deliveryAddressOnSubmit)();
               }
             } }
-            className="h-[55px] w-auto mt-7 flex flex-row items-center justify-center rounded-xl bg-baseGreen"
+            disabled={ guestNeedsEmail }
+            className={ `h-[55px] w-auto mt-7 flex flex-row items-center justify-center rounded-xl ${ guestNeedsEmail ? "bg-gray-300" : "bg-baseGreen" }` }
           >
-            <Text className="text-lg text-white mr-2">Proceed to Payment</Text>
-            <ArrowRight className="text-white" />
+            <Text className={ `text-lg mr-2 ${ guestNeedsEmail ? "text-gray-500" : "text-white" }` }>Proceed to Payment</Text>
+            <ArrowRight className={ guestNeedsEmail ? "text-gray-500" : "text-white" } />
           </TouchableOpacity>
-            </>
-          ) }
         </View>
       </ScrollView>
 

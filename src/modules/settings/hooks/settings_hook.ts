@@ -1,4 +1,5 @@
 import { useDispatch, useSelector } from "react-redux";
+import currencies from "../../../utils/currencies.json";
 import handleError from "../../general/hooks/errorHandler_hook";
 import { 
     setIsLoading, 
@@ -12,6 +13,8 @@ import Geolocation from 'react-native-geolocation-service';
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { changePasswordSchema, IChangePassword } from "../validations/changePassword_validation";
+
+const defaultCurrency = currencies.find((currency) => currency.code === "NGN")!;
 
 const useSettingsHook = () => {
   const { userData } = useSelector((state: RootState) => state.profileState);
@@ -100,19 +103,7 @@ const useSettingsHook = () => {
         
         if (countryCurrencyResponse) {
           const country = countryCurrencyResponse.address.country;
-          const code = countryCurrencyResponse.address.country === "Nigeria" ? "NGN" : countryCurrencyResponse.address.country === "United States" ? "USD" : countryCurrencyResponse.address.country === "United Kingdom" ? "GBP" : "CAD";
-          const name = countryCurrencyResponse.address.country === "Nigeria" ? "Nigerian Naira" : countryCurrencyResponse.address.country === "United States" ? "United States Dollar" : countryCurrencyResponse.address.country === "United Kingdom" ? "Pound Sterling" : "Canadian Dollar";
-          const symbol = countryCurrencyResponse.address.country === "Nigeria" ? "₦" : countryCurrencyResponse.address.country === "United States" ? "$" : countryCurrencyResponse.address.country === "United Kingdom" ? "£" : "C$";
-          const flag = countryCurrencyResponse.address.country === "Nigeria" ? "🇳🇬" : countryCurrencyResponse.address.country === "United States" ? "🇺🇸" : countryCurrencyResponse.address.country === "United Kingdom" ? "🇬🇧" : "🇨🇦"; // "https://flagcdn.com/16x12/ng.png"
-
-          const recommendedCurrency = {
-              code: code,
-              name: name,
-              country: country,
-              symbol: symbol, // Assuming the symbol is the same as the code
-              flag: flag // You can set a flag image URL if available
-          };
-          // console.log("CURRENCY DETAILS:::", recommendedCurrency);
+          const recommendedCurrency = currencies.find((currency) => currency.country === country) ?? defaultCurrency;
 
           // Dispatch the recommended currency to the store
           dispatch(setRecommendedCurrency(recommendedCurrency));
@@ -130,19 +121,7 @@ const useSettingsHook = () => {
     const prefferedCurrency = userData?.prefferedCurrency;
 
     if (prefferedCurrency) {
-      const country = prefferedCurrency === "NGN" ? "Nigeria" : prefferedCurrency === "USD" ? "United States" : prefferedCurrency === "GBP" ? "United Kingdom" : "Canada";
-      const code = prefferedCurrency === "NGN" ? "NGN" : prefferedCurrency === "USD" ? "USD" : prefferedCurrency === "GBP" ? "GBP" : "CAD";
-      const name = prefferedCurrency === "NGN" ? "Nigerian Naira" : prefferedCurrency === "USD" ? "United States Dollar" : prefferedCurrency === "GBP" ? "Pound Sterling" : "Canadian Dollar";
-      const symbol = prefferedCurrency === "NGN" ? "₦" : prefferedCurrency === "USD" ? "$" : prefferedCurrency === "GBP" ? "£" : "C$";
-      const flag = prefferedCurrency === "NGN" ? "🇳🇬" : prefferedCurrency === "USD" ? "🇺🇸" : prefferedCurrency === "GBP" ? "🇬🇧" : "🇨🇦"; // "https://flagcdn.com/16x12/ng.png"
-
-      const recommendedCurrency = {
-          code: code,
-          name: name,
-          country: country,
-          symbol: symbol, // Assuming the symbol is the same as the code
-          flag: flag // You can set a flag image URL if available
-      };
+      const recommendedCurrency = currencies.find((currency) => currency.code === prefferedCurrency) ?? defaultCurrency;
       console.log("CURRENCY DETAILS:::", recommendedCurrency);
 
       // Dispatch the recommended currency to the store

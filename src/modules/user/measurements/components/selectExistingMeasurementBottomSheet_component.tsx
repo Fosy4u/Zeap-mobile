@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Image, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, Image, ScrollView, Modal } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ArrowDown2, ArrowUp2 } from 'iconsax-react-native';
 import { useSelector } from 'react-redux';
 import FastImage from 'react-native-fast-image';
 import { RootState } from '../../../../redux/store/store';
@@ -29,15 +31,18 @@ const flattenMeasurements = (template?: IBodyMeasurement): any[] => {
 const SelectExistingMeasurementBottomSheet: React.FC<IProps> = ({ onApply, onClose }) => {
     const { allSavedMeasurements } = useSelector((state: RootState) => state.measurementState);
     const [pendingId, setPendingId] = useState<string | null>(null);
+    const [expandedIds, setExpandedIds] = useState<Record<string, boolean>>({});
     const pending = allSavedMeasurements.find((t) => t._id === pendingId) ?? null;
     const isEmpty = allSavedMeasurements.length === 0;
+    const insets = useSafeAreaInsets();
 
     return (
-        <View className="h-full w-full absolute inset-0 justify-end">
-            <View className="h-full w-full absolute inset-0 bg-black opacity-60" />
+        <Modal visible transparent animationType="slide" statusBarTranslucent onRequestClose={ onClose }>
+        <View className="flex-1 justify-end bg-black/60">
+            <TouchableOpacity activeOpacity={ 1 } onPress={ onClose } className="absolute top-0 bottom-0 left-0 right-0" accessibilityLabel="Close" />
             <View
                 className="w-full px-5 pt-6 bg-white"
-                style={{ maxHeight: "85%", borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingBottom: 24 }}
+                style={{ maxHeight: "85%", borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingBottom: insets.bottom + 24 }}
             >
                 {/*==== Header ====*/}
                 <View className="h-auto w-full flex-row items-center justify-between">
@@ -69,8 +74,10 @@ const SelectExistingMeasurementBottomSheet: React.FC<IProps> = ({ onApply, onClo
                     ) : (
                         allSavedMeasurements.map((template) => {
                             const isSelected = pendingId === template._id;
+                            const templateKey = template._id ?? template.templateName ?? "";
+                            const isExpanded = !!expandedIds[templateKey];
                             const items = flattenMeasurements(template);
-                            const preview = items.slice(0, 4);
+                            const preview = isExpanded ? items : items.slice(0, 4);
                             const remaining = Math.max(items.length - 4, 0);
                             return (
                                 <TouchableOpacity
@@ -96,7 +103,19 @@ const SelectExistingMeasurementBottomSheet: React.FC<IProps> = ({ onApply, onClo
                                         )) }
                                     </View>
                                     { remaining > 0 && (
-                                        <Text className="mt-2 font-montserratMedium text-xs text-gray-500">+{ remaining } more</Text>
+                                        <TouchableOpacity
+                                            onPress={ () => setExpandedIds((prev) => ({ ...prev, [templateKey]: !prev[templateKey] })) }
+                                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                                            className="mt-3 self-start flex-row items-center"
+                                        >
+                                            <Text className="font-montserratSemiBold text-xs text-baseGreen">
+                                                { isExpanded ? "Show less" : `+${ remaining } more` }
+                                            </Text>
+                                            { isExpanded
+                                                ? <ArrowUp2 size={ 14 } color="#133522" style={{ marginLeft: 4 }} />
+                                                : <ArrowDown2 size={ 14 } color="#133522" style={{ marginLeft: 4 }} />
+                                            }
+                                        </TouchableOpacity>
                                     ) }
                                 </TouchableOpacity>
                             );
@@ -116,6 +135,7 @@ const SelectExistingMeasurementBottomSheet: React.FC<IProps> = ({ onApply, onClo
                 ) }
             </View>
         </View>
+        </Modal>
     );
 };
 

@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../../redux/store/store';
-import { View, Text, SafeAreaView, StatusBar, TouchableOpacity, ScrollView } from 'react-native';
-import { ArrowRight2, Bank, DocumentText1, Like1, Logout, Element3, Notification, Profile, Receipt21, Ruler, Setting2, Shop, Ticket } from 'iconsax-react-native';
+import { View, Text, SafeAreaView, StatusBar, TouchableOpacity, ScrollView, Image, ActivityIndicator } from 'react-native';
+import { ArrowRight2, Bank, Camera, ClipboardText, DocumentText1, Headphone, Like1, Logout, Element3, Notification, Profile, Receipt21, Ruler, Setting2, Shop, Ticket } from 'iconsax-react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import useLogoutHook from '../../auths/hooks/logout_hook';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -16,6 +16,8 @@ import ModuleAppBarComponent from '../../general/components/moduleAppBar_compone
 import AppLoader from '../../general/components/appLoader';
 import NotificationBadgeComponent from '../../notifications/components/notificationBadge_component';
 import AppStatusBar from "../../general/components/appStatusBar";
+import useProfilePicUploadHook from '../hooks/profilePicUpload_hook';
+import { clearPendingDestination } from '../../auths/slices/authState_slice';
 
 const ProfileScreen = () => {
   const { userData } = useSelector((state: RootState) => state.profileState );
@@ -27,6 +29,7 @@ const ProfileScreen = () => {
   const isVendorMode = (route.params as { mode?: string } | undefined)?.mode === "vendor";
 
   const { signOutUser } = useLogoutHook();
+  const { selectedImage, isUploadingProfilePic, handleChooseProfilePic, handleCancelProfilePic, handleSaveProfilePic } = useProfilePicUploadHook();
   // console.log("USER DATA::: ", userData);
 
   const {
@@ -92,18 +95,83 @@ const ProfileScreen = () => {
 
             {/*==== Profile Image ====*/}
             <View className="h-auto w-full py-7 flex-1 items-center rounded-2xl bg-[#F8F9FE]">
-              <UserAvatar
-                photoURL={(userData as any).photoURL}
-                firstName={userData.firstName}
-                lastName={userData.lastName}
-                displayName={(userData as any).displayName}
-                email={userData.email}
-                isGuest={!!userData.isGuest}
-                seed={userData.uid || userData.email}
-                size={80}
-              />
-              <Text className="mt-3 text-xl text-baseGreen">{ userData.firstName }</Text>
-              <Text className="text-sm text-baseGreen">{ userData.email }</Text>
+              <View>
+                { selectedImage?.uri ? (
+                  <Image source={{ uri: selectedImage.uri }} style={{ height: 90, width: 90, borderRadius: 45 }} />
+                ) : (
+                  <UserAvatar
+                    photoURL={ userData.imageUrl?.link }
+                    firstName={userData.firstName}
+                    lastName={userData.lastName}
+                    displayName={(userData as any).displayName}
+                    email={userData.email}
+                    isGuest={!!userData.isGuest}
+                    seed={userData.uid || userData.email}
+                    size={90}
+                  />
+                ) }
+                { !userData.isGuest && !selectedImage && (
+                  <TouchableOpacity
+                    onPress={ handleChooseProfilePic }
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    className="h-[30px] w-[30px] absolute -bottom-1 -right-1 items-center justify-center rounded-full border-2 border-white bg-gold"
+                  >
+                    <Camera size={ 15 } color="#133522" variant="Bold" />
+                  </TouchableOpacity>
+                ) }
+              </View>
+
+              { selectedImage && (
+                <View className="mt-3 flex-row" style={{ columnGap: 8 }}>
+                  <TouchableOpacity
+                    onPress={ handleSaveProfilePic }
+                    disabled={ isUploadingProfilePic }
+                    className="h-[34px] min-w-[72px] px-4 items-center justify-center rounded-lg bg-baseGreen"
+                  >
+                    { isUploadingProfilePic
+                      ? <ActivityIndicator size="small" color="#FFFFFF" />
+                      : <Text className="font-montserratMedium text-sm text-white">Save</Text>
+                    }
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={ handleCancelProfilePic }
+                    disabled={ isUploadingProfilePic }
+                    className="h-[34px] px-4 items-center justify-center rounded-lg bg-red-50"
+                  >
+                    <Text className="font-montserratMedium text-sm text-red-700">Cancel</Text>
+                  </TouchableOpacity>
+                </View>
+              ) }
+
+              { !userData.isGuest && (
+                <>
+                  <Text className="mt-3 text-xl text-baseGreen">{ userData.firstName }</Text>
+                  <Text className="text-sm text-baseGreen">{ userData.email }</Text>
+                </>
+              ) }
+
+              { userData.isGuest && (
+                <View className="w-full mt-5 px-5 flex-row" style={{ columnGap: 12 }}>
+                  <TouchableOpacity
+                    onPress={ () => {
+                      dispatch(clearPendingDestination());
+                      navigation.navigate("loginScreen");
+                    } }
+                    className="h-[48px] flex-1 items-center justify-center rounded-xl border border-baseGreen bg-lightGreen"
+                  >
+                    <Text className="font-montserratMedium text-base text-baseGreen">Sign In</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={ () => {
+                      dispatch(clearPendingDestination());
+                      navigation.navigate("signUpScreen");
+                    } }
+                    className="h-[48px] flex-1 items-center justify-center rounded-xl bg-baseGreen"
+                  >
+                    <Text className="font-montserratMedium text-base text-white">Sign Up</Text>
+                  </TouchableOpacity>
+                </View>
+              ) }
             </View>
 
             <View className="mt-5">
@@ -148,6 +216,12 @@ const ProfileScreen = () => {
                     handleOnPress={ () => navigation.navigate("bankDetailsScreen") }
                     title="Bank details"
                     icon={ <Bank color="gray" /> }
+                  />
+
+                  <CardItems
+                    handleOnPress={ () => navigation.navigate("policiesScreen") }
+                    title="Policies / Contract"
+                    icon={ <ClipboardText color="gray" /> }
                   />
 
                   {/* Identity & shop document */}
@@ -213,20 +287,20 @@ const ProfileScreen = () => {
               />
 
               {/* Help and support */}
-              {/* Hidden: the help & support screen is not wired up yet (the item
-                  has no destination and does nothing when tapped). */}
-              {/* <CardItems
-                handleOnPress={ () => null }
+              <CardItems
+                handleOnPress={ () => navigation.navigate("contactSupportScreen") }
                 title="Help and support"
                 icon={ <Headphone color="gray" /> }
-              /> */}
+              />
 
               {/* Logout */}
-              <CardItems
-                handleOnPress={ () => signOutUser() }
-                title="Logout"
-                icon={ <Logout color="gray" /> }
-              />
+              { !userData.isGuest && (
+                <CardItems
+                  handleOnPress={ () => signOutUser() }
+                  title="Logout"
+                  icon={ <Logout color="gray" /> }
+                />
+              ) }
             </View>
           </View>
           

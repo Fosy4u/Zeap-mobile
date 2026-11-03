@@ -63,7 +63,7 @@ const SearchItemScreen = () => {
                   keyboardType="default"
                   placeholder="Search item"
                   placeholderTextColor="#9ca3af"
-                  className="h-[44px] px-3 py-3 flex-row flex-1 items-center justify-between border border-gray-300 rounded-xl bg-gray-100"
+                  className="h-[50px] px-3 flex-row flex-1 items-center justify-between border border-gray-300 rounded-xl bg-gray-100"
                   onChangeText={(value) => {
                     dispatch(setSearchPhrase(value));
                   }}
@@ -71,14 +71,14 @@ const SearchItemScreen = () => {
               />
 
               <TouchableOpacity onPress={ handleSearchNow }>
-                <View className="h-[55px] w-[55px] ml-3 flex items-center justify-center rounded-xl bg-gold">
-                  <SearchNormal1 className="text-baseGreen" />
+                <View className="h-[50px] w-[50px] ml-3 flex items-center justify-center rounded-xl bg-gold">
+                  <SearchNormal1 size={ 20 } color="#133522" />
                 </View>
               </TouchableOpacity>
 
               <TouchableOpacity onPress={ handleOpenFilters }>
-                <View className="h-[55px] w-[55px] ml-2 flex items-center justify-center rounded-xl border border-gray-300 bg-gray-100">
-                  <Filter className="text-baseGreen" />
+                <View className="h-[50px] w-[50px] ml-2 flex items-center justify-center rounded-xl border border-gray-300 bg-gray-100">
+                  <Filter size={ 20 } color="#133522" />
                   { activeFilterCount > 0 && (
                     <View className="h-5 w-5 absolute -top-1 -right-1 flex items-center justify-center rounded-full bg-baseGreen">
                       <Text className="text-[10px] text-white">{ activeFilterCount }</Text>

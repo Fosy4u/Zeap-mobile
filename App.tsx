@@ -1,9 +1,12 @@
 import React, {useCallback, useEffect} from 'react';
 import {Appearance, Linking} from 'react-native';
 import {StripeProvider, useStripe} from '@stripe/stripe-react-native';
+import {SafeAreaProvider} from 'react-native-safe-area-context';
+import {PaystackProvider} from 'react-native-paystack-webview';
 
 // Import Screens
 import AppRoutes from './src/routes/routes';
+import AppToast from './src/modules/general/components/appToast_component';
 import {
   configureReanimatedLogger,
   ReanimatedLogLevel,
@@ -53,13 +56,21 @@ const App = (): React.JSX.Element => {
   useFCMNotificationHook();
 
   return (
-    // Use StripeProvider here to wrap your app
-    <StripeProvider
-      publishableKey={process.env.REACT_APP_STRIPE_PUBLIC_KEY!}
-      urlScheme={STRIPE_URL_SCHEME}>
-      <StripeDeepLinkHandler />
-      <AppRoutes />
-    </StripeProvider>
+    <SafeAreaProvider>
+      <StripeProvider
+        publishableKey={process.env.REACT_APP_STRIPE_PUBLIC_KEY!}
+        urlScheme={STRIPE_URL_SCHEME}>
+        <StripeDeepLinkHandler />
+        <PaystackProvider
+          publicKey={process.env.REACT_APP_PAYSTACK_PUBLIC_KEY ?? ''}
+          currency="NGN"
+          defaultChannels={['card', 'bank_transfer', 'bank', 'ussd']}
+          debug={__DEV__}>
+          <AppRoutes />
+          <AppToast />
+        </PaystackProvider>
+      </StripeProvider>
+    </SafeAreaProvider>
   );
 };
 

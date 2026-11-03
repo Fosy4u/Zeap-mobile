@@ -58,8 +58,9 @@ const PriceAdjustmentModal: React.FC<IProps> = ({
                                 className="h-[44px] flex-1 font-montserratMedium text-base"
                                 // onBlur={ onBlur }
                                 onChangeText={ (value) => {
-                                    setAutoPricePercentage(value);
-                                    (value === "" || value === "0") ? setIsAutoPriceAdjustment(false) : setIsAutoPriceAdjustment(true);
+                                    const cleaned = value.replace(/[^0-9]/g, "").replace(/^0+(?=\d)/, "");
+                                    setAutoPricePercentage(cleaned);
+                                    setIsAutoPriceAdjustment(Number(cleaned) > 0);
                                 } }
                                 value={ autoPricePercentage }
                             />
@@ -71,11 +72,7 @@ const PriceAdjustmentModal: React.FC<IProps> = ({
                         <View className="h-auto w-full mt-6 flex-row justify-between space-x-3">
                             <TouchableOpacity
                                 onPress={ () => {
-                                    if (autoPricePercentage === "" || autoPricePercentage === "0") {
-                                        setIsAutoPriceAdjustment(false);
-                                    } else {
-                                        setIsAutoPriceAdjustment(true);
-                                    }
+                                    setIsAutoPriceAdjustment(Number(autoPricePercentage) > 0);
 
                                     setShowPriceAdjustmentModal(false);
                                 } }
@@ -87,8 +84,8 @@ const PriceAdjustmentModal: React.FC<IProps> = ({
 
                             <TouchableOpacity
                                 onPress={() => handleSaveAutoPricePercentage() }
-                                disabled={ autoPricePercentage === "" || autoPricePercentage === "0" || productIsLoading }
-                                className={ autoPricePercentage === "" || autoPricePercentage === "0" ? "h-[50px] flex-1 flex-row items-center justify-center rounded-xl bg-gray-200" : `h-[50px] flex-1 flex-row items-center justify-center rounded-xl bg-baseGreen ${ productIsLoading ? "opacity-70" : "" }` }
+                                disabled={ !(Number(autoPricePercentage) > 0) || productIsLoading }
+                                className={ !(Number(autoPricePercentage) > 0) ? "h-[50px] flex-1 flex-row items-center justify-center rounded-xl bg-gray-200" : `h-[50px] flex-1 flex-row items-center justify-center rounded-xl bg-baseGreen ${ productIsLoading ? "opacity-70" : "" }` }
                             >
                                 { productIsLoading ? (
                                     <ActivityIndicator color="#FFFFFF" />

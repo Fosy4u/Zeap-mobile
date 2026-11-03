@@ -1,4 +1,5 @@
 const NON_CANCELLABLE_STATUSES = [
+    "processing",
     "quality check",
     "ready",              // "ready" / "ready for delivery"
     "out for delivery",

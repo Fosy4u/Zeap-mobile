@@ -1,0 +1,44 @@
+diff --git a/node_modules/react-native-paystack-webview/production/lib/PaystackProvider.js b/node_modules/react-native-paystack-webview/production/lib/PaystackProvider.js
+index c0f0a86..54348c0 100644
+--- a/node_modules/react-native-paystack-webview/production/lib/PaystackProvider.js
++++ b/node_modules/react-native-paystack-webview/production/lib/PaystackProvider.js
+@@ -38,9 +38,11 @@ const PaystackProvider = ({ publicKey, currency, defaultChannels = ['card'], dee
+     const [visible, setVisible] = (0, react_1.useState)(false);
+     const [params, setParams] = (0, react_1.useState)(null);
+     const [method, setMethod] = (0, react_1.useState)('checkout');
++    const closeHandledRef = react_1.default.useRef(false);
+     const fallbackRef = (0, react_1.useMemo)(() => `ref_${Date.now()}`, []);
+     const resolvedDeepLinkHosts = (0, react_1.useMemo)(() => [...exports.DEFAULT_DEEP_LINK_HOSTS, ...deepLinkHosts], [deepLinkHosts]);
+     const open = (0, react_1.useCallback)((params, selectedMethod) => {
++        closeHandledRef.current = false;
+         if (debug)
+             console.log(`[Paystack] Opening modal with method: ${selectedMethod}`);
+         if (!(0, utils_1.validateParams)(params, debug))
+@@ -55,6 +57,18 @@ const PaystackProvider = ({ publicKey, currency, defaultChannels = ['card'], dee
+         setVisible(false);
+         setParams(null);
+     };
++    const handleNavigationStateChange = (state) => {
++        const url = state?.url ?? '';
++        if (url.indexOf('https://standard.paystack.co/close') !== 0) { return; }
++        if (closeHandledRef.current) { return; }
++        closeHandledRef.current = true;
++        if (debug) console.log('[Paystack] Close URL reached, resolving transaction');
++        const ref = params?.reference || fallbackRef;
++        const payload = { reference: ref, trans: ref, transaction: ref, status: 'success' };
++        params?.onSuccess?.(payload);
++        onGlobalSuccess?.(payload);
++        close();
++    };
+     const handleMessage = (event) => {
+         (0, utils_1.handlePaystackMessage)({
+             event,
+@@ -90,7 +104,7 @@ const PaystackProvider = ({ publicKey, currency, defaultChannels = ['card'], dee
+             {children}
+             <react_native_1.Modal visible={visible} transparent animationType="slide">
+                 <react_native_safe_area_context_1.SafeAreaView style={styles_1.styles.container}>
+-                    <react_native_webview_1.WebView originWhitelist={["*"]} source={{ html: paystackHTML }} onMessage={handleMessage} onShouldStartLoadWithRequest={(request) => {
++                    <react_native_webview_1.WebView setSupportMultipleWindows={false} originWhitelist={["*"]} source={{ html: paystackHTML }} onMessage={handleMessage} onNavigationStateChange={handleNavigationStateChange} onShouldStartLoadWithRequest={(request) => {
+             const url = request.url ?? '';
+             if (!(0, utils_1.shouldHandleExternally)(url, resolvedDeepLinkHosts)) {
+                 return true;

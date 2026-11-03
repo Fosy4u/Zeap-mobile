@@ -3,6 +3,8 @@ import {ScrollView, Text, TextInput, TouchableOpacity, View} from "react-native"
 import CheckBox from "@react-native-community/checkbox";
 import ColorSwatchChipComponent, { isMulticolor, MULTICOLOR_STOPS } from "../colorSwatchChip_component";
 import LinearGradient from "react-native-linear-gradient";
+import PricingHeadsUpComponent from "../pricingHeadsUp_component";
+import PriceInputComponent from "../priceInput_component";
 
 interface IColorOption {
     colorName: string;
@@ -31,7 +33,7 @@ const StepFiveComponent: React.FC<IProps> = (props) => {
     return (
         <View>
             <Text className="mt-5 font-montserratSemiBold text-base text-baseGreen">Step 5: Variations</Text>
-            <Text className="mt-2 font-montserratMedium">Set variations for your product item.</Text>
+            <PricingHeadsUpComponent productType="bespokeCloth" />
 
             <Text className="mt-6 font-montserratSemiBold text-xs text-gray-700">Colour Type</Text>
             <Text className="font-montserratMedium text-xs text-gray-700">Select a type of colour</Text>
@@ -119,19 +121,7 @@ const StepFiveComponent: React.FC<IProps> = (props) => {
             ) }
 
             <Text aria-label="Price" nativeID="price" className="mt-6 font-montserratMedium">Price<Text className="text-red-600">*</Text></Text>
-            <View className="h-auto w-full mt-1.5 px-3 py-0.5 border rounded-xl border-gray-200 bg-gray-50">
-                <TextInput
-                    aria-label="Price"
-                    aria-labelledby="price"
-                    value={ price.toString() }
-                    keyboardType="number-pad"
-                    textContentType="givenName"
-                    placeholder="Enter amount"
-                    placeholderTextColor="#9ca3af"
-                    className="h-[44px] font-montserratMedium text-base"
-                    onChangeText={(value) => handleChangePrice(value)}
-                />
-            </View>
+            <PriceInputComponent value={ price.toString() } onChangeValue={ handleChangePrice } productType="bespokeCloth" />
         </View>
     );
 };

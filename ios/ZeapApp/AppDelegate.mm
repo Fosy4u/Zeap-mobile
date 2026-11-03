@@ -7,6 +7,14 @@
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
   [FIRApp configure];
+#if DEBUG
+  NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+  NSMutableDictionary *devSettings = [[defaults dictionaryForKey:@"RCTDevMenu"] mutableCopy];
+  if (devSettings) {
+    devSettings[@"showInspector"] = @NO;
+    [defaults setObject:devSettings forKey:@"RCTDevMenu"];
+  }
+#endif
   self.moduleName = @"Zeaper";
   // You can add your custom initial props in the dictionary below.
   // They will be passed down to the ViewController used by React Native.

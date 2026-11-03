@@ -38,14 +38,14 @@ const StepTwoComponent: React.FC<IStepTwoClothProductProps> = ({ manageState }) 
 
     return (
         <View>
-            <Text className="mt-5 font-montserratSemiBold text-base text-baseGreen">Step 2: Category</Text>
-            <Text className="mt-2 font-montserratMedium">Enter all correct information for this product’s category and proceed.</Text>
+            <Text className="mt-5 font-montserratSemiBold text-base text-baseGreen">Step 2: Categories</Text>
 
             {/* ==== Gender (selected first to reveal the rest of the form) ==== */}
             <SearchableDropdownComponent
                 label="Gender"
                 required
-                placeholder="Select at least one gender"
+                placeholder="Select gender"
+                hint="Select at least one gender. Select both male and female if your product is unisex."
                 options={ genderOptions }
                 isOpen={ showGenderDropDown }
                 onToggleOpen={ () => setShowGenderDropDown(!showGenderDropDown) }
@@ -129,6 +129,7 @@ const StepTwoComponent: React.FC<IStepTwoClothProductProps> = ({ manageState }) 
                     <SearchableDropdownComponent
                         label="Design"
                         placeholder="Select a design"
+                        hint="Select as many designs as possible that apply."
                         options={ designOptions }
                         isOpen={ showDesignDropDown }
                         onToggleOpen={ () => setShowDesignDropDown(!showDesignDropDown) }
@@ -141,6 +142,7 @@ const StepTwoComponent: React.FC<IStepTwoClothProductProps> = ({ manageState }) 
                     <SearchableDropdownComponent
                         label="Occasion"
                         placeholder="Select an occasion"
+                        hint="Select as many occasions as possible that apply."
                         options={ occasionOptions }
                         isOpen={ showOccasionDropDown }
                         onToggleOpen={ () => setShowOccasionDropDown(!showOccasionDropDown) }

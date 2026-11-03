@@ -65,7 +65,7 @@ const OrdersScreen: React.FC = () => {
     const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
     const bottomSheetModalRef = useRef<BottomSheetModal>(null);
-    const snapPoints = useMemo(() => ['60%', '70%'], []);
+    const snapPoints = useMemo(() => ['70%', '90%'], []);
 
     const setShowBottomSheetModal = useCallback((value: boolean) => {
         if (value) {

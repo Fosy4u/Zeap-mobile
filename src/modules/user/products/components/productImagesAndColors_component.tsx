@@ -84,31 +84,10 @@ const ProductImagesAndColorsComponent: React.FC<IProps> = (props) => {
     <View className="">
       { (product?.productType === "readyMadeCloth" || product?.productType === "readyMadeShoe" || product?.productType === "accessory") ? (
         <View>
-          {/*==== Product Type, Status & Title ====*/}
+          {/*==== Product Type & Title ====*/}
           <View className="h-auto w-full px-5 pt-5">
             <View className="h-auto w-full flex-row items-center justify-start space-x-3">
               <Text className="px-[8px] py-1.5 font-montserratMedium text-xs rounded-md self-start bg-white">{ FormatWords.productGroupLabel(product?.categories?.productGroup, product?.productType) }</Text>
-              <View className={`px-3 py-1 flex items-center justify-center rounded-md border backdrop-blur-lg ${
-                product.status === "live" 
-                ? "border-green-300 bg-green-50" 
-                : product.status === "draft"
-                ? "border-blue-300 bg-blue-50"
-                : product.status === "under review"
-                ? "border-orange/30 bg-orange/10"
-                : "border-red-300 bg-red-50"
-              }`}>
-                <Text className={`font-montserratMedium text-xs ${
-                    product.status === "live" 
-                    ? "text-green-600" 
-                    : product.status === "draft"
-                    ? "text-blue-600"
-                    : product.status === "under review"
-                    ? "text-orange-800"
-                    : "text-red-600"
-                  }`}>
-                  {product?.status ? product.status.charAt(0).toUpperCase() + product.status.slice(1) : "N/A"}
-                </Text>
-              </View>
             </View>
             <Text className="mt-2 font-montserratMedium text-[23px] text-baseGreen">{ product?.title! }</Text>
             { isOutOfStock && (
@@ -264,7 +243,12 @@ const ProductImagesAndColorsComponent: React.FC<IProps> = (props) => {
           { product.sizes?.length !== 0 && (
             <View className="h-auto w-full mt-7 px-5">
               <View className="h-auto w-full flex-row items-center justify-between">
-                <Text className="flex-1 font-montserratSemiBold text-gray-700 text-[15px]">Available Sizes</Text>
+                <Text className="flex-1 font-montserratSemiBold text-gray-700 text-[15px]">
+                  Available Sizes
+                  { !!product?.sizeStandard && (
+                    <Text className="font-montserratMedium text-gray-500 text-[11px]"> ({ product.sizeStandard })</Text>
+                  ) }
+                </Text>
                 { product?.productType !== "accessory" && (
                   <TouchableOpacity
                     onPress={ () => dispatch(setShowSizedGuideBottomSheet(true)) }
@@ -275,7 +259,7 @@ const ProductImagesAndColorsComponent: React.FC<IProps> = (props) => {
                   </TouchableOpacity>
                 ) }
               </View>
-              <View className="h-auto w-full mt-3 flex-row gap-x-4 items-center justify-start flex-wrap">
+              <View className="h-auto w-full mt-3 flex-row items-center justify-start flex-wrap" style={{ columnGap: 8, rowGap: 8 }}>
                 { product.sizes!.map((eachSize) => {
                   // A size is available only when the SELECTED COLOUR has that
                   // size in stock. Scoping to `selectedColor` is the fix for the
@@ -290,7 +274,7 @@ const ProductImagesAndColorsComponent: React.FC<IProps> = (props) => {
                       key={ eachSize }
                       onPress={() => isSizeAvailable && handleSizeSelection(eachSize)}
                       disabled={!isSizeAvailable}
-                      className="h-[40px] w-[50px] flex items-center justify-center rounded-xl"
+                      className="h-[40px] min-w-[50px] px-2 flex items-center justify-center rounded-xl"
                       style={ {
                         borderWidth: 1,
                         borderColor: !isSizeAvailable
@@ -299,7 +283,7 @@ const ProductImagesAndColorsComponent: React.FC<IProps> = (props) => {
                         opacity: isSizeAvailable ? 1 : 0.5
                       } }
                     >
-                      <Text>{ eachSize }</Text>
+                      <Text numberOfLines={ 1 }>{ eachSize }</Text>
                       { !isSizeAvailable && (
                         <View
                           style={{
@@ -332,63 +316,14 @@ const ProductImagesAndColorsComponent: React.FC<IProps> = (props) => {
         </View>
       ) : (
         <View>
-          {/*==== Product Type and Status ====*/}
+          {/*==== Product Type & Title ====*/}
           <View className="h-auto w-full px-5 pt-5">
             <View className="h-auto w-full flex-row items-center justify-start space-x-3">
               <Text className="px-[8px] py-1.5 font-montserratMedium text-xs rounded-md self-start bg-white">{ FormatWords.productGroupLabel(product?.categories?.productGroup, product?.productType) }</Text>
-              <View className={`px-3 py-1 flex items-center justify-center rounded-md border backdrop-blur-lg ${
-                product.status === "live" 
-                ? "border-green-300 bg-green-50" 
-                : product.status === "draft"
-                ? "border-blue-300 bg-blue-50"
-                : product.status === "under review"
-                ? "border-orange/30 bg-orange/10"
-                : "border-red-300 bg-red-50"
-              }`}>
-                <Text className={`font-montserratMedium text-xs ${
-                    product.status === "live" 
-                    ? "text-green-600" 
-                    : product.status === "draft"
-                    ? "text-blue-600"
-                    : product.status === "under review"
-                    ? "text-orange-800"
-                    : "text-red-600"
-                  }`}>
-                  {product?.status ? product.status.charAt(0).toUpperCase() + product.status.slice(1) : "N/A"}
-                </Text>
-              </View>
             </View>
             <Text className="mt-2 font-montserratMedium text-[23px] text-baseGreen">{ product?.title! }</Text>    
           </View>
 
-          {/*==== Product Stocks Count ====*/}
-          <View className="mt-2 px-5">
-            <View className="mt-2.5 flex-row items-center space-x-3">
-              <View className="flex-row items-center">
-                <Star1 color="#E4A01C" size={18} variant="Bold" className="mr-0.5" />
-                <Text className="font-montserratMedium text-blue-600">
-                  { reviewAndRating?.averageRating?.toFixed(1) ?? '0.0' }
-                </Text>
-                <Text className="ml-1 font-montserratMedium text-xs text-black">({ reviewAndRating?.reviews!.length } { reviewAndRating?.reviews!.length > 1 ? "reviews" : "review" })</Text>
-              </View>
-
-              <View className="flex-row items-center">
-                <Text className={`font-montserratMedium ${ (product?.variations?.[0]?.quantity ?? 0) >= 10 ? "text-green-600" : "text-red-600" }`}>{ product?.variations?.[0]?.quantity ?? 0 }</Text>
-                <Text className="ml-1 font-montserratMedium text-xs text-black">In stock</Text>
-              </View>
-
-              <View className="flex-row items-center">
-                <Text className="font-montserratMedium text-gold">{ 0 }</Text>
-                <Text className="ml-1 font-montserratMedium text-xs text-black">Sold</Text>
-              </View>
-
-              <View className="flex-row items-center">
-                <Text className="font-montserratMedium text-green-600">{ productPromotion?.discount?.fixedPercentage! ? productPromotion?.discount?.fixedPercentage! : 0 }</Text>
-                <Text className="ml-[1px] font-montserratMedium text-xs text-black">% Discount</Text>
-              </View>
-            </View>
-          </View>
-          
           {/* ==== Hero Image ==== */}
           <View className="mt-3 px-5">
             <View className="h-auto w-full p-2 rounded-xl border border-gray-200 bg-[#EDEFF4]">

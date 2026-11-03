@@ -11,6 +11,7 @@ interface IProductDetails {
     currentStep?:      number;
     description?:      string;
     sizes?:            string[];
+    sizeStandard?:     string;
     postedBy?:         By;
     shop?:             Shop;
     colors?:           IColor[];

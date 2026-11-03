@@ -20,10 +20,21 @@ const profileAPI = rootAPI.injectEndpoints({
                 return response.data;
             },
         }),
+
+        updateUserProfilePic: builder.mutation<IUser, FormData>({
+            query: (formData) => ({
+                url: "/user/update/profilePic",
+                method: "PUT",
+                body: formData,
+            }),
+            invalidatesTags: ["user"],
+            transformResponse: (response: { data: IUser }) => response.data,
+        }),
     }),
 });
 
 export const {
     useUpdateUserDetailsMutation,
+    useUpdateUserProfilePicMutation,
 } = profileAPI;
 export default profileAPI;

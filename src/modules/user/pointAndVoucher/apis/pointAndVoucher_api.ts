@@ -1,5 +1,5 @@
 import rootAPI from "../../../../redux/api/rootAPI";
-import { convertPointsRoute, getActiveVouchersRoute, getInactiveVouchersRoute, getPointsRoute, getVoucherByCodeRoute } from "../../../../redux/api/api_route";
+import { applyVoucherRoute, convertPointsRoute, getActiveVouchersRoute, getInactiveVouchersRoute, getPointsRoute, getVoucherByCodeRoute, removeVoucherRoute } from "../../../../redux/api/api_route";
 import IPoint from "../models/point_model";
 import IVoucher from "../models/voucher_model";
 
@@ -56,6 +56,26 @@ const pointAndVoucherAPI = rootAPI.injectEndpoints({
             },
         }),
 
+        // Apply a voucher to the basket
+        applyVoucher: builder.mutation<unknown, { code: string }>({
+            query: ({ code }) => ({
+                url: applyVoucherRoute,
+                method: "PUT",
+                body: { code },
+            }),
+            invalidatesTags: ["Cart", "OrderSummary", "Vouchers", "Points"],
+        }),
+
+        // Remove the applied voucher from the basket
+        removeVoucher: builder.mutation<unknown, void>({
+            query: () => ({
+                url: removeVoucherRoute,
+                method: "PUT",
+                body: {},
+            }),
+            invalidatesTags: ["Cart", "OrderSummary", "Vouchers", "Points"],
+        }),
+
         // Convert points to vouchers
         convertPoints: builder.mutation<IVoucher, { points: number }>({
             query: ({ points }) => ({
@@ -78,6 +98,8 @@ export const {
     useLazyGetInactiveVouchersQuery,
     useLazyGetVoucherByCodeQuery,
     useConvertPointsMutation,
+    useApplyVoucherMutation,
+    useRemoveVoucherMutation,
 } = pointAndVoucherAPI;
 
 export default pointAndVoucherAPI;

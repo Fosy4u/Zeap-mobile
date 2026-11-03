@@ -17,6 +17,8 @@ import ShopSetupScreen from "../modules/vendor/setting/screen/shopSetup_screen";
 import HomeScreen from '../modules/user/home/screens/home_screen';
 import CategoryScreen from '../modules/user/products/screens/allCategory_screen.tsx';
 import ProductListScreen from '../modules/user/products/screens/productList_screen .tsx';
+import BrandsScreen from '../modules/user/products/screens/brands_screen.tsx';
+import SalesScreen from '../modules/user/products/screens/sales_screen.tsx';
 import InviteFriendScreen from '../modules/user/home/screens/inviteFriend_screen ';
 import ProductDetailScreen from '../modules/user/products/screens/productDetails_screen.tsx';
 import MeasurementScreen from '../modules/user/measurements/screens/measurement_screen.tsx';
@@ -30,7 +32,11 @@ import VendorDocumentUploadScreen from '../modules/vendor/general/screens/vendor
 import ShopInformationScreen from '../modules/vendor/general/screens/shopInformation_screen';
 import BankDetailsScreen from '../modules/vendor/general/screens/bankDetails_screen';
 import ShopDocumentsScreen from '../modules/vendor/general/screens/shopDocuments_screen';
+import PoliciesScreen from '../modules/vendor/general/screens/policies_screen';
 import ContactSupportScreen from '../modules/general/screens/contactSupport_screen';
+import WebViewScreen from '../modules/general/screens/webView_screen';
+import HelpCenterScreen from '../modules/general/screens/helpCenter_screen';
+import HelpArticleScreen from '../modules/general/screens/helpArticle_screen';
 import VendorNotificationsScreen from '../modules/notifications/screens/notifications_screen';
 import ReviewListScreen from '../modules/general/screens/reviewList_screen.tsx';
 import PersonalInformationScreen from '../modules/profile/screens/personalInformation_screen.tsx';
@@ -57,6 +63,7 @@ import PromotionScreen from '../modules/vendor/products/screens/promotion_screen
 import UserOrdersScreen from '../modules/user/orders/screens/orders_screen';
 import UserOrderDetailsScreen from '../modules/user/orders/screens/orderDetails_screen';
 import ReceiptScreen from '../modules/user/orders/screens/receipt_screen';
+import OrderItemDetailsScreen from '../modules/user/orders/screens/orderItemDetails_screen';
 import AddressScreen from '../modules/user/address/screens/address_screen.tsx';
 import CheckoutScreen from '../modules/user/cart/screens/checkout_screen.tsx';
 import SettingsScreen from '../modules/settings/screens/settings_screen.tsx';
@@ -120,6 +127,8 @@ const AppRoutes = () => {
         {/* ==== Product ==== */}
         <Stack.Screen name="allCategoryScreen" component={CategoryScreen} options={{ headerShown: false }} />
         <Stack.Screen name="productListScreen" component={ProductListScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="brandsScreen" component={BrandsScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="salesScreen" component={SalesScreen} options={{ headerShown: false }} />
         <Stack.Screen name="productDetailScreen" component={ProductDetailScreen} options={{ headerShown: false }} />
         <Stack.Screen name="reviewListScreen" component={ReviewListScreen} options={{ headerShown: false }} />
         <Stack.Screen name="searchItemScreen" component={SearchItemScreen} options={{ headerShown: false }} />
@@ -176,6 +185,7 @@ const AppRoutes = () => {
         <Stack.Screen name="ordersScreen" component={UserOrdersScreen} options={{ headerShown: false }} />
         <Stack.Screen name="orderDetailsScreen" component={UserOrderDetailsScreen} options={{ headerShown: false }} />
         <Stack.Screen name="receiptScreen" component={ReceiptScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="orderItemDetailsScreen" component={OrderItemDetailsScreen} options={{ headerShown: false }} />
 
         {/* ==== Home ==== */}
         <Stack.Screen
@@ -195,6 +205,15 @@ const AppRoutes = () => {
         />
         <Stack.Screen
           name="contactSupportScreen" component={ContactSupportScreen} options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="webViewScreen" component={WebViewScreen} options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="helpCenterScreen" component={HelpCenterScreen} options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="helpArticleScreen" component={HelpArticleScreen} options={{ headerShown: false }}
         />
         {/* <Stack.Screen
           name="vendorDashboardScreen" component={VendorDashboardScreen} options={{ headerShown: false }}
@@ -249,6 +268,9 @@ const AppRoutes = () => {
         />
         <Stack.Screen
           name="shopDocumentsScreen" component={ShopDocumentsScreen} options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="policiesScreen" component={PoliciesScreen} options={{ headerShown: false }}
         />
 
         {/* ==== Others ==== */}
