@@ -21,7 +21,7 @@ const useVendorHomeHook = () => {
                 dispatch(setShop(shop));
             }
         } catch (error) {
-            console.log("ERROR::: ", error);
+
         };
     };
 
@@ -104,7 +104,7 @@ const useVendorHomeHook = () => {
             dispatch(setSalesCountPieData(salesCount));
             dispatch(setSalesRevenuePieData(salesRevenue));
         } catch (error) {
-            console.log("ERRORING::: ", error);
+
         };
     };
 

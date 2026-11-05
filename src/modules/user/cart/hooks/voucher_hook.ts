@@ -6,6 +6,7 @@ import handleError from "../../../general/hooks/errorHandler_hook";
 import { useApplyVoucherMutation, useRemoveVoucherMutation } from "../../pointAndVoucher/apis/pointAndVoucher_api";
 import { useLazyGetCartQuery, useLazyGetOrderSummaryQuery } from "../apis/cart_api";
 import { setCart, setOrderSummary } from "../slices/cart_slice";
+import normalizeDeliveryCountry from "../../../../utils/normalizeDeliveryCountry";
 
 const useVoucherHook = () => {
     const { cart, selectedDeliveryFee } = useSelector((state: RootState) => state.cartState);
@@ -31,7 +32,7 @@ const useVoucherHook = () => {
 
     const refreshBasketTotals = async () => {
         const requestParams = {
-            country: selectedAddress?.country || "Nigeria",
+            country: normalizeDeliveryCountry(selectedAddress?.country) || "Nigeria",
             method: selectedDeliveryFee?.method || "standard",
         };
 

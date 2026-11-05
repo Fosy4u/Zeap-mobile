@@ -21,8 +21,10 @@ import usePaymentHook from '../../payment/hooks/payment_hook.ts';
 import useDisplayCurrency from '../../../general/hooks/displayCurrency_hook.ts';
 import OrderSuccessPopupModal from '../../payment/modals/orderSuccessPopup_modal.tsx';
 import useVoucherHook from '../hooks/voucher_hook.ts';
+import useScreenProtection from '../../../general/hooks/screenProtection_hook';
 
 const CheckoutScreen = () => {
+  useScreenProtection();
   const { orderSummary, selectedDeliveryFee, isLoading: isCartLoading, loadingMessage: cartLoadingMessage } = useSelector((state: RootState) => state.cartState);
   const { selectedAddress, saveAddressForNextTime, isLoading: isAddressLoading, loadingMessage: addressLoadingMessage } = useSelector((state: RootState) => state.addressState);
   const { cart } = useSelector((state: RootState) => state.cartState);

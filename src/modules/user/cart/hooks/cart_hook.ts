@@ -7,6 +7,7 @@ import IDeliveryDate from "../models/deliveryDate_model";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import RootNavigationStackModel from "../../../../routes/model/routes_model";
+import normalizeDeliveryCountry from "../../../../utils/normalizeDeliveryCountry";
 
 
 const useCartHook = () => {
@@ -88,7 +89,7 @@ const useCartHook = () => {
 
     const handleGetDeliveryMethod = async () => {
         const requestParams = {
-            country: selectedAddress?.country || "Nigeria",
+            country: normalizeDeliveryCountry(selectedAddress?.country) || "Nigeria",
         };
 
         try {
@@ -105,7 +106,7 @@ const useCartHook = () => {
 
     const handleGetOderSummary = async () => {
         const requestParams = {
-            country: selectedAddress?.country || "Nigeria",
+            country: normalizeDeliveryCountry(selectedAddress?.country) || "Nigeria",
             method: selectedDeliveryFee?.method || "standard",
         };
 
@@ -123,7 +124,7 @@ const useCartHook = () => {
 
     const handleGetDeliveryDate = async () => {
         const requestParams = {
-            country: selectedAddress?.country || "Nigeria",
+            country: normalizeDeliveryCountry(selectedAddress?.country) || "Nigeria",
             method: selectedDeliveryFee?.method || "standard",
         };
 

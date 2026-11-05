@@ -12,6 +12,7 @@ import MeasurementSkeletonLoader from '../components/measurementSkeletonLoader_c
 import useMeasurementHook from '../hooks/measurement_hook';
 import { setSelectedMeasurementTemplate } from '../slices/measurement_slice';
 import IBodyMeasurement from '../models/bodyMeasurement_model';
+import useScreenProtection from '../../../general/hooks/screenProtection_hook';
 
 const titleCase = (value?: string | null) => {
     if (!value) return "";
@@ -25,6 +26,7 @@ const flattenMeasurements = (template?: IBodyMeasurement): any[] => {
 };
 
 const SavedMeasurementsScreen = () => {
+    useScreenProtection();
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const dispatch = useDispatch();
     const { allSavedMeasurements, isLoading } = useSelector((state: RootState) => state.measurementState);

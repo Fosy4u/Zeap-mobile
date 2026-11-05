@@ -36,6 +36,7 @@ import StepNineComponent from "../components/vendorOnboarding/stepNine_component
 
 import OnboardingPickerModal, { IPickerOption } from "../components/vendorOnboarding/onboardingPicker_modal";
 import phoneCodes from "../../../../utils/countriesPhoneCodes.json";
+import useScreenProtection from "../../../general/hooks/screenProtection_hook";
 
 interface IPhoneCode {
     name: string;
@@ -56,6 +57,7 @@ const REFERRAL_OPTIONS: IPickerOption[] = [
 ];
 
 const VendorRegistrationScreen = () => {
+    useScreenProtection();
     const {
         selectedStep,
         isSubmitting,

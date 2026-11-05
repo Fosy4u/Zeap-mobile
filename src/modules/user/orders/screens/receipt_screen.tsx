@@ -1,7 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, SafeAreaView, StatusBar, TouchableOpacity, ScrollView, Image, Alert, Platform, PermissionsAndroid } from 'react-native';
-import { captureRef } from 'react-native-view-shot';
-import { CameraRoll } from '@react-native-camera-roll/camera-roll';
+import React, { useEffect, useState } from 'react';
+import { View, Text, SafeAreaView, StatusBar, TouchableOpacity, ScrollView, Image, Alert } from 'react-native';
 import { RouteProp, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useDispatch, useSelector } from 'react-redux';
@@ -16,6 +14,7 @@ import IOrderDetails from '../models/orderDetails_model';
 import { setOrderDetails } from '../slices/order_slice';
 import buildReceiptPdfBase64 from '../utils/receiptPdf';
 import useDisplayCurrency from '../../../general/hooks/displayCurrency_hook';
+import useScreenProtection from '../../../general/hooks/screenProtection_hook';
 
 interface IProps {
     route: RouteProp<RootNavigationStackModel, 'receiptScreen'>;
@@ -29,6 +28,7 @@ const formatReceiptDate = (input?: Date | string): string => {
 };
 
 const ReceiptScreen: React.FC<IProps> = ({ route }) => {
+    useScreenProtection();
     const orderId = route.params.orderId;
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const dispatch = useDispatch();
@@ -36,7 +36,6 @@ const ReceiptScreen: React.FC<IProps> = ({ route }) => {
     const { handleGetOrderDetails } = useOrderHook();
     const { resolveCurrency } = useDisplayCurrency();
     const [isPreparingReceipt, setIsPreparingReceipt] = useState(false);
-    const receiptCardRef = useRef<View>(null);
 
     useEffect(() => {
         if (!orderId) return;
@@ -75,54 +74,24 @@ const ReceiptScreen: React.FC<IProps> = ({ route }) => {
         return message.includes("cancel") || message.includes("dismiss");
     };
 
-    const ensureAndroidSavePermission = async (): Promise<boolean> => {
-        if (Platform.OS !== "android" || Number(Platform.Version) >= 29) { return true; }
-
-        const granted = await PermissionsAndroid.request(
-            PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-            {
-                title: "Save receipt",
-                message: "Zeaper needs access to your storage to save this receipt.",
-                buttonNegative: "Cancel",
-                buttonPositive: "OK",
-            },
-        );
-        return granted === PermissionsAndroid.RESULTS.GRANTED;
-    };
-
     const handleDownloadReceipt = async () => {
         setIsPreparingReceipt(true);
         try {
-            if (!(await ensureAndroidSavePermission())) {
-                Alert.alert("Receipt", "Storage permission is needed to save the receipt.");
+            const base64 = await buildReceiptPdf();
+            if (!base64) {
+                Alert.alert("Receipt", "Could not prepare the receipt. Please try again.");
                 return;
             }
-
-            const uri = await captureRef(receiptCardRef, {
-                format: "png",
-                quality: 1,
-                result: "tmpfile",
-                fileName: buildFileName(),
-            });
-
-            await CameraRoll.saveAsset(uri, { type: "photo", album: "Zeaper" });
-
-            Alert.alert(
-                "Receipt saved",
-                Platform.OS === "ios"
-                    ? "The receipt image is in your Photos, in the Zeaper album."
-                    : "The receipt image is in your Gallery, in the Zeaper album.",
-            );
+            await openShareSheet(base64, true);
         } catch (error: any) {
             if (wasDismissed(error)) { return; }
-            console.log("RECEIPT DOWNLOAD ERROR::: ", error);
+
             Alert.alert("Receipt", "Could not save the receipt. Please try again.");
         } finally {
             setIsPreparingReceipt(false);
         }
     };
 
-    // Share: always the OS share sheet (WhatsApp, Gmail, Drive, …).
     const handleShareReceipt = async () => {
         setIsPreparingReceipt(true);
         try {
@@ -134,7 +103,7 @@ const ReceiptScreen: React.FC<IProps> = ({ route }) => {
             await openShareSheet(base64, false);
         } catch (error: any) {
             if (wasDismissed(error)) { return; }
-            console.log("RECEIPT SHARE ERROR::: ", error);
+
             Alert.alert("Receipt", "Could not open the share sheet. Please try again.");
         } finally {
             setIsPreparingReceipt(false);
@@ -161,8 +130,6 @@ const ReceiptScreen: React.FC<IProps> = ({ route }) => {
                     <ReceiptSkeletonLoader />
                 ) : (
                 <View
-                    ref={ receiptCardRef }
-                    collapsable={ false }
                     className="mx-5 mt-3 px-5 py-5 rounded-xl bg-white"
                 >
                     {/*==== Brand / contact ====*/}

@@ -43,19 +43,17 @@ const useStepOneHook = () => {
                 shopId: data.shopId,
                 currentStep: product?.currentStep! || 1,
             };
-            console.log("REQUEST DATA::: ", requestData);
 
             let createProductResponseData: IVendorProductDetails | undefined;
             if (productMode === "New") {
-                console.log("ADDING BESPOKE SHOES");
+
                 dispatch(setLoadingMessage("Saving basic details..."));
                 createProductResponseData = await createProduct(requestData).unwrap();
             } else {
-                console.log("UPDATING BESPOKE SHOES");
+
                 dispatch(setLoadingMessage("Updating basic details..."));
                 createProductResponseData = await updateProduct(requestData).unwrap();
             }
-            console.log("RESPONSE::: ", createProductResponseData);
 
             if (createProductResponseData) {
                 dispatch(setProduct(createProductResponseData));

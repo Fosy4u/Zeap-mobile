@@ -1,30 +1,13 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ArrowLeft } from 'iconsax-react-native';
-import { SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View, Switch } from 'react-native';
+import { SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View, Linking } from 'react-native';
 import RootNavigationStackModel from '../../../routes/model/routes_model';
 
 const NotificationSettingsScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
   
-  const [notificationSettings, setNotificationSettings] = useState({
-    generalNotification: true,
-    sound: true,
-    payments: false,
-    completeOrder: false,
-    appUpdates: false,
-    newServiceAvailable: true,
-    newTipsAvailable: true,
-  });
-
-  const handleToggle = (key: keyof typeof notificationSettings) => {
-    setNotificationSettings(prev => ({
-      ...prev,
-      [key]: !prev[key]
-    }));
-  };
-    
   return (
     <SafeAreaView className="h-full w-full flex-1 bg-white">
       <StatusBar
@@ -46,47 +29,10 @@ const NotificationSettingsScreen = () => {
       {/*==== Content ====*/}
       <ScrollView showsVerticalScrollIndicator={ false }>
         <View className="px-5 pt-5 pb-20">
-          <NotificationSettingItem
-            title="General notification"
-            value={notificationSettings.generalNotification}
-            onValueChange={() => handleToggle('generalNotification')}
-          />
-          
-          <NotificationSettingItem
-            title="Sound"
-            value={notificationSettings.sound}
-            onValueChange={() => handleToggle('sound')}
-          />
-          
-          <NotificationSettingItem
-            title="Payments"
-            value={notificationSettings.payments}
-            onValueChange={() => handleToggle('payments')}
-          />
-          
-          <NotificationSettingItem
-            title="Complete order"
-            value={notificationSettings.completeOrder}
-            onValueChange={() => handleToggle('completeOrder')}
-          />
-          
-          <NotificationSettingItem
-            title="App updates"
-            value={notificationSettings.appUpdates}
-            onValueChange={() => handleToggle('appUpdates')}
-          />
-          
-          <NotificationSettingItem
-            title="New service available"
-            value={notificationSettings.newServiceAvailable}
-            onValueChange={() => handleToggle('newServiceAvailable')}
-          />
-          
-          <NotificationSettingItem
-            title="New tips available"
-            value={notificationSettings.newTipsAvailable}
-            onValueChange={() => handleToggle('newTipsAvailable')}
-          />
+          <Text className="text-base text-gray-800">Manage notification permissions and sounds in your device settings.</Text>
+          <TouchableOpacity onPress={() => { void Linking.openSettings(); }} className="mt-5">
+            <Text className="text-base text-baseGreen">Open device settings</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -94,26 +40,3 @@ const NotificationSettingsScreen = () => {
 }
 
 export default NotificationSettingsScreen;
-
-interface INotificationSettingItemProps {
-  title: string;
-  value: boolean;
-  onValueChange: (value: boolean) => void;
-}
-
-const NotificationSettingItem = (props: INotificationSettingItemProps) => {
-  const { title, value, onValueChange } = props;
-  
-  return (
-    <View className="h-auto w-full mb-4 flex-row items-center justify-between py-3">
-      <Text className="font-montserratMedium text-base text-gray-800">{title}</Text>
-      <Switch
-        value={value}
-        onValueChange={onValueChange}
-        trackColor={{ false: '#E5E7EB', true: '#133522' }}
-        thumbColor={value ? '#FFFFFF' : '#FFFFFF'}
-        ios_backgroundColor="#E5E7EB"
-      />
-    </View>
-  );
-}; 

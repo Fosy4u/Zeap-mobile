@@ -18,7 +18,6 @@ const AppBottomBarComponent = ({ state, descriptors, navigation }: { state: any,
           const isFocused = state.index === index;
 
           const onPress = () => {
-            // canPreventDefault: true is required for the emitted event to
             const event = navigation.emit({
               type: 'tabPress',
               target: route.key,

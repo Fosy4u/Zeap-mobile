@@ -20,12 +20,14 @@ import CancelOrderPopupModal from '../modals/cancelOrderPopup_modal';
 import useDisplayCurrency from '../../../general/hooks/displayCurrency_hook';
 import ColorSwatchComponent from '../../../general/components/colorSwatch_component';
 import AppStatusBar from "../../../general/components/appStatusBar";
+import useScreenProtection from '../../../general/hooks/screenProtection_hook';
 
 interface IProps {
     route: RouteProp<RootNavigationStackModel, 'orderDetailsScreen'>;
 };
 
 const OrderDetailsScreen: React.FC<IProps> = ({ route }) => {
+    useScreenProtection();
     const { orderDetails, isLoading, showCancelOrderModal } = useSelector((state: RootState) => state.orderState);
     const { formatPrice, pickAmount, formatAmount, currencyRefreshToken } = useDisplayCurrency();
     const productOrders = orderDetails?.productOrders ?? [];

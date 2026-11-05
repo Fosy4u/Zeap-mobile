@@ -9,6 +9,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import RootNavigationStackModel from '../../../routes/model/routes_model';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../redux/store/store';
+import useScreenProtection from '../../general/hooks/screenProtection_hook';
 
 const display = (value: any): string => {
     if (value === null || value === undefined) return "N/A";
@@ -17,6 +18,7 @@ const display = (value: any): string => {
 };
 
 const PersonalInformationScreen = () => {
+    useScreenProtection();
     const { userData } = useSelector((state: RootState) => state.profileState );
     const { deliveryAddresses } = useSelector((state: RootState) => state.addressState);
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();

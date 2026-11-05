@@ -1,76 +1,29 @@
 import { getAuth, getIdToken, onAuthStateChanged } from '@react-native-firebase/auth';
-import EncryptedStorage from 'react-native-encrypted-storage';
+import { captureSession, isCurrentSession } from './session';
 import { forgetSecureItem } from '../../utils/secureStorage';
 
-const TOKEN_KEY = 'auth_token';
-let lastStoredToken: string | null = null;
-
-const waitForAuthRestore = (timeoutMs: number): Promise<any> => {
-    const auth = getAuth();
-    if (auth.currentUser) return Promise.resolve(auth.currentUser);
-    return new Promise((resolve) => {
-        let settled = false;
-        const finish = (value: any) => {
-            if (settled) return;
-            settled = true;
-            try { unsubscribe(); } catch {}
-            clearTimeout(timer);
-            resolve(value);
-        };
-        const unsubscribe = onAuthStateChanged(auth, (user: any) => finish(user ?? null));
-        const timer = setTimeout(() => finish(null), timeoutMs);
+export const waitForAuthRestore = (): Promise<any> => new Promise(resolve => {
+    let unsubscribe: (() => void) | undefined;
+    unsubscribe = onAuthStateChanged(getAuth(), user => {
+        resolve(user);
+        Promise.resolve().then(() => unsubscribe?.());
     });
-};
-
+});
 const AuthorizationHeader = async (headers: Headers): Promise<Headers> => {
-    try {
-        let currentUser = getAuth().currentUser;
-        if (!currentUser) {
-            currentUser = await waitForAuthRestore(3000);
-        }
-
-        let token: string;
-        if (currentUser) {
-            token = await getIdToken(currentUser);
-
-            if (token !== lastStoredToken) {
-                lastStoredToken = token;
-                storeToken(token).catch(() => {});
-            }
-        } else {
-            throw new Error('No authentication token available');
-        }
-
-        headers.set('Authorization', `Bearer ${token}`);
-        headers.set('Accept', 'application/json');
-
-        return headers;
-    } catch (error) {
-        throw new Error('Failed to set authorization headers');
-    }
+    const session = captureSession();
+    const user = getAuth().currentUser;
+    if (!user || !isCurrentSession(session)) throw new Error('Session unavailable');
+    const token = await getIdToken(user);
+    if (!isCurrentSession(session)) throw new Error('Session changed');
+    headers.set('Authorization', `Bearer ${token}`);
+    headers.set('Accept', 'application/json');
+    return headers;
 };
-
-const storeToken = async (token: string): Promise<void> => {
-    try {
-        await EncryptedStorage.setItem(TOKEN_KEY, JSON.stringify(token));
-    } catch (error) {
-        throw new Error('Failed to store token');
-    }
-};
-
+const storeToken = async (_token: string): Promise<void> => {};
 const getToken = async (): Promise<string | null> => {
-    try {
-        const token = await EncryptedStorage.getItem(TOKEN_KEY);
-        return token ? JSON.parse(token) : null;
-    } catch (error) {
-        throw new Error('Failed to get token');
-    }
+    const user = getAuth().currentUser;
+    return user ? getIdToken(user) : null;
 };
-
-const clearToken = async (): Promise<void> => {
-    lastStoredToken = null;
-    await forgetSecureItem(TOKEN_KEY);
-};
-
+const clearToken = () => forgetSecureItem('auth_token');
 export { storeToken, getToken, clearToken };
 export default AuthorizationHeader;

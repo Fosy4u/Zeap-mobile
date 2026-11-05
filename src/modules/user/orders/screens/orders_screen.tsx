@@ -19,7 +19,8 @@ import useDisplayCurrency from '../../../general/hooks/displayCurrency_hook';
 import AppStatusBar from "../../../general/components/appStatusBar";
 
 const OrdersScreen: React.FC = () => {   
-    const { filteredOrders, isLoading } = useSelector((state: RootState) => state.orderState);
+    const { filteredOrders, orderStatusFilter, isLoading } = useSelector((state: RootState) => state.orderState);
+    const isStatusFiltered = !!orderStatusFilter && orderStatusFilter.toLowerCase() !== "all";
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
 
     const { handleGetOrders } = useOrderHook();
@@ -179,7 +180,11 @@ const OrdersScreen: React.FC = () => {
                         />
                     ) : (
                         <View className="px-5 flex-1 items-center py-8">
-                            <EmptyListComponent message="orderered products yet." />
+                            { isStatusFiltered ? (
+                                <EmptyListComponent standalone message={ `No ${ orderStatusFilter.toLowerCase() } orders.` } />
+                            ) : (
+                                <EmptyListComponent message="ordered products yet." />
+                            ) }
                         </View>
                     ) }
 

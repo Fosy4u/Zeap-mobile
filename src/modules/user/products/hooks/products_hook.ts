@@ -241,10 +241,7 @@ const useProductsHook = () => {
                 throw new Error(`Unsupported product type: ${productType}`);
             }
 
-            console.log("REQUEST DATA::: ", requestData);
-
             const addProductResponse = await addProductToCart(requestData).unwrap();
-            console.log("ADD PRODUCT RESPONSE::: ", addProductResponse);
 
             if (addProductResponse) {
                 dispatch(showAppToast({ title: "Congratulations", message: `You have successfully added ${ selectedQuantity } ${ selectedQuantity === 1 ? "item" : "items" } to your cart` }));

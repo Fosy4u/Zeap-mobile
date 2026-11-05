@@ -129,7 +129,7 @@ const useStepThreeHook = () => {
             }
 
             Alert.alert("Error", errorMessage);
-            console.log("Error: ", errorMessage);
+
         };
     };
 
@@ -144,7 +144,7 @@ const useStepThreeHook = () => {
                 setAdditionalMeasurementNote((responseData as any).additionalMeasurementNote ?? "");
             }
         } catch (error) {
-            console.log("BODY MEASUREMENTS ERROR::: ", error);
+
         }
     };
 
@@ -166,14 +166,13 @@ const useStepThreeHook = () => {
             });
             setMeasurementGuides(guidesByGender);
         } catch (error) {
-            console.log("MEASUREMENT GUIDE ERROR::: ", error);
+
         } finally {
             setIsLoadingMeasurements(false);
             setHasLoadedGuides(true);
         }
     };
 
-    // handleSelectMeasurementField: format the measurements and append to the formattedMeasurements array.
     const handleSelectMeasurementField = (
         selectedValue: boolean,
         measurementName: string,

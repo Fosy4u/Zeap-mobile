@@ -5,7 +5,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { getAuth, getIdToken, GoogleAuthProvider, signInWithCredential, signInWithEmailAndPassword } from "@react-native-firebase/auth";
-import EncryptedStorage from "react-native-encrypted-storage";
+import EncryptedStorage from "../../../utils/sessionStorage";
 import { forgetSecureItem } from "../../../utils/secureStorage";
 import { GoogleSignin, statusCodes } from "@react-native-google-signin/google-signin";
 import { IRegisterUser, registerUserSchema } from "../validations/auths_validation";
@@ -201,7 +201,7 @@ const useRegisterHook = () => {
                 await GoogleSignin.signOut();
             }
         } catch (error) {
-            console.warn("[GoogleSignUp] clearGoogleSessionIfNeeded failed:", error);
+
         }
     };
 
@@ -244,7 +244,7 @@ const useRegisterHook = () => {
                 try {
                     await registerGuestUser({}).unwrap();
                 } catch (createErr: any) {
-                    console.warn("[GoogleSignUp] registerGuestUser failed, attempting refetch:", createErr?.status, createErr?.data);
+
                 }
                 userData = await getUserById(uid).unwrap();
             }
@@ -266,7 +266,7 @@ const useRegisterHook = () => {
             userData = normalizeGoogleUserData(userData, authUser);
 
             await EncryptedStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(userData));
-            console.log("[GoogleSignUp] USER DATA:", JSON.stringify(userData, null, 2));
+
             dispatch(setUserData(userData));
 
             redirectAfterAuth();
@@ -275,7 +275,7 @@ const useRegisterHook = () => {
             if (code === statusCodes.SIGN_IN_CANCELLED || code === statusCodes.IN_PROGRESS) {
                 return;
             }
-            console.error("[GoogleSignUp] register failed:", code, error?.message, error);
+
             handleError(error);
         } finally {
             setIsGoogleLoading(false);

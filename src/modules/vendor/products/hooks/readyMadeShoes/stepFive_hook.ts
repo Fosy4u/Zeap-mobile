@@ -83,15 +83,12 @@ const useStepFiveHook = () => {
 
             // Validate variations data
             const requestData = await stepFiveAddReadyMadeShoesSchema.validate(variationsData);
-            console.log("VARIATIONS DATA: ", requestData);
-            
+
             const addProductVariationResponseData = await addProductVariation(requestData).unwrap();
-            console.log("RESPONSE: ", addProductVariationResponseData);
 
             if (addProductVariationResponseData) {
                 // Get the updated product data
                 const updatedProduct = await getProductByProductID(productId).unwrap();
-                console.log("UPDATED PRODUCT::: ", updatedProduct);
 
                 if (updatedProduct) {
                     dispatch(setProduct(updatedProduct));
@@ -130,10 +127,8 @@ const useStepFiveHook = () => {
 
             // Validate variations data
             const requestData = await stepFiveAddReadyMadeShoesSchema.validate(variationsData);
-            console.log("VARIATIONS DATA: ", requestData);
-            
+
             const addProductVariationResponseData = await updateProductVariation(requestData).unwrap();
-            console.log("RESPONSE: ", addProductVariationResponseData);
 
             if (addProductVariationResponseData) {
                 // Clear the variations form
@@ -144,7 +139,6 @@ const useStepFiveHook = () => {
                 
                 // Get the updated product data
                 const updatedProduct = await getProductByProductID(productId).unwrap();
-                console.log("UPDATED PRODUCT::: ", updatedProduct);
 
                 if (updatedProduct) {
                     dispatch(setProduct(updatedProduct));
@@ -172,18 +166,15 @@ const useStepFiveHook = () => {
                 sku: variation.sku,
                 currentStep: 5,
             };
-            console.log("REQUEST DATA: ", requestData);
-            
+
             const deleteProductVariationResponseData = await deleteProductVariation(requestData).unwrap();
-            console.log("DELETE PRODUCT VARIATION RESPONSE: ", deleteProductVariationResponseData);
-            
+
             if (deleteProductVariationResponseData) {
                 dispatch(setLoadingMessage("Getting product details..."));
                 
                 // Get the updated product data
                 const updatedProduct = await getProductByProductID(productId).unwrap();
-                console.log("UPDATED PRODUCT::: ", updatedProduct);
-                
+
                 if (updatedProduct) {
                     dispatch(setProduct(updatedProduct));
                     dispatch(setProductIsLoading(false));

@@ -71,7 +71,6 @@ const useStepThreeHook = () => {
             // console.log("REQUEST DATA::: ", validatedRequestData);
 
             const updateWithBodyMeasurementsResponseData = await updateWithBodyMeasurements(validatedRequestData).unwrap();
-            console.log("RESPONSE::: ", updateWithBodyMeasurementsResponseData);
 
             if (updateWithBodyMeasurementsResponseData) {
                 dispatch(setProductIsLoading(false));
@@ -94,8 +93,7 @@ const useStepThreeHook = () => {
             }
 
             Alert.alert("Error", errorMessage);
-            console.log("Error: ", errorMessage);
-            
+
         };
     };
 
@@ -148,7 +146,7 @@ const useStepThreeHook = () => {
             });
             setMeasurementGuides(guidesByGender);
         } catch (error) {
-            console.log("MEASUREMENT GUIDE ERROR::: ", error);
+
         } finally {
             setIsLoadingMeasurements(false);
             setHasLoadedGuides(true);
@@ -197,8 +195,7 @@ const useStepThreeHook = () => {
                     }
                 }
             }
-            
-            console.log("UPDATED MEASUREMENTS: ", updatedMeasurements);
+
             return updatedMeasurements;
         };
         

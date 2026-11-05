@@ -74,7 +74,7 @@ const useStepOneHook = () => {
                 error?.message ||
                 "Something went wrong saving the basic details. Please try again.";
             Alert.alert("Error", message);
-            console.log("STEP ONE SUBMIT ERROR::: ", error);
+
         }
     };
 

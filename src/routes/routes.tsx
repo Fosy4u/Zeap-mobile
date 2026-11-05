@@ -41,7 +41,6 @@ import VendorNotificationsScreen from '../modules/notifications/screens/notifica
 import ReviewListScreen from '../modules/general/screens/reviewList_screen.tsx';
 import PersonalInformationScreen from '../modules/profile/screens/personalInformation_screen.tsx';
 import EditAccountDetailsScreen from '../modules/profile/screens/editAccountDetails_screen.tsx';
-import EditDeliveryAddressScreen from '../modules/user/address/screens/editDeliveryAddress_screen.tsx';
 import PaymentScreen from '../modules/vendor/payments/screens/payment_screen';
 import OverviewScreen from '../modules/vendor/home/screens/overview_screen';
 import PromoScreen from '../modules/vendor/products/screens/promo_screen.tsx';
@@ -68,10 +67,8 @@ import AddressScreen from '../modules/user/address/screens/address_screen.tsx';
 import CheckoutScreen from '../modules/user/cart/screens/checkout_screen.tsx';
 import SettingsScreen from '../modules/settings/screens/settings_screen.tsx';
 import CurrencySettingsScreen from '../modules/settings/screens/currencySettings_screen.tsx';
-import LanguageSettingsScreen from '../modules/settings/screens/languageSettings_screen.tsx';
 import NotificationSettingsScreen from '../modules/settings/screens/notificationSettings_screen.tsx';
-import SecuritySettingsScreen from '../modules/settings/screens/securitySettings_screen.tsx';
-import ChangePasswordSettingsScreen from '../modules/settings/screens/changePasswordSettings_screen.tsx';
+import DeleteAccountScreen from '../modules/settings/screens/deleteAccount_screen.tsx';
 import UserDashboardScreen from '../modules/profile/screens/userDashboard_screen.tsx';
 import PointAndVoucherScreen from '../modules/user/pointAndVoucher/screens/pointAndVoucher_screen.tsx';
 import ReviewAndRatingScreen from '../modules/user/raviewAndRating/screens/reviewAndRating_screen.tsx';
@@ -160,9 +157,6 @@ const AppRoutes = () => {
         />
         <Stack.Screen
           name="editAccountDetailsScreen" component={EditAccountDetailsScreen} options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="editDeliveryAddressScreen" component={EditDeliveryAddressScreen} options={{ headerShown: false }}
         />
         <Stack.Screen
           name="userDashboardScreen" component={UserDashboardScreen} options={{ headerShown: false }}
@@ -279,11 +273,9 @@ const AppRoutes = () => {
 
         {/* ==== Settings ==== */}
         <Stack.Screen name="settingsScreen" component={SettingsScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="languageSettingsScreen" component={LanguageSettingsScreen} options={{ headerShown: false }} />
         <Stack.Screen name="currencySettingsScreen" component={CurrencySettingsScreen} options={{ headerShown: false }} />
         <Stack.Screen name="notificationSettingsScreen" component={NotificationSettingsScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="securitySettingsScreen" component={SecuritySettingsScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="changePasswordSettingsScreen" component={ChangePasswordSettingsScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="deleteAccountScreen" component={DeleteAccountScreen} options={{ headerShown: false }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

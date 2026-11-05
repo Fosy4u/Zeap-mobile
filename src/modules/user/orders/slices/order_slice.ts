@@ -10,6 +10,7 @@ const initialState: IOrderState = {
     orderDetails: {} as IOrderDetails,
     orders: [],
     filteredOrders: [],
+    orderStatusFilter: "All",
     orderHistory: {
         statusHistory: [],
         nextStatus: {
@@ -46,6 +47,9 @@ const orderSlice = createSlice({
         setFilteredOrders: (state: IOrderState, action: PayloadAction<IOrder[]>) => {
             state.filteredOrders = action.payload;
         },
+        setOrderStatusFilter: (state: IOrderState, action: PayloadAction<string>) => {
+            state.orderStatusFilter = action.payload;
+        },
         setOrderHistory: (state: IOrderState, action: PayloadAction<IOrderHistory>) => {
             state.orderHistory = action.payload;
         },
@@ -72,6 +76,7 @@ export const {
     setOrderDetails,
     setOrders,
     setFilteredOrders,
+    setOrderStatusFilter,
     setOrderHistory,
     setSelectedOrderStatus,
     setSelectedProductOrderID,

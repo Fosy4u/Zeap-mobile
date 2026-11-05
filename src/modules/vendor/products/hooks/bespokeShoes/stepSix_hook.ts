@@ -33,11 +33,8 @@ const useStepSixHook = (
                 adjustmentPercentage: Number(autoPricePercentage),
                 currentStep: 6,
             };
-            console.log("REQUEST DATA: ", autoPriceAdjustmentData);
-            
 
             const saveAutoPricePercentageResponseData = await saveAutoPricePercentage(autoPriceAdjustmentData).unwrap();
-            console.log("RESPONSE: ", saveAutoPricePercentageResponseData);
 
             if (saveAutoPricePercentageResponseData) {
                 setAutoPricePercentage(saveAutoPricePercentageResponseData.autoPriceAdjustment!.adjustmentPercentage!.toString());
@@ -48,7 +45,7 @@ const useStepSixHook = (
                 dispatch(setLoadingMessage(""));
             }
         } catch (error) {
-            console.log("ERROR: ", error);
+
             dispatch(setProductIsLoading(false));
             dispatch(setLoadingMessage(""));
             setShowPriceAdjustmentModal(false);
@@ -70,11 +67,8 @@ const useStepSixHook = (
                 adjustmentPercentage: 0,
                 currentStep: 6,
             };
-            console.log("REQUEST DATA: ", autoPriceAdjustmentData);
-            
 
             const saveAutoPricePercentageResponseData = await saveAutoPricePercentage(autoPriceAdjustmentData).unwrap();
-            console.log("RESPONSE: ", saveAutoPricePercentageResponseData);
 
             if (saveAutoPricePercentageResponseData) {
                 setAutoPricePercentage(saveAutoPricePercentageResponseData.autoPriceAdjustment!.adjustmentPercentage!.toString());
@@ -85,7 +79,7 @@ const useStepSixHook = (
                 dispatch(setLoadingMessage(""));
             }
         } catch (error) {
-            console.log("ERROR: ", error);
+
             dispatch(setProductIsLoading(false));
             dispatch(setLoadingMessage(""));
             setShowPriceAdjustmentModal(false);
@@ -104,10 +98,8 @@ const useStepSixHook = (
             const submitProductData = {
                 productId,
             };
-            console.log("REQUEST DATA: ", submitProductData);
 
             const submitProductResponseData = await submitProduct(submitProductData).unwrap();
-            console.log("RESPONSE: ", submitProductResponseData);
 
             if (submitProductResponseData) {
                 dispatch(setProduct(submitProductResponseData));
@@ -117,7 +109,7 @@ const useStepSixHook = (
                 setShowWarningModal(false);
             }
         } catch (error) {
-            console.log("ERROR: ", error);
+
             dispatch(setProductIsLoading(false));
             dispatch(setLoadingMessage(""));
             return;

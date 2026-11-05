@@ -1,93 +1,61 @@
-import { CommonActions, useNavigation } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import EncryptedStorage from "react-native-encrypted-storage";
-import RootNavigationStackModel from "../../../routes/model/routes_model";
-import { getAuth, signInAnonymously, signOut } from "@react-native-firebase/auth";
-import { useRegisterGuestUserMutation } from "../apis/auths_api";
-import { useDispatch } from "react-redux";
-import { setUserData } from "../../profile/slices/profileState_slice";
-import { setIsLoading, setLoadingMessage } from "../../general/slices/general_slice";
-import { clearPendingDestination } from "../slices/authState_slice";
-import { clearToken } from "../../../redux/services/authorizationHeader";
-import { forgetSecureItem } from "../../../utils/secureStorage";
-
-const STORAGE_KEYS = {
-    FIREBASE_USER: 'fb_user',
-    USER_ID: 'user_id',
-    USER_DATA: 'user_data',
-    GUEST_UID: 'guest_uid'
-} as const;
+import {clearSensitiveFiles} from '../../../utils/sensitiveFiles';
+import {CommonActions, useNavigation} from '@react-navigation/native';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {Alert} from 'react-native';
+import RootNavigationStackModel from '../../../routes/model/routes_model';
+import {getAuth, signOut} from '@react-native-firebase/auth';
+import {deleteToken, getMessaging} from '@react-native-firebase/messaging';
+import {clearToken} from '../../../redux/services/authorizationHeader';
+import {forgetSecureItem} from '../../../utils/secureStorage';
+import {
+  beginSessionEnd,
+  finishSessionEnd,
+} from '../../../redux/services/session';
+import {securityEvent} from '../../../utils/securityLogger';
+import PushNotification from 'react-native-push-notification';
 
 const useLogoutHook = () => {
-    const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
-    const dispatch = useDispatch();
-
-    const [registerGuestUser] = useRegisterGuestUserMutation();
-    const auth = getAuth();
-
-    const reestablishGuestSessionInBackground = async () => {
-        try {
-            const anonymousUserData = await signInAnonymously(auth);
-            if (!anonymousUserData) return;
-
-            const uid = anonymousUserData.user.uid;
-            await EncryptedStorage.setItem(STORAGE_KEYS.GUEST_UID, JSON.stringify(uid));
-
-            const guestUserData = await registerGuestUser({}).unwrap();
-            if (guestUserData) {
-                await EncryptedStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(guestUserData));
-                dispatch(setUserData(guestUserData));
-            }
-        } catch (err) {
-            console.warn("[Logout] Background guest re-init failed; splash will retry on next app launch.", err);
-        }
-    };
-
-    const signOutUser = async () => {
-        dispatch(setLoadingMessage("Signing out..."));
-        dispatch(setIsLoading(true));
-
-        await Promise.all([
-            clearToken(),
-            forgetSecureItem(STORAGE_KEYS.FIREBASE_USER),
-            forgetSecureItem(STORAGE_KEYS.USER_ID),
-            forgetSecureItem(STORAGE_KEYS.USER_DATA),
-            forgetSecureItem(STORAGE_KEYS.GUEST_UID),
-        ]);
-
-        dispatch(setUserData({ isGuest: true } as any));
-
-        dispatch(clearPendingDestination());
-
-        navigation.dispatch(
-            CommonActions.reset({
-                index: 0,
-                routes: [{ name: "homeScreen", state: { routes: [{ name: "Home" }] } }],
-            })
-        );
-
-        dispatch(setIsLoading(false));
-        dispatch(setLoadingMessage(""));
-
-        void (async () => {
-            try {
-                await signOut(auth);
-            } catch (err) {
-                console.warn("[Logout] Firebase signOut failed (likely offline); local state already cleared.", err);
-            }
-            await reestablishGuestSessionInBackground();
-        })();
-    };
-
-    const removeUserData = async () => {
-        await forgetSecureItem(STORAGE_KEYS.USER_DATA);
-    };
-
-    const removeToken = async () => {
-        await clearToken();
-    };
-
-    return { signOutUser, removeUserData, removeToken };
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
+  const signOutUser = async () => {
+    beginSessionEnd();
+    try {
+      await Promise.race([
+        deleteToken(getMessaging()),
+        new Promise(resolve => setTimeout(resolve, 5000)),
+      ]).catch(() => securityEvent('notification_registration_failed'));
+      PushNotification.cancelAllLocalNotifications();
+      await signOut(getAuth());
+      await clearSensitiveFiles();
+      await Promise.all(
+        ['fb_user', 'user_id', 'user_data', 'guest_uid'].map(forgetSecureItem),
+      );
+      await clearToken();
+      finishSessionEnd();
+      navigation.dispatch(
+        CommonActions.reset({index: 0, routes: [{name: 'splashScreen'}]}),
+      );
+    } catch {
+      securityEvent('logout_failed');
+      Alert.alert(
+        'Sign out incomplete',
+        'Your session is locked. Please retry to finish signing out.',
+        [
+          {
+            text: 'Retry',
+            onPress: () => {
+              void signOutUser();
+            },
+          },
+        ],
+        {cancelable: false},
+      );
+    }
+  };
+  return {
+    signOutUser,
+    removeUserData: () => forgetSecureItem('user_data'),
+    removeToken: clearToken,
+  };
 };
-
 export default useLogoutHook;

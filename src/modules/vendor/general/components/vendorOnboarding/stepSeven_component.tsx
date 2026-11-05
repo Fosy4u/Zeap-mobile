@@ -1,9 +1,10 @@
 import React from "react";
-import { ActivityIndicator, Alert, Linking, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
 import { ArrowRight, DocumentText, TickCircle } from "iconsax-react-native";
 import { Control, Controller, FieldErrors } from "react-hook-form";
 import { IStepSevenForm } from "../../validations/vendorOnboarding_validation";
 import { ISellerPolicy } from "../../models/vendorOnboardingState_model";
+import { openSecureLink } from "../../../../../utils/safeLinks";
 
 interface IProps {
     control: Control<IStepSevenForm>;
@@ -14,9 +15,7 @@ interface IProps {
 
 const StepSevenComponent: React.FC<IProps> = ({ control, errors, policies, isLoadingPolicies }) => {
     const handleOpenPolicy = (link: string) => {
-        Linking.openURL(link).catch(() => {
-            Alert.alert("Couldn't open link", "Please try again or contact support.");
-        });
+        openSecureLink(link);
     };
 
     return (

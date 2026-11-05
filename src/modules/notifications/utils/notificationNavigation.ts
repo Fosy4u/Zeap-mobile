@@ -1,6 +1,8 @@
 import navigate from "../../../routes/pushNavigation";
 
 export interface INotificationPayload {
+    recipientUid?: string;
+    uid?: string;
     notificationType?: string;
     orderId?: string;
     productOrder_id?: string;

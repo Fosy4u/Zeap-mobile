@@ -12,6 +12,7 @@ import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { ArrowLeft, ArrowRight2, Like1, Dislike, MessageQuestion } from "iconsax-react-native";
 import HTMLView from "react-native-htmlview";
+import { openExternalLinkWithConfirm } from "../../../utils/safeLinks";
 import RootNavigationStackModel from "../../../routes/model/routes_model";
 import {
     useGetHelpArticleQuery,
@@ -66,7 +67,7 @@ const HelpArticleScreen = () => {
             await markHelpful({ articleId: article.articleId, isHelpful }).unwrap();
             setHelpfulChoice(isHelpful);
         } catch (error) {
-            console.log("Failed to mark article as helpful:", error);
+
         }
     };
 
@@ -123,7 +124,7 @@ const HelpArticleScreen = () => {
                                 </Text>
 
                                 <View className="mt-4">
-                                    <HTMLView value={ article.content || "<p>No content available</p>" } stylesheet={ htmlStyles } />
+                                    <HTMLView value={ article.content || "<p>No content available</p>" } stylesheet={ htmlStyles } onLinkPress={ openExternalLinkWithConfirm } />
                                 </View>
 
                                 {/*==== Was this helpful? ====*/}

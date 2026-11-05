@@ -8,6 +8,7 @@ import { useGetProductOrderQuery } from '../apis/order_api';
 import useDisplayCurrency from '../../../general/hooks/displayCurrency_hook';
 import formatDate from '../../../../utils/formatDate';
 import { IDateRange } from '../models/productOrderDetails_model';
+import useScreenProtection from '../../../general/hooks/screenProtection_hook';
 
 const Row: React.FC<{ label: string; value?: string | number | null }> = ({ label, value }) => (
   <View className="py-3 flex-row items-start justify-between border-b border-gray-100">
@@ -27,6 +28,7 @@ const rangeText = (range?: IDateRange): string => {
 };
 
 const OrderItemDetailsScreen = () => {
+  useScreenProtection();
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
   const { productOrderId } = (useRoute().params as { productOrderId: string });
   const { formatAmount } = useDisplayCurrency();

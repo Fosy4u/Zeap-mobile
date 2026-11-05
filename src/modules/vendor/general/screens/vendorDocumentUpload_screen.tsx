@@ -15,6 +15,7 @@ import { ArrowLeft, DocumentText1, DocumentUpload, TickCircle, Warning2 } from "
 import RootNavigationStackModel from "../../../../routes/model/routes_model";
 import useVendorDocumentUploadHook, { IDocSlotState } from "../hooks/vendorOnboarding/vendorDocumentUpload_hook";
 import { IOnboardingDocumentRequirement } from "../apis/general_api";
+import useScreenProtection from "../../../general/hooks/screenProtection_hook";
 
 const EXAMPLES_BY_SLUG: Record<string, string> = {
     proof_of_identity:     "International Passport, Driver's Licence, Voter's Card, etc.",
@@ -162,6 +163,7 @@ const DocCard: React.FC<IDocCardProps> = ({ doc, slot, onPickFile, onUpload }) =
 };
 
 const VendorDocumentUploadScreen = () => {
+    useScreenProtection();
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const {
         docs,

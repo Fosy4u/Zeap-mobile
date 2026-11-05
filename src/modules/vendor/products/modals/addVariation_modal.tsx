@@ -26,7 +26,6 @@ const comboKey = (combo: IVariationCombo) => `${ combo.colorName }|${ combo.size
 
 const AddVariationModal: React.FC<IProps> = ({ visible, onClose, availableCombos, colorOptions, sizes, previewSku, isLoading, onSubmit }) => {
     const { entrySymbol } = useShopCurrency();
-    // ON = auto-generate remaining combos (new quick pattern); OFF = original
     const [quickPicker, setQuickPicker] = useState(true);
 
     const [useDefaultPrice, setUseDefaultPrice] = useState(false);

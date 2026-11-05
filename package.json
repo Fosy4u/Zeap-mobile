@@ -2,12 +2,14 @@
   "name": "ZeapApp",
   "version": "0.0.1",
   "private": true,
+  "packageManager": "npm@10.9.3",
   "scripts": {
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "lint": "eslint .",
     "start": "react-native start",
     "test": "jest",
+    "typecheck": "tsc --noEmit",
     "build-android": "cd android && ./gradlew assembleRelease",
     "postinstall": "patch-package"
   },
@@ -15,7 +17,6 @@
     "@gorhom/bottom-sheet": "^4.6.3",
     "@hookform/resolvers": "^3.9.0",
     "@pdf-lib/fontkit": "^1.1.1",
-    "@react-native-camera-roll/camera-roll": "^7.10.2",
     "@react-native-clipboard/clipboard": "^1.16.3",
     "@react-native-community/checkbox": "^0.5.17",
     "@react-native-community/push-notification-ios": "^1.12.0",
@@ -47,7 +48,6 @@
     "react-native-dropdown-select-list": "^2.0.5",
     "react-native-encrypted-storage": "^4.0.3",
     "react-native-fast-image": "^8.6.3",
-    "react-native-geolocation-service": "^5.3.1",
     "react-native-gesture-handler": "2.21.0",
     "react-native-gifted-charts": "^1.4.46",
     "react-native-htmlview": "^0.17.0",
@@ -67,7 +67,6 @@
     "react-native-svg": "14.1.0",
     "react-native-tab-view": "^3.5.2",
     "react-native-video": "^6.16.1",
-    "react-native-view-shot": "^4.0.3",
     "react-native-webview": "^13.15.0",
     "react-redux": "^9.1.2",
     "yup": "^1.4.0"

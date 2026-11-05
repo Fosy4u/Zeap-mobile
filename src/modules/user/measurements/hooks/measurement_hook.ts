@@ -257,7 +257,7 @@ const useMeasurementHook = () => {
             await handleGetAllSavedMeasurements();
             return true;
         } catch (error) {
-            console.log("DELETE TEMPLATE ERROR (raw):", JSON.stringify(error, null, 2));
+
             handleError(error);
             return false;
         }

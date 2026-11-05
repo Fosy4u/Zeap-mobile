@@ -7,6 +7,7 @@ interface IOrderState {
     orderDetails: IOrderDetails;
     orders: IOrder[];
     filteredOrders: IOrder[];
+    orderStatusFilter: string;
     orderHistory: IOrderHistory;
     selectedOrderStatus: IStatus
     selectedProductOrderID: string;

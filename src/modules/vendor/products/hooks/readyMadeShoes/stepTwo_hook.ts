@@ -83,17 +83,14 @@ const useStepTwoHook = () => {
             
             // Validate categoriesData
             const requestData = await stepTwoAddShoesSchema.validate(validatedCategoriesData);
-            console.log("REQUEST DATA::: ", requestData);
 
             const updateResponseData = await updatedProduct(requestData).unwrap();
-            console.log("RESPONSE::: ", updateResponseData);
 
             if (updateResponseData) {
                 dispatch(setLoadingMessage("Getting product details..."));
 
                 // Get the updated product data
                 const updatedProduct = await getProductByProductID(productId).unwrap();
-                console.log("UPDATED PRODUCT::: ", updatedProduct);
 
                 if (updatedProduct) {
                     dispatch(setProduct(updatedProduct));

@@ -1,8 +1,6 @@
 {
     "java.configuration.updateBuildConfiguration": "interactive",
 
-    /* Keep the Java/Gradle extensions off node_modules: some RN libs ship their own
-       Gradle 4.x wrappers, which cannot run on Java 17. */
     "java.import.exclusions": [
         "**/node_modules/**",
         "**/.metadata/**",

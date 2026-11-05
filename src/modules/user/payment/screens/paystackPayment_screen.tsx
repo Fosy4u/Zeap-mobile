@@ -9,8 +9,10 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../../../../redux/store/store';
 import OrderSuccessPopupModal from '../modals/orderSuccessPopup_modal';
 import RootNavigationStackModel from '../../../../routes/model/routes_model';
+import useScreenProtection from '../../../general/hooks/screenProtection_hook';
 
 const PaystackPaymentScreen = () => {
+    useScreenProtection();
     const { paymentReference, showOrderSuccessModal } = useSelector((state: RootState) => state.paymentState);
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
 
@@ -97,12 +99,7 @@ const PaystackPaymentScreen = () => {
             : !hasKey
             ? "Paystack publishable key is missing from the build. Add REACT_APP_PAYSTACK_PUBLIC_KEY to .env and rebuild (Metro: --reset-cache)."
             : `Paystack amount is invalid (${amountInMajorUnit}). Check the backend payment-reference response.`;
-        console.log("PAYSTACK CONFIG ERROR::: ", {
-            hasKey,
-            keyPreview: paystackKey ? `${paystackKey.slice(0, 6)}…` : null,
-            amountInMajorUnit,
-            paymentReference,
-        });
+
         return (
             <SafeAreaView className="flex-1 justify-center bg-lightGray">
                 <View className="px-5">

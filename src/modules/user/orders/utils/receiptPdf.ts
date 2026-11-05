@@ -315,7 +315,7 @@ const embedReceiptFonts = async (doc: PDFDocument): Promise<{ regular: PDFFont; 
             bold: await doc.embedFont(MONTSERRAT_SEMIBOLD_BASE64, { subset: true }),
         };
     } catch (error) {
-        console.log("RECEIPT FONT EMBED FAILED, USING STANDARD FONTS::: ", error);
+
         return {
             regular: await doc.embedFont(StandardFonts.Helvetica),
             bold: await doc.embedFont(StandardFonts.HelveticaBold),

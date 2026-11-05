@@ -78,7 +78,7 @@ const ReadyMadeDashboardScreen = () => {
                     subtitle="Instant Chic. Zero Fuss"
                     titleClassName="text-3xl"
                     image={ require("../../../../../assets/images/categories/rtw_hero_poster.jpg") }
-                    videoUri="https://zeaper-web-dev.vercel.app/video/rtwHome.mov"
+                    videoUri="https://www.zeaper.com/video/rtwHome.mov"
                     onPress={ () => openCollection("Ready to Wear Collections", READY_MADE_FILTER) }
                 />
 

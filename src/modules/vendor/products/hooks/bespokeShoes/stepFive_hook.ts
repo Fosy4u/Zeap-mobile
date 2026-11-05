@@ -110,20 +110,12 @@ const useStepFiveHook = () => {
                         sku: "BESPOKE",
                     },
                 }).unwrap();
-                console.log("VARIATIONS DATA: ", {
-                    ...requestData,
-                    variation: {
-                        ...requestData.variation,
-                        sku: "BESPOKE",
-                    },
-                });
+
             }
-            console.log("RESPONSE: ", addProductVariationResponseData);
 
             if (addProductVariationResponseData) {
                 // Get the updated product data
                 const updatedProduct = await getProductByProductID(productId).unwrap();
-                console.log("UPDATED PRODUCT::: ", updatedProduct);
 
                 if (updatedProduct) {
                     dispatch(setProduct(updatedProduct));

@@ -9,8 +9,10 @@ import AuthCheck from '../../../auths/components/authCheck';
 import { display, yesNo } from '../../../../utils/displayValue';
 import useShopGuardHook from '../hooks/shopGuard_hook';
 import NoShopPopupModal from '../modals/noShopPopup_modal';
+import useScreenProtection from '../../../general/hooks/screenProtection_hook';
 
 const ShopInformationScreen = () => {
+    useScreenProtection();
     const { shop, isResolvingShop, isCheckingShop, hasNoShop, recheckShop } = useShopGuardHook();
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
 
@@ -96,4 +98,4 @@ const ShopInformationScreen = () => {
     );
 };
 
-export default AuthCheck(ShopInformationScreen);
+export default AuthCheck(ShopInformationScreen, undefined, 'vendor');

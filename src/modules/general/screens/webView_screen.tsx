@@ -12,11 +12,13 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { WebView } from "react-native-webview";
 import { ArrowLeft, Refresh2 } from "iconsax-react-native";
 import RootNavigationStackModel from "../../../routes/model/routes_model";
+import { isTrustedWebLink, openExternalLinkWithConfirm } from "../../../utils/safeLinks";
 
 const WebViewScreen = () => {
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const { params } = useRoute<RouteProp<RootNavigationStackModel, "webViewScreen">>();
     const webViewRef = useRef<WebView>(null);
+    const isAllowedPage = isTrustedWebLink(params?.url);
 
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [hasError, setHasError] = useState<boolean>(false);
@@ -54,7 +56,16 @@ const WebViewScreen = () => {
                 </View>
 
                 <View className="flex-1">
-                    { hasError ? (
+                    { !isAllowedPage ? (
+                        <View className="flex-1 px-8 items-center justify-center">
+                            <Text className="font-montserratSemiBold text-base text-gray-700 text-center">
+                                This page can't be opened in Zeaper
+                            </Text>
+                            <Text className="mt-2 font-montserratMedium text-sm text-gray-500 text-center leading-6">
+                                The link isn't a secure Zeaper page.
+                            </Text>
+                        </View>
+                    ) : hasError ? (
                         <View className="flex-1 px-8 items-center justify-center">
                             <Text className="font-montserratSemiBold text-base text-gray-700 text-center">
                                 We couldn't load this page
@@ -73,6 +84,13 @@ const WebViewScreen = () => {
                         <WebView
                             ref={ webViewRef }
                             source={{ uri: params?.url ?? "" }}
+                            originWhitelist={ ["https://*"] }
+                            onShouldStartLoadWithRequest={ (request) => {
+                                if (isTrustedWebLink(request.url)) return true;
+                                if (request.isTopFrame === false) return false;
+                                openExternalLinkWithConfirm(request.url);
+                                return false;
+                            } }
                             startInLoadingState={ false }
                             onLoadStart={ () => setIsLoading(true) }
                             onLoadEnd={ () => setIsLoading(false) }
@@ -84,7 +102,7 @@ const WebViewScreen = () => {
                         />
                     ) }
 
-                    { isLoading && !hasError && (
+                    { isAllowedPage && isLoading && !hasError && (
                         <View className="absolute inset-0 items-center justify-center bg-white">
                             <ActivityIndicator size="large" color="#133522" />
                             <Text className="mt-3 font-montserratMedium text-xs text-gray-500">Loading...</Text>

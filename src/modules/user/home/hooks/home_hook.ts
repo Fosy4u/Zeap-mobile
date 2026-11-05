@@ -100,7 +100,7 @@ const useHomeHook = (): any => {
           const url = 'https://wa.me/447518465207';
           await Linking.openURL(url);
         } catch (error) {
-          console.error("Error opening WhatsApp:", error);
+
         };
     };
 

@@ -1,6 +1,6 @@
 import { useCancelOrderMutation, useLazyGetOrderDetailsQuery, useLazyGetOrderHistoryQuery, useLazyGetOrdersQuery } from "../apis/order_api";
 import { useDispatch, useSelector } from "react-redux";
-import { setFilteredOrders, setIsLoading, setLoadingMessage, setOrderDetails, setOrderHistory, setOrders, setShowCancelOrderModal } from "../slices/order_slice";
+import { setFilteredOrders, setOrderStatusFilter, setIsLoading, setLoadingMessage, setOrderDetails, setOrderHistory, setOrders, setShowCancelOrderModal } from "../slices/order_slice";
 import handleError from "../../../general/hooks/errorHandler_hook";
 import { RootState } from "../../../../redux/store/store";
 import { useState } from "react";
@@ -28,6 +28,7 @@ const useOrderHook = () => {
             if (orderResponse) {
                 dispatch(setOrders(orderResponse));
                 dispatch(setFilteredOrders(orderResponse)); // Initialize filtered orders with all orders
+                dispatch(setOrderStatusFilter("All"));
 
                 dispatch(setIsLoading(false));
                 dispatch(setLoadingMessage(""));
@@ -41,26 +42,22 @@ const useOrderHook = () => {
 
     // Filter orders by status
     const filterOrdersByStatus = (status: string) => {
-        if (!orders || orders.length === 0) {
-            return [];
-        }
+        const allOrders = orders ?? [];
+        dispatch(setOrderStatusFilter(status));
 
         // If status is 'all', return all orders
         if (status.toLowerCase() === 'all') {
-            dispatch(setFilteredOrders(orders));
-            return orders;
+            dispatch(setFilteredOrders(allOrders));
+            return allOrders;
         }
-        
-        const filteredOrders = orders.filter(order =>
+
+        const filteredOrders = allOrders.filter(order =>
             (order?.productOrders ?? []).some(
                 productOrder => productOrder?.status?.name?.toLowerCase() === status.toLowerCase()
             )
         );
-        if (filteredOrders.length > 0) {
-            dispatch(setFilteredOrders(filteredOrders));
-        } else {
-            return [];
-        }
+        dispatch(setFilteredOrders(filteredOrders));
+        return filteredOrders;
     }
 
     // Handle get order details (accept optional orderId to allow calling before Redux orderID updates)

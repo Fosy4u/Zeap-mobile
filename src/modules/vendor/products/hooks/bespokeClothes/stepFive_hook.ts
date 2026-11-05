@@ -6,6 +6,8 @@ import { Alert } from "react-native";
 import { useAddProductVariationMutation, useUpdateProductVariationMutation } from "../../apis/bespokeProduct_api";
 import { useLazyGetProductByProductIDQuery } from "../../apis/product_api";
 import { setLoadingMessage, setProduct, setProductIsLoading, setSelectedStep } from "../../slices/vendorProductState_slice";
+import { stepFiveAddBespokeShoesSchema } from "../../validations/addProduct_validation";
+import handleError from "../../../../general/hooks/errorHandler_hook";
 
 interface IColorOption {
     colorName: string;
@@ -80,7 +82,7 @@ const useStepFiveHook = () => {
             }
 
             // Add variations
-            const variationsData = {
+            const variationsData = await stepFiveAddBespokeShoesSchema.validate({
                 productId,
                 variation: {
                     colorType: colourType.toLocaleLowerCase(),
@@ -88,9 +90,7 @@ const useStepFiveHook = () => {
                     price: Number(price),
                 },
                 currentStep: 5,
-            };
-            console.log("VARIATIONS DATA: ", variationsData);
-            console.log("PRODUCT VARIATIONS: ", product?.variations);
+            });
 
 
             let addProductVariationResponseData: any
@@ -106,20 +106,12 @@ const useStepFiveHook = () => {
                         sku: "BESPOKE",
                     },
                 }).unwrap();
-                console.log("VARIATIONS DATA: ", {
-                    ...variationsData,
-                    variation: {
-                        ...variationsData.variation,
-                        sku: "BESPOKE",
-                    },
-                });
+
             }
-            console.log("RESPONSE: ", addProductVariationResponseData);
 
             if (addProductVariationResponseData) {
                 // Get the updated product data
                 const updatedProduct = await getProductByProductID(productId).unwrap();
-                console.log("UPDATED PRODUCT::: ", updatedProduct);
 
                 if (updatedProduct) {
                     dispatch(setProduct(updatedProduct));
@@ -131,7 +123,7 @@ const useStepFiveHook = () => {
         } catch (error) {
             dispatch(setProductIsLoading(false));
             dispatch(setLoadingMessage(""));
-            console.log("ERROR: ", error);
+            handleError(error);
         }
     };
 

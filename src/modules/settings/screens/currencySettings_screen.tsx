@@ -63,9 +63,9 @@ const CurrencySettingsScreen = () => {
           )}
         />
 
-        <Text className="mt-5 font-montserratSemiBold text-base text-gray-700">Recommended Currency</Text>
+        <Text className="mt-5 font-montserratSemiBold text-base text-gray-700">Preferred Currency</Text>
         <View className="h-[100px] w-full mt-1 px-5 py-4 rounded-lg bg-[#F8F9FE]">
-          <Text className="text-sm text-gray-500">Recommended currency based on your location:</Text>
+          <Text className="text-sm text-gray-500">Your preferred currency:</Text>
           <View className="h-auto w-full flex-row items-center gap-x-5">
             <Text className="font-montserratSemiBold text-base text-gray-700">
               {recommendedCurrency.code} ({recommendedCurrency.symbol})

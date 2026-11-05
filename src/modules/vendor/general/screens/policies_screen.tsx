@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, Alert, Linking, SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ArrowLeft, ExportSquare } from 'iconsax-react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -9,6 +9,7 @@ import AuthCheck from '../../../auths/components/authCheck';
 import useShopGuardHook from '../hooks/shopGuard_hook';
 import NoShopPopupModal from '../modals/noShopPopup_modal';
 import { useGetSellerPoliciesQuery } from '../apis/general_api';
+import { openSecureLink } from '../../../../utils/safeLinks';
 
 const PoliciesScreen = () => {
     const { shop, isResolvingShop, isCheckingShop, hasNoShop, recheckShop } = useShopGuardHook();
@@ -20,9 +21,7 @@ const PoliciesScreen = () => {
         : "N/A";
 
     const handleOpenPolicy = (link: string) => {
-        Linking.openURL(link).catch(() => {
-            Alert.alert("Couldn't open link", "Please try again or contact support.");
-        });
+        openSecureLink(link);
     };
 
     return (
@@ -94,4 +93,4 @@ const PoliciesScreen = () => {
     );
 };
 
-export default AuthCheck(PoliciesScreen);
+export default AuthCheck(PoliciesScreen, undefined, 'vendor');

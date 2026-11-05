@@ -114,7 +114,7 @@ const useStepFourHook = () => {
 
             return granted === PermissionsAndroid.RESULTS.GRANTED;
         } catch (err) {
-            console.warn(err);
+
             return false;
         }
     };
@@ -417,7 +417,7 @@ const useStepFourHook = () => {
         setDefaultProductImage({ productId, imageName, color: pendingColor.value })
             .unwrap()
             .then((updatedProduct) => updatedProduct && dispatch(setProduct(updatedProduct)))
-            .catch((error) => console.log("AUTO DEFAULT IMAGE ERROR: ", error));
+            .catch((error) => void 0);
     }, [product]);
 
     return {

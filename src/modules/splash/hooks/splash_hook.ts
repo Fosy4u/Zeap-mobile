@@ -1,250 +1,130 @@
-import { useNavigation } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { useEffect, useRef } from "react";
-import RootNavigationStackModel from "../../../routes/model/routes_model";
-import { getAuth, getIdToken, onAuthStateChanged, signInAnonymously } from "@react-native-firebase/auth";
-import { useLazyGetUserByIdQuery, useRegisterGuestUserMutation } from "../../auths/apis/auths_api";
-import { useDispatch } from "react-redux";
-import { setUserData } from "../../profile/slices/profileState_slice";
-import { setIsLoading, setLoadingMessage } from "../../general/slices/general_slice";
-import { readSecureItem, readSecureJSON, writeSecureItem } from "../../../utils/secureStorage";
-import { storeToken } from "../../../redux/services/authorizationHeader";
-
-const STORAGE_KEYS = {
-    FIREBASE_USER: 'fb_user',
-    USER_ID: 'user_id',
-    USER_DATA: 'user_data',
-    GUEST_UID: 'guest_uid',
-    HAS_LAUNCHED: 'has_launched',
-} as const;
-
-const SPLASH_ANIMATION_DURATION_MS = 4000;
-
-const SPLASH_WATCHDOG_MS = 10000;
+import {clearSensitiveFiles} from '../../../utils/sensitiveFiles';
+import {useEffect} from 'react';
+import {useNavigation} from '@react-navigation/native';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {useDispatch, useStore} from 'react-redux';
+import {Alert} from 'react-native';
+import {getAuth, signInAnonymously, signOut} from '@react-native-firebase/auth';
+import RootNavigationStackModel from '../../../routes/model/routes_model';
+import {waitForAuthRestore} from '../../../redux/services/authorizationHeader';
+import {
+  captureSession,
+  isCurrentSession,
+} from '../../../redux/services/session';
+import {
+  readSecureJSON,
+  writeSecureItem,
+  forgetSecureItem,
+} from '../../../utils/secureStorage';
+import {
+  useLazyGetUserByIdQuery,
+  useRegisterGuestUserMutation,
+} from '../../auths/apis/auths_api';
+import {setUserData} from '../../profile/slices/profileState_slice';
+import {clearPendingDestination} from '../../auths/slices/authState_slice';
+import type {RootState} from '../../../redux/store/store';
 
 const useSplashHook = () => {
-    const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
-    const dispatch = useDispatch();
-
-    const [registerGuestUser] = useRegisterGuestUserMutation();
-    const [getUserById] = useLazyGetUserByIdQuery();
-
-    const authInstance = getAuth();
-
-    const hasLeftSplashRef = useRef(false);
-    const watchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-    const leaveSplash = (destination: "home" | "onboarding" = "home") => {
-        if (hasLeftSplashRef.current) return;
-        hasLeftSplashRef.current = true;
-
-        if (watchdogRef.current) {
-            clearTimeout(watchdogRef.current);
-            watchdogRef.current = null;
-        }
-
-        clearLoading();
-        if (destination === "onboarding") {
-            navigation.navigate("onboardingOneScreen");
-        } else {
-            navigation.navigate("homeScreen", { screen: "Home" });
-        }
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
+  const dispatch = useDispatch();
+  const store = useStore<RootState>();
+  const [getUser] = useLazyGetUserByIdQuery();
+  const [registerGuest] = useRegisterGuestUserMutation();
+  useEffect(() => {
+    let active = true;
+    const pendingDestination = store.getState().authState.pendingDestination;
+    if (pendingDestination) dispatch(clearPendingDestination());
+    const loadSignedInProfile = async (uid: string) => {
+      try {
+        return await getUser(uid, false).unwrap();
+      } catch (error: any) {
+        if (error?.status === 401 || error?.status === 403) throw error;
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        return await getUser(uid, false).unwrap();
+      }
     };
-
-    const handleCheckForFirstTimer = async () => {
+    const bootstrap = async () => {
+      try {
+        await clearSensitiveFiles();
+        let user = await waitForAuthRestore();
+        if (!active) return;
+        if (!user) user = (await signInAnonymously(getAuth())).user;
+        const session = captureSession();
+        if (user.isAnonymous)
+          await writeSecureItem('guest_uid', JSON.stringify(user.uid));
+        const cached = await readSecureJSON<any>('user_data');
+        if (!active || !isCurrentSession(session)) return;
+        const hasCachedProfile = cached?.uid === user.uid;
+        if (hasCachedProfile) dispatch(setUserData(cached));
+        else await forgetSecureItem('user_data');
         try {
-            const [storedUser, hasLaunchedBefore] = await Promise.all([
-                readSecureJSON<any>(STORAGE_KEYS.USER_DATA),
-                readSecureJSON<boolean>(STORAGE_KEYS.HAS_LAUNCHED),
-            ]);
-
-            if (storedUser) {
-                dispatch(setUserData(storedUser));
-                leaveSplash("home");
-
-                // Silently refresh user data in the background
-                refreshUserDataSilently(storedUser.uid);
-            } else if (hasLaunchedBefore === true) {
-                await checkIsUserLoggedInAnonymously();
-            } else {
-                await writeSecureItem(STORAGE_KEYS.HAS_LAUNCHED, JSON.stringify(true));
-                checkIsUserLoggedInAnonymously({ navigateHome: false });
-
-                setTimeout(() => leaveSplash("onboarding"), SPLASH_ANIMATION_DURATION_MS);
-            }
-        } catch (error) {
-            console.error("[Splash] Bootstrap failed; continuing as guest.", error);
-            leaveSplash("home");
+          const profile = user.isAnonymous
+            ? await registerGuest({}).unwrap()
+            : await loadSignedInProfile(user.uid);
+          if (!active || !isCurrentSession(session)) return;
+          if (!profile || (profile.uid && profile.uid !== user.uid))
+            throw new Error('Profile identity mismatch');
+          const data = {...profile, uid: user.uid, isGuest: user.isAnonymous};
+          await writeSecureItem('user_data', JSON.stringify(data));
+          if (active && isCurrentSession(session)) dispatch(setUserData(data));
+        } catch (error: any) {
+          if (!isCurrentSession(session)) return;
+          if (
+            error?.status === 401 ||
+            error?.status === 403 ||
+            [
+              'auth/user-disabled',
+              'auth/user-token-expired',
+              'auth/invalid-user-token',
+              'auth/user-not-found',
+            ].includes(error?.code)
+          ) {
+            dispatch({type: 'session/reset'});
+            await forgetSecureItem('user_data');
+            await signOut(getAuth());
+            if (active) navigation.replace('loginInfoScreen');
+            return;
+          }
+          if (user.isAnonymous && !hasCachedProfile) {
+            dispatch(setUserData({uid: user.uid, isGuest: true} as any));
+          } else if (!user.isAnonymous && !hasCachedProfile) {
+            Alert.alert(
+              "Couldn't finish signing in",
+              'We couldn\'t load your account. Please check your connection and log in again.',
+            );
+            await signOut(getAuth());
+            return;
+          }
         }
-    };
-
-    const parseAuthUserName = (
-        backendUser: any,
-        authUser: any,
-    ): { firstName: string; lastName: string } => {
-        const rawDisplayName: string = authUser?.displayName ?? "";
-        const cleanedDisplayName = rawDisplayName.replace(/\s*\([^)]*\)\s*/g, " ").trim();
-
-        if (cleanedDisplayName) {
-            const parts = cleanedDisplayName.split(/\s+/).filter(Boolean);
-            return {
-                firstName: parts[0] || "Customer",
-                lastName: parts.slice(1).join(" ") || "Guest",
-            };
+        if (!active || !isCurrentSession(session)) return;
+        const launched = await readSecureJSON<boolean>('has_launched');
+        await writeSecureItem('has_launched', 'true');
+        if (active && isCurrentSession(session) && pendingDestination && !user.isAnonymous) {
+          navigation.reset({
+            index: 1,
+            routes: [
+              {name: 'homeScreen', params: {screen: 'Home'}},
+              {name: pendingDestination.name, params: pendingDestination.params} as any,
+            ],
+          });
+          return;
         }
-
-        const email: string = authUser?.email ?? "";
-        const localPart = email.split("@")[0]?.trim();
-        if (localPart) return { firstName: localPart, lastName: "" };
-
-        if (backendUser?.firstName || backendUser?.lastName) {
-            return {
-                firstName: backendUser.firstName || "Customer",
-                lastName: backendUser.lastName || "Guest",
-            };
+        if (active && isCurrentSession(session)) {
+          navigation.replace(
+            launched ? 'homeScreen' : 'onboardingOneScreen',
+            launched ? {screen: 'Home'} : undefined,
+          );
         }
-
-        return { firstName: "Customer", lastName: "Guest" };
+      } catch {
+        if (active) navigation.replace('loginInfoScreen');
+      }
     };
-
-    const refreshUserDataSilently = async (uid: string) => {
-        try {
-            const userData = await getUserById(uid).unwrap();
-            if (!userData) return;
-            const currentUser = authInstance.currentUser;
-            const isFirebaseAuthenticated = !!currentUser && !currentUser.isAnonymous;
-
-            const cached = (await readSecureJSON<any>(STORAGE_KEYS.USER_DATA)) ?? {};
-
-            let merged: any = { ...cached, ...userData };
-            if (isFirebaseAuthenticated) {
-                const { firstName, lastName } = parseAuthUserName(userData, currentUser);
-                merged = {
-                    ...merged,
-                    uid: currentUser!.uid,
-                    email: userData.email || currentUser!.email || "",
-                    displayName: currentUser!.displayName || (userData as any).displayName || "",
-                    firstName,
-                    lastName,
-                    photoURL: (userData as any).photoURL || currentUser!.photoURL || "",
-                    isGuest: false,
-                };
-            }
-
-            await writeSecureItem(STORAGE_KEYS.USER_DATA, JSON.stringify(merged));
-            dispatch(setUserData(merged as any));
-
-        } catch {
-        }
+    void bootstrap();
+    return () => {
+      active = false;
     };
-
-    const SETTING_UP_SESSION = "Setting up your session...";
-    const FETCHING_PROFILE = "Loading your profile...";
-
-    const clearLoading = () => {
-        dispatch(setIsLoading(false));
-        dispatch(setLoadingMessage(""));
-    };
-
-    // Check if user is logged in anonymously.
-    const checkIsUserLoggedInAnonymously = async ({ navigateHome = true }: { navigateHome?: boolean } = {}) => {
-        const unsubscribe = onAuthStateChanged(authInstance, async (user: any) => {
-            unsubscribe(); // Run only once
-
-            try {
-                if (user) {
-                    const uid = user.uid;
-                    const token = await getIdToken(user);
-                    if (!uid) return;
-
-                    await writeSecureItem(STORAGE_KEYS.FIREBASE_USER, JSON.stringify(user));
-                    await writeSecureItem(STORAGE_KEYS.USER_ID, JSON.stringify(uid));
-                    await storeToken(token);
-
-                    if (user.isAnonymous) {
-                        dispatch(setLoadingMessage(SETTING_UP_SESSION));
-                        dispatch(setIsLoading(true));
-
-                        await writeSecureItem(STORAGE_KEYS.GUEST_UID, JSON.stringify(uid));
-
-                        const guestUserData = await registerGuestUser({}).unwrap();
-                        if (guestUserData) {
-                            await writeSecureItem(STORAGE_KEYS.USER_DATA, JSON.stringify(guestUserData));
-                            dispatch(setUserData(guestUserData));
-                        }
-                        if (navigateHome) leaveSplash("home");
-                    } else {
-                        dispatch(setLoadingMessage(FETCHING_PROFILE));
-                        dispatch(setIsLoading(true));
-
-                        let userData: any = await getUserById(uid).unwrap();
-
-                        if (userData) {
-                            const { firstName, lastName } = parseAuthUserName(userData, user);
-                            userData = {
-                                ...userData,
-                                uid: user.uid,
-                                email: userData.email || user.email || "",
-                                displayName: user.displayName || userData.displayName || "",
-                                firstName,
-                                lastName,
-                                photoURL: userData.photoURL || user.photoURL || "",
-                                isGuest: false,
-                            };
-
-                            await writeSecureItem(STORAGE_KEYS.USER_DATA, JSON.stringify(userData));
-                            console.log("[Splash] USER DATA (auth):", JSON.stringify(userData, null, 2));
-                            dispatch(setUserData(userData));
-
-                            if (navigateHome) leaveSplash("home");
-                        }
-                    }
-                } else {
-                    dispatch(setLoadingMessage(SETTING_UP_SESSION));
-                    dispatch(setIsLoading(true));
-
-                    const anonymousUserData = await signInAnonymously(authInstance);
-                    if (!anonymousUserData) return;
-
-                    const uid = anonymousUserData.user.uid;
-                    await writeSecureItem(STORAGE_KEYS.GUEST_UID, JSON.stringify(uid));
-
-                    let guestUserData: any = null;
-                    try {
-                        guestUserData = await registerGuestUser({}).unwrap();
-                    } catch (createErr: any) {
-                        console.warn("[Splash] registerGuestUser failed; navigating to home anyway.", createErr?.status, createErr?.data);
-                    }
-
-                    if (guestUserData) {
-                        await writeSecureItem(STORAGE_KEYS.USER_DATA, JSON.stringify(guestUserData));
-                        dispatch(setUserData(guestUserData));
-                    }
-                    if (navigateHome) leaveSplash("home");
-                }
-            } catch (error) {
-                console.error("[Splash] Auth bootstrap failed:", error);
-            } finally {
-                if (navigateHome) leaveSplash("home");
-                clearLoading();
-            }
-        });
-    };
-
-    useEffect(() => {
-        watchdogRef.current = setTimeout(() => {
-            console.warn(`[Splash] No navigation within ${SPLASH_WATCHDOG_MS}ms; continuing as guest.`);
-            leaveSplash("home");
-        }, SPLASH_WATCHDOG_MS);
-
-        handleCheckForFirstTimer();
-
-        return () => {
-            if (watchdogRef.current) clearTimeout(watchdogRef.current);
-        };
-    }, []);
-
-    return {};
+  }, [dispatch, getUser, navigation, registerGuest, store]);
+  return {};
 };
-
 export default useSplashHook;

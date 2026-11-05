@@ -44,8 +44,7 @@ const useFilterAndSearchHook = () => {
         setSelectedFilters((prev) => {
             const current = prev[filterName] || [];
             const isSelected = current.includes(optionValue);
-            console.log("FILE NAME::: ", filterName);
-            console.log("OPTION VALUE::: ", optionValue);
+
 
             // Filter logic: if item is selected, remove it; if not, add it
             const updated = isSelected
@@ -56,7 +55,6 @@ const useFilterAndSearchHook = () => {
                 ...prev,
                 [filterName]: updated
             };
-            console.log("SELECTED FILTER::: ", selectedFilter);
 
             return selectedFilter;
         });
@@ -68,7 +66,9 @@ const useFilterAndSearchHook = () => {
         dispatch(setIsLoading(true));
         
         try {
-            const { dynamicFilters, totalCount } = await getDynamicFilterOptions({queryParams}).unwrap();
+            const filterOptions = await getDynamicFilterOptions({queryParams}).unwrap();
+            if (!filterOptions) { return; }
+            const { dynamicFilters, totalCount } = filterOptions;
 
             if (dynamicFilters) {
                 dispatch(setDynamicFilterOptions(dynamicFilters));
@@ -147,7 +147,7 @@ const useFilterAndSearchHook = () => {
             }
         } catch (error) {
             handleError(error);
-            console.log("ERROR (FILTERED PRODUCTS)::: ", error);
+
         } finally {
             dispatch(setIsLoading(false));
             dispatch(setLoadingMessage(""));
@@ -291,7 +291,6 @@ const useFilterAndSearchHook = () => {
             limit: 20,
             pageNumber: 1
         };
-        console.log("REQUEST DATA::: ", queryParams);
 
         try {
             const productResponse = await getFilteredProducts({queryParams, screenTitle}).unwrap();

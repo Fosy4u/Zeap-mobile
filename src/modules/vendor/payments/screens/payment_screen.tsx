@@ -8,12 +8,14 @@ import useVendorPaymentHook from '../hooks/payment_hook';
 import PaymentCardComponent from '../components/paymentCard_component';
 import useDisplayCurrency from '../../../general/hooks/displayCurrency_hook';
 import AppStatusBar from "../../../general/components/appStatusBar";
+import useScreenProtection from '../../../general/hooks/screenProtection_hook';
 
 const isPaid = (status?: string) => /^(success|paid)$/i.test(status ?? "");
 const isPending = (status?: string) => /^pending$/i.test(status ?? "");
 const isCancelled = (status?: string) => /cancel|fail|refund/i.test(status ?? "");
 
 const PaymentScreen = () => {
+    useScreenProtection();
     const { selectedTab, tabs, payments, isLoading, hasFetched } = useSelector((state: RootState) => state.vendorPaymentState);
     const { userData } = useSelector((state: RootState) => state.profileState);
     const dispatch = useDispatch();

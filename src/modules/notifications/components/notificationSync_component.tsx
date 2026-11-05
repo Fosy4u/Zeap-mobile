@@ -29,9 +29,7 @@ const NotificationSyncComponent = () => {
                     ));
                 }
             })
-            .catch(() => {
-                // Silent: a failed background poll must never surface an error.
-            });
+            .catch(() => {});
     };
 
     useEffect(() => {

@@ -34,7 +34,7 @@ const useAddReadyMadeShoesHook = () => {
             dispatch(setDraftProducts(getDraftProductResponseData));
             // console.log("GET DRAFT PRODUCT RESPONSE DATA::: ", getDraftProductResponseData);
         } catch (error) {
-            console.log("ERROR::: ", error);
+
         }
     };
 

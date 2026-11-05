@@ -13,8 +13,10 @@ import useAddressHook from '../hooks/address_hook.ts';
 import countries from "../../../../utils/deliveryCountries.json";
 import { SelectList } from 'react-native-dropdown-select-list';
 import AddressSkeletonLoader from '../components/addressSkeletonLoader_component.tsx';
+import useScreenProtection from '../../../general/hooks/screenProtection_hook';
 
 const AddressScreen = () => {
+    useScreenProtection();
     const { deliveryAddresses, selectedAddress, isLoading, showNewDeliveryAddressForm } = useSelector((state: RootState) => state.addressState);
     const { userData } = useSelector((state: RootState) => state.profileState );
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();

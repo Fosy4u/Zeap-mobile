@@ -99,7 +99,6 @@ const measurementAPI = rootAPI.injectEndpoints({
                 return response.data;
             },
         }),
-        // NOTE: getBodyMeasurementGuide moved to the general API
     }),
 });
 

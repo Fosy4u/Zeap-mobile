@@ -1,79 +1,95 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# Zeaper Mobile
 
-# Getting Started
+The Zeaper fashion marketplace app for iOS and Android, built with React Native 0.74 and TypeScript. Buyers browse and buy ready-to-wear and bespoke fashion; vendors run their shop, products and orders from the same app.
 
->**Note**: Make sure you have completed the [React Native - Environment Setup](https://reactnative.dev/docs/environment-setup) instructions till "Creating a new application" step, before proceeding.
+- **API:** `https://zeap-api.onrender.com`. The app and the web app share this backend.
+- **Web app (reference behaviour):** https://zeaper-web-dev.vercel.app
+- **Auth and push notifications:** Firebase (Auth, Cloud Messaging)
+- **Payments:** Paystack (NGN) and Stripe
 
-## Step 1: Start the Metro Server
+## Requirements
 
-First, you will need to start **Metro**, the JavaScript _bundler_ that ships _with_ React Native.
+| Tool | Version |
+| --- | --- |
+| Node.js | 18 or newer (CI uses 22) |
+| npm | 10. This project uses **npm only**; don't use Yarn. |
+| Xcode | 15 or newer, with CocoaPods (iOS 15.0 minimum deployment target) |
+| Android Studio | With JDK 17 and an Android SDK |
 
-To start Metro, run the following command from the _root_ of your React Native project:
+Set up your machine first with React Native's [environment setup guide](https://reactnative.dev/docs/environment-setup).
 
-```bash
-# using npm
-npm start
+## Setup
 
-# OR using Yarn
-yarn start
+```sh
+npm ci
+cp .env.example .env
+cd ios && pod install && cd ..
 ```
 
-## Step 2: Start your Application
+- `npm ci` installs the exact versions in `package-lock.json`. Its `postinstall` step runs `patch-package`, which applies the fix in `patches/react-native-paystack-webview+5.1.0.patch`.
+- `.env` is git-ignored. Ask the team lead for the values. The app reads:
+  - `REACT_APP_PAYSTACK_PUBLIC_KEY` and `REACT_APP_STRIPE_PUBLIC_KEY`: **public / publishable** keys (`pk_…`).
+  - `REACT_APP_ENCRYPTION_KEY`: the passphrase the backend expects for email sign-up. Without it, email sign-up shows "temporarily unavailable". This is a temporary arrangement until the backend change in `reports/BACKEND_CHANGES.md` (BC1) lands.
+- Everything in `.env` is built into the app and can be extracted from it, so never put real secrets there.
+- Firebase config files are already in the repository: `ios/ZeapApp/GoogleService-Info.plist` and `android/app/google-services.json`.
 
-Let Metro Bundler run in its _own_ terminal. Open a _new_ terminal from the _root_ of your React Native project. Run the following command to start your _Android_ or _iOS_ app:
+## Running the app
 
-### For Android
-
-```bash
-# using npm
-npm run android
-
-# OR using Yarn
-yarn android
+```sh
+npm start          # start Metro
+npm run ios        # build and run on the iOS simulator
+npm run android    # build and run on an Android emulator or device
 ```
 
-### For iOS
+## Checks
 
-```bash
-# using npm
-npm run ios
-
-# OR using Yarn
-yarn ios
+```sh
+npm run typecheck  # TypeScript, no build output
+npm test           # Jest test suite
 ```
 
-If everything is set up _correctly_, you should see your new app running in your _Android Emulator_ or _iOS Simulator_ shortly provided you have set up your emulator/simulator correctly.
+The same checks run automatically on GitHub for every push to `master` or `development` and on every pull request (`.github/workflows/ci.yml`). Please keep them passing.
 
-This is one way to run your app — you can also run it directly from within Android Studio and Xcode respectively.
+- Shared test setup lives in `jest.setup.js`. It provides stand-ins for phone-only modules such as Firebase, secure storage, push notifications, payments and media.
+- `__tests__/App.test.tsx` checks that the whole app renders. The other files cover login, order filtering, product validation, link safety, request time limits and session isolation.
 
-## Step 3: Modifying your App
+## Release builds
 
-Now that you have successfully run the app, let's modify it.
+### Android
 
-1. Open `App.tsx` in your text editor of choice and edit some lines.
-2. For **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Developer Menu** (<kbd>Ctrl</kbd> + <kbd>M</kbd> (on Window and Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (on macOS)) to see your changes!
+Release builds are signed with a dedicated release key that is **never** committed. Set these environment variables before building:
 
-   For **iOS**: Hit <kbd>Cmd ⌘</kbd> + <kbd>R</kbd> in your iOS Simulator to reload the app and see your changes!
+```sh
+export ZEAP_RELEASE_STORE_FILE=/absolute/path/to/release.keystore
+export ZEAP_RELEASE_STORE_PASSWORD=…
+export ZEAP_RELEASE_KEY_ALIAS=…
+export ZEAP_RELEASE_KEY_PASSWORD=…
+npm run build-android
+```
 
-## Congratulations! :tada:
+The build fails if any variable is missing or if it points at the debug keystore.
 
-You've successfully run and modified your React Native App. :partying_face:
+### iOS
 
-### Now what?
+Archive from `ios/ZeapApp.xcworkspace` in Xcode with the team's distribution certificate. Before submitting, check that the archived app's push entitlement (`aps-environment`) is `production`.
 
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [Introduction to React Native](https://reactnative.dev/docs/getting-started).
+## Project structure
 
-# Troubleshooting
+```
+App.tsx, index.tsx        App entry; the Redux store and providers are set up in index.tsx
+src/modules/<area>/       Features: auths, user, vendor, profile, settings, notifications, …
+    apis/                 RTK Query endpoints (injected into src/redux/api/rootAPI.ts)
+    hooks/                Screen logic
+    screens/, components/, modals/
+    slices/, models/, validations/
+src/redux/                Store, root API, request and session policies
+src/routes/               Navigation stack and route types
+src/utils/                Shared helpers (secure storage, safe links, formatting, …)
+patches/                  patch-package fixes applied on install
+```
 
-If you can't get this to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
+Network requests go through `src/redux/api/rootAPI.ts`. Every request is limited to 45 seconds (uploads: 120 seconds), and automatic retries are limited to read-only requests.
 
-# Learn More
+## Local reports
 
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+Security reviews and web-app issue lists are kept in `reports/`. That folder is git-ignored, so it stays on your machine and is never pushed.

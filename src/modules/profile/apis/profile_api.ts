@@ -30,11 +30,20 @@ const profileAPI = rootAPI.injectEndpoints({
             invalidatesTags: ["user"],
             transformResponse: (response: { data: IUser }) => response.data,
         }),
+
+        deleteUserAccount: builder.mutation<unknown, { _id: string; uid: string }>({
+            query: (requestData) => ({
+                url: "/user/delete",
+                method: "PUT",
+                body: requestData,
+            }),
+        }),
     }),
 });
 
 export const {
     useUpdateUserDetailsMutation,
     useUpdateUserProfilePicMutation,
+    useDeleteUserAccountMutation,
 } = profileAPI;
 export default profileAPI;

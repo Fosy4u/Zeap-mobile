@@ -78,7 +78,7 @@ const ForgotScreen = () => {
         { showSuccessModal && (
           <SuccessPopupModal
             title="Check Your Email"
-            bodyText={ `We've sent a password reset link to ${ submittedEmail }. Open it to set a new password, then log back in.` }
+            bodyText={ `If an account exists for ${ submittedEmail }, you'll receive a password reset link. Open it to set a new password, then log back in.` }
             screenURL="loginScreen"
           />
         ) }

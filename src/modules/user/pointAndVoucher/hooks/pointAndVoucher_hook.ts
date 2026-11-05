@@ -79,7 +79,6 @@ const usePointAndVoucherHook = () => {
 
         try {
             const voucherResponse = await getVoucherByCode({ code }).unwrap();
-            console.log("VOUCHER RESPONSE", voucherResponse);
 
             if (voucherResponse) {
                 dispatch(setSelectedVoucher(voucherResponse));

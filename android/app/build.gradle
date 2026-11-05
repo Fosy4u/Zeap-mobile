@@ -70,6 +70,35 @@ def enableProguardInReleaseBuilds = true
  */
 def jscFlavor = 'org.webkit:android-jsc:+'
 
+def releaseSigning = [
+    storeFile: System.getenv("ZEAP_RELEASE_STORE_FILE"),
+    storePassword: System.getenv("ZEAP_RELEASE_STORE_PASSWORD"),
+    keyAlias: System.getenv("ZEAP_RELEASE_KEY_ALIAS"),
+    keyPassword: System.getenv("ZEAP_RELEASE_KEY_PASSWORD")
+]
+
+gradle.taskGraph.whenReady { graph ->
+    if (graph.allTasks.any { it.project == project && it.name.toLowerCase().contains("release") }) {
+        if (releaseSigning.values().any { !it }) {
+            throw new GradleException("Release signing requires all ZEAP_RELEASE_* environment variables.")
+        }
+        if (file(releaseSigning.storeFile).canonicalFile == file("debug.keystore").canonicalFile ||
+            releaseSigning.keyAlias == "androiddebugkey") {
+            throw new GradleException("Debug signing is forbidden for release builds.")
+        }
+        def keyStore = java.security.KeyStore.getInstance(java.security.KeyStore.getDefaultType())
+        file(releaseSigning.storeFile).withInputStream {
+            keyStore.load(it, releaseSigning.storePassword.toCharArray())
+        }
+        def debugStore = java.security.KeyStore.getInstance(java.security.KeyStore.getDefaultType())
+        file("debug.keystore").withInputStream { debugStore.load(it, "android".toCharArray()) }
+        if (keyStore.getCertificate(releaseSigning.keyAlias) == null ||
+            keyStore.getCertificate(releaseSigning.keyAlias) == debugStore.getCertificate("androiddebugkey")) {
+            throw new GradleException("A dedicated release certificate is required.")
+        }
+    }
+}
+
 android {
     ndkVersion rootProject.ext.ndkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
@@ -83,14 +112,10 @@ android {
         versionCode 1
         versionName "1.0"
 
-        /* reactNativeArchitectures only governs RN's own build; prebuilt .so files
-           from third-party AARs still ship for every ABI without this filter. */
         ndk {
             abiFilters "armeabi-v7a", "arm64-v8a"
         }
     }
-    /* Per-ABI APKs: a universal build carries both 32- and 64-bit native
-       libraries. universalApk stays on as an install fallback. */
     splits {
         abi {
             enable true
@@ -106,15 +131,21 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+        release {
+            if (releaseSigning.values().every { it }) {
+                storeFile file(releaseSigning.storeFile)
+                storePassword releaseSigning.storePassword
+                keyAlias releaseSigning.keyAlias
+                keyPassword releaseSigning.keyPassword
+            }
+        }
     }
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
         }
         release {
-            // Caution! In production, you need to generate your own keystore file.
-            // see https://reactnative.dev/docs/signed-apk-android.
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.release
             minifyEnabled enableProguardInReleaseBuilds
             shrinkResources enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"

@@ -5,11 +5,6 @@ interface ISettingsState {
     recommendedCurrency: ICuurrency;
     isLoading: boolean;
     loadingMessage: string;
-    
-    // Password visibility states
-    showCurrentPassword: boolean;
-    showNewPassword: boolean;
-    showConfirmNewPassword: boolean;
 };
 
 export default ISettingsState;

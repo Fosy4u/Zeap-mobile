@@ -185,7 +185,7 @@ const productAPI = rootAPI.injectEndpoints({
             transformResponse: (response: { data: { dynamicFilters: IDynamicFilter[]; totalCount?: number } }) => {
                 const totalCount = response?.data?.totalCount;
                 return {
-                    dynamicFilters: response.data.dynamicFilters,
+                    dynamicFilters: response?.data?.dynamicFilters ?? [],
                     totalCount: typeof totalCount === "number" ? totalCount : null,
                 };
             },

@@ -2,7 +2,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { ILoginUser, loginUserSchema } from "../validations/auths_validation";
-import { getAuth, signInWithEmailAndPassword, signInWithCredential, getIdToken, GoogleAuthProvider } from "@react-native-firebase/auth";
+import { getAuth, signInWithEmailAndPassword, signInWithCredential, getIdToken, GoogleAuthProvider, signOut } from "@react-native-firebase/auth";
 import { useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -14,8 +14,8 @@ import { clearPendingDestination } from "../slices/authState_slice";
 import { useLazyGetUserByIdQuery, useMergeUserDataMutation, useRegisterGuestUserMutation } from "../apis/auths_api";
 import { GoogleSignin, statusCodes } from "@react-native-google-signin/google-signin";
 import handleError from "../../general/hooks/errorHandler_hook";
-import EncryptedStorage from 'react-native-encrypted-storage';
-import { storeToken, clearToken } from "../../../redux/services/authorizationHeader";
+import EncryptedStorage from '../../../utils/sessionStorage';
+import { storeToken } from "../../../redux/services/authorizationHeader";
 import { forgetSecureItem } from "../../../utils/secureStorage";
 
 const STORAGE_KEYS = {
@@ -60,62 +60,52 @@ const useLoginHook = () => {
     const onSubmit: SubmitHandler<ILoginUser> = async (data) => {
         setIsLoading(true);
 
+        const guestUID = await EncryptedStorage.getItem(STORAGE_KEYS.GUEST_UID).catch(() => null);
+        let parsedGuestUID: string | null = null;
         try {
-            const responseData = await signInWithEmailAndPassword(authInstance, data.email, data.password);
-            const authUser = responseData.user;
-            
-            
-            const uid = authUser.uid;
-            const token = await getIdToken(authUser, true); // ✅ Modular getIdToken
+            parsedGuestUID = guestUID ? JSON.parse(guestUID) : null;
+        } catch {
+            parsedGuestUID = null;
+        }
 
-            if (uid) {
-                const firebaseUserData = { uid: authUser.uid, email: authUser.email, displayName: authUser.displayName, photoURL: authUser.photoURL };
-                await EncryptedStorage.setItem(STORAGE_KEYS.FIREBASE_USER, JSON.stringify(firebaseUserData));
-                await EncryptedStorage.setItem(STORAGE_KEYS.USER_ID, JSON.stringify(uid));
-                await storeToken(token);
-
-                const userData = await getUserById(authUser.uid).unwrap();
-                console.log("USER DATA::: ", userData);
-                
-                if (userData) {
-                    // Save userData to secure storage
-                    await EncryptedStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(userData));
-
-                    // Check if there's a guest account to merge
-                    const guestUID = await EncryptedStorage.getItem(STORAGE_KEYS.GUEST_UID);
-                    const parsedGuestUID = guestUID ? JSON.parse(guestUID) : null;
-                    
-                    if (parsedGuestUID) {
-                        // Merge the guest and the logged-in user
-                        const mergedUserData = await mergeUserData({ guestUid: parsedGuestUID }).unwrap();
-
-                        if (mergedUserData) {
-                            // Update storage with merged user data
-                            await EncryptedStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(mergedUserData));
-                            
-                            // Clear all stored data
-                            await Promise.all([
-                                clearToken(),
-                                forgetSecureItem(STORAGE_KEYS.FIREBASE_USER),
-                                forgetSecureItem(STORAGE_KEYS.USER_ID),
-                                forgetSecureItem(STORAGE_KEYS.GUEST_UID)
-                            ]);
-                            
-                            // Dispatch merged user data to Redux Store
-                            dispatch(setUserData(mergedUserData));
-
-                            redirectAfterAuth();
-                        }
-                    } else {
-                        // No guest account to merge, proceed with normal login
-                        dispatch(setUserData(userData));
-
-                        redirectAfterAuth();
-                    }
-                }
-            }
+        let authUser;
+        try {
+            authUser = (await signInWithEmailAndPassword(authInstance, data.email, data.password)).user;
         } catch (error) {
             handleError(error);
+            setIsLoading(false);
+            return;
+        }
+
+        const uid = authUser.uid;
+
+        try {
+            const firebaseUserData = { uid, email: authUser.email, displayName: authUser.displayName, photoURL: authUser.photoURL };
+            await EncryptedStorage.setItem(STORAGE_KEYS.FIREBASE_USER, JSON.stringify(firebaseUserData));
+            await EncryptedStorage.setItem(STORAGE_KEYS.USER_ID, JSON.stringify(uid));
+
+            let userData = await getUserById(uid).unwrap();
+            if (!userData || (userData.uid && userData.uid !== uid)) throw new Error("Failed to load user profile.");
+
+            // Check if there's a guest account to merge
+            if (parsedGuestUID && parsedGuestUID !== uid) {
+                try {
+                    const mergedUserData = await mergeUserData({ guestUid: parsedGuestUID }).unwrap();
+                    if (mergedUserData && (!mergedUserData.uid || mergedUserData.uid === uid)) userData = mergedUserData;
+                } catch (mergeError) {
+                }
+            }
+            await forgetSecureItem(STORAGE_KEYS.GUEST_UID);
+
+            userData = { ...userData, uid };
+            await EncryptedStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(userData));
+            dispatch(setUserData(userData));
+
+            redirectAfterAuth();
+        } catch (error) {
+            await signOut(authInstance).catch(() => {});
+            handleError(new Error("We couldn't load your account. Please try logging in again."));
+            navigation.reset({ index: 0, routes: [{ name: "splashScreen" }] });
         } finally {
             setIsLoading(false);
         }
@@ -182,7 +172,7 @@ const useLoginHook = () => {
                 await GoogleSignin.signOut();
             }
         } catch (error) {
-            console.warn("[GoogleSignIn] clearGoogleSessionIfNeeded failed:", error);
+
         }
     };
 
@@ -192,69 +182,60 @@ const useLoginHook = () => {
         dispatch(setGlobalIsLoading(true));
 
         try {
-            console.log("[GoogleSignIn] Starting Google Sign-In flow...");
 
             await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
-            console.log("[GoogleSignIn] Play services available");
 
             await clearGoogleSessionIfNeeded();
-            console.log("[GoogleSignIn] Cleared cached Google session if needed");
 
             const signInResponse: any = await GoogleSignin.signIn();
-            console.log("[GoogleSignIn] SignIn response:", JSON.stringify(signInResponse));
 
             if (signInResponse?.type === "cancelled") {
-                console.log("[GoogleSignIn] User cancelled sign-in");
+
                 return;
             }
 
             const { idToken, accessToken } = await getGoogleTokens(signInResponse);
-            console.log("[GoogleSignIn] Got tokens, idToken exists:", !!idToken);
+
             if (!idToken) throw new Error("Failed to retrieve Google ID token.");
 
-            console.log("[GoogleSignIn] Creating Firebase credential...");
             const googleCredential = GoogleAuthProvider.credential(idToken, accessToken);
             const { user: authUser } = await signInWithCredential(authInstance, googleCredential);
-            console.log("[GoogleSignIn] Firebase auth successful, uid:", authUser.uid);
 
             const uid = authUser.uid;
             const token = await getIdToken(authUser, true);
-            console.log("[GoogleSignIn] Got Firebase ID token");
 
             const firebaseUserData = { uid: authUser.uid, email: authUser.email, displayName: authUser.displayName, photoURL: authUser.photoURL };
             await EncryptedStorage.setItem(STORAGE_KEYS.FIREBASE_USER, JSON.stringify(firebaseUserData));
             await EncryptedStorage.setItem(STORAGE_KEYS.USER_ID, JSON.stringify(uid));
             await storeToken(token);
-            console.log("[GoogleSignIn] Stored Firebase auth data");
 
             let userData;
-            console.log("[GoogleSignIn] Fetching user profile from backend, uid:", uid);
+
             try {
                 userData = await getUserById(uid).unwrap();
-                console.log("[GoogleSignIn] Got user data from API");
+
             } catch (getUserError: any) {
-                console.log("[GoogleSignIn] getUserById failed, creating user record...", getUserError?.status);
+
                 try {
                     await registerGuestUser({}).unwrap();
                 } catch (createErr: any) {
-                    console.warn("[GoogleSignIn] registerGuestUser failed, attempting refetch anyway:", createErr?.status, createErr?.data);
+
                 }
                 userData = await getUserById(uid).unwrap();
-                console.log("[GoogleSignIn] Got user data after creation");
+
             }
             if (!userData) throw new Error("Failed to load user profile.");
 
             const guestUID = await EncryptedStorage.getItem(STORAGE_KEYS.GUEST_UID);
             const parsedGuestUID = guestUID ? JSON.parse(guestUID) : null;
-            console.log("[GoogleSignIn] Guest UID from storage:", parsedGuestUID);
 
             if (parsedGuestUID && parsedGuestUID !== uid) {
-                console.log("[GoogleSignIn] Merging guest data...");
+
                 try {
                     const mergedUserData = await mergeUserData({ guestUid: parsedGuestUID }).unwrap();
                     if (mergedUserData) userData = mergedUserData;
                 } catch (mergeErr: any) {
-                    console.warn("[GoogleSignIn] Guest merge failed; continuing with fetched profile.", mergeErr);
+
                 }
                 await forgetSecureItem(STORAGE_KEYS.GUEST_UID);
             }
@@ -262,22 +243,19 @@ const useLoginHook = () => {
             userData = normalizeGoogleUserData(userData, authUser);
 
             await EncryptedStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(userData));
-            console.log("[GoogleSignIn] Stored user data in encrypted storage");
 
-            console.log("[GoogleSignIn] USER DATA:", JSON.stringify(userData, null, 2));
-            console.log("[GoogleSignIn] Dispatching user data to Redux, isGuest:", userData.isGuest);
+
             dispatch(setUserData(userData));
 
-            console.log("[GoogleSignIn] Routing to pending destination or User Home Screen");
             redirectAfterAuth();
-            console.log("[GoogleSignIn] Login flow completed successfully!");
+
         } catch (error: any) {
             const code = error?.code;
             if (code === statusCodes.SIGN_IN_CANCELLED || code === statusCodes.IN_PROGRESS) {
-                console.log("[GoogleSignIn] Sign-in cancelled or in progress");
+
                 return;
             }
-            console.error("[GoogleSignIn] login failed:", code, error?.message, error);
+
             handleError(error);
         } finally {
             setIsGoogleLoading(false);

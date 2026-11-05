@@ -55,12 +55,9 @@ const hasLongSequentialRun = (value: string, maxRun = 4): boolean => {
 };
 const SOCIAL_MAX = 200;
 
-// Website: must begin with http://, https:// or www. and contain a domain.
 const WEBSITE_REGEX = /^(https?:\/\/|www\.)[^\s.]+(\.[^\s.]+)+.*$/i;
-// Handle: "@" followed by letters/numbers/dot/underscore (TikTok, Instagram, X).
 const HANDLE_REGEX = /^@[A-Za-z0-9._]{1,30}$/;
 const FACEBOOK_REGEX = /^(https?:\/\/)?(www\.)?facebook\.com\/[A-Za-z0-9._\-]+\/?$/i;
-// LinkedIn: optional scheme/www, then linkedin.com/<path>.
 const LINKEDIN_REGEX = /^(https?:\/\/)?(www\.)?linkedin\.com\/[A-Za-z0-9._\-\/]+\/?$/i;
 
 const optionalSocial = (regex: RegExp, message: string) =>

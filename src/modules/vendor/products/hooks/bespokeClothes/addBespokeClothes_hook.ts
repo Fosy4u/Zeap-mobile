@@ -38,7 +38,7 @@ const useAddBespokeClothesHook = () => {
             dispatch(setDraftProducts(getDraftProductResponseData));
             // console.log("GET DRAFT PRODUCT RESPONSE DATA::: ", getDraftProductResponseData);
         } catch (error) {
-            console.log("ERROR::: ", error);
+
         }
     };
 
@@ -56,7 +56,7 @@ const useAddBespokeClothesHook = () => {
             await deleteDraftProduct({ productIds: [productID] }).unwrap();
             await handleGetDraftProducts();
         } catch (error) {
-            console.log("DELETE DRAFT PRODUCT ERROR::: ", error);
+
         } finally {
             setShowDeleteDraftModal(false);
             setDraftToDeleteId("");

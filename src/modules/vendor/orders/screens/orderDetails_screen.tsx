@@ -32,12 +32,14 @@ import OrderStatusHistoryBottomSheetComponent from '../components/orderStatusHis
 import OrderStatusPillComponent from '../components/orderStatusPill_component.tsx';
 import { canRejectOrderStatus } from '../models/orderFilter_model.ts';
 import useDisplayCurrency from '../../../general/hooks/displayCurrency_hook.ts';
+import useScreenProtection from '../../../general/hooks/screenProtection_hook';
 
 interface IProps {
   route: RouteProp<RootNavigationStackModel, 'vendorOrderDetailsScreen'>;
 }
 
 const VendorOrderDetailsScreen: React.FC<IProps> = ({route}) => {
+  useScreenProtection();
   const {
     order, orderHistory, historyIsLoading,
     showConfirmOrderModal, showRejectOrderModal, showStatusSuccessModal,

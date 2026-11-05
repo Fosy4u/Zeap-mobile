@@ -1,3 +1,4 @@
+import { getAuth } from '@react-native-firebase/auth';
 import rootAPI from "../../../redux/api/rootAPI.ts";
 import { checkUserEmailRoute, convertGuestToPasswordUserRoute, loginUserRoute, mergeUserDataRoute, registerUserRoute } from "../../../redux/api/api_route.ts";
 import { IUser } from "../../profile/models/profileState_model";
@@ -15,7 +16,9 @@ const authAPI = rootAPI.injectEndpoints({
             extraOptions: { maxRetries: 0 },
             invalidatesTags: ["user"],
             transformResponse: (response: { data: any }) => {
-                return response.data;
+                const uid = getAuth().currentUser?.uid;
+                if (!uid || !response.data || (response.data.uid && response.data.uid !== uid)) throw new Error('Profile identity mismatch');
+                return { ...response.data, uid };
             },
         }),
 
@@ -28,8 +31,9 @@ const authAPI = rootAPI.injectEndpoints({
             }),
             extraOptions: { maxRetries: 0 },
             providesTags: ["user"],
-            transformResponse: (response: { data: IUser }) => {
-                return response.data;
+            transformResponse: (response: { data: IUser }, _meta, uid) => {
+                if (!response.data || (response.data.uid && response.data.uid !== uid)) throw new Error('Profile identity mismatch');
+                return { ...response.data, uid };
             },
         }),
 

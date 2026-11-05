@@ -92,7 +92,6 @@ const stepTwoAddBespokeClothesSchema = yup.object().shape({
     }),
 });
 
-// clothes: design, occasion, sleeve length, fastening and fit are optional;
 const stepTwoAddReadyMadeClothesSchema = yup.object().shape({
     productId: yup.string().required("Product ID is required."),
     categories: yup.object().shape({
@@ -222,12 +221,32 @@ const stepThreeAddReadyMadeShoesSchema = yup.object().shape({
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Step 5 Schemas
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+const variationPriceRule = yup
+    .number()
+    .typeError("Please enter a valid price.")
+    .required("Please enter a price.")
+    .test("variation-price", (value, context) => {
+        if (value < 0) return context.createError({ message: "Price cannot be less than 0." });
+        if (value === 0) return context.createError({ message: "Please enter a valid price." });
+        return true;
+    });
+const variationQuantityRule = yup
+    .number()
+    .typeError("Please enter a valid quantity.")
+    .required("Please enter a quantity.")
+    .test("variation-quantity", (value, context) => {
+        if (value < 0) return context.createError({ message: "Quantity cannot be less than 0." });
+        if (!Number.isInteger(value)) return context.createError({ message: "Quantity must be a whole number." });
+        if (value === 0) return context.createError({ message: "Please enter a valid quantity." });
+        return true;
+    });
+
 const stepFiveAddBespokeShoesSchema = yup.object().shape({
     productId: yup.string().required("Product ID is required."),
     variation: yup.object().shape({
         colorType: yup.string().required("Color type is required."),
         availableColors: yup.array().of(yup.string()),
-        price: yup.number().required("Price is required."),
+        price: variationPriceRule,
         sku: yup.string().optional(),
     }),
     currentStep: yup.number().required("Current step is required."),
@@ -237,8 +256,8 @@ const stepFiveAddReadyMadeClothesSchema = yup.object().shape({
     variation: yup.object().shape({
         colorValue: yup.string().required("Color value is required."),
         size: yup.string().required("Size is required."),
-        price: yup.number().required("Price is required."),
-        quantity: yup.number().required("Quantity is required."),
+        price: variationPriceRule,
+        quantity: variationQuantityRule,
         sku: yup.string().optional(),
     }),
     currentStep: yup.number().required("Current step is required."),
@@ -248,8 +267,8 @@ const stepFiveAddReadyMadeShoesSchema = yup.object().shape({
     variation: yup.object().shape({
         colorValue: yup.string().required("Color value is required."),
         size: yup.string().required("Size is required."),
-        price: yup.number().required("Price is required."),
-        quantity: yup.number().required("Quantity is required."),
+        price: variationPriceRule,
+        quantity: variationQuantityRule,
         sku: yup.string().optional(),
     }),
     currentStep: yup.number().required("Current step is required."),

@@ -52,8 +52,7 @@ const useReviewAndRatingHook = () => {
 
         try {
             const reviewsResponse = await getAllReviews().unwrap();
-            console.log("REVIEWS RESPONSE", reviewsResponse);
-            
+
             if (reviewsResponse) {
                 dispatch(setPendingReviews(reviewsResponse.pendingReviews ?? []));
                 dispatch(setGivenReviews(reviewsResponse.givenReviews ?? []));
@@ -83,7 +82,7 @@ const useReviewAndRatingHook = () => {
     const onSubmit: SubmitHandler<IRateAndReviewFormData> = async (data) => {
         // Check if reviewOrder is available
         if (!reviewOrder) {
-            console.error("No review order data available");
+
             return;
         }
 

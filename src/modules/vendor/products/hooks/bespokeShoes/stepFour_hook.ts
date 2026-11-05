@@ -61,7 +61,7 @@ const useStepFourHook = () => {
             
             return granted === PermissionsAndroid.RESULTS.GRANTED;
         } catch (err) {
-            console.warn(err);
+
             return false;
         }
     };
@@ -197,7 +197,6 @@ const useStepFourHook = () => {
                 
                 // Get the updated product data
                 const updatedProduct = await getProductByProductID(productId).unwrap();
-                console.log("UPDATED PRODUCT::: ", updatedProduct);
 
                 if (updatedProduct) {
                     dispatch(setProduct(updatedProduct));
@@ -210,7 +209,7 @@ const useStepFourHook = () => {
             dispatch(setProductIsLoading(false));
             dispatch(setLoadingMessage(""));
             Alert.alert("Error", error.errors[0]);
-            console.log("ERROR: ", error);
+
         }
     };
 
@@ -227,7 +226,6 @@ const useStepFourHook = () => {
 
             try {
                 const deleteProductImageResponseData = await deleteProductImage({ productId, imageName, color }).unwrap();
-                console.log("DELETE PRODUCT IMAGE RESPONSE: ", deleteProductImageResponseData);
 
                 if (deleteProductImageResponseData) {
                     const updatedProduct = await getProductByProductID(productId).unwrap();
@@ -241,7 +239,7 @@ const useStepFourHook = () => {
             } catch (error) {
                 dispatch(setProductIsLoading(false));
                 dispatch(setLoadingMessage(""));
-                console.log("ERROR: ", error);
+
             }
         } else {
             setSelectedImages(prevState => prevState.filter((_, i) => i !== index));
@@ -277,11 +275,9 @@ const useStepFourHook = () => {
         const productId = product?.productId || "";
         const imageName = selectedDefaultImage.name || "";
         const color = "Bespoke";
-        console.log("REQUEST DATA: ", { productId, imageName, color });
-        
+
         try {
             const setDefaultProductImageResponseData = await setDefaultProductImage({ productId, imageName, color }).unwrap();
-            console.log("SET DEFAULT PRODUCT IMAGE RESPONSE: ", setDefaultProductImageResponseData);
 
             if (setDefaultProductImageResponseData) {
                 setShowDefaultImageModal(false);
@@ -293,7 +289,7 @@ const useStepFourHook = () => {
             setShowDefaultImageModal(false);
             dispatch(setProductIsLoading(false));
             dispatch(setLoadingMessage(""));
-            console.log("ERROR: ", error);
+
         }
     };
 

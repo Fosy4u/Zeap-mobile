@@ -13,11 +13,6 @@ const initialState: ISettingsState = {
         symbol: "",
         flag: undefined
     },
-    
-    // Password visibility states
-    showCurrentPassword: false,
-    showNewPassword: false,
-    showConfirmNewPassword: false,
 
     isLoading: false,
     loadingMessage: "",
@@ -29,15 +24,6 @@ const settingsStateSlice = createSlice({
     reducers: {
         setRecommendedCurrency: (state: ISettingsState, action: PayloadAction<ICuurrency>) => {
             state.recommendedCurrency = action.payload;
-        },
-        setShowCurrentPassword: (state: ISettingsState, action: PayloadAction<boolean>) => {
-            state.showCurrentPassword = action.payload;
-        },
-        setShowNewPassword: (state: ISettingsState, action: PayloadAction<boolean>) => {
-            state.showNewPassword = action.payload;
-        },
-        setShowConfirmNewPassword: (state: ISettingsState, action: PayloadAction<boolean>) => {
-            state.showConfirmNewPassword = action.payload;
         },
         setIsLoading: (state: ISettingsState, action: PayloadAction<boolean>) => {
             state.isLoading = action.payload;
@@ -51,9 +37,6 @@ const settingsStateSlice = createSlice({
 const { actions, reducer } = settingsStateSlice;
 export const {
     setRecommendedCurrency,
-    setShowCurrentPassword,
-    setShowNewPassword,
-    setShowConfirmNewPassword,
     setIsLoading,
     setLoadingMessage,
 } = actions;

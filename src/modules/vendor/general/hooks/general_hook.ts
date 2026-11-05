@@ -13,7 +13,7 @@ const useVendorGeneralHook = () => {
             // Dispatch to Redux Store
             dispatch(setShop(shop));
         } catch (error) {
-            console.log("ERROR::: ", error);
+
         };
     };
 

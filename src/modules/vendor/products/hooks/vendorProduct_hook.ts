@@ -311,7 +311,7 @@ const useVendorProductHook = () => {
         } catch (error) {
             dispatch(setIsLoading(false));
             dispatch(setLoadingMessage(""));
-            console.log("ERROR::: ", error);
+
         }
     };
 
@@ -348,7 +348,7 @@ const useVendorProductHook = () => {
             };
 
             const likeResponse = await likeReview(requestData).unwrap();
-            console.log("RESPONSE::: ", likeResponse);
+
         } catch (error: any) {
             handleError(error);
         };
@@ -356,10 +356,10 @@ const useVendorProductHook = () => {
 
     // Handle review dislike
     const handleReviewDislike: SubmitHandler<ILikeReview> = async (data) => {
-        console.log("REQUEST DATA::: ", data);
+
         try {
             const dislikeResponse = await dislikeReview(data).unwrap();
-            console.log("RESPONSE::: ", dislikeResponse);
+
         } catch (error: any) {
             handleError(error);
         };
@@ -411,16 +411,13 @@ const useVendorProductHook = () => {
                 productId: product?.productId!,
                 promoId: selectedPromo?.promoId!,
             };
-            console.log("REQUEST DATA::: ", requestData);
 
             const applyPromotionResponse = await applyPromotion(requestData).unwrap();
-            console.log("RESPONSE::: ", applyPromotionResponse);
 
             if (applyPromotionResponse) {
 
                 // Get back the product promo
                 const productPromotionResponse = await getProductPromotion(product?.productId!).unwrap();
-                console.log("RESPONSE::: ", productPromotionResponse);
 
                 if (productPromotionResponse) {
                     dispatch(setProductPromotion(productPromotionResponse));
@@ -451,16 +448,13 @@ const useVendorProductHook = () => {
                 productId: product?.productId!,
                 promoId: promoID,
             };
-            console.log("REQUEST DATA::: ", requestData);
 
             const tornOffPromotionResponse = await turnOffPromotion(requestData).unwrap();
-            console.log("RESPONSE::: ", tornOffPromotionResponse);
 
             if (tornOffPromotionResponse) {
 
                 // Get back the product promo
                 const productPromotionResponse = await getProductPromotion(product?.productId!).unwrap();
-                console.log("RESPONSE::: ", productPromotionResponse);
 
                 if (productPromotionResponse) {
                     dispatch(setProductPromotion(productPromotionResponse));

@@ -25,10 +25,7 @@ import { useUpdateBodyMeasurementTemplateMutation } from "../apis/measurement_ap
 import handleError from "../../../general/hooks/errorHandler_hook";
 import IBodyMeasurementGuide from "../../../general/models/bodyMeasurementGuide_model";
 import EditMeasurementTemplateSkeletonLoader from "../components/editMeasurementTemplateSkeletonLoader_component";
-
-//
-//
-//   { template_id, templateName, measurements: [{field, value}, ...] }
+import useScreenProtection from "../../../general/hooks/screenProtection_hook";
 
 interface ISavedField {
     field: string;
@@ -36,6 +33,7 @@ interface ISavedField {
 }
 
 const EditMeasurementTemplateScreen = () => {
+    useScreenProtection();
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const dispatch = useDispatch<AppDispatch>();
 

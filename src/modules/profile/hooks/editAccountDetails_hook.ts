@@ -237,13 +237,6 @@ const useEditAccountDetailsHook = () => {
         };
 
         const requestUrl = `${ baseURL }/user/update?_id=${ userId }`;
-        console.log("CURRENCY UPDATE REQUEST:::", JSON.stringify({
-            url: requestUrl,
-            method: "PUT",
-            payload: requestData,
-            isGuest: userData?.isGuest ?? null,
-            uid: userData?.uid ?? null,
-        }, null, 2));
 
         try {
             const updatedUserDataResponse = await updateUserDetails(requestData).unwrap();
@@ -253,13 +246,7 @@ const useEditAccountDetailsHook = () => {
                 dispatch(bumpCurrencyRefreshToken());
             }
         } catch (error: any) {
-            console.log("CURRENCY UPDATE FAILED:::", JSON.stringify({
-                url: requestUrl,
-                method: "PUT",
-                payload: requestData,
-                status: error?.status ?? null,
-                response: error?.data ?? null,
-            }, null, 2));
+
             handleError(error);
         } finally {
             dispatch(setIsLoading(false));

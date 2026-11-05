@@ -3,6 +3,7 @@ import { View, Text, useWindowDimensions } from 'react-native'
 import HTMLView from 'react-native-htmlview';
 import IProductDetails from '../models/productDetails_model'
 import FormatWords from '../../../../utils/formatWords';
+import { openExternalLinkWithConfirm } from '../../../../utils/safeLinks';
 
 interface IProps {
   product: IProductDetails;
@@ -22,6 +23,7 @@ const DescriptionComponent: React.FC<IProps> = ({ product }) => {
         {/* Render HTML description */}
         <HTMLView
           value={product?.description || "<p>No description available</p>"}
+          onLinkPress={ openExternalLinkWithConfirm }
           stylesheet={{
             p: { color: "#374151", fontFamily: "Montserrat-Medium", fontSize: 13 }, // text-gray-700, text-xs
             h1: { fontFamily: "Montserrat-Medium", fontSize: 14, fontWeight: "bold" },

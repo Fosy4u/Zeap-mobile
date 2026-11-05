@@ -5,9 +5,11 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../../../redux/store/store";
 import { SelectList } from "react-native-dropdown-select-list";
 import SuccessPopupModal from "../../../auths/modals/successPopup_modal";
+import useScreenProtection from "../../../general/hooks/screenProtection_hook";
 
 
 const ShopSetupScreen = () => {
+  useScreenProtection();
   const { phoneCodeOptions } = useSelector((state: RootState) => state.profileState);
   const [selected, setSelected] = useState("");
   const [step, setStep] = useState("StepOne");

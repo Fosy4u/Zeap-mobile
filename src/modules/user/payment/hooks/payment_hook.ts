@@ -59,13 +59,11 @@ const usePaymentHook = () => {
 
         try {
             const paymentReferenceResponse = await promise.unwrap();
-            console.log("PAYMENT REFERENCE::: ", paymentReferenceResponse?.reference, "status:", paymentReferenceResponse?.paymentStatus);
 
             if (paymentReferenceResponse) {
                 dispatch(setPaymentReference(paymentReferenceResponse));
 
                 const paymentCurrency = paymentReferenceResponse?.currency || "NGN";
-                console.log("PAYMENT CURRENCY::: ", paymentCurrency);
 
                 if (paymentCurrency === "NGN") {
                     navigation.navigate("paystackPaymentScreen");
@@ -74,7 +72,7 @@ const usePaymentHook = () => {
                 }
             }
         } catch (error) {
-            console.log("ERROR::: ", error);
+
             if (aborted) {
                 handleError(new Error(
                     "The payment server is taking too long to respond. Please check your connection and try again in a moment.",
@@ -94,7 +92,7 @@ const usePaymentHook = () => {
     // Handle Stripe payment
     const handleStripePayment = async (paymentReference?: IPaymentReference, clientSecret?: string) => {
         const stripeClientSecret = clientSecret ?? paymentReference?.stripeClientSecret!;
-        console.log("STRIPE PAYMENT INTENT::: ", stripeClientSecret?.split("_secret_")[0]);
+
         const { error: paymentSheetError } = await initPaymentSheet({
             paymentIntentClientSecret: stripeClientSecret,
             merchantDisplayName: "Zeaper",
@@ -107,14 +105,14 @@ const usePaymentHook = () => {
         });
         if (paymentSheetError) {
             handleError(paymentSheetError);
-            console.error('Error initializing payment sheet:', paymentSheetError.message);
+
             return;
         }
 
         const { error: presentError } = await presentPaymentSheet();
         if (presentError) {
             handleError(presentError);
-            console.error('Error presenting payment sheet:', presentError.message);
+
             return;
         }
 
@@ -125,7 +123,7 @@ const usePaymentHook = () => {
         }
 
         const stripeStatus = paymentIntent?.status;
-        console.log("STRIPE PAYMENT INTENT STATUS::: ", stripeStatus);
+
         if (stripeStatus !== "Succeeded" && stripeStatus !== "Processing") {
             handleError(new Error(`Stripe payment is not complete (status: ${ stripeStatus || "unknown" }).`));
             return;
@@ -138,7 +136,6 @@ const usePaymentHook = () => {
     const handlePaymentSuccess = async (reference: string, retryPendingStripePayment = false) => {
         setLoadingMessage("Verifying payment...");
         setIsLoading(true);
-        console.log("PAYMENT REFERENCE::: ", reference);
 
         // Verify payment
         try {
@@ -169,8 +166,6 @@ const usePaymentHook = () => {
                 }
             }
 
-            console.log("VERIFY PAYMENT RESPONSE DATA SUCCESS::: ", verifyPaymentResponse);
-
             if (verifyPaymentResponse!) {
                 dispatch(setCart({
                     _id: "",
@@ -190,7 +185,7 @@ const usePaymentHook = () => {
                 dispatch(setShowOrderSuccessModal(true));
             }
         } catch (error) {
-            console.log("ERROR::: ", error);
+
             handleError(new Error(
                 `We could not confirm your payment (ref: ${reference}). If you were charged, please contact support with this reference rather than paying again.`,
             ));
@@ -202,7 +197,7 @@ const usePaymentHook = () => {
 
     // Handle payment cancel
     const handlePaymentCancel = () => {
-        console.log("PAYMENT CANCELED.");
+
         navigation.navigate("checkoutScreen");
     };
 

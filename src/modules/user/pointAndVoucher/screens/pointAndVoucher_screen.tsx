@@ -14,12 +14,14 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { RouteProp } from '@react-navigation/native';
 import RootNavigationStackModel from '../../../../routes/model/routes_model';
 import PointAndVoucherSkeletonLoader from '../components/pointAndVoucherSkeletonLoader_component';
+import useScreenProtection from '../../../general/hooks/screenProtection_hook';
 
 interface IProps {
     route: RouteProp<RootNavigationStackModel, "pointAndVoucherScreen">;
 };
 
 const PointAndVoucherScreen: React.FC<IProps> = ({ route }) => {
+    useScreenProtection();
     const { tabs, selectedTab, points, isLoading } = useSelector((state: RootState) => state.pointAndVoucherState);
     const dispatch = useDispatch();
     const from = route.params?.from;

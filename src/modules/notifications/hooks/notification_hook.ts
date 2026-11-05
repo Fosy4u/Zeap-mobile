@@ -48,12 +48,9 @@ const useNotificationHook = () => {
         const requestData = {
             notification_id
         }
-        console.log("NOTIFICATION ID::: ", notification_id);
-        
-        
+
         try {
             const deleteNotificationResponse = await deleteNotification(requestData).unwrap();
-            console.log("DELETE NOTIFICATION RESPONSE::: ", deleteNotificationResponse);
 
             if (deleteNotificationResponse) {
                 dispatch(setNotifications(

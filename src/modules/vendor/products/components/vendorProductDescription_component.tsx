@@ -4,6 +4,7 @@ import { Setting4 } from 'iconsax-react-native';
 import IVendorProductDetails, { IVariation } from '../models/vendorProductDetails_model';
 import HTMLView from 'react-native-htmlview';
 import FormatWords from '../../../../utils/formatWords';
+import { openExternalLinkWithConfirm } from '../../../../utils/safeLinks';
 import useVariationManagerHook from '../hooks/variationManager_hook';
 import ManageVariationsModal from '../modals/manageVariations_modal';
 import useDisplayCurrency from '../../../general/hooks/displayCurrency_hook';
@@ -65,6 +66,7 @@ const VendorProductDescriptionComponent: React.FC<IProps> = ({ product }) => {
     <View className="mt-4">
       <HTMLView
         value={product?.description || "<p>No description available</p>"}
+        onLinkPress={ openExternalLinkWithConfirm }
         stylesheet={{
           p: { color: "#374151", fontSize: 12 }, // text-gray-700, text-xs
           h1: { fontSize: 14, fontWeight: "bold" },

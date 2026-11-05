@@ -13,8 +13,10 @@ import useEditAccountDetailsHook from "../hooks/editAccountDetails_hook";
 import CountriesPhoneCodeModal from "../modals/countriesPhoneCode_modal";
 import SuccessPopupModal from "../../auths/modals/successPopup_modal";
 import AppLoader from "../../general/components/appLoader";
+import useScreenProtection from "../../general/hooks/screenProtection_hook";
 
 const EditAccountDetailsScreen = () => {
+    useScreenProtection();
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
 
     const {

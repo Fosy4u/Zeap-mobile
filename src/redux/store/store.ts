@@ -1,4 +1,7 @@
-import { configureStore } from "@reduxjs/toolkit";
+import { combineReducers, configureStore } from "@reduxjs/toolkit";
+import { getAuth, onAuthStateChanged } from '@react-native-firebase/auth';
+import { cleanupSensitiveFiles } from '../../utils/sensitiveFiles';
+import { setSessionReset, syncSession } from '../services/session';
 import authReducer from "../../modules/auths/slices/authState_slice";
 import dashboardWrapperReducer from "../../modules/user/home/slices/dashboardWrapper_slice";
 import productReducer from "../../modules/user/products/slices/product_slice";
@@ -23,8 +26,7 @@ import rootAPI from "../api/rootAPI.ts";
 import reviewAndRatingReducer from "../../modules/user/raviewAndRating/slices/reviewAndRating_slice";
 
 
-const appStore = configureStore({
-    reducer: {
+const combinedReducer = combineReducers({
         //  General
         authState: authReducer,
         profileState: profileReducer,
@@ -53,8 +55,15 @@ const appStore = configureStore({
         vendorOrderState: vendorOrderReducer,
 
         [rootAPI.reducerPath]: rootAPI.reducer,
-    },
+});
 
+const appStore = configureStore({
+    reducer: (state: ReturnType<typeof combinedReducer> | undefined, action: any) => {
+        if (action.type !== 'session/reset') return combinedReducer(state, action);
+        const freshState = combinedReducer(undefined, action);
+        const pendingDestination = state?.authState?.pendingDestination ?? null;
+        return { ...freshState, authState: { ...freshState.authState, pendingDestination } };
+    },
     middleware: (getDefaultMiddleware) => getDefaultMiddleware({
         serializableCheck: false,
         immutableCheck: false,
@@ -62,6 +71,16 @@ const appStore = configureStore({
         rootAPI.middleware
     ]),
 });
+
+setSessionReset(() => {
+    appStore.dispatch(rootAPI.util.getRunningQueriesThunk()).forEach(request => request.abort());
+    appStore.dispatch(rootAPI.util.getRunningMutationsThunk()).forEach(request => request.abort());
+    appStore.dispatch(rootAPI.util.resetApiState());
+    appStore.dispatch({ type: 'session/reset' });
+    cleanupSensitiveFiles();
+});
+syncSession();
+onAuthStateChanged(getAuth(), () => { syncSession(); });
 
 export type RootState = ReturnType<typeof appStore.getState>;
 export type AppDispatch = typeof appStore.dispatch;

@@ -99,7 +99,6 @@ const useStepTwoHook = () => {
         } catch (error: any) {
             dispatch(setProductIsLoading(false));
             dispatch(setLoadingMessage(""));
-            // Defensive: surface yup (error.errors[0]) or API (error.data.*)
             const message =
                 error?.errors?.[0] ||
                 error?.data?.error ||
@@ -107,7 +106,7 @@ const useStepTwoHook = () => {
                 error?.message ||
                 "Something went wrong saving the category. Please try again.";
             Alert.alert("Error", message);
-            console.log("STEP TWO SUBMIT ERROR::: ", error);
+
         }
     };
 

@@ -102,7 +102,6 @@ const useStepNineHook = () => {
             const createdShop = await registerVendor(payload).unwrap();
             await finishOnboarding(createdShop);
         } catch (error: any) {
-            console.log("[stepNine] registerVendor failed::: ", JSON.stringify(error, null, 2));
 
             const status = error?.status;
             const data = error?.data;
@@ -123,7 +122,7 @@ const useStepNineHook = () => {
                     await finishOnboarding();
                     return;
                 } catch (recoverError) {
-                    console.log("[stepNine] already-has-shop recovery failed::: ", JSON.stringify(recoverError, null, 2));
+
                 }
             }
 

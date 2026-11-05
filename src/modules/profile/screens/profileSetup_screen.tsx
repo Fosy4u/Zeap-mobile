@@ -9,9 +9,11 @@ import SuccessPopupModal from "../../auths/modals/successPopup_modal";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import RootNavigationStackModel from "../../../routes/model/routes_model";
+import useScreenProtection from "../../general/hooks/screenProtection_hook";
 
 
 const ProfileSetupScreen = () => {
+  useScreenProtection();
   const { heightUnitOptions, weightUnitOptions, complexionOptions, shoeSizeOptions, bestOutfitOptions, bestColorOptions } = useSelector((state: RootState) => state.profileState);
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
   const [selected, setSelected] = useState("");

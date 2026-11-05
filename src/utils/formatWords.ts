@@ -38,7 +38,6 @@ class FormatWords {
             }
         }
 
-        // type code (ACC) as a backstop when productType is absent.
         if (productType?.toLowerCase() === "accessory" || code === "ACC") return "Accessory";
 
         if (!productGroup) return "N/A";

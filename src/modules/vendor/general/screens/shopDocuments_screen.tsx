@@ -1,9 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
-    Alert,
-    Linking,
-    Modal,
+    BackHandler,
     SafeAreaView,
     ScrollView,
     StatusBar,
@@ -23,6 +21,8 @@ import { useGetOnboardingDocumentsQuery, IOnboardingDocumentRequirement } from '
 import AuthCheck from '../../../auths/components/authCheck';
 import useShopGuardHook from '../hooks/shopGuard_hook';
 import NoShopPopupModal from '../modals/noShopPopup_modal';
+import { openSecureLink } from '../../../../utils/safeLinks';
+import useScreenProtection from '../../../general/hooks/screenProtection_hook';
 
 const ShopDocumentsScreen = () => {
     const { shop, isCheckingShop, hasNoShop, recheckShop } = useShopGuardHook();
@@ -34,6 +34,17 @@ const ShopDocumentsScreen = () => {
     const { data: documents = [], isFetching, isError } = useGetOnboardingDocumentsQuery(shopId, { skip: !shopId });
 
     const [previewDoc, setPreviewDoc] = useState<IOnboardingDocumentRequirement | null>(null);
+
+    useScreenProtection();
+
+    useEffect(() => {
+        if (!previewDoc) { return; }
+        const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
+            setPreviewDoc(null);
+            return true;
+        });
+        return () => subscription.remove();
+    }, [previewDoc]);
 
     return (
         <GestureHandlerRootView>
@@ -110,13 +121,11 @@ const ShopDocumentsScreen = () => {
                 </ScrollView>
                 ) }
 
-                {/*==== Document preview modal ====*/}
-                <Modal
-                    visible={ !!previewDoc }
-                    transparent
-                    animationType="fade"
-                    onRequestClose={ () => setPreviewDoc(null) }
-                >
+            </SafeAreaView>
+
+            {/*==== Document preview modal ====*/}
+            { !!previewDoc && (
+                <View className="absolute inset-0">
                     <View className="flex-1 bg-black/90 items-center justify-center px-5">
                         {/*==== Close ====*/}
                         <TouchableOpacity
@@ -138,9 +147,7 @@ const ShopDocumentsScreen = () => {
                                     onPress={ () => {
                                         const link = previewDoc?.link;
                                         if (!link) { return; }
-                                        Linking.openURL(link).catch(() =>
-                                            Alert.alert("Couldn't open file", "No app available to open this PDF."),
-                                        );
+                                        openSecureLink(link, "Couldn't open file", "No app available to open this PDF.");
                                     } }
                                     className="mt-5 px-6 py-3 rounded-xl bg-baseGreen"
                                 >
@@ -160,10 +167,10 @@ const ShopDocumentsScreen = () => {
                             </View>
                         ) }
                     </View>
-                </Modal>
-            </SafeAreaView>
+                </View>
+            ) }
         </GestureHandlerRootView>
     );
 };
 
-export default AuthCheck(ShopDocumentsScreen);
+export default AuthCheck(ShopDocumentsScreen, undefined, 'vendor');

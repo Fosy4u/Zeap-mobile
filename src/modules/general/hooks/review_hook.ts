@@ -58,7 +58,6 @@ const useReviewHook = (productId?: string) => {
             imageMatch: true,
             review: data.review,
         }
-        console.log("REQUEST DATA::: ", requestData);
 
         try {
             const reviewResponse = await createReview(requestData).unwrap();

@@ -32,7 +32,7 @@ const useGeneralHook = () => {
             dispatch(setAccessoriesOptions(productOptions.accessories!));
             // console.log("PRODUCT OPTIONS::: ", productOptions.readyMadeClothes!.colorEnums);
         } catch (error) {
-            console.log("ERROR::: ", error);
+
         }
     };
     
@@ -40,20 +40,20 @@ const useGeneralHook = () => {
     const handleReviewLike: SubmitHandler<ILikeReview> = async (data) => {
         try {
             const likeResponse = await likeReview(data).unwrap();
-            console.log("RESPONSE::: ", likeResponse);
+
         } catch (error) {
-            console.log("ERROR::: ", error);
+
         };
     };
 
     // Handle review dislike
     const handleReviewDislike: SubmitHandler<ILikeReview> = async (data) => {
-        console.log("REQUEST DATA::: ", data);
+
         try {
             const dislikeResponse = await dislikeReview(data).unwrap();
-            console.log("RESPONSE::: ", dislikeResponse);
+
         } catch (error) {
-            console.log("ERROR::: ", error);
+
         };
     };
 

@@ -79,7 +79,7 @@ const BespokeDashboardScreen = () => {
                     subtitle="Crafting Unique Styles Just for You"
                     titleClassName="text-3xl"
                     image={ require("../../../../../assets/images/categories/bespoke_hero_poster.jpg") }
-                    videoUri="https://zeaper-web-dev.vercel.app/video/bespokeHome.mov"
+                    videoUri="https://www.zeaper.com/video/bespokeHome.mov"
                     onPress={ () => openCollection("Bespoke Collections", BESPOKE_FILTER) }
                 />
 

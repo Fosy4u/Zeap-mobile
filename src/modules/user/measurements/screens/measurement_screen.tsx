@@ -13,8 +13,10 @@ import AppHeaderComp from '../../../vendor/general/components/appHeader_comp.tsx
 import useMeasurementHook from '../hooks/measurement_hook';
 import { setSelectedGender, setSelectedMeasurementTemplate, setShowSelectGenderBottomSheet } from '../slices/measurement_slice';
 import IBodyMeasurement from '../models/bodyMeasurement_model.ts';
+import useScreenProtection from '../../../general/hooks/screenProtection_hook';
 
 const MeasurementScreen = () => {
+  useScreenProtection();
   const {
     selectedMeasurementTemplate, showAddNewMeasurementBottomSheet, showSelectGenderBottomSheet,
     isLoading,

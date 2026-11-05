@@ -1,9 +1,13 @@
-import EncryptedStorage from "react-native-encrypted-storage";
+import { securityEvent } from './securityLogger';
+import EncryptedStorage from "./sessionStorage";
 
 const forgetSecureItem = async (key: string): Promise<void> => {
     try {
         await EncryptedStorage.removeItem(key);
-    } catch {
+    } catch (error: any) {
+        if (error?.code === -25300 || error?.code === '-25300' || error?.code === 'RNEncryptedStorageError' && error?.message?.includes('not exist')) return;
+        securityEvent('secure_storage_delete_failed');
+        throw new Error('Secure session cleanup failed');
     }
 };
 
@@ -11,7 +15,7 @@ const readSecureItem = async (key: string): Promise<string | null> => {
     try {
         return await EncryptedStorage.getItem(key);
     } catch (error) {
-        console.warn(`[secureStorage] read failed for "${key}"; treating as empty.`, error);
+
         return null;
     }
 };
@@ -21,7 +25,7 @@ const writeSecureItem = async (key: string, value: string): Promise<boolean> => 
         await EncryptedStorage.setItem(key, value);
         return true;
     } catch (error) {
-        console.warn(`[secureStorage] write failed for "${key}".`, error);
+
         return false;
     }
 };
@@ -33,7 +37,7 @@ const readSecureJSON = async <T>(key: string): Promise<T | null> => {
     try {
         return JSON.parse(raw) as T;
     } catch (error) {
-        console.warn(`[secureStorage] corrupt JSON at "${key}"; discarding.`, error);
+
         await forgetSecureItem(key);
         return null;
     }

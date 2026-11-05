@@ -35,7 +35,6 @@ type RootNavigationStackModel = {
 
   // Address Routes
   addressScreen: undefined;
-  editDeliveryAddressScreen: undefined;
 
   checkoutScreen: undefined;
   deliveryMethodScreen: undefined;
@@ -63,11 +62,9 @@ type RootNavigationStackModel = {
 
   // Settings
   settingsScreen: undefined;
-  languageSettingsScreen: undefined;
   currencySettingsScreen: undefined;
   notificationSettingsScreen: undefined;
-  securitySettingsScreen: undefined;
-  changePasswordSettingsScreen: undefined;
+  deleteAccountScreen: undefined;
 
   // Order Routes
   ordersScreen: undefined;

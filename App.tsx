@@ -1,5 +1,10 @@
-import React, {useCallback, useEffect} from 'react';
-import {Appearance, Linking} from 'react-native';
+import {
+  getSessionIdentity,
+  isSessionBlocked,
+  subscribeSession,
+} from './src/redux/services/session';
+import React, {useCallback, useEffect, useSyncExternalStore} from 'react';
+import {Appearance, Linking, View, Text, ActivityIndicator} from 'react-native';
 import {StripeProvider, useStripe} from '@stripe/stripe-react-native';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {PaystackProvider} from 'react-native-paystack-webview';
@@ -51,6 +56,18 @@ const App = (): React.JSX.Element => {
   // Call the FCM hook
   useFCMNotificationHook();
 
+  const blocked = useSyncExternalStore(subscribeSession, isSessionBlocked);
+  const sessionIdentity = useSyncExternalStore(
+    subscribeSession,
+    getSessionIdentity,
+  );
+  if (blocked)
+    return (
+      <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
+        <ActivityIndicator />
+        <Text>Finishing sign out…</Text>
+      </View>
+    );
   return (
     <SafeAreaProvider>
       <StripeProvider
@@ -62,7 +79,7 @@ const App = (): React.JSX.Element => {
           currency="NGN"
           defaultChannels={['card', 'bank_transfer', 'bank', 'ussd']}
           debug={__DEV__}>
-          <AppRoutes />
+          <AppRoutes key={sessionIdentity} />
           <AppToast />
         </PaystackProvider>
       </StripeProvider>
