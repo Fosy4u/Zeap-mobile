@@ -52,30 +52,18 @@ const productAPI = rootAPI.injectEndpoints({
                 })
             },
             providesTags: ["Products"],
-            // Backend response shape is inconsistent across the endpoints this
-            // single query reaches:
-            //   • /products/live/newest, /mostPopular wrap as { data: { products: [...] } }
-            //   • /products/recentViews, /products/live/recommended return { data: [...] }
-            // Normalize both into a plain IProduct[] so consumers don't have
-            // to care which endpoint they hit.
             transformResponse: (response: any): IProduct[] => {
                 if (Array.isArray(response?.data)) return response.data as IProduct[];
                 return (response?.data?.products as IProduct[]) ?? [];
             },
         }),
 
-        // Live product search — hits /products/live/searchProducts with
-        // `search`, `limit`, `pageNumber` query params. Kept as its own query
-        // (separate from getFilteredProducts) so the dedicated search screen
-        // can stay independent of the filter-list cache + screenTitle routing.
         searchProducts: builder.query<IProduct[], { search: string; limit?: number; pageNumber?: number; filters?: Record<string, string | number> }>({
             query: ({ search, limit = 10, pageNumber = 1, filters = {} }) => ({
                 url: searchProductsRoute,
                 method: "GET",
                 params: removeUndefined({ search, limit, pageNumber, ...filters }),
             }),
-            // No providesTags — search results are ephemeral; don't want them
-            // invalidated by unrelated product mutations.
             transformResponse: (response: any): IProduct[] => {
                 if (Array.isArray(response?.data)) { return response.data as IProduct[]; }
                 return (response?.data?.products as IProduct[]) ?? [];

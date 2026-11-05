@@ -35,10 +35,6 @@ const useLoginHook = () => {
     const [mergeUserData] = useMergeUserDataMutation();
     const [registerGuestUser] = useRegisterGuestUserMutation();
 
-    // Send the freshly-authenticated user back to whatever screen the auth
-    // gate intercepted, or fall back to the User Home Screen when there's
-    // no recorded destination (explicit login from the header button, etc.).
-    // `reset` so the back stack can't lead them into the login screen again.
     const redirectAfterAuth = () => {
         if (pendingDestination) {
             navigation.reset({
@@ -108,17 +104,12 @@ const useLoginHook = () => {
                             // Dispatch merged user data to Redux Store
                             dispatch(setUserData(mergedUserData));
 
-                            // Either return to the screen the user was trying
-                            // to reach when the auth gate caught them, or fall
-                            // back to the User Home Screen.
                             redirectAfterAuth();
                         }
                     } else {
                         // No guest account to merge, proceed with normal login
                         dispatch(setUserData(userData));
 
-                        // Either return to the user's intended destination, or
-                        // fall back to the User Home Screen.
                         redirectAfterAuth();
                     }
                 }
@@ -145,15 +136,6 @@ const useLoginHook = () => {
         return { idToken, accessToken };
     };
 
-    // The backend `/user/guest/create` endpoint always stores `isGuest: true` AND seeds
-    // firstName/lastName as "Customer"/"Guest" placeholders, even when called for a
-    // non-anonymous (Google) Firebase user. So we must prefer the Google profile over
-    // the backend record for name fields, and stamp `isGuest: false` locally.
-    //
-    // Name resolution rules (in priority order):
-    //   1. authUser.displayName  (strip bracketed content, split on whitespace)
-    //   2. email local-part      (e.g. "tman44wiz@gmail.com" → "tman44wiz")
-    //   3. literal "Customer" / "Guest" as last-resort fallback
     const parseGoogleName = (authUser: any): { firstName: string; lastName: string } => {
         const rawDisplayName: string = authUser?.displayName ?? "";
         const cleanedDisplayName = rawDisplayName.replace(/\s*\([^)]*\)\s*/g, " ").trim();
@@ -215,11 +197,9 @@ const useLoginHook = () => {
             await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
             console.log("[GoogleSignIn] Play services available");
 
-            // Only clear the cached Google session when there is an active signed-in account.
             await clearGoogleSessionIfNeeded();
             console.log("[GoogleSignIn] Cleared cached Google session if needed");
 
-            // v13 returns { type: 'success' | 'cancelled', data }; it no longer throws on cancel.
             const signInResponse: any = await GoogleSignin.signIn();
             console.log("[GoogleSignIn] SignIn response:", JSON.stringify(signInResponse));
 
@@ -247,8 +227,6 @@ const useLoginHook = () => {
             await storeToken(token);
             console.log("[GoogleSignIn] Stored Firebase auth data");
 
-            // Fetch existing profile; if backend has no record yet (first Google sign-in),
-            // create one then re-fetch.
             let userData;
             console.log("[GoogleSignIn] Fetching user profile from backend, uid:", uid);
             try {
@@ -259,7 +237,6 @@ const useLoginHook = () => {
                 try {
                     await registerGuestUser({}).unwrap();
                 } catch (createErr: any) {
-                    // Backend may return 409 (already exists) on a transient state — treat as recoverable.
                     console.warn("[GoogleSignIn] registerGuestUser failed, attempting refetch anyway:", createErr?.status, createErr?.data);
                 }
                 userData = await getUserById(uid).unwrap();
@@ -267,7 +244,6 @@ const useLoginHook = () => {
             }
             if (!userData) throw new Error("Failed to load user profile.");
 
-            // Merge any pre-existing guest session into the authenticated account
             const guestUID = await EncryptedStorage.getItem(STORAGE_KEYS.GUEST_UID);
             const parsedGuestUID = guestUID ? JSON.parse(guestUID) : null;
             console.log("[GoogleSignIn] Guest UID from storage:", parsedGuestUID);
@@ -283,9 +259,6 @@ const useLoginHook = () => {
                 await forgetSecureItem(STORAGE_KEYS.GUEST_UID);
             }
 
-            // ALWAYS normalize after fetch + merge — backend writes `isGuest: true` for
-            // records created via /user/guest/create, even for authenticated users.
-            // Firebase auth state is the source of truth here.
             userData = normalizeGoogleUserData(userData, authUser);
 
             await EncryptedStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(userData));

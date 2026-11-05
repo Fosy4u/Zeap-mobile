@@ -13,21 +13,15 @@ interface ISearchableDropdownProps {
     onToggleOpen: () => void;
     mode: "multi" | "single";
 
-    // Multi-select wiring
     selectedValues?: string[];
     onChangeValues?: (next: string[]) => void;
 
-    // Single-select wiring
     selectedValue?: string;
     onSelectValue?: (value: string) => void;
 
     searchThreshold?: number;
 }
 
-// Reusable category dropdown for the bespoke-clothes step 2 form. When an
-// option list has more than `searchThreshold` items it renders a search input
-// that filters the list as the user types. The transient search text is local
-// UI state of this widget; the selection/open state is owned by the step hook.
 const SearchableDropdownComponent: React.FC<ISearchableDropdownProps> = ({
     label,
     required = false,
@@ -65,7 +59,7 @@ const SearchableDropdownComponent: React.FC<ISearchableDropdownProps> = ({
     const handleSelectSingle = (item: string) => {
         onSelectValue?.(item);
         setQuery("");
-        onToggleOpen(); // close after picking (the dropdown is open here)
+        onToggleOpen();
     };
 
     return (
@@ -87,7 +81,6 @@ const SearchableDropdownComponent: React.FC<ISearchableDropdownProps> = ({
                             <ArrowUp2 size={18} color="#9ca3af" className="mx-1 mt-1" />
                         </TouchableOpacity>
 
-                        {/* Inline search — only for long lists. */}
                         { isSearchable && (
                             <View className="mt-2 px-3 py-1 flex-row items-center border border-[#ececed] rounded-lg bg-white">
                                 <SearchNormal1 size={16} color="#9ca3af" />

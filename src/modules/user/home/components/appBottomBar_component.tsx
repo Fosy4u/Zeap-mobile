@@ -11,14 +11,9 @@ const tabWidth = width / 5;
 const height = 72;
 
 const AppBottomBarComponent = ({ state, descriptors, navigation }: any) => {
-  // Live cart-item count for the Cart tab badge. basketItems is the canonical
-  // array — bespoke + ready-made entries both land there. Falls back to 0
-  // when the cart hasn't been hydrated yet so we never flash a stale number.
   const cartCount = useSelector(
     (rootState: RootState) => rootState.cartState?.cart?.basketItems?.length ?? 0,
   );
-  // Cart-items fetch in flight — the badge shows a spinner instead of a
-  // (stale or empty) count until the first response settles.
   const isCartLoading = useSelector(
     (rootState: RootState) => !!rootState.cartState?.isCartItemsLoading,
   );
@@ -61,8 +56,6 @@ const AppBottomBarComponent = ({ state, descriptors, navigation }: any) => {
 
           const onPress = () => {
             // canPreventDefault: true is required so listeners can call
-            // event.preventDefault() (used by the vendor Market tab to redirect
-            // to the buyer home stack, and reserved for future tab interceptors).
             const event = navigation.emit({
               type: 'tabPress',
               target: route.key,

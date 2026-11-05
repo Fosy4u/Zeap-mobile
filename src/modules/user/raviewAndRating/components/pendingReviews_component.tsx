@@ -42,8 +42,6 @@ const PendingReviewsComponent = () => {
                                 <Text className="text-gray-600 font-montserratRegular text-[13px] mb-3">
                                     Delivered on: {formatReviewDate(order.deliveryDate)}
                                 </Text>
-                                {/* Always navigates: the old `if (review.order)` guard
-                                    never passed, so the button did nothing at all. */}
                                 <TouchableOpacity
                                     className="flex-row items-center"
                                     onPress={() => {

@@ -11,6 +11,7 @@ import AppBottomBarComponent from '../components/appBottomBar_component';
 import useHomeHook from '../hooks/home_hook';
 import useCartHook from '../../cart/hooks/cart_hook';
 import useDisplayCurrency from '../../../general/hooks/displayCurrency_hook';
+import useDoubleBackExit from '../../../general/hooks/doubleBackExit_hook';
 
 const Tab = createBottomTabNavigator();
 
@@ -18,17 +19,10 @@ const HomeScreen = () => {
   const { handleOpenWhatsApp } = useHomeHook();
   const { handleGetCarts } = useCartHook();
   const { currencyRefreshToken } = useDisplayCurrency();
+  useDoubleBackExit();
 
-  // Prewarm the cart on login/home mount: a single background fetch that
-  // populates `cartState.cart` in Redux. This drives the bottom-bar Cart
-  // badge (a live selector) so the count is correct before the user ever
-  // opens the Cart tab, and seeds the cart state so the Cart screen renders
-  // its items instantly while it refetches in the background on focus.
   useEffect(() => {
     handleGetCarts();
-    // Run once per mount — the badge stays in sync afterwards via cart
-    // mutations (add/remove/quantity) that update the same Redux state, and
-    // again on a currency switch so the cart totals come back re-priced.
   }, [currencyRefreshToken]);
 
   return (
@@ -38,16 +32,12 @@ const HomeScreen = () => {
         tabBar={(props) => <AppBottomBarComponent {...props} />}
         screenOptions={{
           headerShown: false,
-          /* Freeze the 3 inactive tabs so cart/Redux updates don't re-render
-             them while the user is on another tab. */
           freezeOnBlur: true,
         }}
       >
         <Tab.Screen name="Home" component={ DashboardWrapperScreen } />
         <Tab.Screen name="Cart" component={ CartScreen } />
         <Tab.Screen name="Saved" component={ SavedScreen } />
-        {/* See the vendor stack's Profile tab — `mode` drives which app bar
-            ProfileScreen renders. */}
         <Tab.Screen
           name="Profile"
           component={ ProfileScreen }

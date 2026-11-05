@@ -1,6 +1,7 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useAddDeliveryAddressMutation, useUpdateDeliveryAddressMutation, useLazyGetDeliveryAddressesQuery, useLazyGetDeliveryAddressQuery, useDeleteAddressMutation, useSetAsDefaultAddressMutation } from "../apis/address_api";
-import { SubmitHandler, useForm, useWatch } from "react-hook-form";
+import { SubmitErrorHandler, SubmitHandler, useForm, useWatch } from "react-hook-form";
+import { Alert } from "react-native";
 import addressFormFieldsSchema, { IAddressFormFieldsSchema } from "../validations/address_validation";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -16,8 +17,6 @@ import {
     phonePlaceholderForCountry, sanitizePhoneInput,
 } from "../../../../utils/phoneNumberRules";
 
-// Map the user's preferred currency to a delivery-country key.
-// Matches the keys in src/utils/deliveryCountries.json.
 const getDefaultCountryForCurrency = (currency?: string): string => {
     switch (currency) {
         case "USD": return "USA";
@@ -28,7 +27,7 @@ const getDefaultCountryForCurrency = (currency?: string): string => {
 };
 
 const useAddressHook = () => {
-    const { selectedAddress, editingAddressId, showNewDeliveryAddressForm } = useSelector((state: RootState) => state.addressState);
+    const { selectedAddress, editingAddressId, showNewDeliveryAddressForm, deliveryAddresses } = useSelector((state: RootState) => state.addressState);
     const { userData } = useSelector((state: RootState) => state.profileState );
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const dispatch = useDispatch();
@@ -54,9 +53,6 @@ const useAddressHook = () => {
         resolver: yupResolver(addressFormFieldsSchema)
     });
 
-    // Apply the currency-derived country default once userData hydrates after first render.
-    // Skip if the user already has a selected address (their stored country wins) or has
-    // typed something in the field manually.
     useEffect(() => {
         if (selectedAddress?.country) return;
         const current = getValues("country");
@@ -66,8 +62,6 @@ const useAddressHook = () => {
         }
     }, [userData?.prefferedCurrency]);
 
-    /* Phone rules follow the selected country. Re-trim + re-validate whenever it
-       changes so a number left over from another country can't slip through. */
     const phoneCountry = useWatch({ control, name: "country" }) as string | undefined;
 
     useEffect(() => {
@@ -113,6 +107,11 @@ const useAddressHook = () => {
         }
     };
 
+    const onInvalid: SubmitErrorHandler<IAddressFormFieldsSchema> = (formErrors) => {
+        const firstError = Object.values(formErrors).find((fieldError) => fieldError?.message);
+        Alert.alert("Check your address", String(firstError?.message ?? "Please fill in all required fields."));
+    };
+
     const handleStartNewAddress = () => {
         dispatch(setEditingAddressId(""));
         dispatch(setSelectedAddress({} as IAddress));
@@ -129,7 +128,6 @@ const useAddressHook = () => {
         dispatch(setShowNewDeliveryAddressForm(true));
     };
 
-    // Opens the form pre-filled, targeting that address for an update.
     const handleStartEditAddress = (address: IAddress) => {
         dispatch(setEditingAddressId(address._id ?? ""));
         dispatch(setSelectedAddress(address));
@@ -183,16 +181,10 @@ const useAddressHook = () => {
             if (deliveryAddressesResponse) {
                 dispatch(setDeliveryAddresses(deliveryAddressesResponse));
 
-                // Only set a selected address if the response actually contains one.
-                // Previously `deliveryAddressesResponse[0]` returned undefined for users
-                // with no saved addresses, which then crashed the checkout screen at
-                // `Object.entries(selectedAddress)`.
                 if (deliveryAddressesResponse.length > 0) {
                     const defaultAddress = deliveryAddressesResponse.find((address: IAddress) => address.isDefault);
                     dispatch(setSelectedAddress(defaultAddress ?? deliveryAddressesResponse[0]));
                 } else {
-                    // Reset to the empty-object shape from the slice's initial state so
-                    // downstream `Object.keys(selectedAddress).length > 0` checks behave.
                     dispatch(setSelectedAddress({} as IAddress));
                 }
             }
@@ -229,11 +221,8 @@ const useAddressHook = () => {
         dispatch(setIsLoading(true));
         
         try {
-            const setAsDefaultAddressResponse = await setAsDefaultAddress({ address_id }).unwrap();
-
-            if (setAsDefaultAddressResponse) {
-                await handleGetDeliveryAddresses();
-            }
+            await setAsDefaultAddress({ address_id }).unwrap();
+            await handleGetDeliveryAddresses();
         } catch (error) {
             handleError(error);
         } finally {
@@ -248,11 +237,9 @@ const useAddressHook = () => {
         dispatch(setIsLoading(true));
 
         try {
-            const deleteAddressResponse = await deleteAddress({ address_id }).unwrap();
-
-            if (deleteAddressResponse) {
-                await handleGetDeliveryAddresses();
-            }
+            await deleteAddress({ address_id }).unwrap();
+            dispatch(setDeliveryAddresses(deliveryAddresses.filter((address: IAddress) => address._id !== address_id)));
+            await handleGetDeliveryAddresses();
         } catch (error) {
             handleError(error);
         } finally {
@@ -266,7 +253,7 @@ const useAddressHook = () => {
     }, [selectedAddress, reset]);
 
     return {
-        control, handleSubmit, onSubmit, errors, getValues, setValue, phoneRules,
+        control, handleSubmit, onSubmit, onInvalid, errors, getValues, setValue, phoneRules,
         handleGetDeliveryAddresses,
         deliveryAddress, handleGetDeliveryAddress,
         handleSetAsDefaultAddress,

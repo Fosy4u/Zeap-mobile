@@ -10,10 +10,6 @@ const paymentAPI = rootAPI.injectEndpoints({
     endpoints: (builder) => ({
 
         // Get Payment Reference.
-        // Retries are explicitly disabled — this endpoint creates a Paystack
-        // reference server-side, and rootAPI's default 3 retries would (a)
-        // create orphan references each retry, and (b) on a cold Render
-        // server cause a 3+ minute silent wait that looks like a hang.
         getPaymentReference: builder.query<IPaymentReference, IPaymentReferenceParams>({
             query: (params) => ({
                 url: `/payment/reference`,
@@ -27,7 +23,6 @@ const paymentAPI = rootAPI.injectEndpoints({
             },
         }),
 
-        // Verify and fulfil a completed payment for either supported gateway.
         verifyPayment: builder.mutation<IVerifyPaymentResponse, { reference: string }>({
             query: ({ reference }) => ({
                 url: `/payment/verify`,
@@ -35,8 +30,6 @@ const paymentAPI = rootAPI.injectEndpoints({
                 body: { reference },
             }),
             invalidatesTags: ["PaymentReference", "Cart"],
-            // Stripe verification is retried deliberately in the payment hook
-            // while its webhook catches up. Avoid stacking RTK's hidden retries.
             extraOptions: { maxRetries: 0 },
 
             transformResponse: (response: { data: IVerifyPaymentResponse }) => {

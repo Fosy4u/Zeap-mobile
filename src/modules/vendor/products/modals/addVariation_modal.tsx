@@ -27,21 +27,17 @@ const comboKey = (combo: IVariationCombo) => `${ combo.colorName }|${ combo.size
 const AddVariationModal: React.FC<IProps> = ({ visible, onClose, availableCombos, colorOptions, sizes, previewSku, isLoading, onSubmit }) => {
     const { entrySymbol } = useShopCurrency();
     // ON = auto-generate remaining combos (new quick pattern); OFF = original
-    // manual single-variation flow.
     const [quickPicker, setQuickPicker] = useState(true);
 
-    // Quick-picker state
     const [useDefaultPrice, setUseDefaultPrice] = useState(false);
     const [defaultPrice, setDefaultPrice] = useState("");
     const [selections, setSelections] = useState<Record<string, ISelection>>({});
 
-    // Manual state
     const [manualColor, setManualColor] = useState<IColorOption | null>(null);
     const [manualSize, setManualSize] = useState("");
     const [manualPrice, setManualPrice] = useState("");
     const [manualQuantity, setManualQuantity] = useState("");
 
-    // Reset everything whenever the modal re-opens.
     useEffect(() => {
         if (!visible) return;
         setQuickPicker(true);
@@ -78,7 +74,6 @@ const AddVariationModal: React.FC<IProps> = ({ visible, onClose, availableCombos
 
     const selectedCount = availableCombos.filter((combo) => selections[comboKey(combo)]?.selected).length;
 
-    // Quick-picker rows that have everything they need to be saved.
     const readyInputs: IVariationInput[] = useMemo(() => {
         return availableCombos
             .filter((combo) => selections[comboKey(combo)]?.selected)

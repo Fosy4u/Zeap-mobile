@@ -1,20 +1,15 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { readSecureJSON, writeSecureItem } from "../../../../utils/secureStorage";
 import { AppDispatch, RootState } from "../../../../redux/store/store";
 import { useLazyGetDynamicFilterOptionsQuery, useLazySearchProductsQuery } from "../apis/product_api";
 import { setSearchPhrase } from "../slices/product_slice";
 import buildFilterParams from "../utils/buildFilterParams";
+import { PAGE_SIZE, getTotalPages } from "./filterAndSearch_hook";
 
-// 500ms debounce — fires the search once the user has paused typing. Standard
-// UX sweet spot: responsive enough to feel live, slow enough that mid-word
-// keystrokes don't spam the backend.
 const SEARCH_DEBOUNCE_MS = 500;
-const DEFAULT_LIMIT = 10;
 const DEFAULT_PAGE = 1;
 
-// Recent searches are persisted in secure storage, newest-first, deduped, and
-// capped at MAX_RECENT_SEARCHES.
 const RECENT_SEARCHES_KEY = "RECENT_SEARCHES";
 const MAX_RECENT_SEARCHES = 5;
 
@@ -22,13 +17,16 @@ const useSearchHook = () => {
     const dispatch = useDispatch<AppDispatch>();
     const { searchPhrase } = useSelector((state: RootState) => state.productState);
     const [recentSearches, setRecentSearches] = useState<string[]>([]);
+    const [isRecentLoaded, setIsRecentLoaded] = useState(false);
+    const lastSearchKeyRef = useRef("");
+    const [currentPage, setCurrentPage] = useState(DEFAULT_PAGE);
+    const [paginatingDirection, setPaginatingDirection] = useState<"Prev" | "Next" | null>(null);
 
     const [
         triggerSearch,
         { data: results = [], isFetching, isError, isUninitialized },
     ] = useLazySearchProductsQuery();
 
-    // Load persisted recent searches once on mount.
     useEffect(() => {
         (async () => {
             const parsed = await readSecureJSON<unknown>(RECENT_SEARCHES_KEY);
@@ -37,6 +35,7 @@ const useSearchHook = () => {
                     parsed.filter((s): s is string => typeof s === "string").slice(0, MAX_RECENT_SEARCHES),
                 );
             }
+            setIsRecentLoaded(true);
         })();
     }, []);
 
@@ -45,8 +44,6 @@ const useSearchHook = () => {
         await writeSecureItem(RECENT_SEARCHES_KEY, JSON.stringify(list));
     };
 
-    // Add a term to the top: dedupe case-insensitively, newest-first, capped at
-    // MAX_RECENT_SEARCHES. Called ONLY when the user explicitly runs a search.
     const saveRecentSearch = (rawTerm: string) => {
         const term = rawTerm.trim();
         if (!term) { return; }
@@ -68,6 +65,41 @@ const useSearchHook = () => {
         () => buildFilterParams(selectedFilters, dynamicFilterOptions),
         [selectedFilters, dynamicFilterOptions],
     );
+
+    const [getResultsCount, { data: resultsCountData }] = useLazyGetDynamicFilterOptionsQuery();
+    const totalCount = resultsCountData?.totalCount ?? null;
+    const totalPages = getTotalPages(totalCount);
+
+    const runSearch = (term: string, page: number = DEFAULT_PAGE) => {
+        lastSearchKeyRef.current = `${ term }|${ JSON.stringify(formattedFilters) }`;
+        if (page === DEFAULT_PAGE) {
+            setCurrentPage(DEFAULT_PAGE);
+            getResultsCount({ queryParams: { search: term, ...formattedFilters } });
+        }
+        return triggerSearch({ search: term, limit: PAGE_SIZE, pageNumber: page, filters: formattedFilters });
+    };
+
+    const isPrevDisabled = !!paginatingDirection || isFetching || currentPage <= 1;
+    const isNextDisabled = !!paginatingDirection || isFetching || (totalPages !== null
+        ? currentPage >= totalPages
+        : results.length < PAGE_SIZE);
+
+    const handlePaginate = async (direction: "Prev" | "Next") => {
+        const term = searchPhrase?.trim();
+        if (!term || (direction === "Prev" ? isPrevDisabled : isNextDisabled)) { return false; }
+
+        const nextPage = direction === "Next" ? currentPage + 1 : currentPage - 1;
+        setPaginatingDirection(direction);
+        try {
+            await runSearch(term, nextPage).unwrap();
+            setCurrentPage(nextPage);
+            return true;
+        } catch {
+            return false;
+        } finally {
+            setPaginatingDirection(null);
+        }
+    };
 
     const activeFilterCount = useMemo(
         () => Object.values(selectedFilters).reduce((n, v) => n + (v?.length ?? 0), 0),
@@ -91,29 +123,28 @@ const useSearchHook = () => {
 
     const clearAllFilters = useCallback(() => setSelectedFilters({}), []);
 
-    // Debounced auto-search while typing. Does NOT persist the term — saving only
-    // happens on an explicit search (the magnifying-glass button).
-    //
-    // Deps are intentionally ONLY [searchPhrase]. Including `triggerSearch` here
-    // caused an infinite re-fetch loop: each result arrival re-rendered the
-    // screen, the effect re-ran, and scheduled another search — so `isFetching`
-    // never settled and the spinner span forever. `triggerSearch` is stable
-    // enough to call from the captured closure.
     useEffect(() => {
         const term = searchPhrase?.trim();
-        if (!term) { return; }
+        if (!term || lastSearchKeyRef.current === `${ term }|${ JSON.stringify(formattedFilters) }`) { return; }
         const handle = setTimeout(() => {
-            triggerSearch({ search: term, limit: DEFAULT_LIMIT, pageNumber: DEFAULT_PAGE, filters: formattedFilters });
+            runSearch(term);
         }, SEARCH_DEBOUNCE_MS);
         return () => clearTimeout(handle);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchPhrase, formattedFilters]);
 
-    // Search icon: run immediately AND persist the term as a recent search.
     const handleSearchNow = () => {
         const term = searchPhrase?.trim();
         if (!term) { return; }
-        triggerSearch({ search: term, limit: DEFAULT_LIMIT, pageNumber: DEFAULT_PAGE, filters: formattedFilters });
+        runSearch(term);
+        saveRecentSearch(term);
+    };
+
+    const searchFor = (rawTerm: string) => {
+        const term = rawTerm.trim();
+        if (!term) { return; }
+        dispatch(setSearchPhrase(term));
+        runSearch(term);
         saveRecentSearch(term);
     };
 
@@ -123,11 +154,9 @@ const useSearchHook = () => {
         setShowBottomSheetModal(true);
     };
 
-    // Tapping a recent search: fill the box and search immediately (no re-save —
-    // it's already in the list).
     const selectRecentSearch = (term: string) => {
         dispatch(setSearchPhrase(term));
-        triggerSearch({ search: term, limit: DEFAULT_LIMIT, pageNumber: DEFAULT_PAGE, filters: formattedFilters });
+        runSearch(term);
     };
 
     return {
@@ -136,9 +165,19 @@ const useSearchHook = () => {
         isError,
         isUninitialized,
         handleSearchNow,
+        searchFor,
+        isRecentLoaded,
         recentSearches,
         removeRecentSearch,
         selectRecentSearch,
+
+        // Pagination
+        currentPage,
+        totalPages,
+        paginatingDirection,
+        isPrevDisabled,
+        isNextDisabled,
+        handlePaginate,
 
         // Filters
         selectedFilters,

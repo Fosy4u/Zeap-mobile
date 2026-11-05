@@ -12,6 +12,7 @@ import {
     useGetOnboardingDocumentsQuery,
     useUploadOnboardingDocumentMutation,
 } from "../../apis/general_api";
+import requestCameraPermission, { alertImagePickerError } from "../../../../../utils/cameraPermission";
 
 const MAX_FILE_SIZE_BYTES = 1.5 * 1024 * 1024;
 const ALLOWED_MIME = [
@@ -70,25 +71,6 @@ const requestGalleryPermission = async (): Promise<boolean> => {
         const granted = await PermissionsAndroid.request(permission, {
             title: "Gallery Permission",
             message: "App needs access to your gallery to select document images.",
-            buttonNeutral: "Ask Me Later",
-            buttonNegative: "Cancel",
-            buttonPositive: "OK",
-        });
-        return granted === PermissionsAndroid.RESULTS.GRANTED;
-    } catch {
-        return false;
-    }
-};
-
-const requestCameraPermission = async (): Promise<boolean> => {
-    if (Platform.OS !== "android") { return true; }
-    try {
-        const permission = PermissionsAndroid.PERMISSIONS.CAMERA;
-        if (await PermissionsAndroid.check(permission)) { return true; }
-
-        const granted = await PermissionsAndroid.request(permission, {
-            title: "Camera Permission",
-            message: "App needs access to your camera to photograph your documents.",
             buttonNeutral: "Ask Me Later",
             buttonNegative: "Cancel",
             buttonPositive: "OK",
@@ -200,15 +182,12 @@ const useVendorDocumentUploadHook = () => {
     };
 
     const pickFromCamera = async (slug: string) => {
-        if (!(await requestCameraPermission())) {
-            Alert.alert("Permission Required", "Please allow access to your camera to photograph your documents.");
-            return;
-        }
+        if (!(await requestCameraPermission("Zeaper needs access to your camera to photograph your documents."))) { return; }
 
         const response = await launchCamera({ ...IMAGE_PICKER_OPTIONS, saveToPhotos: false });
         if (response.didCancel) { return; }
         if (response.errorCode) {
-            Alert.alert("Couldn't open camera", response.errorMessage ?? "Please try again.");
+            alertImagePickerError(response.errorCode, response.errorMessage);
             return;
         }
 

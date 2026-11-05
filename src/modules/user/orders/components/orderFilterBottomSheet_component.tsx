@@ -18,8 +18,6 @@ const OrderFilterBottomSheetComponent = ({ bottomSheetModalRef, snapPoints, setS
     const { filterOrdersByStatus } = useOrderHook();
 
     const filterCounts = useMemo(() => {
-        /* The API can return an order with no productOrders (and a product order
-           with no status), so every hop is guarded — one miss throws here. */
         const countByStatus = (status: string) =>
             (orders ?? []).filter(order =>
                 (order?.productOrders ?? []).some(
@@ -39,8 +37,6 @@ const OrderFilterBottomSheetComponent = ({ bottomSheetModalRef, snapPoints, setS
         };
     }, [orders]);
 
-    // The full lifecycle — Confirmed and Ready were missing, so orders sitting in
-    // those states weren't filterable here.
     const filterItems = [
         { name: 'All', count: filterCounts.allCount },
         { name: 'Placed', count: filterCounts.placedCount },

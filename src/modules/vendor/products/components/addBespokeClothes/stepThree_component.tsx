@@ -5,11 +5,8 @@ import CheckBox from '@react-native-community/checkbox';
 import IBodyMeasurementGuide, { IField } from '../../../../general/models/bodyMeasurementGuide_model';
 import SkeletonBlock from '../../../../general/components/skeletonBlock_component';
 
-// Placeholder shown while the gender's measurement guide is being fetched — a
-// couple of section cards each with a header and a few field rows, matching the
-// real layout so the screen doesn't sit empty/idle on entry.
 const MeasurementSkeleton: React.FC = () => {
-    const contentWidth = Dimensions.get('window').width - 70; // px-5 screen + px-3 card
+    const contentWidth = Dimensions.get('window').width - 70;
 
     return (
         <View>
@@ -34,12 +31,6 @@ interface IGenderTab {
     label: string;
 }
 
-// Renders a measurement-guide image sized to its OWN aspect ratio. A fixed
-// height + resizeMode="contain" letterboxed images whose shape didn't match the
-// box (e.g. "Arm Length Long"), leaving a large empty gap below the
-// description. Measuring the natural dimensions on load and applying them as an
-// aspectRatio makes the box hug the image — no dead space, no cropping. Capped
-// so an unusually tall image can't dominate the card.
 const GuideImage: React.FC<{ uri: string }> = ({ uri }) => {
     const [aspectRatio, setAspectRatio] = useState<number>(16 / 9);
     return (
@@ -147,7 +138,6 @@ const StepThreeComponent: React.FC<IProps> = ({
                     const checkedFields = (guide.fields ?? []).filter((field: IField) => isFieldChecked(guide.name, field.field));
                     return (
                     <View key={ guide._id } className="h-auto w-full mt-1.5 px-3 py-3.5 border rounded-xl border-gray-200 bg-gray-50">
-                        {/* Section header — tap anywhere to collapse/expand the group. */}
                         <TouchableOpacity
                             onPress={ () => toggleGuide(guide.name) }
                             className="flex-row items-center justify-between"
@@ -169,7 +159,6 @@ const StepThreeComponent: React.FC<IProps> = ({
                             </View>
                         ) }
 
-                        {/* Select All / Clear All — mirrors the web bulk controls. */}
                         { !isCollapsed && (
                             <View className="mt-3 flex-row items-center" style={{ gap: 10 }}>
                                 <TouchableOpacity
@@ -212,7 +201,6 @@ const StepThreeComponent: React.FC<IProps> = ({
                                         <Text className="ml-2.5 flex-1 font-montserratMedium text-sm leading-5 text-baseGreen">{ titleCase(field.field) }</Text>
                                     </View>
 
-                                    {/* Measurement Guide toggle — reveals the description + image. */}
                                     { (field.description || field.imageUrl?.link) && (
                                         <>
                                             <TouchableOpacity

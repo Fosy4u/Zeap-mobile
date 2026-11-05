@@ -31,7 +31,6 @@ const VariationFormModal: React.FC<IProps> = ({
     const [colourType, setColourType] = useState<string>("Single");
     const [selectedColors, setSelectedColors] = useState<IColorOption[]>([]);
 
-    // Seed (edit) or reset (add) whenever the modal opens.
     useEffect(() => {
         if (!visible) return;
 

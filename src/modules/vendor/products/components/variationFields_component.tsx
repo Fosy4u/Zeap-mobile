@@ -19,7 +19,6 @@ interface IProps {
     setPrice: (price: string) => void;
     quantity: string;
     setQuantity: (quantity: string) => void;
-    // Optionally disable a colour / size (e.g. combos already taken).
     isColorDisabled?: (colorName: string) => boolean;
     isSizeDisabled?: (size: string) => boolean;
 }

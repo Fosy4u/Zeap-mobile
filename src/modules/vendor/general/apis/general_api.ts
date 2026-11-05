@@ -56,7 +56,6 @@ const generalAPI = rootAPI.injectEndpoints({
             },
         }),
 
-        // Fetch the seller policy/contract links shown on onboarding step 7.
         getSellerPolicies: builder.query<ISellerPolicy[], void>({
             query: () => ({
                 url: getSellerPoliciesRoute,
@@ -65,8 +64,6 @@ const generalAPI = rootAPI.injectEndpoints({
             transformResponse: (response: { data: ISellerPolicy[] }) => response.data,
         }),
 
-        // First-create endpoint — disable retries so a failed submission surfaces
-        // immediately instead of stalling the Join button.
         registerVendor: builder.mutation<IShop, IRegisterVendorPayload>({
             query: (body) => ({
                 url: registerVendorRoute,
@@ -78,8 +75,6 @@ const generalAPI = rootAPI.injectEndpoints({
             transformResponse: (response: { data: IShop }) => response.data,
         }),
 
-        // Returns the currently-authenticated user's shop with the `status`
-        // field — driven by the post-create welcome screen flow.
         getAuthShop: builder.query<IShop, void>({
             query: () => ({
                 url: getAuthShopRoute,
@@ -89,8 +84,6 @@ const generalAPI = rootAPI.injectEndpoints({
             transformResponse: (response: { data: IShop }) => response.data,
         }),
 
-        // Required onboarding documents (per shop). The backend may return
-        // `link` for already-uploaded docs and null for outstanding ones.
         getOnboardingDocuments: builder.query<IOnboardingDocumentRequirement[], string>({
             query: (shopId) => ({
                 url: getOnboardingDocumentsRoute,
@@ -101,9 +94,6 @@ const generalAPI = rootAPI.injectEndpoints({
             transformResponse: (response: { data: IOnboardingDocumentRequirement[] }) => response.data,
         }),
 
-        // Multipart upload of one document at a time. The FormData body must
-        // include `file`, `shopId`, and `slug` — built in the upload hook.
-        // First-create style endpoint, so we kill retries.
         uploadOnboardingDocument: builder.mutation<IOnboardingDocumentRequirement, FormData>({
             query: (body) => ({
                 url: uploadOnboardingDocumentRoute,

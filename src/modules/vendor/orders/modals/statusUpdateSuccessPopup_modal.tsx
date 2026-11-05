@@ -12,8 +12,6 @@ const StatusUpdateSuccessPopupModal = () => {
 
     const { handleGetOrderDetails, handleGetOrderHistory } = useOrderHook();
 
-    /* The vendor stays on the order they just updated, so pull the fresh details
-       and history — the history also drives which action buttons show. */
     const handleOk = async () => {
         if (order?._id) {
             await handleGetOrderDetails(order._id);

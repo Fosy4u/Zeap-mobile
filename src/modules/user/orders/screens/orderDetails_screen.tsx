@@ -39,12 +39,9 @@ const OrderDetailsScreen: React.FC<IProps> = ({ route }) => {
     const { getColorCode } = useGeneralHook();
 
     // ==== Horizontal "items in your order" carousel sizing ====
-    // Each card spans ~80% of the available width so the next item peeks ~20%,
-    // making it obvious the row scrolls horizontally. The active card index
-    // drives the dot indicator below the list.
     const [activeItemIndex, setActiveItemIndex] = useState(0);
     const screenWidth = Dimensions.get("window").width;
-    const SCREEN_HORIZONTAL_PADDING = 40; // px-5 on each side of the screen
+    const SCREEN_HORIZONTAL_PADDING = 40;
     const ITEM_GAP = 12;
     const AVAILABLE_WIDTH = screenWidth - SCREEN_HORIZONTAL_PADDING;
     const ITEM_WIDTH = Math.round(AVAILABLE_WIDTH * 0.8);
@@ -73,17 +70,12 @@ const OrderDetailsScreen: React.FC<IProps> = ({ route }) => {
         }
     }, [orderID, currencyRefreshToken]);
 
-    // Show the skeleton (instead of an early-returned AppLoader) while the
-    // order is being fetched OR while orderDetails is still an empty object —
-    // header chrome stays interactive during the wait.
     const isOrderDetailsEmpty = !orderDetails || Object.keys(orderDetails).length === 0;
     const showSkeleton = isLoading || isOrderDetailsEmpty;
 
     return (
         <GestureHandlerRootView>
             <BottomSheetModalProvider>
-                {/* Horizontal padding lives on the inner sections, not here — iOS
-                    SafeAreaView overwrites its own padding with the safe-area insets. */}
                 <SafeAreaView className="h-auto w-full flex-1 pb-2 pt-2 bg-lightGray">
                     <AppStatusBar backgroundColor="#133522" barStyle="light-content" />
 

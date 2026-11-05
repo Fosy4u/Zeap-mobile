@@ -16,8 +16,6 @@ import RootNavigationStackModel from "../../../../routes/model/routes_model";
 import useVendorDocumentUploadHook, { IDocSlotState } from "../hooks/vendorOnboarding/vendorDocumentUpload_hook";
 import { IOnboardingDocumentRequirement } from "../apis/general_api";
 
-// Backend doesn't return per-document examples yet, so we keep a local lookup
-// keyed by slug. Adding a new slug here is the only place that needs touching.
 const EXAMPLES_BY_SLUG: Record<string, string> = {
     proof_of_identity:     "International Passport, Driver's Licence, Voter's Card, etc.",
     business_registration: "CAC certificate, Incorporation Docs, etc.",

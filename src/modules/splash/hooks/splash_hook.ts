@@ -78,7 +78,6 @@ const useSplashHook = () => {
         }
     };
 
-    // Parses a displayName like "John Doe (Google)" into { firstName: "John", lastName: "Doe" }.
     const parseAuthUserName = (
         backendUser: any,
         authUser: any,
@@ -108,7 +107,6 @@ const useSplashHook = () => {
         return { firstName: "Customer", lastName: "Guest" };
     };
 
-    // Non-blocking background refresh — never blocks navigation
     const refreshUserDataSilently = async (uid: string) => {
         try {
             const userData = await getUserById(uid).unwrap();
@@ -137,7 +135,6 @@ const useSplashHook = () => {
             dispatch(setUserData(merged as any));
 
         } catch {
-            // Silently fail — the user is already on the home screen with cached data
         }
     };
 

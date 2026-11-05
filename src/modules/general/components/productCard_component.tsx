@@ -51,8 +51,6 @@ const ProductCardComponent: React.FC<IProductCardItemProps> = (props) => {
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                     className="h-[35px] w-[35px] absolute top-1.5 right-1.5 flex items-center justify-center rounded-xl bg-gray-200"
                 >
-                    {/* Always render the heart — it starts unsaved and flips to
-                        filled once the wishlist lands, so no spinner is shown. */}
                     <Heart color={ saved ? "#e11d48" : "gray" } variant={ saved ? "Bold" : "Linear" } />
                 </TouchableOpacity>
             </View>
@@ -93,8 +91,6 @@ const ProductCardComponent: React.FC<IProductCardItemProps> = (props) => {
 
                     const isHorizontal = orientation === "Horizontal";
 
-                    // Price stack — current + strikethrough on the first line,
-                    // "Save X%" on the next.
                     const priceStack = (
                         <View className={ isHorizontal ? "" : "flex-1 mr-2" }>
                             <View className="flex-row items-baseline flex-wrap">

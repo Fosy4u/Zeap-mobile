@@ -32,7 +32,6 @@ const notificationsApi = rootAPI.injectEndpoints({
             }
         }),
 
-        // Mark all notifications as read (clears the unread bell badge).
         markNotificationsAsRead: builder.mutation<any, void>({
             query: () => ({
                 url: markNotificationAsReadRoute,
@@ -44,7 +43,6 @@ const notificationsApi = rootAPI.injectEndpoints({
             }
         }),
 
-        // Mark specific notifications as seen (persists read-state per item).
         markNotificationAsSeen: builder.mutation<any, { notification_ids: string[] }>({
             query: (requestData) => ({
                 url: markNotificationAsSeenRoute,

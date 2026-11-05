@@ -3,7 +3,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Add, ArrowRight, Call, Location, Map, Trash, Edit2, ArrowDown2, ArrowLeft } from 'iconsax-react-native';
-import { View, Text, TouchableOpacity, SafeAreaView, ScrollView, TextInput, StatusBar } from 'react-native';
+import { View, Text, TouchableOpacity, SafeAreaView, ScrollView, TextInput, StatusBar, Alert } from 'react-native';
 import RootNavigationStackModel from '../../../../routes/model/routes_model.ts';
 import { AppDispatch, RootState } from '../../../../redux/store/store.ts';
 import { Controller } from 'react-hook-form';
@@ -21,7 +21,7 @@ const AddressScreen = () => {
     const dispatch = useDispatch<AppDispatch>();
 
     const {
-        control, handleSubmit, onSubmit, errors, phoneRules,
+        control, handleSubmit, onSubmit, onInvalid, errors, phoneRules,
         handleSetAsDefaultAddress, handleDeleteAddress,
         handleGetDeliveryAddresses,
         editingAddressId, handleStartNewAddress, handleStartEditAddress, handleCancelAddressForm,
@@ -31,7 +31,13 @@ const AddressScreen = () => {
         handleGetDeliveryAddresses();
     }, []);
 
-    // Default address first, matching the Personal Information card's order.
+    const handleConfirmDelete = (address: IAddress) => {
+        Alert.alert("Delete address", "Are you sure you want to delete this address?", [
+            { text: "Cancel", style: "cancel" },
+            { text: "Delete", style: "destructive", onPress: () => handleDeleteAddress(address._id!) },
+        ]);
+    };
+
     const sortedAddresses = [...(deliveryAddresses ?? [])].sort(
         (a, b) => Number(!!b.isDefault) - Number(!!a.isDefault),
     );
@@ -58,7 +64,7 @@ const AddressScreen = () => {
                 <View className="h-[40px] w-[40px]" />
             </View>
 
-            <ScrollView showsVerticalScrollIndicator={ false }>
+            <ScrollView showsVerticalScrollIndicator={ false } keyboardShouldPersistTaps="handled">
                 <View className="px-5 pt-2 pb-20">
                     { !showNewDeliveryAddressForm && (
                         <Text className="my-2 font-Montserrat font-normal text-base text-gray-700">Your saved delivery addresses</Text>
@@ -66,8 +72,6 @@ const AddressScreen = () => {
 
                     { (!showNewDeliveryAddressForm) ? (
                         <View className="flex-1 flex-col justify-between">
-                            {/*==== Add New Address — sits above the list so it is
-                                 reachable without scrolling past every card. ====*/}
                             <TouchableOpacity
                                 onPress={ handleStartNewAddress }
                                 className="h-[55px] w-full mt-3 flex-row items-center justify-center gap-x-1 rounded-xl border border-baseGreen bg-lightGreen"
@@ -98,10 +102,18 @@ const AddressScreen = () => {
                                                     { savedAddress.isDefault && (
                                                         <Text className="px-2 py-0.5 font-montserratMedium text-xs text-baseGreen rounded-md bg-lightGreen">Default</Text>
                                                     ) }
-                                                    <TouchableOpacity onPress={ () => handleStartEditAddress(savedAddress) }>
+                                                    <TouchableOpacity
+                                                        onPress={ () => handleStartEditAddress(savedAddress) }
+                                                        hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
+                                                        className="p-1.5 rounded-full bg-blue-50"
+                                                    >
                                                         <Edit2 color="#305CDE" size={ 18 } variant="Bold" />
                                                     </TouchableOpacity>
-                                                    <TouchableOpacity onPress={ () => handleDeleteAddress(savedAddress._id!) }>
+                                                    <TouchableOpacity
+                                                        onPress={ () => handleConfirmDelete(savedAddress) }
+                                                        hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
+                                                        className="p-1.5 rounded-full bg-red-50"
+                                                    >
                                                         <Trash color="#AA1F1F" size={ 18 } variant="Bold" />
                                                     </TouchableOpacity>
                                                 </View>
@@ -122,8 +134,6 @@ const AddressScreen = () => {
                                                 <Text className="flex-1 font-montserratMedium text-gray-700">{ savedAddress.region! }</Text>
                                             </View>
 
-                                            {/* Inline, not absolutely positioned — the old overlay
-                                                sat on top of the region row on longer addresses. */}
                                             { !savedAddress.isDefault && (
                                                 <TouchableOpacity
                                                     onPress={ () => handleSetAsDefaultAddress(savedAddress._id!) }
@@ -313,7 +323,7 @@ const AddressScreen = () => {
                                 </TouchableOpacity>
 
                                 <TouchableOpacity 
-                                    onPress={handleSubmit(onSubmit)}
+                                    onPress={ handleSubmit(onSubmit, onInvalid) }
                                     disabled={isLoading}
                                     className="h-[55px] w-auto mt-5 flex-1 flex-row items-center justify-center rounded-xl bg-baseGreen"
                                 >

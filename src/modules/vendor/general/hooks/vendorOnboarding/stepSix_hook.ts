@@ -34,8 +34,6 @@ const useStepSixHook = () => {
         dispatch(setSelectedOnboardingStep(7));
     };
 
-    // Socials are optional — Skip clears any partially-entered handles and
-    // advances straight to the next step.
     const handleSkip = () => {
         dispatch(setOnboardingFormData({
             website: "",

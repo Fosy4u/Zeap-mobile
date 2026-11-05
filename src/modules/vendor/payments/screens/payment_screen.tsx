@@ -21,8 +21,6 @@ const PaymentScreen = () => {
     const { handleGetVendorPayments } = useVendorPaymentHook();
     const { currencyRefreshToken } = useDisplayCurrency();
 
-    /* Fetch this vendor's own payments. This used to pass a hard-coded shop id,
-       so every vendor saw another shop's orders. */
     React.useEffect(() => {
         if (userData?.shopId) {
             handleGetVendorPayments(userData.shopId);

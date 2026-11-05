@@ -2,10 +2,6 @@ import React from "react";
 import { View } from "react-native";
 import SkeletonBlock from "../../../general/components/skeletonBlock_component";
 
-// Skeleton for the Join Promo screen — mirrors the promo card:
-//   • title + subtitle, date range, discount row
-//   • description line and the allowed-product chips
-
 const PromoSkeletonLoader = () => {
     return (
         <View>

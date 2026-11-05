@@ -46,7 +46,6 @@ const authAPI = rootAPI.injectEndpoints({
             },
         }),
 
-        // Look up whether an email already belongs to a registered account
         checkUserEmail: builder.query<any, string>({
             query: (email) => ({
                 url: checkUserEmailRoute,
@@ -57,7 +56,6 @@ const authAPI = rootAPI.injectEndpoints({
             transformResponse: (response: { data: any }) => response.data,
         }),
 
-        // Turn the current guest into an email/password account (same call as the web sign-up)
         convertGuestToPasswordUser: builder.mutation<IUser, { email: string; password: string; firstName: string; lastName: string; phoneNumber: string }>({
             query: (requestData) => ({
                 url: convertGuestToPasswordUserRoute,

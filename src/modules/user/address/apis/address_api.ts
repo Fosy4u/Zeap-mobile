@@ -63,23 +63,20 @@ const addressAPI = rootAPI.injectEndpoints({
                 method: "PUT",
                 body: { address_id },
             }), 
-            invalidatesTags: ["DeliveryAddress"],
+            invalidatesTags: ["DeliveryAddress", "DeliveryAddresses"],
             transformResponse: (response: { data: IAddress }) => {
                 return response.data;
             },
         }),
 
         // Delete address
-        deleteAddress: builder.mutation<IAddress, { address_id: string }>({
+        deleteAddress: builder.mutation<{ message?: string }, { address_id: string }>({
             query: ({ address_id }) => ({
                 url: "/deliveryAddress/delete",
                 method: "DELETE",
                 body: { address_id },
             }),
-            invalidatesTags: ["DeliveryAddress"],
-            transformResponse: (response: { data: IAddress }) => {
-                return response.data;
-            },
+            invalidatesTags: ["DeliveryAddress", "DeliveryAddresses"],
         }),
     }),
 });

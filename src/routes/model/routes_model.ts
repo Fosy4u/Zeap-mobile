@@ -46,7 +46,7 @@ type RootNavigationStackModel = {
   profileSetupScreen: undefined;
   personalInformationScreen: undefined;
   editAccountDetailsScreen: undefined;
-  searchItemScreen: undefined;
+  searchItemScreen: { initialSearch?: string } | undefined;
   searchResultsScreen: undefined;
   userNotificationsScreen: undefined;
   userDashboardScreen: undefined;

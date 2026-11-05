@@ -98,8 +98,6 @@ const AddReadyMadeClothesScreen = () => {
         }
 
         if (selectedStep === 4) {
-            // Per-colour uploads happen via the in-card "Upload" button; here we
-            // just advance once at least one colour has been uploaded.
             handleProceedToNextStep();
         }
 
@@ -276,7 +274,6 @@ const AddReadyMadeClothesScreen = () => {
                 />
             }
 
-            {/* Per-colour image upload modal — opens when a colour is selected. */}
             { showImageUploadModal && stepFourSelectedColor.length > 0 &&
                 <UploadColorImageModal
                     colorName={ stepFourSelectedColor[0].colorName }

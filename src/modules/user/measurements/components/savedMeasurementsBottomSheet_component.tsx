@@ -26,9 +26,6 @@ import LinearGradient from 'react-native-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface IProps {
-    // When true, render just the form (no dark overlay / slide-up sheet / close
-    // button) so it can sit inline on the measurement screen. Defaults to the
-    // bottom-sheet presentation used by the "Add New Measurement" flow.
     embedded?: boolean;
     header?: React.ReactNode;
 }
@@ -41,9 +38,6 @@ const SavedMeasurementsBottomSheet: React.FC<IProps> = ({ embedded = false, head
     const isGuest = !!userData?.isGuest;
     const [expandedGuides, setExpandedGuides] = useState<Record<string, boolean>>({});
 
-    // Find the guide entry for a given measurement category + field name.
-    // Comparison is case-insensitive — the API payload mixes casing
-    // ("shirt (short sleeve)" vs "Shirt (Long Sleeve)").
     const getGuideEntry = (measurementName?: string, fieldName?: string) => {
         if (!measurementName || !fieldName) return null;
         const guide = bodyMeasurementGuides?.find(
@@ -57,19 +51,10 @@ const SavedMeasurementsBottomSheet: React.FC<IProps> = ({ embedded = false, head
     const toggleGuide = (key: string) => {
         setExpandedGuides((prev) => ({ ...prev, [key]: !prev[key] }));
     };
-    // Sheet caps at ~90% of the viewport so the rounded top + header always
-    // peek above the keyboard. The actual lift above the keyboard is handled
-    // by KeyboardAvoidingView (iOS) + Android's adjustResize, so we no longer
-    // measure keyboard height manually.
     const { height: screenHeight } = useWindowDimensions();
     const insets = useSafeAreaInsets();
     const dispatch = useDispatch<AppDispatch>();
 
-    // Android's adjustResize moves the window but does NOT auto-scroll a
-    // focused input into the visible area inside a nested ScrollView. We do
-    // that ourselves on every input focus by asking the ScrollView's response
-    // chain to bring the focused node into view above the keyboard. iOS gets
-    // the same behavior for free via `automaticallyAdjustKeyboardInsets`.
     const scrollRef = useRef<ScrollView>(null);
     const handleInputFocus = (event: any) => {
         if (Platform.OS !== "android") { return; }
@@ -83,7 +68,6 @@ const SavedMeasurementsBottomSheet: React.FC<IProps> = ({ embedded = false, head
         control, handleSubmit, onSubmitFromMeasurementForm, errors, watch, handleSaveMeasurementTemplate,
     } = useMeasurementHook();
 
-    // The template is saved from its own sheet, so add-to-cart must never save it a second time.
     useEffect(() => {
         dispatch(setSaveMeasurementForNextTime(false));
     }, []);
@@ -111,7 +95,6 @@ const SavedMeasurementsBottomSheet: React.FC<IProps> = ({ embedded = false, head
     const [templateName, setTemplateName] = useState("");
     const [templateNameError, setTemplateNameError] = useState("");
     const [isSavingTemplate, setIsSavingTemplate] = useState(false);
-    // A reapplied saved template is already stored, so the toggle starts on.
     const [savedTemplateName, setSavedTemplateName] = useState<string>(selectedMeasurementTemplate?.templateName ?? "");
 
     const closeTemplateSheet = () => {
@@ -142,7 +125,6 @@ const SavedMeasurementsBottomSheet: React.FC<IProps> = ({ embedded = false, head
         return () => clearTimeout(timer);
     }, [showRequiredWarning]);
 
-    // Mirrors the web: flag the form, then bring the first missing field into view.
     const handleInvalidSubmit = (formErrors: any) => {
         const missingKeys: string[] = [];
         requiredMeasurementFormFields?.measurements?.forEach((measurement, measurementIndex) => {
@@ -167,12 +149,9 @@ const SavedMeasurementsBottomSheet: React.FC<IProps> = ({ embedded = false, head
     };
 
     const handleCloseAddNewMeasurementBottomSheet = () => {
-        // Dismiss immediately — no slide-out wait.
         dispatch(setShowAddNewMeasurementBottomSheet(false));
     };
 
-    // The form fields — shared between the inline (embedded) and bottom-sheet
-    // presentations so both stay identical.
     const formContent = (
         <View className="flex-1 flex-col justify-between">
 
@@ -319,7 +298,6 @@ const SavedMeasurementsBottomSheet: React.FC<IProps> = ({ embedded = false, head
                 </View>
             </View>
 
-            {/*==== Save measurement — only once every required measurement is filled ====*/}
             { allRequiredFieldsFilled && (
                 <View>
                     <View className="mt-5 flex-row items-center">
@@ -413,8 +391,6 @@ const SavedMeasurementsBottomSheet: React.FC<IProps> = ({ embedded = false, head
         </View>
     ) : null;
 
-    // Inline presentation — just the scrollable form, no overlay/header. Used
-    // directly on the measurement screen.
     if (embedded) {
         return (
             <View className="flex-1">

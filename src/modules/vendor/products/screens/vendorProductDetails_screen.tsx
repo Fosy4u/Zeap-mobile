@@ -49,12 +49,8 @@ const VendorProductDetailsScreen: React.FC<IProps> = ({ route }) => {
         handleTornOffPromo,
     } = useProductHook();
 
-    // The colour currently shown (drives the selected-swatch ring + the sizes).
     const selectedColorName = (defaultFeaturedImageAndThumbnails as any)?.value as string | undefined;
 
-    // Sizes available for the selected colour, derived from the product's
-    // variations (ready-to-wear). Falls back to the flat product.sizes for
-    // products that don't carry per-colour variations.
     const sizesForSelectedColor = Array.from(new Set(
         (product?.variations ?? [])
             .filter((variation) => variation.colorValue?.toLowerCase() === (selectedColorName ?? "").toLowerCase())
@@ -92,7 +88,6 @@ const VendorProductDetailsScreen: React.FC<IProps> = ({ route }) => {
         return () => { active = false; };
     }, [productID]);
 
-    // Falls back to the converted payload only if the shop lookup returned nothing.
     const findVariation = (variations: IVariation[], size?: string) =>
         variations.find((variation) =>
             variation.colorValue?.toLowerCase() === (selectedColorName ?? "").toLowerCase() && (!size || variation.size === size)
@@ -109,8 +104,6 @@ const VendorProductDetailsScreen: React.FC<IProps> = ({ route }) => {
             {/*==== Header ====*/}
             <AppHeaderComp title="Product Details" />
 
-            {/* While the product loads, show a layout-matching skeleton instead
-                of a blocking full-screen loader. */}
             { isLoading ? (
                 <VendorProductDetailsSkeletonComponent />
             ) : (
@@ -188,7 +181,6 @@ const VendorProductDetailsScreen: React.FC<IProps> = ({ route }) => {
                     */}
                 </View>
 
-                {/*==== Rejection Reasons — shown until the product goes live again ====*/}
                 { (product?.status !== "live" && (product?.rejectionReasons?.length ?? 0) > 0) && (
                     <VendorProductRejectionReasonsComponent rejectionReasons={ product?.rejectionReasons } />
                 ) }
@@ -216,9 +208,6 @@ const VendorProductDetailsScreen: React.FC<IProps> = ({ route }) => {
                                 fallback
                             />
                         ) : (
-                            // No image uploaded yet (e.g. a draft) — show the app
-                            // logo with a caption so it's clear an image belongs
-                            // here, rather than a shimmer that reads as loading.
                             <View className="h-[500px] w-full rounded-lg bg-gray-100 items-center justify-center">
                                 <Image
                                     source={ require("../../../../../assets/images/image_placeholder.png") }
@@ -332,8 +321,6 @@ const VendorProductDetailsScreen: React.FC<IProps> = ({ route }) => {
                 { Object.entries(productPromotion).length > 0 ? (
                     <View className="h-auto w-full mt-2 px-3 pt-4 pb-4 border border-gray-200 rounded-xl bg-lightGray">
                         <View className="h-auto w-full flex-row items-center justify-between">
-                            {/* flex-1 so a long promo title wraps rather than
-                                pushing the status badge off the card. */}
                             <View className="flex-1 mr-3">
                                 <Text className="font-montserratSemiBold text-base text-gray-700">{  productPromotion?.title! }</Text>
                                 <Text className="font-montserratMedium text-sm text-gray-700">Discount: { productPromotion?.discount?.fixedPercentage! ? productPromotion?.discount?.fixedPercentage! : 0 }%</Text>
@@ -375,8 +362,6 @@ const VendorProductDetailsScreen: React.FC<IProps> = ({ route }) => {
                     </View>
                 ) : (
                     <View className="h-auto w-full mt-2 px-3 py-4 flex-row items-center justify-between border border-gray-200 rounded-xl bg-lightGray">
-                        {/* flex-1 + mr so the longer copy wraps instead of
-                            colliding with the button. */}
                         <Text className="flex-1 mr-3 font-montserratSemiBold text-base text-gray-700">
                             This product is not part of any promo
                         </Text>

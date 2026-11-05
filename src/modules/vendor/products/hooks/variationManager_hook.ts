@@ -58,7 +58,6 @@ const useVariationManagerHook = () => {
     const isBespoke = isBespokeType(product?.productType);
     const canManageVariations = isReadyToWear || isBespoke;
 
-    // Colour enums for this product type — used to resolve each colour's hex.
     const colorEnumsForType: IColorEnum[] = useMemo(() => {
         switch (product?.productType) {
             case "readyMadeCloth": return readyMadeClothesOptions.colorEnums ?? [];
@@ -70,7 +69,6 @@ const useVariationManagerHook = () => {
         }
     }, [product?.productType, readyMadeClothesOptions, readyMadeShoesOptions, accessoriesOptions, bespokeClothesOptions, bespokeShoesOptions]);
 
-    // The product's uploaded colours (name + resolved hex) and sizes.
     const colorOptions: IColorOption[] = useMemo(
         () => (product?.colors ?? []).map((color) => ({
             colorName: color.value ?? "",
@@ -80,9 +78,6 @@ const useVariationManagerHook = () => {
     );
     const sizes: string[] = product?.sizes ?? [];
 
-    // Bespoke colours are the ones the vendor can source on request, so the
-    // picker offers the full enum for the product type rather than only the
-    // colours already uploaded against the product.
     const bespokeColorOptions: IColorOption[] = useMemo(
         () => colorEnumsForType.map((enumColor) => ({
             colorName: enumColor.name ?? "",
@@ -91,8 +86,6 @@ const useVariationManagerHook = () => {
         [colorEnumsForType],
     );
 
-    // colour+size combinations that don't yet have a variation — the pool the
-    // "Add Variation" quick picker offers.
     const availableCombos: IVariationCombo[] = useMemo(() => {
         const taken = new Set(variations.map((variation) => `${variation.colorValue}|${variation.size}`));
         const combos: IVariationCombo[] = [];
@@ -106,8 +99,6 @@ const useVariationManagerHook = () => {
         return combos;
     }, [variations, colorOptions, sizes]);
 
-    // Base SKU (everything before the trailing "-<size>-<colour>") lifted from an
-    // existing variation, so the picker can preview SKUs the backend will mint.
     const skuBase = useMemo(() => {
         const sample = variations.find((variation) => variation.sku && variation.size && variation.colorValue);
         if (!sample) return "";
@@ -117,14 +108,11 @@ const useVariationManagerHook = () => {
     const previewSku = (size: string, colorName: string) =>
         skuBase ? `${skuBase}-${size}-${colorName}` : `${size}-${colorName}`;
 
-    // Refetch the product and push it back into Redux so every screen reflects
-    // the change.
     const refreshProduct = async (productId: string) => {
         const updatedProduct = await getProductByProductID(productId).unwrap();
         if (updatedProduct) dispatch(setProduct(updatedProduct));
     };
 
-    // Edit a single existing variation (identified by its sku).
     const handleUpdateVariation = async (input: IVariationInput): Promise<boolean> => {
         const productId = product?.productId || "";
         dispatch(setLoadingMessage("Updating product variation..."));
@@ -153,7 +141,6 @@ const useVariationManagerHook = () => {
         }
     };
 
-    // Add one or more new variations (the quick picker passes the selected set).
     const handleAddVariations = async (inputs: IVariationInput[]): Promise<boolean> => {
         const productId = product?.productId || "";
         dispatch(setLoadingMessage(inputs.length > 1 ? "Adding product variations..." : "Adding product variation..."));
@@ -183,8 +170,6 @@ const useVariationManagerHook = () => {
         }
     };
 
-    // Bespoke products carry exactly one variation: price plus the colour setup.
-    // Adds it on first save, edits it afterwards, mirroring the create flow.
     const handleSaveBespokeVariation = async (input: IBespokeVariationInput): Promise<boolean> => {
         const productId = product?.productId || "";
         const existingSku = variations[0]?.sku ?? BESPOKE_SKU;
@@ -217,7 +202,6 @@ const useVariationManagerHook = () => {
         }
     };
 
-    // Delete an existing variation by sku.
     const handleDeleteVariation = async (sku?: string): Promise<boolean> => {
         const productId = product?.productId || "";
         dispatch(setLoadingMessage("Deleting product variation..."));

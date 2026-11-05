@@ -149,8 +149,6 @@ const useVendorProductHook = () => {
         max: promo?.discount?.rangePercentage?.max ?? 0,
     });
 
-    // Fixed promos lock to their own percentage; range promos open at the
-    // minimum the vendor is allowed to pick.
     const setSelectedPromo = (promo: IPromotion) => {
         setSelectedPromoState(promo);
         if (isFixedPromo(promo)) {
@@ -508,13 +506,6 @@ const useVendorProductHook = () => {
         }
     }, [product]);
 
-    // Pagination visibility — the products endpoint returns only the page
-    // array (no total count), so paging is inferred from page-fullness:
-    //   • current page is full (length === limit) → a next page likely exists
-    //   • we are past page 1                       → a previous page exists
-    // When neither holds (empty list, or everything fits on one page) the
-    // Previous/Next controls are hidden. Kept here (controller) rather than in
-    // the screen so the view stays presentation-only.
     const visibleProducts = useMemo(() => {
         const phrase = searchPhrase.trim().toLowerCase();
         if (!phrase) { return products; }
@@ -553,8 +544,6 @@ const useVendorProductHook = () => {
         featuredColors,
         promotions, handleGetAvailablePromos, selectedPromo, setSelectedPromo, handleApplyPromo, handleTornOffPromo,
         discountPercentage, setDiscountPercentage, isFixedPromo, promoRange,
-        /* Uninitialized counts as loading: it covers the render between mount
-           and the screen's useEffect firing the request. */
         isLoadingPromotions: isPromotionsUninitialized || isFetchingPromotions,
 
         productTypeOptions, selectedProductType,

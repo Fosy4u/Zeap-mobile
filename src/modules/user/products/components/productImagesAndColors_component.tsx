@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Animated, Dimensions, Image, Text, TouchableOpacity, View } from 'react-native'
 import { IColor, IImage } from '../models/productDetails_model';
 import { useDispatch, useSelector } from 'react-redux';
@@ -27,6 +27,36 @@ interface IProps {
   handleAddProductToCart: (productType: string) => void;
 };
 
+const HeroImage: React.FC<{ link?: string }> = ({ link }) => {
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => { setLoaded(false); }, [link]);
+
+  return (
+    <View className="w-full">
+      { link ? (
+        <FastImage
+          key={ link }
+          source={{ uri: link, priority: FastImage.priority.high }}
+          resizeMode={ FastImage.resizeMode.cover }
+          className="h-[500px] w-full rounded-lg"
+          style={{ aspectRatio: 0.68, opacity: loaded ? 1 : 0 }}
+          onLoadEnd={ () => setLoaded(true) }
+        />
+      ) : null }
+      { (!link || !loaded) && (
+        <View className={ link ? "absolute inset-0 items-center justify-center" : "" } style={ link ? undefined : { marginTop: 20 } }>
+          <SkeletonBlock
+            width={ Dimensions.get('window').width - 40 }
+            height={ 350 }
+            radius={ 16 }
+          />
+        </View>
+      ) }
+    </View>
+  );
+};
+
 const ProductImagesAndColorsComponent: React.FC<IProps> = (props) => {
   const {
     defaultFeaturedImageAndThumbnails,
@@ -39,20 +69,18 @@ const ProductImagesAndColorsComponent: React.FC<IProps> = (props) => {
     handleAddProductToCart,
   } = props;
 
-  const { product, reviewAndRating, productPromotion, selectedColor, selectedSize, isLoading } = useSelector((state: RootState) => state.productState);
+  const { product, reviewAndRating, productPromotion, selectedColor, selectedSize } = useSelector((state: RootState) => state.productState);
   const { resolveCurrency } = useDisplayCurrency();
   const [visible, setVisible] = useState(false);
+  const heroLink = product?.colors?.some((color) => color.images?.some((image) => image.link === featuredImage?.link))
+    ? featuredImage?.link
+    : undefined;
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
   const dispatch = useDispatch();
   // console.log("SELECTED PRODUCT::: ", product);
 
-  // Global stock — true when every variation across all colours is at zero
-  // (or there are no variations). Flags the whole product as out of stock.
   const isOutOfStock = !product?.variations?.some((variation) => (variation.quantity ?? 0) > 0);
 
-  // Selection-aware stock. Each colour carries its own per-size quantities, so
-  // the available sizes, the out-of-stock messaging, and the Add-to-cart button
-  // must all reflect the CURRENTLY SELECTED colour — not the product as a whole.
   const selectedColorHasStock = product?.variations?.some(
     (variation) => variation.colorValue === selectedColor?.name && (variation.quantity ?? 0) > 0
   );
@@ -61,10 +89,6 @@ const ProductImagesAndColorsComponent: React.FC<IProps> = (props) => {
   );
   const canAddToCart = (selectedVariation?.quantity ?? 0) > 0;
 
-  // Price follows the selected colour (and the exact size once one is chosen).
-  // Each colour can carry its own price, so reading variations[0] always showed
-  // the first colour's price regardless of selection. Fall back to the selected
-  // colour's first variation, then to the product's first variation.
   const priceVariation =
     product?.variations?.find((variation) => variation.colorValue === selectedColor?.name && variation.size === selectedSize) ||
     product?.variations?.find((variation) => variation.colorValue === selectedColor?.name) ||
@@ -98,7 +122,6 @@ const ProductImagesAndColorsComponent: React.FC<IProps> = (props) => {
           </View>
 
           {/*==== Product Review, Stocks, Sold & Discount Count ====*/}
-          {/* Hidden by request — keep for future re-enable. */}
           {/* <View className="mt-2 px-5">
             <View className="mt-2.5 flex-row items-center space-x-3">
               <View className="flex-row items-center">
@@ -130,27 +153,7 @@ const ProductImagesAndColorsComponent: React.FC<IProps> = (props) => {
           <View className="mt-3 px-5">
             <View className="h-auto w-full p-2 rounded-xl border border-gray-200 bg-[#EDEFF4]">
               <View className="h-auto w-auto p-0 flex items-center justify-center rounded-xl bg-transparent">
-                { !isLoading && featuredImage?.link ? (
-                  <FastImage
-                      source={{
-                          uri: featuredImage?.link!,
-                          priority: FastImage.priority.normal
-                      }}
-                      defaultSource={ require("../../../../../assets/images/image_placeholder.png") }
-                      resizeMode={ FastImage.resizeMode.cover }
-                      className="h-[500px] w-full rounded-lg"
-                      style={{ aspectRatio: 0.68 }}
-                      fallback
-                  />
-                ) : (
-                  <View style={{ marginTop: 20 }}>
-                    <SkeletonBlock
-                      width={ Dimensions.get('window').width - 40 }
-                      height={ 350 }
-                      radius={ 16 }
-                    />
-                  </View>
-                ) }
+                <HeroImage link={ heroLink } />
               </View>
             </View>
           </View>
@@ -196,11 +199,6 @@ const ProductImagesAndColorsComponent: React.FC<IProps> = (props) => {
                   );
 
                   return (
-                    // Out-of-stock colours stay selectable so tapping one surfaces
-                    // the "out of stock" message + disables Add-to-cart, rather than
-                    // silently doing nothing. The diagonal slash marks them; the
-                    // swatch itself keeps its true colour (no dimming → black reads
-                    // as black, not grey).
                     <TouchableOpacity key={ eachColor.name! }
                       onPress={ () => {
                         handleColorSelection(eachColor);
@@ -231,8 +229,6 @@ const ProductImagesAndColorsComponent: React.FC<IProps> = (props) => {
             </View>
           ) }
 
-          {/* Per-colour stock notice — the selected colour is sold out while the
-              product still has other colours in stock. */}
           { !isOutOfStock && !selectedColorHasStock && (
             <View className="mt-5 mx-5 px-3 py-2 self-start rounded-md border border-red-200 bg-red-50">
               <Text className="font-montserratSemiBold text-xs text-red-600">This colour is out of stock. Please choose another colour.</Text>
@@ -261,10 +257,6 @@ const ProductImagesAndColorsComponent: React.FC<IProps> = (props) => {
               </View>
               <View className="h-auto w-full mt-3 flex-row items-center justify-start flex-wrap" style={{ columnGap: 8, rowGap: 8 }}>
                 { product.sizes!.map((eachSize) => {
-                  // A size is available only when the SELECTED COLOUR has that
-                  // size in stock. Scoping to `selectedColor` is the fix for the
-                  // cross-colour leak where another colour's stock made a size
-                  // look available under a colour that doesn't carry it.
                   const isSizeAvailable = product.variations?.some(
                     (variation) => variation.colorValue === selectedColor?.name && variation.size === eachSize && (variation.quantity ?? 0) > 0
                   );
@@ -328,27 +320,7 @@ const ProductImagesAndColorsComponent: React.FC<IProps> = (props) => {
           <View className="mt-3 px-5">
             <View className="h-auto w-full p-2 rounded-xl border border-gray-200 bg-[#EDEFF4]">
               <View className="h-auto w-auto p-0 flex items-center justify-center rounded-xl bg-transparent">
-                { !isLoading && featuredImage?.link ? (
-                  <FastImage
-                      source={{
-                          uri: featuredImage?.link!,
-                          priority: FastImage.priority.normal
-                      }}
-                      defaultSource={ require("../../../../../assets/images/image_placeholder.png") }
-                      resizeMode={ FastImage.resizeMode.cover }
-                      className="h-[500px] w-full rounded-lg"
-                      style={{ aspectRatio: 0.68 }}
-                      fallback
-                  />
-                ) : (
-                  <View style={{ marginTop: 20 }}>
-                    <SkeletonBlock
-                      width={ Dimensions.get('window').width - 40 }
-                      height={ 350 }
-                      radius={ 16 }
-                    />
-                  </View>
-                ) } 
+                <HeroImage link={ heroLink } /> 
               </View>
             </View>
           </View>

@@ -7,7 +7,6 @@ interface IVendorOnboardingFormData {
     // Step 1
     businessName: string;
 
-    // Step 2 — null = unanswered (Yes/No tiles must be tapped to proceed)
     isTailor: boolean | null;
     isShoeMaker: boolean | null;
 
@@ -26,7 +25,6 @@ interface IVendorOnboardingFormData {
     accountName: string;
     accountNumber: string;
 
-    // Step 6 — all optional
     website: string;
     tiktok: string;
     instagram: string;

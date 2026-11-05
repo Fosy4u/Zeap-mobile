@@ -5,8 +5,6 @@ import LinearGradient from 'react-native-linear-gradient';
 interface IProps {
   colorName: string;
   colorCode: string;
-  /* Border/ring classes for the chip body, so callers keep control of the
-     selected state. Defaults to the plain unselected border. */
   className?: string;
 }
 
@@ -21,7 +19,6 @@ const getReadableTextColor = (hex: string) => {
   if (!isFlatHex(hex)) return "text-black";
 
   let value = hex.trim().slice(1);
-  /* Expand the #RGB shorthand to #RRGGBB before measuring. */
   if (value.length === 3) {
     value = value.split("").map((char) => char + char).join("");
   }

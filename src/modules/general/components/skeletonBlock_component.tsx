@@ -20,14 +20,6 @@ interface ISkeletonBlockProps {
     style?: StyleProp<ViewStyle>;
 }
 
-// Project-local skeleton primitive used by every screen-specific skeleton
-// loader. A flat colored block with a LinearGradient overlay whose translateX
-// is animated from -width to +width using Reanimated. Both deps
-// (react-native-linear-gradient, react-native-reanimated) are already in the
-// project — no third-party shimmer library is needed.
-//
-// Tune colors per surface (e.g. dark green header vs white body) via the
-// baseColor / highlightColor props.
 const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
 
 const sharedProgress = makeMutable(0);

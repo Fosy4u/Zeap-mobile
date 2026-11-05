@@ -22,8 +22,6 @@ const SavedScreen = () => {
   const { wishItems, isWishlistLoading, isWishlistFetching, refetch } = useSavedHook();
   const savedProducts = useMemo(() => wishItems.map((item) => item.product).filter(Boolean), [wishItems]);
 
-  // Refresh the wishlist whenever the tab regains focus, so items saved
-  // elsewhere appear right away.
   useFocusEffect(useCallback(() => { refetch(); }, [refetch]));
 
   const [searchPhrase, setSearchPhrase] = useState("");

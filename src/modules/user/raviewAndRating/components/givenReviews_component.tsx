@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, ScrollView, Image, TouchableOpacity } from 'react-native';
-import { ArrowRight, Star1 } from 'iconsax-react-native';
+import { ArrowRight, Heart, Star1 } from 'iconsax-react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -8,20 +8,24 @@ import RootNavigationStackModel from '../../../../routes/model/routes_model';
 import { setReviewOrder } from '../slices/reviewAndRating_slice';
 import { RootState } from '../../../../redux/store/store';
 import { formatReviewDate, normalizeReviewOrder } from '../models/review_model';
+import useWishlistToggle from '../../saved/hooks/wishlistToggle_hook';
+import IProduct from '../../products/models/product_model';
 
 const GivenReviewsComponent = () => {
     const { givenReviews } = useSelector((state: RootState) => state.reviewAndRatingState);
     const dispatch = useDispatch();
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
+    const { isSaved, toggleSave } = useWishlistToggle();
 
     return (
         <ScrollView className="flex-1 mt-6" showsVerticalScrollIndicator={false}>
             {givenReviews.length > 0 ? (
                 givenReviews.map((review, index) => {
                   const order = normalizeReviewOrder(review);
+                  const saved = isSaved(order.productId);
 
                   return (
-                    <View key={index} className="bg-white rounded-lg border border-gray-200 p-4 mb-4">
+                    <View key={index} className="bg-white rounded-lg border border-gray-200 px-3 py-3 mb-4">
                         <View className="flex-row items-start">
                             <View className="relative">
                                 <Image
@@ -31,12 +35,16 @@ const GivenReviewsComponent = () => {
                                     className="w-20 h-24 rounded-lg"
                                     resizeMode="cover"
                                 />
-                                <TouchableOpacity className="absolute top-1 right-1 bg-gray-100 rounded-md p-1">
-                                    <Text className="text-gray-600 text-xs">♡</Text>
+                                <TouchableOpacity
+                                    onPress={ () => toggleSave({ productId: order.productId, colors: order.color ? [{ value: order.color }] : [] } as unknown as IProduct) }
+                                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                                    className="h-[35px] w-[35px] absolute top-0 right-0 flex items-center justify-center rounded-xl bg-gray-200"
+                                >
+                                    <Heart color={ saved ? "#e11d48" : "gray" } variant={ saved ? "Bold" : "Linear" } />
                                 </TouchableOpacity>
                             </View>
-                            <View className="flex-1 ml-4">
-                                <Text className="text-gray-800 font-montserratMedium text-[16px] mb-1">
+                            <View className="flex-1 ml-3">
+                                <Text className="text-gray-800 font-montserratMedium text-[15px] mb-1">
                                     {order.title || 'Product Name'}
                                 </Text>
                                 <Text className="text-gray-600 font-montserratLight text-[13px] mb-1">
@@ -45,20 +53,18 @@ const GivenReviewsComponent = () => {
                                 <Text className="text-gray-600 font-montserratLight text-[13px] mb-3">
                                     Delivered on: {formatReviewDate(order.deliveryDate)}
                                 </Text>
-                                {/* The score sits outside the touchable so only
-                                    the label is tappable, not the whole row. */}
                                 <View className="flex-row items-center justify-between">
                                     <TouchableOpacity
                                         onPress={() => {
                                             dispatch(setReviewOrder(order));
                                             navigation.navigate('rateAndReviewScreen');
                                         }}
-                                        className="flex-row items-center"
+                                        className="flex-1 flex-row items-center mr-2"
                                     >
-                                        <Text className="text-green-600 font-montserratMedium text-[14px] mr-2">
+                                        <Text className="text-green-600 font-montserratMedium text-[12px] mr-1" numberOfLines={ 1 }>
                                             View or Edit Review
                                         </Text>
-                                        <ArrowRight color="#16a34a" size={20} />
+                                        <ArrowRight color="#16a34a" size={14} />
                                     </TouchableOpacity>
 
                                     <View className="flex-row items-center">

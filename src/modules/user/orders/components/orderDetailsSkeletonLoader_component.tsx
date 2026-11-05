@@ -2,21 +2,10 @@ import React from "react";
 import { ScrollView, useWindowDimensions, View } from "react-native";
 import SkeletonBlock from "../../../general/components/skeletonBlock_component";
 
-// Skeleton for the Order Details body — mirrors the four-card layout:
-//   1. Order summary (id / item count / placed-on / total + progress bar)
-//   2. Items in your order (horizontal scroll of product order cards)
-//   3. Payment information (status pill + 4 rows)
-//   4. Delivery address (title + address + phone + name + region)
-//   plus the View Receipt CTA at the bottom.
-//
-// Rendered inside the screen's ScrollView while orderDetails is fetching,
-// so the header (back button + title + divider) stays clickable.
-
 const OrderDetailsSkeletonLoader = () => {
     const screenWidth = useWindowDimensions().width;
-    // Order details body lives inside px-5 (20px each side).
     const cardWidth = screenWidth - 40;
-    const innerWidth = cardWidth - 32; // minus card's own p-4 padding
+    const innerWidth = cardWidth - 32;
 
     const Row = ({ marginTop = 12 }: { marginTop?: number }) => (
         <View style={{ marginTop }}>
@@ -47,7 +36,6 @@ const OrderDetailsSkeletonLoader = () => {
                 </View>
             </View>
 
-            {/*==== Items in your order — horizontal cards ====*/}
             <View style={{ marginTop: 28 }}>
                 <SkeletonBlock width={ 200 } height={ 14 } radius={ 4 } />
             </View>

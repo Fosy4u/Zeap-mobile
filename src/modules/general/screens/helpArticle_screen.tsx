@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
+    ActivityIndicator,
     Dimensions,
     SafeAreaView,
     ScrollView,
@@ -20,7 +21,6 @@ import {
 import IHelpArticle, { labelForCategory, labelForSubCategory } from "../models/helpArticle_model";
 import SkeletonBlock from "../components/skeletonBlock_component";
 import AppStatusBar from "../components/appStatusBar";
-import handleError from "../hooks/errorHandler_hook";
 
 const CONTENT_WIDTH = Dimensions.get("window").width - 40;
 
@@ -43,7 +43,7 @@ const HelpArticleScreen = () => {
     const subCategory = params?.subCategory ?? "";
     const isDetail = !!articleId;
 
-    const { data: article, isFetching: isFetchingArticle } = useGetHelpArticleQuery(
+    const { data: article, isLoading: isFetchingArticle } = useGetHelpArticleQuery(
         { articleId },
         { skip: !isDetail },
     );
@@ -54,12 +54,19 @@ const HelpArticleScreen = () => {
 
     const [markHelpful, { isLoading: isMarking }] = useMarkHelpArticleHelpfulMutation();
 
+    const [helpfulChoice, setHelpfulChoice] = useState("");
+
+    useEffect(() => {
+        setHelpfulChoice(article?.markedIsHelpful ? "yes" : article?.markedIsNotHelpful ? "no" : "");
+    }, [article?.markedIsHelpful, article?.markedIsNotHelpful]);
+
     const handleMarkHelpful = async (isHelpful: string) => {
-        if (!article?.articleId) { return; }
+        if (!article?.articleId || isHelpful === helpfulChoice) { return; }
         try {
             await markHelpful({ articleId: article.articleId, isHelpful }).unwrap();
+            setHelpfulChoice(isHelpful);
         } catch (error) {
-            handleError(error);
+            console.log("Failed to mark article as helpful:", error);
         }
     };
 
@@ -122,23 +129,33 @@ const HelpArticleScreen = () => {
                                 {/*==== Was this helpful? ====*/}
                                 <View className="mt-10 p-5 items-center rounded-2xl bg-lightGray border border-gray-100">
                                     <Text className="font-montserratMedium text-sm text-gray-600">Was this article helpful?</Text>
-                                    <View className="mt-3 flex-row items-center gap-x-3">
+                                    <View className="mt-3 flex-row items-center" style={{ columnGap: 12 }}>
                                         <TouchableOpacity
                                             onPress={ () => handleMarkHelpful("yes") }
                                             disabled={ isMarking }
-                                            className={ `px-5 py-2 flex-row items-center gap-x-2 rounded-lg border ${ article.markedIsHelpful ? "bg-baseGreen border-baseGreen" : "border-gray-300" } ${ isMarking ? "opacity-60" : "" }` }
+                                            className={ `h-[38px] min-w-[80px] px-5 flex-row items-center justify-center rounded-lg border ${ helpfulChoice === "yes" ? "bg-baseGreen border-baseGreen" : "border-gray-300" }` }
+                                            style={{ columnGap: 8 }}
                                         >
-                                            <Like1 size={ 15 } color={ article.markedIsHelpful ? "#ffffff" : "#6b7280" } variant="Bold" />
-                                            <Text className={ `font-montserratMedium text-xs ${ article.markedIsHelpful ? "text-white" : "text-gray-600" }` }>Yes</Text>
+                                            { isMarking ? <ActivityIndicator size="small" color={ helpfulChoice === "yes" ? "#ffffff" : "#133522" } /> : (
+                                                <>
+                                                    <Like1 size={ 15 } color={ helpfulChoice === "yes" ? "#ffffff" : "#6b7280" } variant="Bold" />
+                                                    <Text className={ `font-montserratMedium text-xs ${ helpfulChoice === "yes" ? "text-white" : "text-gray-600" }` }>Yes</Text>
+                                                </>
+                                            ) }
                                         </TouchableOpacity>
 
                                         <TouchableOpacity
                                             onPress={ () => handleMarkHelpful("no") }
                                             disabled={ isMarking }
-                                            className={ `px-5 py-2 flex-row items-center gap-x-2 rounded-lg border ${ article.markedIsNotHelpful ? "bg-red-600 border-red-600" : "border-gray-300" } ${ isMarking ? "opacity-60" : "" }` }
+                                            className={ `h-[38px] min-w-[80px] px-5 flex-row items-center justify-center rounded-lg border ${ helpfulChoice === "no" ? "bg-baseGreen border-baseGreen" : "border-gray-300" }` }
+                                            style={{ columnGap: 8 }}
                                         >
-                                            <Dislike size={ 15 } color={ article.markedIsNotHelpful ? "#ffffff" : "#6b7280" } variant="Bold" />
-                                            <Text className={ `font-montserratMedium text-xs ${ article.markedIsNotHelpful ? "text-white" : "text-gray-600" }` }>No</Text>
+                                            { isMarking ? <ActivityIndicator size="small" color={ helpfulChoice === "no" ? "#ffffff" : "#133522" } /> : (
+                                                <>
+                                                    <Dislike size={ 15 } color={ helpfulChoice === "no" ? "#ffffff" : "#6b7280" } variant="Bold" />
+                                                    <Text className={ `font-montserratMedium text-xs ${ helpfulChoice === "no" ? "text-white" : "text-gray-600" }` }>No</Text>
+                                                </>
+                                            ) }
                                         </TouchableOpacity>
                                     </View>
                                 </View>

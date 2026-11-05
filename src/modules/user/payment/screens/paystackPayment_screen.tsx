@@ -75,7 +75,6 @@ const PaystackPaymentScreen = () => {
         return <AppLoader loadingAdditionalMessage={ loadingMessage } />;
     }
 
-    // After success, the screen is owned by the modal — Paystack must stay unmounted.
     if (paymentCompleted || showOrderSuccessModal) {
         return (
             <View className="flex-1 bg-lightGray">

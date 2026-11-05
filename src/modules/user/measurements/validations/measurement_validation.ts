@@ -1,11 +1,5 @@
 import * as yup from "yup";
 
-// The `name` field on each measurement is sourced from the API
-// (requiredMeasurementFormFields) and is NOT a user-editable input — it does
-// not belong in the form schema. Keeping it here previously forced a hidden
-// Controller in the bottom sheet that ran a useEffect inside its render to
-// keep the name synced, which violated the Rules of Hooks. Names are now
-// stitched back into the submit payload directly from the API source.
 const requiredMeasurementFormFieldsSchema = yup.object().shape({
     templateName: yup.string().optional(),
     measurements: yup.array().of(

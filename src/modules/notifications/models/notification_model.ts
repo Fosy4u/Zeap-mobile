@@ -10,8 +10,6 @@ interface INotification {
   title: string;
   body: string;
   image?: string;
-  // Read-state flag from /notification/inbox. Drives the unread badge on the
-  // bell icon (count of notifications where seen !== true).
   seen?: boolean;
   createdAt: string;
   data?: INotificationPayload;

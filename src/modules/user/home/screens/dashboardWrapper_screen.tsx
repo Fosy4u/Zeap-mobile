@@ -1,5 +1,5 @@
-import React, { useEffect } from "react";
-import { Text, View, Pressable, SafeAreaView, StatusBar, ScrollView, TouchableOpacity } from "react-native";
+import React, { useEffect, useState } from "react";
+import { Text, View, Pressable, SafeAreaView, StatusBar, ScrollView, TextInput, TouchableOpacity } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useNavigation } from "@react-navigation/native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -33,6 +33,14 @@ const DashboardWrapperScreen = () => {
     const { handleGetPromoProducts, handleGetFilteredProducts, handleGetPopularProducts, handleGetNewestProducts } = useFilterAndSearchHook();
     const { currencyRefreshToken } = useDisplayCurrency();
 
+    const [homeSearchText, setHomeSearchText] = useState("");
+
+    const handleHomeSearch = () => {
+      const term = homeSearchText.trim();
+      navigation.navigate("searchItemScreen", term ? { initialSearch: term } : undefined);
+      setHomeSearchText("");
+    };
+
     useNotificationHook();
     const unreadNotifications = notifications.filter((n) => n?.seen !== true).length;
 
@@ -42,7 +50,6 @@ const DashboardWrapperScreen = () => {
       handleGetFilteredProducts({ screenTitle: "All Products" });
       handleGetPopularProducts("Popular Products");
       handleGetNewestProducts("Newest Products");
-    // Re-runs on a currency switch so every price on the home screen reloads.
     }, [currencyRefreshToken]);
 
     const { data: wishItems } = useGetWishlistQuery(undefined, {
@@ -93,19 +100,10 @@ const DashboardWrapperScreen = () => {
                   <View className="flex-row items-center">
                     <Pressable
                       className="bg-lightGreen p-2.5 rounded-full"
-                      style={{ marginRight: 12 }}
-                      onPress={ () => navigation.navigate("searchItemScreen") }
-                    >
-                      <SearchNormal1 color="#133522" size={24} variant="Linear" />
-                    </Pressable>
-                    <Pressable
-                      className="bg-lightGreen p-2.5 rounded-full"
                       onPress={ () => navigation.navigate("userNotificationsScreen") }
                     >
                       <Notification color="#133522" size={24} variant="Bold" />
 
-                      {/* Unread badge — hidden at 0, caps at "9+" so a long count
-                          can't break the circle. */}
                       { unreadNotifications > 0 && (
                         <View
                           className="absolute -top-1 -right-1 px-1 items-center justify-center rounded-full bg-red-500"
@@ -120,8 +118,27 @@ const DashboardWrapperScreen = () => {
                   </View>
                 </View>
 
+                {/*==== Search Bar ====*/}
+                <View className="h-[48px] mt-5 pl-4 pr-1.5 flex-row items-center rounded-xl bg-white">
+                  <TextInput
+                    value={ homeSearchText }
+                    onChangeText={ setHomeSearchText }
+                    onSubmitEditing={ handleHomeSearch }
+                    placeholder="Search for products"
+                    placeholderTextColor="#9ca3af"
+                    returnKeyType="search"
+                    className="flex-1 h-full font-montserratMedium text-sm text-baseGreen"
+                  />
+                  <TouchableOpacity
+                    onPress={ handleHomeSearch }
+                    className="h-[36px] w-[36px] items-center justify-center rounded-lg bg-gold"
+                  >
+                    <SearchNormal1 color="#133522" size={18} variant="Linear" />
+                  </TouchableOpacity>
+                </View>
+
                 {/*==== Section Tabs ====*/}
-                <View className="mt-8 flex-row justify-between" style={{ columnGap: 12 }}>
+                <View className="mt-6 flex-row justify-between" style={{ columnGap: 12 }}>
                   { dashboards.map((dashboard) => {
                     const isActive = selectedDashboard.name === dashboard.name;
                     return (

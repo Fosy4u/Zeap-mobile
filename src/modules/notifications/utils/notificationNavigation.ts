@@ -11,9 +11,6 @@ export interface INotificationPayload {
     reference?: string;
 }
 
-// Shared navigation handler — used both by FCM (push tap / foreground) and by
-// the in-app notifications list tap. Keeping a single implementation prevents
-// the two surfaces from drifting on route names or payload shape.
 const handleNotificationNavigation = (data?: INotificationPayload | null) => {
     if (!data) return;
 

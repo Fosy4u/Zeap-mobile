@@ -29,8 +29,6 @@ const VendorProductTimelineComponent: React.FC<IProps> = ({ timelines }) => {
                 <View className="mt-0.5 flex-row items-center flex-wrap">
                   <Text className="text-xs text-gray-500">By { timeline.actionBy?.firstName ?? "Unknown" }</Text>
                   <Text className="mx-1 text-xs text-gray-400">•</Text>
-                  {/* Relative time ("5 min ago"), matching the web timeline.
-                      timeAgo falls back to an absolute date past 30 days. */}
                   <Text className="text-xs text-gray-500">{ timeAgo(timeline.date!) }</Text>
                 </View>
               </View>

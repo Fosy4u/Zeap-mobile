@@ -2,10 +2,6 @@ import React from "react";
 import { View } from "react-native";
 import SkeletonBlock from "../../../general/components/skeletonBlock_component";
 
-// Skeleton for the Reviews & Ratings tab content. Approximates 3 review
-// rows — image thumbnail + title + 5-star strip + body lines — used by
-// both Pending and Given tabs while their initial fetch is in flight.
-
 const ReviewAndRatingSkeletonLoader = () => {
     return (
         <View style={{ marginTop: 20 }}>

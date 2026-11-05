@@ -121,8 +121,6 @@ const VendorWelcomeScreen = () => {
                             <Text className="font-montserratSemiBold text-base text-baseGreen">Go to Vendor Home</Text>
                         </TouchableOpacity>
 
-                        {/* Temporary escape hatch into the buyer-side home — handy while
-                            the post-signup verification UX is still being shaped. */}
                         <TouchableOpacity
                             onPress={ () => navigation.reset({ index: 0, routes: [{ name: "homeScreen", params: { screen: "Home" } }] }) }
                             activeOpacity={ 0.85 }

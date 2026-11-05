@@ -36,25 +36,19 @@ const ReceiptScreen: React.FC<IProps> = ({ route }) => {
     const { handleGetOrderDetails } = useOrderHook();
     const { resolveCurrency } = useDisplayCurrency();
     const [isPreparingReceipt, setIsPreparingReceipt] = useState(false);
-    // The receipt card itself — what Download rasterises to a PNG.
     const receiptCardRef = useRef<View>(null);
 
     useEffect(() => {
         if (!orderId) return;
-        // Clear any previously viewed order so the receipt never flashes stale
-        // data on entry — the skeleton shows until THIS order is fetched.
         dispatch(setOrderDetails({} as IOrderDetails));
         handleGetOrderDetails(orderId);
     }, [orderId]);
 
-    // The receipt is ready only once the fetched order matches the requested id.
     const isReceiptReady = !isLoading && orderDetails?.orderId === orderId;
 
     const currency = resolveCurrency(orderDetails?.payment?.currency);
     const buyerName = `${orderDetails?.user?.firstName ?? ""} ${orderDetails?.user?.lastName ?? ""}`.trim();
 
-    // Per-item amount is already in major units (naira); pick the entry matching
-    // the receipt currency. (Dividing by 100 here was the summing bug.)
     const getLineAmount = (po: { amount?: { currency?: string; value?: number }[] }) =>
         po?.amount?.find((a) => a.currency === currency)?.value ?? po?.amount?.[0]?.value ?? 0;
 
@@ -64,8 +58,6 @@ const ReceiptScreen: React.FC<IProps> = ({ route }) => {
         (await buildReceiptPdfBase64(orderDetails, currency)) || null;
 
     const openShareSheet = async (base64: string, saveToFiles: boolean) => {
-        /* Pass the name WITHOUT ".pdf" — the library appends the extension from
-           the data URI's mime type, so adding it here produced "…​.pdf.pdf". */
         await Share.open({
             url: `data:application/pdf;base64,${base64}`,
             filename: buildFileName(),
@@ -78,14 +70,11 @@ const ReceiptScreen: React.FC<IProps> = ({ route }) => {
         });
     };
 
-    // Dismissing the sheet/picker rejects in react-native-share — not an error.
     const wasDismissed = (error: any): boolean => {
         const message: string = (error?.message ?? "").toLowerCase();
         return message.includes("cancel") || message.includes("dismiss");
     };
 
-    /* Saving to the gallery needs WRITE_EXTERNAL_STORAGE only up to API 28 —
-       from API 29 MediaStore handles the insert without a runtime grant. */
     const ensureAndroidSavePermission = async (): Promise<boolean> => {
         if (Platform.OS !== "android" || Number(Platform.Version) >= 29) { return true; }
 
@@ -112,7 +101,6 @@ const ReceiptScreen: React.FC<IProps> = ({ route }) => {
             const uri = await captureRef(receiptCardRef, {
                 format: "png",
                 quality: 1,
-                // A tmpfile is what CameraRoll wants; base64 would need re-encoding.
                 result: "tmpfile",
                 fileName: buildFileName(),
             });
@@ -260,7 +248,6 @@ const ReceiptScreen: React.FC<IProps> = ({ route }) => {
             </ScrollView>
 
             {/*==== Action bar ====*/}
-            {/* Hidden until the receipt is loaded — nothing to save yet. */}
             { isReceiptReady && (
                 <View className="h-auto w-full px-5 py-3 flex-row items-center gap-x-3 bg-white border-t border-gray-200">
                     <TouchableOpacity

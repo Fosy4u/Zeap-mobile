@@ -9,20 +9,14 @@ const useVendorHomeHook = () => {
     
     const [getShop] = useLazyGetShopQuery();
     const [getAnalytics] = useLazyGetAnalyticsQuery();
-    /* Not wired yet: getOverview, getWeeklySalesChartData, getRecentPayment,
-       getProductsByCategories, getPromoProducts. */
 
     const handleGetShop = async (shopId: string) => {
-        /* Without a shop id this hits /shop with `undefined` and comes back
-           "shop not found" — the caller should be gating on the id instead. */
         if (!shopId) { return; }
 
         try {
             const shop = await getShop(shopId).unwrap();
             // console.log("SHOP RESPONSE::: ", shop);
 
-            /* Only write a real shop through — a terminated shop answers 2xx with
-               an empty body, and the guard hook owns the "no shop" verdict. */
             if (shop?.shopId) {
                 dispatch(setShop(shop));
             }
@@ -36,8 +30,6 @@ const useVendorHomeHook = () => {
             const analytics = await getAnalytics(shopId).unwrap();
             // console.log("VENDOR ANALYTICS RESPONSE::: ", analytics);
 
-            /* A tile with no number reads as broken, so every count falls back
-               to 0 when the payload omits its status. */
             const orderCounts = analytics.ordersCountByStatus ?? {};
             const overviews = [
                 {

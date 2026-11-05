@@ -8,9 +8,6 @@ import { RootState } from '../../../../redux/store/store';
 import IBodyMeasurement from '../models/bodyMeasurement_model';
 
 interface IProps {
-    // Fired when the user taps Apply with a template selected. The screen
-    // applies it (sets the selected template + gender, fetches guides) and the
-    // inline required-measurement form re-prefills from it.
     onApply: (template: IBodyMeasurement) => void;
     onClose: () => void;
 }
@@ -20,8 +17,6 @@ const titleCase = (value?: string | null) => {
     return value.charAt(0).toUpperCase() + value.slice(1);
 };
 
-// Flatten a template's measurements (supports the legacy nested shape and the
-// new flat shape) into a uniform [{ field, value }] list for the preview.
 const flattenMeasurements = (template?: IBodyMeasurement): any[] => {
     const raw: any[] = (template?.measurements as any[]) ?? [];
     const isFlat = raw.length > 0 && raw[0]?.field !== undefined && raw[0]?.measurements === undefined;
@@ -123,7 +118,6 @@ const SelectExistingMeasurementBottomSheet: React.FC<IProps> = ({ onApply, onClo
                     ) }
                 </ScrollView>
 
-                {/*==== Apply — hidden when there's nothing to select ====*/}
                 { !isEmpty && (
                     <TouchableOpacity
                         onPress={ () => pending && onApply(pending) }

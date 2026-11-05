@@ -2,16 +2,6 @@ import React from "react";
 import { View } from "react-native";
 import SkeletonBlock from "../../general/components/skeletonBlock_component";
 
-// Skeleton for the Notifications inbox.
-//
-// Each card mirrors the real notification:
-//   • left  : 45×45 icon
-//   • right : title + body lines
-//   • below : timestamp on the left, trash button placeholder on the right
-//
-// The screen's AppHeaderComp stays mounted above, so the skeleton only takes
-// the body region.
-
 const NotificationsSkeletonLoader = () => {
     return (
         <View className="px-5" style={{ marginTop: 20 }}>

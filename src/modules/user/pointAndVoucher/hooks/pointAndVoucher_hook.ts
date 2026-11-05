@@ -42,7 +42,6 @@ const usePointAndVoucherHook = () => {
             // console.log("ACTIVE VOUCHERS RESPONSE", vouchersResponse);
             
             if (vouchersResponse) {
-                // Assuming you have a setActiveVouchers action to handle the response
                 dispatch(setActiveVouchers(vouchersResponse));
             }
         } catch (error) {
@@ -63,7 +62,6 @@ const usePointAndVoucherHook = () => {
             // console.log("INACTIVE VOUCHERS RESPONSE", vouchersResponse);
             
             if (vouchersResponse) {
-                // Assuming you have a setInactiveVouchers action to handle the response
                 dispatch(setInactiveVouchers(vouchersResponse));
             }
         } catch (error) {

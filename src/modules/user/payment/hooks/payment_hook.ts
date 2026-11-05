@@ -37,8 +37,6 @@ const usePaymentHook = () => {
             email: userData.email!,
             address: formData.address,
             region: formData.region,
-            // SelectList returns keys such as "UK"/"USA", but the payment API
-            // accepts canonical names such as "United Kingdom"/"United States".
             country: normalizeDeliveryCountry(formData.country),
             phoneNumber: formData.phoneNumber,
             deliveryNote: formData.deliveryNote?.trim() || "",
@@ -113,7 +111,6 @@ const usePaymentHook = () => {
             return;
         }
 
-        // Now that the payment sheet is initialized, you can present it to the user
         const { error: presentError } = await presentPaymentSheet();
         if (presentError) {
             handleError(presentError);
@@ -121,9 +118,6 @@ const usePaymentHook = () => {
             return;
         }
 
-        // PaymentSheet returning without an error normally means confirmation
-        // completed. Retrieve the intent as an additional guard before asking
-        // our server to fulfil the order.
         const { paymentIntent, error: retrieveError } = await retrievePaymentIntent(stripeClientSecret);
         if (retrieveError) {
             handleError(retrieveError);
@@ -197,8 +191,6 @@ const usePaymentHook = () => {
             }
         } catch (error) {
             console.log("ERROR::: ", error);
-            /* Reaching here means the gateway already confirmed the charge, so
-               staying silent leaves the user paid with no order and no notice. */
             handleError(new Error(
                 `We could not confirm your payment (ref: ${reference}). If you were charged, please contact support with this reference rather than paying again.`,
             ));

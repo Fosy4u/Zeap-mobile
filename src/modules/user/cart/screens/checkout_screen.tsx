@@ -27,15 +27,8 @@ const CheckoutScreen = () => {
   const { selectedAddress, saveAddressForNextTime, isLoading: isAddressLoading, loadingMessage: addressLoadingMessage } = useSelector((state: RootState) => state.addressState);
   const { cart } = useSelector((state: RootState) => state.cartState);
   const { userData, acceptMarketing, showEditEmail, isLoading: isProfileLoading } = useSelector((state: RootState) => state.profileState );
-  // Guests cannot persist a delivery address — the backend rejects
-  // `/deliveryAddress/create` for guest accounts. Drive the "save address"
-  // option off the normalized `isGuest` flag so it's disabled up front rather
-  // than failing silently after payment.
   const isGuest = !!userData?.isGuest;
 
-  // Guests have no email on file. They must provide + save a contact email
-  // (persisted via `/user/update`) before the delivery/payment step unlocks.
-  // Once saved, `userData.email` is populated and this flips to false.
   const guestNeedsEmail = isGuest && !userData?.email?.trim();
 
   const { showOrderSuccessModal } = useSelector((state: RootState) => state.paymentState);
@@ -63,17 +56,9 @@ const CheckoutScreen = () => {
       handleViewAddresses,
   } = useAddressHook();
 
-  // Cart-screen pre-fetches delivery addresses, delivery method, and order summary
-  // in parallel — no need to refetch on checkout mount.
-
-  // Drive the State/Region dropdown off the currently-selected country.
-  // `useWatch` only re-renders this slice of the form, not the whole tree.
   const selectedCountryKey = useWatch({ control, name: "country" }) as string | undefined;
   const regionOptions = (selectedCountryKey && (countryStates as Record<string, { key: string; value: string }[]>)[selectedCountryKey]) || [];
 
-  // When the country changes, clear `region` if the previously selected value
-  // isn't a valid state for the new country. Preserves saved-address values
-  // that match the new country's list (e.g. Nigeria + Lagos stays intact).
   useEffect(() => {
     const currentRegion = getValues("region");
     if (currentRegion && !regionOptions.some(opt => opt.key === currentRegion)) {
@@ -274,7 +259,6 @@ const CheckoutScreen = () => {
             <Text className="font-montserratSemiBold text-base text-gray-700">
               { (selectedAddress && Object.keys(selectedAddress).length > 0) ? "Add New Delivery Address" : "Delivery Address" }
             </Text>
-            {/* Address fields stay hidden until a guest has saved a contact email. */}
             { !guestNeedsEmail && (
             <View>
                 <Text aria-label="FirstName" nativeID="firstName" className="mt-5 font-montserratMedium">First Name <Text className="text-red-500">*</Text></Text>

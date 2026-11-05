@@ -47,7 +47,6 @@ const buildStatusOptions = (orders?: IOrder[]): string[] => {
 const canRejectOrderStatus = (status?: IOrderLifecycleStatus): boolean =>
     canCancelOrderAtStatus(status, true);
 
-// An order matches a chip when its name equals it or its value phrase contains it.
 const statusMatches = (order: IOrder, statusName: string): boolean => {
     const wanted = statusName.trim().toLowerCase();
     if (!wanted) { return true; }

@@ -14,7 +14,6 @@ const RateAndReviewScreen = () => {
 
     const { control, handleSubmit, onSubmit, onInvalid, errors, isEditing } = useReviewAndRatingHook();
 
-    // Renders the message for a field that failed validation.
     const fieldError = (message?: string) => (
         message ? <Text className="mt-1.5 font-montserratRegular text-[12px] text-red-500">{ message }</Text> : null
     );
@@ -230,8 +229,6 @@ const RateAndReviewScreen = () => {
 
                     {/*==== Submit Button ====*/}
                     <View className="px-5 pb-6">
-                        {/* Disabled while the request is in flight so a second
-                            tap cannot post the review twice. */}
                         <TouchableOpacity
                             onPress={handleSubmit(onSubmit, onInvalid)}
                             disabled={isLoading}

@@ -25,12 +25,8 @@ const useReviewAndRatingHook = () => {
     const [createReview] = useCreateReviewMutation();
     const [updateReview] = useUpdateReviewMutation();
 
-    /* A pending entry has no review of its own; a given one does, and that is
-       what turns this screen from "rate" into "view or edit". */
     const isEditing = !!reviewOrder?.reviewId;
 
-    /* Existing reviews open populated; a new one starts empty except for the
-       name, which the API requires and the profile already knows. */
     const buildFormValues = (): IRateAndReviewFormData => ({
         rating: reviewOrder?.rating ?? 0,
         reviewTitle: reviewOrder?.reviewTitle ?? "",
@@ -45,8 +41,6 @@ const useReviewAndRatingHook = () => {
         resolver: yupResolver(rateAndReviewFormSchema),
     });
 
-    /* navigate() reuses a screen already in the stack, so opening a different
-       entry would otherwise keep the previous one's answers on screen. */
     useEffect(() => {
         reset(buildFormValues());
     }, [reviewOrder?.reviewId, reviewOrder?.productId, reviewOrder?.orderId]);
@@ -96,8 +90,6 @@ const useReviewAndRatingHook = () => {
         dispatch(setLoadingMessage(isEditing ? "Updating review..." : "Submitting review..."));
         dispatch(setIsLoading(true));
 
-        /* An edit addresses the review by its own id; a new one is pinned to the
-           purchase, where sku identifies the exact variation that was bought. */
         const requestData: ICreateReviewPayload | IUpdateReviewPayload = isEditing
             ? {
                 productId: reviewOrder.productId,

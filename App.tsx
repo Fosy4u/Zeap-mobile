@@ -19,10 +19,6 @@ configureReanimatedLogger({
   strict: false, // 👈 disable strict mode
 });
 
-/* The app has a light-only design (no dark theme), so we force the light color
-   scheme at the JS layer. This keeps RN default components (e.g. TextInput text
-   color) readable even on devices set to dark mode, matching the native
-   light-mode lock in Info.plist and styles.xml. */
 Appearance.setColorScheme('light');
 
 const STRIPE_URL_SCHEME = 'zeaper';

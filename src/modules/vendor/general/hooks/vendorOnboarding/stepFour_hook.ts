@@ -22,9 +22,6 @@ const useStepFourHook = () => {
         mode: "onChange",
     });
 
-    // Mirrors the country-state-city pattern from editAccountDetails_hook —
-    // countries are pulled from the static package, then the region list is
-    // derived from the ISO code of whichever country the user picks.
     const countryOptions = useMemo<IPickerOption[]>(
         () => Country.getAllCountries().map((c) => ({
             label: `${ c.flag ?? "🏳" }  ${ c.name }`,

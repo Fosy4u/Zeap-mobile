@@ -45,9 +45,9 @@ const sizeGuideRoute = "/bodyMeasurementGuide/readyMade";
 const dynamicFiltersRoute = "/products/list/dynamicFilters";
 
 // Wishlist Routes
-const wishAddRoute = "/wish/add";        // POST { productId, color }
-const wishListRoute = "/wish/auth/user"; // GET the auth user's wishlist
-const wishRemoveRoute = "/wish/remove";  // DELETE { wish_id } — POST is not routed
+const wishAddRoute = "/wish/add";
+const wishListRoute = "/wish/auth/user";
+const wishRemoveRoute = "/wish/remove";
 
 // Order 
 const getOrdersRoute = "/orders/authUser/buyer";
@@ -112,7 +112,6 @@ const getVendorPaymentDetailsRoute = "/vendor/payment";
 // const updatePaymentStatusRoute = "/vendor/payment/status";
 
 // Product Routes
-// Permanent delete of a draft product (removes it entirely).
 const deleteDraftProductRoute = "/product/delete/absolute";
 const productCommissionRoute = "/products/commission";
 

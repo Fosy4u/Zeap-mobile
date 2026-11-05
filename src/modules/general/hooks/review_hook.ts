@@ -42,7 +42,6 @@ const useReviewHook = (productId?: string) => {
     });
 
     const onSubmit: SubmitHandler<IReviewProduct> =  async(data) => {
-        // The endpoint keys the review by product, so there is nothing to post without one.
         if (!productId) {
             handleError(new Error("This review is not linked to a product. Please reopen the product and try again."));
             return;

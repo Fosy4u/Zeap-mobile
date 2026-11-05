@@ -20,8 +20,6 @@ const addressFormFieldsSchema = yup.object().shape({
     postCode: yup
         .string()
         .optional(),
-    /* Validated against the selected country's format so e.g. a Nigerian
-       number can't be saved with more or fewer than 11 digits. */
     deliveryNote: yup
         .string()
         .max(300, "Delivery note must be 300 characters or less.")

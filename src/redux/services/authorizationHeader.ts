@@ -3,13 +3,8 @@ import EncryptedStorage from 'react-native-encrypted-storage';
 import { forgetSecureItem } from '../../utils/secureStorage';
 
 const TOKEN_KEY = 'auth_token';
-/* Last token we persisted — lets us skip redundant EncryptedStorage writes on
-   the hot path (getIdToken returns the same cached token for ~1h). */
 let lastStoredToken: string | null = null;
 
-// On cold start, getAuth().currentUser is null until Firebase finishes restoring
-// the persisted session (usually <1s). Wait briefly for it to appear so we don't
-// fall back to a stale stored token whose `kid` Firebase has since rotated out.
 const waitForAuthRestore = (timeoutMs: number): Promise<any> => {
     const auth = getAuth();
     if (auth.currentUser) return Promise.resolve(auth.currentUser);
@@ -31,7 +26,6 @@ const AuthorizationHeader = async (headers: Headers): Promise<Headers> => {
     try {
         let currentUser = getAuth().currentUser;
         if (!currentUser) {
-            // Wait for Firebase to restore auth state (cold start race).
             currentUser = await waitForAuthRestore(3000);
         }
 
@@ -39,8 +33,6 @@ const AuthorizationHeader = async (headers: Headers): Promise<Headers> => {
         if (currentUser) {
             token = await getIdToken(currentUser);
 
-            /* Persist as a fallback for other readers, but never block the request
-               on disk I/O, and only write when the value actually changed. */
             if (token !== lastStoredToken) {
                 lastStoredToken = token;
                 storeToken(token).catch(() => {});

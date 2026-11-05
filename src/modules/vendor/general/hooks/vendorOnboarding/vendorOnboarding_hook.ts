@@ -26,8 +26,6 @@ const useVendorOnboardingHook = () => {
         }
     };
 
-    // Leave the onboarding stack reliably — goBack() is a no-op when this
-    // screen is the root of its stack, so fall back to the app home then.
     const leaveOnboarding = () => {
         if (navigation.canGoBack()) {
             navigation.goBack();

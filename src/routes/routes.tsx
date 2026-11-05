@@ -83,12 +83,9 @@ const Stack = createNativeStackNavigator<RootNavigationStackModel>();
 const AppRoutes = () => {
   return (
     <NavigationContainer ref={navigationRef}>
-      {/* Keeps the unread badge live on every screen. Renders nothing. */}
       <NotificationSyncComponent />
       <Stack.Navigator
         initialRouteName="splashScreen"
-        /* freezeOnBlur suspends re-renders of screens that aren't focused, so a
-           Redux change no longer re-renders every mounted screen in the stack. */
         screenOptions={{ freezeOnBlur: true }}
       >
         {/* ==== Splash & Onboarding ==== */}

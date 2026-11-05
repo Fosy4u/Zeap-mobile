@@ -16,15 +16,10 @@ const useVendorPaymentHook = () => {
         dispatch(setPayments([]));
 
         try {
-            /* forceRefetch so the screen always reflects the backend rather
-               than an RTK Query cache entry from earlier in the session. */
             const paymentResponse = await getVendorPayments({ shopID }, false).unwrap();
 
-            /* Always write the response through — including an empty list, so
-               "no payments" is shown as an empty state instead of stale rows. */
             dispatch(setPayments(paymentResponse ?? []));
         } catch (error) {
-            /* Leave the list empty rather than showing data we can't trust. */
             dispatch(setPayments([]));
             handleError(error);
         } finally {

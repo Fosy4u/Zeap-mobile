@@ -18,17 +18,14 @@ const EditAccountDetailsScreen = () => {
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
 
     const {
-        // form
         control, errors,
 
-        // redux-derived
         selectedCountry, selectedPhoneCode, showPhoneCodeModal,
         heightUnitOptions, weightUnitOptions, complexionOptions,
         shoeSizeOptions, bestOutfitOptions, bestColorOptions,
         isLoading, loadingMessage,
         openPhoneCodeModal,
 
-        // local UI state
         setSelected,
         selectedHeightUnit, setSelectedHeightUnit,
         selectedWeightUnit, setSelectedWeightUnit,
@@ -39,7 +36,6 @@ const EditAccountDetailsScreen = () => {
         selectedStateIso, setSelectedStateIso,
         setSelectedCity,
 
-        // computed
         isVendor,
         countryIso,
         isCountryChosen,
@@ -47,13 +43,10 @@ const EditAccountDetailsScreen = () => {
         stateOptions,
         cityOptions,
 
-        // handlers
         handleProceed,
         handleCountrySelected,
     } = useEditAccountDetailsHook();
 
-    // Success-modal "Done" handler — close the modal and go back to the
-    // Personal Information screen so the user lands where they started.
     const handleSuccessDone = () => {
         setShowSuccessModal(false);
         navigation.navigate("personalInformationScreen");
@@ -201,7 +194,6 @@ const EditAccountDetailsScreen = () => {
                             </View>
                         )}
 
-                        {/* City (depends on State) — same `flex-row`-removal rationale as State above. */}
                         <Text className="mt-5">City</Text>
                         {selectedStateIso && cityOptions.length > 0 ? (
                             <View className="h-auto w-full mt-1.5 py-0 border border-gray-300 rounded-xl bg-gray-100">
@@ -383,8 +375,6 @@ const EditAccountDetailsScreen = () => {
             { showSuccessModal &&
                 <SuccessPopupModal
                     bodyText="You have successfully updated your account details."
-                    // screenURL kept for type compatibility; the actual destination
-                    // is owned by handleSuccessDone via the onProceed override.
                     screenURL="loginScreen"
                     buttonLabel="Done"
                     onProceed={ handleSuccessDone }

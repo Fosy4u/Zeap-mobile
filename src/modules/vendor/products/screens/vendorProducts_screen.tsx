@@ -48,9 +48,6 @@ const VendorProductsScreen = () => {
         handleFetchFilteredProducts();
     }, [selectedStatus]);
 
-    // Pull-to-refresh — re-fetches the current page's products. Driven by its
-    // own flag so the spinner reflects the refresh gesture, independent of the
-    // initial-load skeleton (isLoadingProducts).
     const [isRefreshing, setIsRefreshing] = useState(false);
     const onRefresh = useCallback(async () => {
         setIsRefreshing(true);

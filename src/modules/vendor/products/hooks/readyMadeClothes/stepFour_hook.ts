@@ -47,7 +47,6 @@ const useStepFourHook = () => {
     const [showDefaultImageModal, setShowDefaultImageModal] = useState(false);
     const [colorOptions, setColorOptions] = useState<IColorOption[]>([]);
     const [selectedColor, setSelectedColor] = useState<IColorOption[]>([]);
-    // Controls the per-colour image-upload modal (opens when a colour is picked).
     const [showImageUploadModal, setShowImageUploadModal] = useState(false);
     const dispatch = useDispatch();
 
@@ -70,10 +69,6 @@ const useStepFourHook = () => {
         setColorOptions(formattedColours);
     };
 
-    // Handle selecting colour — single active colour at a time. Tapping a new
-    // colour switches to it (and clears any images picked for the previous
-    // one); tapping the active colour again deselects it. The active colour is
-    // what the uploader and "Selected colour" indicator reflect.
     const handleSelectColour = (colour: IColorOption) => {
 
         // Check if the selected color already exist in the uploaded color and images
@@ -83,14 +78,11 @@ const useStepFourHook = () => {
             return;
         }
 
-        // Activate the colour and open the upload modal for it. Images are
-        // reset so the modal starts empty for this colour.
         setSelectedColor([colour]);
         setSelectedImages([]);
         setShowImageUploadModal(true);
     };
 
-    // Close the modal and clear the in-progress colour/images (cancel).
     const handleCloseImageUploadModal = () => {
         setShowImageUploadModal(false);
         setSelectedColor([]);
@@ -202,11 +194,7 @@ const useStepFourHook = () => {
         setSelectedImages(prevState => prevState.filter((_, i) => i !== index));
     };
 
-    // Upload the ACTIVE colour and its images via /product/update/addColorAndImages.
-    // Stays on step 4 and resets the selection so the vendor can add the next
-    // colour (select colour → add images → Upload → repeat → Save & Continue).
     const handleUploadColorAndImages = async () => {
-        // Require an active colour and at least one image for it.
         if (selectedColor.length === 0) {
             Alert.alert("Select a colour", "Please select a colour before uploading images.");
             return;
@@ -240,7 +228,6 @@ const useStepFourHook = () => {
                 });
             });
 
-            // New colour → add; an existing one → append to it.
             let uploadProductImagesResponseData: IVendorProductDetails | undefined;
             const isColorAlreadySelected = uploadedColorAndImages.find((colorAndImage) => colorAndImage.color?.colorName === selectedColor[0].colorName);
             if (isColorAlreadySelected) {
@@ -257,8 +244,6 @@ const useStepFourHook = () => {
 
                 if (updatedProduct) {
                     dispatch(setProduct(updatedProduct));
-                    // Reset and close the modal so the vendor returns to the
-                    // main screen and can pick the next colour.
                     setShowImageUploadModal(false);
                     setSelectedColor([]);
                     setSelectedImages([]);
@@ -273,7 +258,6 @@ const useStepFourHook = () => {
         }
     };
 
-    // Save & Continue — requires at least one uploaded colour, then advances.
     const handleProceedToNextStep = () => {
         if (uploadedColorAndImages.length === 0) {
             Alert.alert("Add a colour", "Please upload at least one colour with its images before continuing.");
@@ -318,8 +302,6 @@ const useStepFourHook = () => {
     };
 
     // Handle delete image
-    // Delete a single already-uploaded image from a colour via
-    // /product/update/deleteProductImage ({ productId, color, imageName }).
     const handleDeleteUploadedImage = async (colorName: string, imageName: string) => {
         if (!colorName || !imageName) return;
 
@@ -344,9 +326,6 @@ const useStepFourHook = () => {
         }
     };
 
-    // Open the upload modal for an already-uploaded colour to add more images.
-    // Skips the "already selected" guard in handleSelectColour on purpose — the
-    // upload then routes to /product/update/addImagesToProductColor.
     const handleAddMoreImages = (colour: IColorOption) => {
         setSelectedColor([colour]);
         setSelectedImages([]);
@@ -426,8 +405,6 @@ const useStepFourHook = () => {
 
 
 
-    // A colour with a single image has nothing to choose between, so that image
-    // becomes the colour's default automatically (each colour tried once).
     const autoDefaultAttempted = useRef<Set<string>>(new Set());
     useEffect(() => {
         const productId = product?.productId;

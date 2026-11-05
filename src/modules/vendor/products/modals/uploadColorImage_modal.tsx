@@ -20,9 +20,6 @@ interface Props {
     onClose: () => void;
 };
 
-// Per-colour image upload modal. Opens when a colour is selected on step 4:
-// pick images → Upload → the API runs → on success the parent closes this modal
-// and the colour appears on the main screen.
 const UploadColorImageModal: React.FC<Props> = ({
     colorName,
     colorCode,

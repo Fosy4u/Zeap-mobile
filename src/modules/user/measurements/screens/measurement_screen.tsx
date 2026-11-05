@@ -27,7 +27,6 @@ const MeasurementScreen = () => {
     handleGetRequiredMeasurementFormFields, handleGetBodyMeasurementGuides,
   } = useMeasurementHook();
 
-  // Drives the "Select Existing Measurement" bottom sheet (screen-local).
   const [showSelectExistingSheet, setShowSelectExistingSheet] = useState(false);
   const isBusy = isLoading || requiredMeasurementFormFieldsLoading;
 
@@ -43,9 +42,6 @@ const MeasurementScreen = () => {
     }
   }, [product?.productId]);
 
-  // Clear the selected measurement template when leaving this screen, so the
-  // built-in fields don't auto-prefill with a previously selected saved
-  // measurement when the user comes back — they should start blank each visit.
   useFocusEffect(
     useCallback(() => {
       return () => {
@@ -54,14 +50,12 @@ const MeasurementScreen = () => {
     }, [dispatch])
   );
 
-  // When the user taps "Add New Measurement", we clear the selected template
   const handleAddNewMeasurement = () => {
     dispatch(setSelectedMeasurementTemplate({}));
     dispatch(setSelectedGender(""));
     dispatch(setShowSelectGenderBottomSheet(true));
   };
 
-  // Handle when the user selects an existing measurement template from the bottom sheet. We set it as the selected template and fetch its
   const handleApplyExistingMeasurement = (template: IBodyMeasurement) => {
     dispatch(setSelectedMeasurementTemplate(template));
     const gender = ((template as any)?.gender as string | undefined)?.toLowerCase();
@@ -78,7 +72,6 @@ const MeasurementScreen = () => {
         Kindly provide us your measurements
       </Text>
 
-      {/*==== Actions — sit directly under the caption ====*/}
       <View className="mt-4">
         <TouchableOpacity
           onPress={ handleAddNewMeasurement }
@@ -106,7 +99,6 @@ const MeasurementScreen = () => {
         <AppHeaderComp title="Measurement" />
 
         <View className="flex-1 px-[20px]">
-          {/*==== Required measurement form (inline) — caption and actions scroll with it ====*/}
           { isBusy ? (
             <View>
               { formHeader }

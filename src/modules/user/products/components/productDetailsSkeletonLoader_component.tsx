@@ -2,27 +2,8 @@ import React from "react";
 import { ScrollView, useWindowDimensions, View } from "react-native";
 import SkeletonBlock from "../../../general/components/skeletonBlock_component";
 
-// Skeleton for the Product Details body. Mirrors the layout produced by
-// ProductImagesAndColorsComponent + the tab bar + the Similar Items rail:
-//
-//   • category pill + status pill row, then product title
-//   • hero image card (~500h, aspect 0.68)
-//   • thumbnail row (75×75 each)
-//   • price line
-//   • "Available Colours" label + color swatch row
-//   • "Available Sizes" label + size square row
-//   • Add to Cart CTA
-//   • Description / Reviews / Timeline tab bar
-//   • Description body (lines)
-//   • Similar Items horizontal rail (vertical 150×220 cards)
-//
-// Rendered inside the screen's ScrollView while the product fetch is in
-// flight — the back-button header stays mounted above so the user can bail
-// out at any time.
-
 const ProductDetailsSkeletonLoader = () => {
     const screenWidth = useWindowDimensions().width;
-    // Hero/body lives inside px-5 (20px each side).
     const contentWidth = screenWidth - 40;
 
     return (

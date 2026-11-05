@@ -16,13 +16,8 @@ const SelectGenderBottomSheetComponent = () => {
     };
 
     const handleSelectGender = async (gender: "male" | "female") => {
-        // Persist the selected gender so the save-template payload can include
-        // it. The backend rejects the template create call without it.
         dispatch(setSelectedGender(gender));
 
-        // Close the gender sheet immediately — the fetch hooks set isLoading
-        // so the screen-level AppLoader becomes visible right away while the
-        // guide + form fields are fetched in parallel.
         dispatch(setShowSelectGenderBottomSheet(false));
         await Promise.all([
             handleGetBodyMeasurementGuides(gender),

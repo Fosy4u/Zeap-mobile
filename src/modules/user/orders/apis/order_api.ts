@@ -58,8 +58,6 @@ const orderAPI = rootAPI.injectEndpoints({
             },
         }),
 
-        /* Buyer-side cancellation of a single product order. Invalidates the
-           vendor tags too, so a vendor session sees the withdrawal immediately. */
         cancelOrder: builder.mutation<IOrderDetails, IOrderCancel>({
             query: (cancellation) => ({
                 url: cancelOrderRoute,

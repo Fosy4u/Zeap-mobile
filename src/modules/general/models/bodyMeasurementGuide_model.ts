@@ -1,7 +1,3 @@
-// Body measurement guide — the canonical, shared model for the
-// /bodyMeasurementGuide/bespoke?gender=… endpoint. Used by both the buyer
-// (user) measurement flow and the vendor add-bespoke-product step 3, so it
-// lives in the general module as the single source of truth.
 interface IBodyMeasurementGuide {
   _id: string;
   name: string;

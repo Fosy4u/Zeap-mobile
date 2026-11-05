@@ -1,6 +1,3 @@
-// Captures the screen the user was trying to reach when an auth gate
-// bounced them to the login flow, so we can return them to it after a
-// successful sign-in / sign-up. Cleared on consume.
 interface IPendingDestination {
     name: string;
     params?: Record<string, any>;

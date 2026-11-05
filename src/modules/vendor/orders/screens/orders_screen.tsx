@@ -42,7 +42,6 @@ const OrdersScreen = () => {
     handleGetOrders();
   }, [currencyRefreshToken]);
 
-  // Skeleton on the first load only; refreshes keep the rows and use the spinner.
   const isLoadingOrders = !ordersHaveFetched;
 
 
@@ -65,8 +64,6 @@ const OrdersScreen = () => {
             onRightPress={() => dispatch(setShowOrderFilterBottomSheet(true))}
           />
 
-          {/*==== Search Box — filters the fetched orders as you type (product
-               name or order number). No endpoint call, so it stays instant. ====*/}
           <View className="h-auto w-full mt-4 px-5">
             <View className="h-[55px] w-full px-3 py-1 flex-row items-center border border-gray-300 rounded-xl bg-gray-100">
               <SearchNormal1 color="#9ca3af" size={20} />
@@ -97,8 +94,6 @@ const OrdersScreen = () => {
             ) }
           </View>
 
-          {/* Loading is handled before the list, so an empty list while loading
-              can't fall through to ListEmptyComponent. */}
           { isLoadingOrders ? (
             <View style={{ padding: 20 }}>
               { [0, 1, 2, 3].map((row) => (

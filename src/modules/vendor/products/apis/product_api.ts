@@ -48,7 +48,6 @@ const productAPI = rootAPI.injectEndpoints({
             }
         }),
 
-        // Permanently delete a draft product. Body: { productIds: [id] }.
         deleteDraftProduct: builder.mutation<string, { productIds: string[]; }>({
             query: (body) => ({
                 url: deleteDraftProductRoute,

@@ -37,9 +37,6 @@ const useMeasurementHook = () => {
         const isFlat = first?.field !== undefined && first?.measurements === undefined;
         const target = fieldName.trim().toLowerCase();
         const isTarget = (m: any) => (m?.field ?? "").trim().toLowerCase() === target;
-        // The backend regroups saved fields under its own guide categories, so a
-        // field can live in a different group than the product's form expects.
-        // Prefer the same-named group, then fall back to any group.
         const sameGroup = isFlat
             ? undefined
             : tpl.find((g: any) => (g?.name ?? "").trim().toLowerCase() === (categoryName ?? "").trim().toLowerCase())?.measurements;
@@ -68,7 +65,6 @@ const useMeasurementHook = () => {
                 value: Number(value) || 0,
             }));
             return {
-                // Group name comes from the API source, not form state.
                 name: apiMeasurement?.name ?? "",
                 measurements: measurementData,
             };
@@ -86,7 +82,6 @@ const useMeasurementHook = () => {
         };
     };
 
-    // Saves the measurements entered so far as a reusable template, independent of adding to cart.
     const handleSaveMeasurementTemplate = async (templateName: string): Promise<boolean> => {
         try {
             const measurements = buildMeasurementGroups(getValues());
@@ -252,7 +247,6 @@ const useMeasurementHook = () => {
         }
     };
     
-    // Delete a saved measurement template by id. Callers (the measurement
     const handleDeleteMeasurementTemplate = async (templateId: string): Promise<boolean> => {
         if (!templateId) return false;
         try {

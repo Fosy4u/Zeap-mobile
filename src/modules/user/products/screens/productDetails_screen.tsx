@@ -22,7 +22,7 @@ import useDisplayCurrency from '../../../general/hooks/displayCurrency_hook';
 
 
 const ProductDetailScreen = () => {
-  const { product, productID, reviewAndRating, selectedTab, tabs, popularProducts, showSizedGuideBottomSheet, isLoading } = useSelector((state: RootState) => state.productState);
+  const { product, productID, reviewAndRating, selectedTab, tabs, popularProducts, showSizedGuideBottomSheet } = useSelector((state: RootState) => state.productState);
   const cartCount = useSelector((state: RootState) => state.cartState?.cart?.basketItems?.length ?? 0);
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
   const dispatch = useDispatch<AppDispatch>();
@@ -80,14 +80,13 @@ const ProductDetailScreen = () => {
         </View>
 
 
-        { (isLoading && !product?.productId) ? (
+        { (product?.productId !== productID) ? (
           <ProductDetailsSkeletonLoader />
         ) : (
         <ScrollView
           showsVerticalScrollIndicator={ false }
             className="mt-[15px]"
         >
-          {/*==== Top Skewed Light Green Background — scrolls with content ====*/}
           <FastImage
             source={require("../../../../../assets/images/product_detail_top_background.png")}
             className="h-[400px] w-full absolute top-0 left-0 z-0"

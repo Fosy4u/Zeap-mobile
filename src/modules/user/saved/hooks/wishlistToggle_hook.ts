@@ -5,10 +5,6 @@ import IProduct from "../../products/models/product_model";
 import { useAddToWishlistMutation, useLazyGetWishlistQuery, useRemoveFromWishlistMutation } from "../apis/saved_api";
 import { addSavedProductId, removeSavedProductId } from "../slices/saved_slice";
 
-// Lightweight wishlist controller for product cards: reads the optimistic
-// saved-id mirror and toggles it, WITHOUT subscribing to the wishlist query
-// (so a screen full of cards doesn't spawn a fetch each). The list query +
-// reconciliation lives in useSavedHook, used by the Saved screen.
 const useWishlistToggle = () => {
     const dispatch = useDispatch<AppDispatch>();
     const { savedProductIds, wishIdsByProductId } = useSelector((state: RootState) => state.savedState);
@@ -19,8 +15,6 @@ const useWishlistToggle = () => {
 
     const isSaved = (productId?: string) => !!productId && savedProductIds.includes(productId);
 
-    // /wish/add needs a colour. Bespoke saves as "Bespoke"; ready-made falls
-    // back to the product's default/first colour.
     const resolveColor = (product?: IProduct): string => {
         if (product?.productType === "bespokeCloth" || product?.productType === "bespokeShoe") return "Bespoke";
         return product?.colors?.[0]?.value || product?.variations?.[0]?.colorValue || "Default";
@@ -34,7 +28,6 @@ const useWishlistToggle = () => {
         return wishItems.find((item) => item.product?.productId === productId)?._id;
     };
 
-    // Optimistic toggle with revert-on-failure.
     const toggleSave = async (product?: IProduct) => {
         const productId = product?.productId;
         if (!productId) return;

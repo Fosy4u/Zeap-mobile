@@ -8,7 +8,6 @@ const isNotificationForUser = (
     data: INotificationPayload | null | undefined,
     user: NotificationAudience,
 ): boolean => {
-    // No metadata at all — a general/system message from the admin.
     if (!data) { return true; }
 
     const roleType = String(data.roleType ?? "").trim().toLowerCase();
@@ -18,7 +17,6 @@ const isNotificationForUser = (
         if (data.shopId && user?.shopId && data.shopId !== user.shopId) { return false; }
     }
 
-    // Shop notifications name the shop they concern, whatever the role.
     if (data.notificationType === "shop" && data.shopId && user?.shopId && data.shopId !== user.shopId) {
         return false;
     }

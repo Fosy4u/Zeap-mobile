@@ -16,8 +16,6 @@ const StepThreeComponent: React.FC<IProps> = ({ accessorySizes, selectedSizes, s
             <Text className="mt-2 font-montserratMedium">Select the sizes of the product available.</Text>
             
             <View className="h-auto w-full mt-1.5 px-3 py-3.5 border rounded-xl border-gray-200 bg-gray-50 z-50">
-                {/* Same row treatment as the step 2 dropdowns: the whole row is the
-                    tap target at the 44pt platform minimum. */}
                 { accessorySizes.map((size: string, index: number) => {
                     const isChecked = selectedSizes.includes(size);
 
@@ -32,7 +30,6 @@ const StepThreeComponent: React.FC<IProps> = ({ accessorySizes, selectedSizes, s
                             className="h-auto w-full my-0.5 px-1 flex-row items-center justify-start space-x-2 rounded-lg"
                             style={{ minHeight: 44 }}
                         >
-                            {/* Presentational only — the row owns the toggle. */}
                             <View pointerEvents="none">
                                 <CheckBox
                                     value={ isChecked }

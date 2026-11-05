@@ -2,15 +2,6 @@ import React from "react";
 import { View } from "react-native";
 import SkeletonBlock from "../../../general/components/skeletonBlock_component";
 
-// Skeleton for the Product list / Search results body.
-//
-// Each row mirrors ProductListCard:
-//   • left  : 160×130 image card with a small heart-icon placeholder top-right
-//   • right : title (2 lines) + category pill + price line
-//
-// Used by both productListScreen and searchResultsScreen — they share the
-// same FlatList of ProductListCard rows, so they share the same skeleton.
-
 interface IProps {
     rows?: number;
 }

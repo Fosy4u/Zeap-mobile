@@ -5,8 +5,6 @@ interface IAnalytic {
     shopRevenuesByPaymentStatus?: ShopRevenuesByPaymentStatus;
 }
 
-/* Keys mirror the API's order statuses verbatim — two of them are spaced
-   phrases, not camelCase. */
 interface OrdersCountByStatus {
     placed?:                 number;
     confirmed?:              number;

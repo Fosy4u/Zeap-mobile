@@ -307,8 +307,6 @@ const VendorDashboardScreen = () => {
                     <TouchableOpacity
                       onPress={ () => {
                         if (!product) { return; }
-                        /* Mirrors the products-screen edit flow: seed the draft,
-                           reset to step 1, open the stepper for its type. */
                         dispatch(setProduct(product));
                         dispatch(setProductMode("Draft"));
                         dispatch(setSelectedStep(1));
@@ -348,8 +346,6 @@ const VendorDashboardScreen = () => {
         </View>
       </Animated.ScrollView>
 
-      {/* ==== Reusable floating header: pinned app bar + collapsible band,
-          both sharing the same rounded bottom corners. ==== */}
       <VendorHomeHeaderComponent
         scrollY={ scrollY }
         onHeaderHeightChange={ setHeaderHeight }
@@ -364,8 +360,6 @@ const VendorDashboardScreen = () => {
               >
                 <Notification color="#D5B07B" size={24} variant="Bold" />
 
-                {/* Unread badge — hidden at 0, caps at "9+" so a long count can't
-                    break the circle. */}
                 { unreadNotifications > 0 && (
                   <View
                     className="absolute -top-1 -right-1 px-1 items-center justify-center rounded-full bg-red-500"

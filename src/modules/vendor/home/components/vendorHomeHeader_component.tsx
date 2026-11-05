@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Animated, View } from "react-native";
 
-/* Tailwind's rounded-3xl — shared by the app bar and the band so their bottom
-   curves match. The band's pt-6 fills the bar's corner cut-outs at rest. */
 const HEADER_CORNER_RADIUS = 24;
 
 interface IVendorHomeHeaderProps {
@@ -12,8 +10,6 @@ interface IVendorHomeHeaderProps {
   onHeaderHeightChange?: (height: number) => void;
 }
 
-/* Reusable floating header for the vendor home screens: a pinned app bar with a
-   collapsible band that slides up behind it on scroll and back down at the top. */
 const VendorHomeHeaderComponent: React.FC<IVendorHomeHeaderProps> = ({
   scrollY,
   appBarContent,
@@ -23,8 +19,6 @@ const VendorHomeHeaderComponent: React.FC<IVendorHomeHeaderProps> = ({
   const [appBarHeight, setAppBarHeight] = useState(0);
   const [bandHeight, setBandHeight] = useState(0);
 
-  /* The band's top HEADER_CORNER_RADIUS px sit behind the app bar, so only the
-     remainder (bandHeight - radius) is visible and collapsible. */
   const visibleBandHeight = Math.max(bandHeight - HEADER_CORNER_RADIUS, 0);
 
   const collapsibleTranslateY = scrollY.interpolate({
@@ -48,8 +42,6 @@ const VendorHomeHeaderComponent: React.FC<IVendorHomeHeaderProps> = ({
 
   return (
     <>
-      {/* Collapsing band — rendered first so it sits behind the app bar. Its
-          bottom radius matches the bar's, so both share the same curve. */}
       <Animated.View
         pointerEvents="box-none"
         style={{
@@ -70,8 +62,6 @@ const VendorHomeHeaderComponent: React.FC<IVendorHomeHeaderProps> = ({
         </Animated.View>
       </Animated.View>
 
-      {/* Pinned app bar — rendered last so it stays on top. Never moves, so it
-          needs no animation. */}
       <View
         onLayout={ (event) => {
           const { height } = event.nativeEvent.layout;

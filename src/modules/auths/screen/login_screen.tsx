@@ -22,7 +22,6 @@ const LoginScreen = () => {
 
   const { control, handleSubmit, onSubmit, handleGoogleSignIn, errors, isLoading, isGoogleLoading } = useLoginHook();
 
-  // Return a browsing user to where they were; anyone arriving from the onboarding/sign-up flow goes straight to Home.
   const handleContinueShopping = () => {
     dispatch(clearPendingDestination());
 

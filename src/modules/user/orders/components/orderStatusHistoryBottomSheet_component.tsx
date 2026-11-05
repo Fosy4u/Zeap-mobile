@@ -27,8 +27,6 @@ const OrderStatusHistoryBottomSheetComponent = ({ bottomSheetModalRef, snapPoint
 
     const canCancel = canCancelOrderStatus(selectedOrderStatus);
 
-    /* The confirmation dialog cannot stack above the sheet's portal, so the
-       sheet stands down and hands the screen over to the modal. */
     const handleOpenCancelModal = () => {
         setShowBottomSheetModal(false);
         dispatch(setShowCancelOrderModal(true));
@@ -39,7 +37,6 @@ const OrderStatusHistoryBottomSheetComponent = ({ bottomSheetModalRef, snapPoint
             ref={bottomSheetModalRef}
             index={0}
             snapPoints={snapPoints}
-            // Match the measurement sheet — fixed header + close button, not draggable.
             enablePanDownToClose={false}
             handleComponent={null}
             onDismiss={() => setShowBottomSheetModal(false)}

@@ -12,8 +12,6 @@ import {
 } from "react-native";
 import { ArrowLeft, ArrowRight } from "iconsax-react-native";
 import AppLoader from "../../../general/components/appLoader";
-// `phoneCodes` still drives the dial-code picker on step 3; the country picker
-// on step 4 now derives its options from country-state-city via stepFour hook.
 
 import useVendorOnboardingHook, { TOTAL_ONBOARDING_STEPS } from "../hooks/vendorOnboarding/vendorOnboarding_hook";
 import useStepOneHook from "../hooks/vendorOnboarding/stepOne_hook";
@@ -69,8 +67,6 @@ const VendorRegistrationScreen = () => {
         handleClose,
     } = useVendorOnboardingHook();
 
-    // All step hooks are instantiated up-front so form state survives Back/Next
-    // navigation and the orchestrator can drive setValue from picker modals.
     const stepOne   = useStepOneHook();
     const stepTwo   = useStepTwoHook();
     const stepThree = useStepThreeHook();
@@ -90,15 +86,6 @@ const VendorRegistrationScreen = () => {
         [],
     );
 
-    // Per-step gate for the Continue button. A step's own react-hook-form
-    // `isValid` (all use mode: "onChange" + a yup resolver) tells us whether
-    // every required field is filled and valid:
-    //   • Steps 1–5: all fields required → disabled until valid.
-    //   • Step 6 (socials): every field optional → isValid is true when empty
-    //     (acts as "skip"), but flips false the moment an entry breaks format.
-    //   • Step 7: disabled until the terms checkbox is ticked.
-    //   • Step 8: disabled until a referral source is selected.
-    //   • Step 9 (review): always enabled — it's the submit screen.
     const stepValidity: Record<number, boolean> = {
         1: stepOne.isValid,
         2: stepTwo.isValid,
@@ -132,8 +119,6 @@ const VendorRegistrationScreen = () => {
             stepThree.setValue("businessPhoneCode", option.value, setOpts);
         }
         if (activePicker === "country") {
-            // Picking a new country invalidates the previously-chosen region,
-            // so we clear it to force the user back through the region picker.
             stepFour.setValue("country", option.value, setOpts);
             stepFour.setValue("region", "", setOpts);
         }
@@ -238,7 +223,6 @@ const VendorRegistrationScreen = () => {
                     className="absolute bottom-0 left-0 right-0 px-5 pt-3 pb-6 bg-white border-t border-gray-100"
                     style={{ shadowColor: "#000", shadowOpacity: 0.04, shadowRadius: 8, shadowOffset: { width: 0, height: -2 }, elevation: 8 }}
                 >
-                    {/* Socials (step 6) are optional — let the vendor skip straight ahead. */}
                     { selectedStep === 6 && (
                         <TouchableOpacity
                             onPress={ stepSix.handleSkip }

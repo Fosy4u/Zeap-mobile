@@ -14,7 +14,6 @@ const useStepTwoHook = () => {
     const { readyMadeClothesOptions } = useSelector((state: RootState) => state.generalState);
     const dispatch = useDispatch();
 
-    // Used to refresh the product options (incl. size standards) before step 3.
     const { handleGetProductOptions } = useGeneralHook();
     
     const [mainOptions , setMainOptions] = useState<string[]>([]);
@@ -103,8 +102,6 @@ const useStepTwoHook = () => {
                 if (updatedProduct) {
                     dispatch(setProduct(updatedProduct));
 
-                    // Refresh product options before step 3 so its size
-                    // standards + per-standard sizes are current.
                     dispatch(setLoadingMessage("Fetching options..."));
                     await handleGetProductOptions();
 

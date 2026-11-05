@@ -47,8 +47,6 @@ const useLogoutHook = () => {
         dispatch(setLoadingMessage("Signing out..."));
         dispatch(setIsLoading(true));
 
-        /* Every removal swallows its own failure: a key that was never written
-           rejects on iOS, and one rejection used to abort the sign-out below. */
         await Promise.all([
             clearToken(),
             forgetSecureItem(STORAGE_KEYS.FIREBASE_USER),
@@ -57,22 +55,10 @@ const useLogoutHook = () => {
             forgetSecureItem(STORAGE_KEYS.GUEST_UID),
         ]);
 
-        // Seed Redux with a minimal guest placeholder so the dashboard
-        // immediately renders the "Guest" header + "Login" button instead
-        // of a blank state while the background guest re-init runs. The
-        // background flow will replace this with the full backend record.
         dispatch(setUserData({ isGuest: true } as any));
 
-        // Wipe any pending post-login destination from a previous session
-        // — the next login should start with no carryover from whatever
-        // protected screen got the previous user bounced here.
         dispatch(clearPendingDestination());
 
-        // Reset the navigation stack to homeScreen → Home tab. Using
-        // `reset` (not `navigate`) so the user can't swipe back into the
-        // authenticated profile/settings screens, and so the splash screen
-        // sitting in the back stack can't re-fire its counter animation
-        // effect that navigates to onboarding.
         navigation.dispatch(
             CommonActions.reset({
                 index: 0,
@@ -83,9 +69,6 @@ const useLogoutHook = () => {
         dispatch(setIsLoading(false));
         dispatch(setLoadingMessage(""));
 
-        // Fire-and-forget — Firebase signOut may need the network to revoke
-        // tokens server-side; if it fails, the local state is already cleared
-        // so the user is logged out from the app's perspective.
         void (async () => {
             try {
                 await signOut(auth);

@@ -326,37 +326,6 @@ const RegisterScreen = () => {
               </TouchableOpacity>
                 </>
               ) }
-              {/* <View className="mt-6 flex flex-row items-center">
-                <Text>Will you like to sell too?</Text>
-                <TouchableOpacity
-                    onPress={ () => setShowBottomSheetModal() }
-                >
-                  <InfoCircle variant="Bold" size={18} className="ml-2 text-gray-400" />
-                </TouchableOpacity>
-              </View>
-              <View className="h-auto w-full mt-1.5 py-0 flex-row items-center justify-between border border-gray-300 rounded-xl bg-gray-100">
-                <Controller
-                    control={ control }
-                    name="isVendor"
-                    rules={{ required: true }}
-                    render={ ({ field: { onChange, value } }) => (
-                        <SelectList
-                            data={ isVendorData }
-                            defaultOption={{ key: value, value: value }}
-                            arrowicon={ <ArrowDown2 size={18} color="#9ca3af" className="mx-1 mt-1" /> }
-                            boxStyles={{ height: "auto", width: "100%", paddingHorizontal: 12, paddingVertical: 17, borderColor: "transparent" }}
-                            inputStyles={{ fontSize: 16, color: "#606060" }}
-                            dropdownStyles={{ height: "auto", width: "100%", marginTop: -15, borderColor: "transparent" }}
-                            dropdownTextStyles={{ color: "#606060", fontSize: 16 }}
-                            dropdownItemStyles={{ paddingHorizontal: 15, paddingTop: 10, paddingBottom: 5 }}
-                            placeholder="Select an option"
-                            search={ false }
-                            setSelected={ onChange }
-                        />
-                    ) }
-                />
-                { errors.isVendor && (<Text className="text-red-500 text-xs">{errors.isVendor.message}</Text>) }
-              </View> */}
 
 
               { step !== "login" && (

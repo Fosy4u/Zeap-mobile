@@ -9,11 +9,9 @@ import useSuccessPopupHook from "../hooks/successPopup_hook.ts";
 interface Props {
     bodyText?: string;
     setShowSuccessModal:  React.Dispatch<React.SetStateAction<boolean>>;
-    // productId of the just-submitted product — "View Product" opens its details.
     productID?: string;
 };
 
-/* Product-submission copy, matching the web success dialog wording. */
 const PRODUCT_SUCCESS_LINES = [
     "Your product has been successfully added to your shop.",
     "Our team will review it shortly before it goes live.",
@@ -32,8 +30,6 @@ const SuccessPopupModal: React.FC<Props> = ({bodyText, setShowSuccessModal, prod
             />
 
             <View className="h-full w-full absolute inset-0 bg-black opacity-60"/>
-            {/* Height follows the copy — the product message runs to three
-                lines, which the old fixed 340px box clipped. */}
             <View className="h-auto w-[320px] pb-5 rounded-2xl bg-white">
                 <ImageBackground
                     source={require("../../../../../assets/images/success_modal_image.png")}
@@ -83,16 +79,8 @@ const SuccessPopupModal: React.FC<Props> = ({bodyText, setShowSuccessModal, prod
                         <TouchableOpacity
                             onPress={ () => {
                                 setShowSuccessModal(false);
-                                // Refresh the dashboard bell badge — the new
-                                // submission generated an "under review" alert.
                                 handleRefreshNotificationCount();
-                                // Refresh the product listing + drafts so the
-                                // new product shows without a manual reload.
                                 handleRefreshProductList();
-                                // Open the just-submitted product's details (it
-                                // refetches by productId, so it shows the fresh
-                                // "under review" status, not the stale draft).
-                                // Fall back to the products list if no id.
                                 if (productID) {
                                     navigation.navigate("vendorProductDetailsScreen", { productID });
                                 } else {
@@ -107,11 +95,7 @@ const SuccessPopupModal: React.FC<Props> = ({bodyText, setShowSuccessModal, prod
                         <TouchableOpacity 
                             onPress={ () => {
                                 setShowSuccessModal(false);
-                                // Refresh the dashboard bell badge before landing
-                                // on the dashboard so the new count shows at once.
                                 handleRefreshNotificationCount();
-                                // Refresh the product listing + drafts so the
-                                // new product shows without a manual reload.
                                 handleRefreshProductList();
                                 navigation.navigate("vendorHomeScreen", { screen: "Dashboard" });
                             } }

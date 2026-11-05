@@ -10,16 +10,8 @@ import PushNotification, { Importance } from "react-native-push-notification";
 import handleNotificationNavigation from "../utils/notificationNavigation";
 import { isNotificationForUser } from "../utils/notificationRelevance";
 
-// One-time library setup. Must run before any localNotification() call:
-//  • configure() registers the tap handler — without it, taps on local
-//    notifications never reach our navigator.
-//  • createChannel() registers the Android 8+ channel — Android silently
-//    drops notifications whose channelId hasn't been created, which is why
-//    foreground order notifications weren't appearing.
 PushNotification.configure({
     onNotification: (notification: any) => {
-        // Only handle user taps, not the silent delivery callback fired
-        // when the notification is first shown.
         if (notification?.userInteraction) {
             handleNotificationNavigation(notification?.data ?? notification?.userInfo);
         }
@@ -147,8 +139,6 @@ const useFCMNotificationHook = () => {
         const unsubscribeOnMessage = onMessage(messagingInstance, async remoteMessage => {
             // console.log("REMOTE NOTIFICATION::: ", remoteMessage);
 
-            /* Delivery is the backend's call, display is ours: drop anything the
-               payload shows belongs to another shop or another role. */
             if (!isNotificationForUser(remoteMessage.data as any, audienceRef.current)) {
                 console.log("NOTIFICATION SUPPRESSED (not for this user):::", remoteMessage.data);
                 return;

@@ -11,7 +11,6 @@ const MARGIN = 48;
 const CONTENT_WIDTH = PAGE_WIDTH - MARGIN * 2;
 const RIGHT_EDGE = MARGIN + CONTENT_WIDTH;
 
-// Mirrors the on-screen card: name on the left, quantity + price clustered right.
 const PRICE_COL_WIDTH = 110;
 const QTY_COL_WIDTH = 70;
 const COL_GAP = 16;
@@ -40,8 +39,6 @@ const GLYPH_FALLBACKS: Record<string, string> = {
     "\u00A0": " ", "\u2009": " ", "\u202F": " ",
 };
 
-/* The embedded Montserrat subset covers Latin-1 plus the currency signs;
-   anything else (emoji, CJK) would render as .notdef boxes, so drop it. */
 const sanitize = (text?: string | number | null): string =>
     String(text ?? "")
         .replace(
@@ -50,8 +47,6 @@ const sanitize = (text?: string | number | null): string =>
         )
         .replace(/[^\x20-\x7E\xA1-\xFF\u20A6\u20AC\u20B9]/g, "");
 
-/* Matches the on-screen receipt: real currency symbols, and the same decimal rule
-   as formatCurrency — Naira hides a ".00", every other currency keeps both. */
 const formatPdfCurrency = (amount: number, currency: string = "NGN"): string => {
     const localeMap: Record<string, string> = {
         NGN: "en-NG", USD: "en-US", GBP: "en-GB", CAD: "en-CA", EUR: "de-DE",
@@ -86,7 +81,6 @@ interface IDrawOptions {
     color?: ReturnType<typeof rgb>;
 }
 
-// Wraps on whole words, hard-splitting any single word wider than maxWidth.
 const wrapText = (text: string, font: PDFFont, size: number, maxWidth: number): string[] => {
     const words = text.split(/\s+/).filter(Boolean);
     if (words.length === 0) { return [""]; }
@@ -135,7 +129,6 @@ class ReceiptCanvas {
     get y(): number { return this.cursor; }
     get currentPage(): PDFPage { return this.page; }
 
-    // Starts a new page when the next block wouldn't fit above the bottom margin.
     ensureSpace(height: number) {
         if (this.cursor - height >= BOTTOM_LIMIT) { return; }
         this.page = this.doc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
@@ -187,7 +180,6 @@ const drawHeader = async (canvas: ReceiptCanvas, doc: PDFDocument) => {
             height: logoHeight,
         });
     } catch {
-        // A missing/corrupt logo must not cost the user their receipt.
         canvas.move(16);
         canvas.text("ZEAPER", MARGIN, { size: 18, font: canvas.bold, color: INK });
     }
@@ -210,7 +202,6 @@ const drawParties = (canvas: ReceiptCanvas, orderDetails: IOrderDetails) => {
     canvas.move(13);
     canvas.text(orderDetails?.user?.email ?? "", MARGIN, { size: 9, color: MUTED });
 
-    // Order meta sits on the same band, right-aligned.
     const bottom = canvas.y;
     const metaRows = [
         { label: "Order ID:", value: orderDetails?.orderId ?? "" },
@@ -257,8 +248,6 @@ const drawItemsTable = (canvas: ReceiptCanvas, orderDetails: IOrderDetails, curr
     }
 
     for (const po of productOrders) {
-        /* Per-item amounts are already in major units, unlike the payment
-           totals which arrive in the smallest currency unit. */
         const price = po?.amount?.find((a) => a.currency === currency)?.value
             ?? po?.amount?.[0]?.value
             ?? 0;
@@ -285,7 +274,6 @@ const drawItemsTable = (canvas: ReceiptCanvas, orderDetails: IOrderDetails, curr
 };
 
 const drawTotals = (canvas: ReceiptCanvas, orderDetails: IOrderDetails, currency: string) => {
-    // Gateway amounts arrive in the smallest currency unit (kobo/cents).
     const rows = [
         { label: "Subtotal", value: (orderDetails?.payment?.itemsTotal ?? 0) / 100 },
         { label: "Delivery Fee", value: (orderDetails?.payment?.deliveryFee ?? 0) / 100 },
@@ -335,9 +323,6 @@ const embedReceiptFonts = async (doc: PDFDocument): Promise<{ regular: PDFFont; 
     }
 };
 
-// Returns the finished PDF as base64, ready for react-native-share.
-/* fallbackCurrency is the currency the user selected in settings — used only
-   when the order payload carries none, so the PDF never invents a symbol. */
 const buildReceiptPdfBase64 = async (orderDetails: IOrderDetails, fallbackCurrency: string = "NGN"): Promise<string> => {
     const currency = orderDetails?.payment?.currency || fallbackCurrency;
 

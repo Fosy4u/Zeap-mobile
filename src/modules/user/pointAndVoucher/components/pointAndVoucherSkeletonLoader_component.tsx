@@ -2,10 +2,6 @@ import React from "react";
 import { View } from "react-native";
 import SkeletonBlock from "../../../general/components/skeletonBlock_component";
 
-// Skeleton for the Points & Vouchers tab content. Approximates the headline
-// card (balance / hero) + 3 list-item rows for the two-tab layout. Rendered
-// inside the tab body while the initial points + vouchers fetch is in flight.
-
 const PointAndVoucherSkeletonLoader = () => {
     return (
         <View>

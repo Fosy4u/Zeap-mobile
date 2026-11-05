@@ -7,9 +7,6 @@ interface IProps {
 }
 
 const TimelineComponent: React.FC<IProps> = ({ productType }) => {
-  // Pick the timeline that matches this product type (accessory, ready-to-wear
-  // cloth/shoe, bespoke cloth/shoe). Sourced from the shared productTimelines
-  // utility so the steps stay consistent across the app.
   const timelines = getProductTimeline(productType);
 
   return (

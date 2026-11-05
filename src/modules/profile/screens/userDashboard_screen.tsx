@@ -15,9 +15,10 @@ import { setProductID } from '../../user/products/slices/product_slice';
 import UserAvatar from '../../general/components/userAvatar_component';
 import ProductCardComponent from '../../general/components/productCard_component';
 import AppStatusBar from "../../general/components/appStatusBar";
+import useSavedHook from '../../user/saved/hooks/saved_hook';
 
 const UserDashboardScreen = () => {
-    const { recentlyViewedProducts, recommendedProducts, wishListProducts, recentlyViewedProductsIsLoading, recommendedProductsIsLoading } = useSelector((state: RootState) => state.productState);
+    const { recentlyViewedProducts, recommendedProducts, recentlyViewedProductsIsLoading, recommendedProductsIsLoading } = useSelector((state: RootState) => state.productState);
     const { userData } = useSelector((state: RootState) => state.profileState);
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const dispatch = useDispatch();
@@ -26,6 +27,8 @@ const UserDashboardScreen = () => {
     const recommendedProductsLoading = recommendedProductsIsLoading;
 
     const { handleGetRecentlyViewedProducts, handleGetRecommendedProducts } = useFilterAndSearchHook();
+    const { wishItems, isWishlistLoading } = useSavedHook();
+    const wishListProducts = wishItems.map((wishItem) => wishItem.product);
 
     useEffect(() => {
         handleGetRecentlyViewedProducts("Recently Viewed");
@@ -36,8 +39,6 @@ const UserDashboardScreen = () => {
         <SafeAreaView className="flex-1 h-auto w-screen bg-white">
              <AppStatusBar backgroundColor="#112F1E" barStyle="light-content" />
 
-            {/* ==== Header (fixed — stays mounted above the ScrollView so
-                    it doesn't scroll away with the content) ==== */}
             <View className="px-5 pt-5 pb-2 flex-row items-center justify-between bg-white">
                 <TouchableOpacity onPress={() => navigation.goBack()}>
                     <View className="h-[40px] w-[40px] flex items-center justify-center rounded-full bg-baseGreen">
@@ -121,12 +122,24 @@ const UserDashboardScreen = () => {
                     <View className="h-auto w-full mt-6">
                         <View className="flex-row justify-between items-center">
                             <Text className="font-medium text-base text-baseGreen">Wish list</Text>
-                            <TouchableOpacity onPress={ () => navigation.navigate("productListScreen", { screenTitle: "Wish List" }) }>
+                            <TouchableOpacity onPress={ () => navigation.navigate("homeScreen", { screen: "Saved" }) }>
                             <Text className="text-sm text-baseGreen">See all</Text>
                             </TouchableOpacity>
                         </View>
                         
-                        { wishListProducts.length > 0 ? (
+                        { isWishlistLoading ? (
+                            <ScrollView
+                                horizontal
+                                showsHorizontalScrollIndicator={ false }
+                                className="h-auto w-full mt-2"
+                            >
+                                { Array.from({ length: 5 }, (_, index) => (
+                                    <View key={ `wish-${index}` } style={{ marginTop: 5, marginRight: 15 }}>
+                                        <SkeletonBlock width={ 150 } height={ 220 } radius={ 16 } />
+                                    </View>
+                                )) }
+                            </ScrollView>
+                        ) : wishListProducts.length > 0 ? (
                             <ScrollView
                                 horizontal
                                 showsHorizontalScrollIndicator={ false }

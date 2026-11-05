@@ -60,8 +60,6 @@ const ProductListCard: React.FC<IProps> = (props) => {
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                     className="h-[35px] w-[35px] absolute top-0 right-0 flex items-center justify-center rounded-xl bg-gray-200"
                 >
-                    {/* Always render the heart — it starts unsaved and flips to
-                        filled once the wishlist lands, so no spinner is shown. */}
                     <Heart color={ saved ? "#e11d48" : "gray" } variant={ saved ? "Bold" : "Linear" } />
                 </TouchableOpacity>
             </View>
@@ -120,8 +118,6 @@ const ProductListCard: React.FC<IProps> = (props) => {
                 })() }
 
                 { (() => {
-                    /* Available colours — same circular swatches (max 4 + "+N")
-                       used on the dashboard product card. */
                     const colors = getProductSwatchValues(product);
                     if (colors.length === 0) return null;
                     const visibleColors = colors.slice(0, 4);

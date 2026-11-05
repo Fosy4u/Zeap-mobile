@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from 'react'
-import { SafeAreaView, ScrollView, Text, View, TouchableOpacity, Image, BackHandler, Alert, ActivityIndicator } from 'react-native';
+import React from 'react'
+import { SafeAreaView, ScrollView, Text, View, TouchableOpacity, Image, Alert, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import RootNavigationStackModel from '../../../routes/model/routes_model';
@@ -8,73 +8,28 @@ import useLoginHook from '../hooks/login_hook';
 import AppLoader from '../../general/components/appLoader';
 import { useDispatch } from 'react-redux';
 import { clearPendingDestination } from '../slices/authState_slice';
-import showToast from '../../../utils/showToast';
+import useDoubleBackExit from '../../general/hooks/doubleBackExit_hook';
 
 const LoginInfoScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
   const dispatch = useDispatch();
-  // Reuse the login hook's Google flow so social sign-in here behaves exactly
-  // like the dedicated login screen — including the post-auth redirect back to
-  // the protected screen the user was bounced from (pendingDestination).
   const { handleGoogleSignIn, isGoogleLoading } = useLoginHook();
 
-  // Apple Sign-In isn't wired up yet (no native handler exists). Be honest
-  // instead of silently doing nothing, and point users to a working option.
   const handleApplePressed = () => {
     Alert.alert(
       "Apple Sign-In coming soon",
       "Apple Sign-In isn't available yet. Please continue with email or Google.",
     );
   };
-  /* Opting out of logging in also drops the stashed destination — otherwise a
-     later, unrelated sign-in would bounce the user into the screen they left. */
   const handleContinueShopping = () => {
     dispatch(clearPendingDestination());
     navigation.navigate("homeScreen", { screen: "Home" });
   };
 
-  const backPressCount = useRef(0);
-  const backPressTimer = useRef<NodeJS.Timeout | null>(null);
-
-  useEffect(() => {
-    const backAction = () => {
-      if (backPressCount.current === 0) {
-        backPressCount.current = 1;
-        showToast('Press back again to exit');
-        
-        // Reset the counter after 2 seconds
-        if (backPressTimer.current) {
-          clearTimeout(backPressTimer.current);
-        }
-        backPressTimer.current = setTimeout(() => {
-          backPressCount.current = 0;
-        }, 2000);
-        
-        return true;
-      }
-      
-      if (backPressCount.current === 1) {
-        BackHandler.exitApp();
-        return true;
-      }
-      
-      return true;
-    };
-
-    const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
-
-    return () => {
-      backHandler.remove();
-      if (backPressTimer.current) {
-        clearTimeout(backPressTimer.current);
-      }
-    };
-  }, []);
+  useDoubleBackExit();
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      {/* Scrollable so the last action stays reachable on short screens and at
-          large font scales — the stack is ~585pt before any accessibility bump. */}
       <ScrollView
         contentContainerStyle={{ flexGrow: 1, paddingBottom: 24 }}
         showsVerticalScrollIndicator={ false }
@@ -161,8 +116,6 @@ const LoginInfoScreen = () => {
       </View>
       </ScrollView>
 
-      {/* Full-screen overlay while the Google flow runs — it navigates away on
-          success, so this covers the brief auth + profile-fetch window. */}
       { isGoogleLoading && (
         <AppLoader loadingAdditionalMessage="Signing in with Google..." />
       ) }

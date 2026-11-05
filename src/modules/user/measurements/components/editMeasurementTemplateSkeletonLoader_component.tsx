@@ -2,14 +2,6 @@ import React from "react";
 import { ScrollView, View } from "react-native";
 import SkeletonBlock from "../../../general/components/skeletonBlock_component";
 
-// Skeleton for the EditMeasurementTemplate body — mirrors the layout:
-//   • Template name card (read-only display + gender line)
-//   • A few garment-group cards, each with a title + several field rows
-//     (label + input + "Show Measurement Guide" pill)
-//
-// Rendered while the bespoke guide is loading; the screen's header stays
-// mounted above so the back button is always reachable.
-
 const EditMeasurementTemplateSkeletonLoader = () => {
     return (
         <ScrollView

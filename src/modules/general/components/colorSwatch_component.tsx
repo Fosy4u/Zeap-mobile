@@ -29,7 +29,6 @@ const MULTICOLOR_VALUES = [
     "bespoke", "custom",
 ];
 
-// Strip spaces/dashes so "Multi-Color" and "multi color" both match.
 const normalize = (value?: string): string => (value ?? "").toLowerCase().replace(/[^a-z]/g, "");
 
 const isMulticolor = (value?: string): boolean => MULTICOLOR_VALUES.includes(normalize(value));
@@ -47,16 +46,14 @@ const resolveBackground = (hex?: string, value?: string): string => {
 };
 
 const MULTICOLOR_HUES = [
-    "#EF4444", // red
-    "#F97316", // orange
-    "#FACC15", // yellow
-    "#22C55E", // green
-    "#2563EB", // blue
-    "#8B5CF6", // violet
+    "#EF4444",
+    "#F97316",
+    "#FACC15",
+    "#22C55E",
+    "#2563EB",
+    "#8B5CF6",
 ];
 
-/* One pie wedge of the swatch. Angles run clockwise from 12 o'clock, so the
-   first hue sits top-centre where the eye lands first. */
 const wedgePath = (radius: number, startAngle: number, endAngle: number): string => {
     const point = (angle: number) => {
         const radians = ((angle - 90) * Math.PI) / 180;
@@ -78,8 +75,6 @@ const ColorSwatchComponent: React.FC<IProps> = ({
     value,
     hex,
     size = 12,
-    /* gray-300 rather than gray-200: pale fills like Milk or White sit on an
-       almost-white card, so the ring is what makes them read as a swatch. */
     borderColor = "#d1d5db",
     borderWidth = 1,
     style,

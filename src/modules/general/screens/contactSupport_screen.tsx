@@ -138,7 +138,6 @@ const ContactSupportScreen = () => {
                                 title="WhatsApp"
                                 rows={ [{
                                     value: WHATSAPP_NUMBER,
-                                    // wa.me expects the number without `+` or spaces.
                                     onPress: () => openUrl(
                                         `https://wa.me/${ WHATSAPP_NUMBER.replace(/[^0-9]/g, "") }`,
                                         "Couldn't open WhatsApp.",

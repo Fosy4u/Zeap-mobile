@@ -1,8 +1,6 @@
 import React from 'react';
 import { Text, View } from 'react-native';
 
-/* Every pill shares one recipe — tint-50 background, -300 border, -700 text — so
-   only the hue changes between statuses and they read as one family. */
 const STATUS_PILLS: Record<string, string> = {
     "placed":             "bg-slate-50 border-slate-300",
     "confirmed":          "bg-blue-50 border-blue-300",
@@ -31,13 +29,10 @@ const STATUS_TEXT: Record<string, string> = {
     "rejected":           "text-red-700",
 };
 
-/* A status the backend adds later still renders as a proper outlined pill rather
-   than an odd grey box — only the hue falls back. */
 const FALLBACK_PILL = "bg-slate-50 border-slate-300";
 const FALLBACK_TEXT = "text-slate-700";
 
 interface IProps {
-    // The API's status.name, e.g. "quality check". Lowercase, sometimes absent.
     statusName?: string;
 }
 

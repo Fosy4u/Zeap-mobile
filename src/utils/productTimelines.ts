@@ -1,13 +1,9 @@
-// Shared product delivery timelines, keyed by product type. Used by the buyer
-// product-details Timeline tab (and available to vendor screens too). Each step
-// is a { title, description }; pick the right list with getProductTimeline().
 
 export interface ITimelineStep {
     title: string;
     description: string;
 }
 
-// Accessories (eyewear, watches, bags…)
 export const accessoriesTimeline: ITimelineStep[] = [
     { title: "Place Order", description: "Select the preferred accessory and place the order." },
     { title: "Order Confirmation", description: "Order details and product availability are confirmed." },
@@ -64,8 +60,6 @@ export const bespokeFootwearTimeline: ITimelineStep[] = [
     { title: "Feedback", description: "Customer feedback is collected." },
 ];
 
-// Resolve the timeline for a given product type. Falls back to ready-to-wear
-// clothes for any unrecognised type.
 export const getProductTimeline = (productType?: string): ITimelineStep[] => {
     switch (productType) {
         case "accessory":      return accessoriesTimeline;

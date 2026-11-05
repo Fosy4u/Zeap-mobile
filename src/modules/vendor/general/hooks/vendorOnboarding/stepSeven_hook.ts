@@ -11,9 +11,6 @@ const useStepSevenHook = () => {
     const { formData, sellerPolicies } = useSelector((state: RootState) => state.vendorOnboardingState);
     const dispatch = useDispatch();
 
-    // Fetched once when the step mounts. The slice mirror lets us re-render
-    // from cache if the user navigates back and forth without re-hitting the
-    // network on every Back/Next.
     const { data, isFetching } = useGetSellerPoliciesQuery();
     useEffect(() => {
         if (data) {

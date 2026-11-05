@@ -34,7 +34,6 @@ const AddProductScreen = () => {
         draftToDeleteId, setDraftToDeleteId,
     } = useAddBespokeClothesHook();
 
-    // The draft currently queued for deletion (for the confirmation modal title).
     const draftToDelete = draftProducts?.find((draft) => draft.productId === draftToDeleteId);
 
     const handleSelectCategory = (category: typeof PRODUCT_CATEGORIES[number]) => {
@@ -93,8 +92,6 @@ const AddProductScreen = () => {
                                         onPress={ () => {
                                             dispatch(setProduct(product));
                                             dispatch(setProductMode("Draft"));
-                                            // Resume on the step the draft was left on (not the next
-                                            // one). Clamp to the valid 1–6 range as a guard.
                                             dispatch(setSelectedStep(Math.min(Math.max(product.currentStep ?? 1, 1), 6)));
                                             navigation.navigate(
                                                 product.productType === "bespokeCloth" ? "addBespokeClothesScreen" :

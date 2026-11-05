@@ -8,8 +8,6 @@ const initialFormData: IVendorOnboardingFormData = {
     isShoeMaker: null,
 
     businessEmail: "",
-    // Phone code starts empty so stepThree_hook can seed it from the user's
-    // currency (NGN → +234, USD/CAD → +1, GBP → +44) on first render.
     businessPhoneCode: "",
     businessPhone: "",
 

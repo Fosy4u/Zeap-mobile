@@ -100,8 +100,6 @@ const measurementAPI = rootAPI.injectEndpoints({
             },
         }),
         // NOTE: getBodyMeasurementGuide moved to the general API
-        // (src/modules/general/apis/general_api.ts) as the single source of
-        // truth — shared by this buyer flow and the vendor bespoke step 3.
     }),
 });
 

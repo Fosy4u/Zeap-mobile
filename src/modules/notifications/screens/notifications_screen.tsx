@@ -22,8 +22,6 @@ const UserNotificationsScreen = () => {
     // Call the Notification Hook
     const { handleDeleteNotification, handleMarkAllAsRead, handleMarkNotificationAsSeen } = useNotificationHook();
 
-    // Mark the inbox as read once, the first time it has loaded — clears the
-    // dashboard bell badge. Guarded with a ref so it fires a single time.
     const hasMarkedAsRead = useRef(false);
     useEffect(() => {
         if (!hasMarkedAsRead.current && notifications.length > 0) {
@@ -32,8 +30,6 @@ const UserNotificationsScreen = () => {
         }
     }, [notifications]);
 
-    // Newest first — sort a copy so the redux array isn't mutated. The backend
-    // returns them oldest→newest, which read upside down on screen.
     const sortedNotifications = [...notifications].sort(
         (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
@@ -57,7 +53,6 @@ const UserNotificationsScreen = () => {
                     ? sortedNotifications.map((notification) => (
                         <TouchableOpacity key={ notification._id }
                             onPress={ () => {
-                                // Always fire — local seen:true is optimistic, so it can't gate the call.
                                 handleMarkNotificationAsSeen(notification._id);
                                 handleNotificationNavigation(notification.data);
                             } }
@@ -106,11 +101,6 @@ const UserNotificationsScreen = () => {
     );
 };
 
-// Loading fallback shown while AuthCheck runs its token refresh — mirrors the
-// real screen's chrome (status bar + header) with the notification-shaped
-// skeleton in the body, so the user never sees a blank white screen on the way
-// in. Once the auth check passes, the screen below shows the same skeleton
-// while the inbox fetch is in flight.
 const NotificationsLoadingScreen = () => (
     <SafeAreaView className="h-auto w-full pb-1 flex-1 bg-lightGray">
         <AppStatusBar backgroundColor="#133522" barStyle="light-content" />

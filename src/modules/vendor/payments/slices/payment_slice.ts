@@ -4,8 +4,6 @@ import IPayment from "../models/payment_model";
 
 const initialState: IPaymentState = {
     payments: [],
-    /* Mirrors the web's payment filters. "Received" was renamed to "Paid" to
-       match, and "Cancelled" added. */
     tabs: ["All", "Pending", "Paid", "Cancelled"],
     selectedTab: "All",
 

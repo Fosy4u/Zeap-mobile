@@ -19,7 +19,6 @@ import SkeletonBlock from "../../../general/components/skeletonBlock_component";
 import encodeMediaUri from "../../../../utils/encodeMediaUri";
 import AppStatusBar from "../../../general/components/appStatusBar";
 
-// Mirrors the web's HOME category bar: same items, order, filters and list titles.
 const HOME_CATEGORY_LINKS: { label: string; title?: string; filters?: Record<string, string>; screen?: "brands" | "sales"; categoryName?: string }[] = [
   { label: "Women", title: "All Women's Collections", filters: { gender: "Female", ageGroup: "Adults" }, categoryName: "Women" },
   { label: "Men", title: "All Men Collections", filters: { gender: "Male", ageGroup: "Adults" }, categoryName: "Men" },
@@ -47,8 +46,6 @@ const MainDashboardScreen = () => {
   const dispatch = useDispatch();
   const [activeCategoryLabel, setActiveCategoryLabel] = useState("Women");
   const width = useWindowDimensions().width - 40;
-  // Promo slides now use the landscape (largeScreenImageUrl) artwork, so the
-  // carousel takes a 16:9 landscape height instead of the old tall portrait box.
   const promoHeight = Math.round(width * 9 / 16);
 
 

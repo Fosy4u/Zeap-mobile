@@ -16,8 +16,6 @@ interface IChoiceTileProps {
     addRightMargin?: boolean;
 }
 
-// Tiles use an explicit `mr-3` on the first one because NativeWind 2 does not
-// honor `gap-x-*` reliably — sticking to margin keeps the visible gap consistent.
 const ChoiceTile: React.FC<IChoiceTileProps> = ({ selected, label, onPress, addRightMargin }) => (
     <TouchableOpacity
         onPress={ onPress }

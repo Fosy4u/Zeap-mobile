@@ -19,10 +19,8 @@ const useStepThreeHook = () => {
     const [updatedProduct] = useUpdateProductMutation();
     const [getProductByProductID] = useLazyGetProductByProductIDQuery();
 
-    // The available size standards (AUS, CAN, EU, INTL, UK, US) for shoes.
     const sizeStandardOptions = readyMadeShoesOptions?.sizeStandardEnums ?? [];
 
-    // Sizes available for the chosen standard — empty until one is picked.
     const shoeSizes = selectedSizeStandard
         ? (readyMadeShoesOptions?.shoeSizeEnumsByRegion?.[selectedSizeStandard] ?? [])
         : [];
@@ -67,15 +65,12 @@ const useStepThreeHook = () => {
         };
     };
 
-    // Choosing a standard switches the size list — drop any previously-picked
-    // sizes that don't exist under the new standard.
     const handleSelectSizeStandard = (standard: string) => {
         setSelectedSizeStandard(standard);
         const regionSizes = readyMadeShoesOptions?.shoeSizeEnumsByRegion?.[standard] ?? [];
         setSelectedSizes((prev) => prev.filter((size) => regionSizes.includes(size)));
     };
 
-    // Pre-fill standard + sizes when editing a draft product.
     const handleSelectSizes = () => {
         if (!product) return;
         if ((product as any).sizeStandard) setSelectedSizeStandard((product as any).sizeStandard);

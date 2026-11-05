@@ -11,8 +11,6 @@ import useShopGuardHook from '../hooks/shopGuard_hook';
 import NoShopPopupModal from '../modals/noShopPopup_modal';
 
 const BankDetailsScreen = () => {
-    /* Payout details belong to the shop, so the shop has to exist first — the
-       guard hook resolves it. */
     const { shop, isResolvingShop, isCheckingShop, hasNoShop, recheckShop } = useShopGuardHook();
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const bankDetails = shop?.bankDetails;
@@ -37,8 +35,6 @@ const BankDetailsScreen = () => {
                     <View className="h-[40px] w-[40px]" />
                 </View>
 
-                {/* Still resolving — a loader beats three empty rows reading as
-                    "we have no bank details for you". */}
                 { isResolvingShop && !hasNoShop && (
                     <View className="flex-1 items-center justify-center">
                         <ActivityIndicator color="#133522" />

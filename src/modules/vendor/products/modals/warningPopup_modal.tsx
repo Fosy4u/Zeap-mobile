@@ -6,15 +6,12 @@ import {NativeStackNavigationProp} from 'react-native-screens/lib/typescript/nat
 import RootNavigationStackModel from "../../../../routes/model/routes_model.ts";
 
 interface Props {
-    /* Optional override — left out, the modal shows the standard submit
-       confirmation copy (kept in step with the web's confirm dialog). */
     bodyText?: string;
     screenURL: keyof RootNavigationStackModel;
     setShowWarningModal:  React.Dispatch<React.SetStateAction<boolean>>;
     handleSubmitProduct: () => void;
 };
 
-/* Submit-confirmation copy, matching the web confirm dialog wording. */
 const SUBMIT_WARNING_TITLE = "Are you sure you want to submit this product?";
 const SUBMIT_WARNING_BODY =
     "This will change the status of the product to under review and seller will not be able to edit the product without contacting the admin except for the variation";
@@ -38,8 +35,6 @@ const WarningPopupModal: React.FC<Props> = ({ bodyText, screenURL, setShowWarnin
             />
 
             <View className="h-full w-full absolute inset-0 bg-black opacity-60"/>
-            {/* Height follows the copy — the web wording runs several lines,
-                which the old fixed 340px box clipped. */}
             <View className="h-auto w-[320px] pb-5 rounded-2xl bg-white">
                 <ImageBackground
                     source={require("../../../../../assets/images/warning_modal_image.png")}

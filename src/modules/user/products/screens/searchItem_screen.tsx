@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useRef } from 'react'
-import { ActivityIndicator, Image, SafeAreaView, StatusBar, Text, TextInput, View } from 'react-native';
-import { ArrowLeft, Filter, SearchNormal1 } from 'iconsax-react-native';
+import { ActivityIndicator, Image, SafeAreaView, StatusBar, Text, TextInput, TouchableOpacity as PaginationButton, View } from 'react-native';
+import { ArrowLeft, ArrowRight, Filter, SearchNormal1 } from 'iconsax-react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../../redux/store/store.ts';
 import { GestureHandlerRootView, ScrollView } from 'react-native-gesture-handler';
 import { BottomSheetModalProvider, TouchableOpacity } from '@gorhom/bottom-sheet';
-import { useNavigation } from '@react-navigation/native';
+import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import RootNavigationStackModel from '../../../../routes/model/routes_model.ts';
 import useSearchHook from '../hooks/search_hook.ts';
@@ -18,13 +18,29 @@ import DynamicFilterBottomSheetComponent from '../components/dynamicFilterBottom
 const SearchItemScreen = () => {
   const { searchPhrase } = useSelector((state: RootState) => state.productState);
   const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
+  const { params } = useRoute<RouteProp<RootNavigationStackModel, "searchItemScreen">>();
   const dispatch = useDispatch<AppDispatch>();
 
   const {
-    results, isFetching, isUninitialized, handleSearchNow, recentSearches, removeRecentSearch, selectRecentSearch,
+    results, isFetching, isUninitialized, handleSearchNow, searchFor, isRecentLoaded, recentSearches, removeRecentSearch, selectRecentSearch,
     selectedFilters, toggleCheckboxOption, clearAllFilters, dynamicFilterOptions, filtersLoading,
     activeFilterCount, showBottomSheetModal, setShowBottomSheetModal, handleOpenFilters,
+    paginatingDirection, isPrevDisabled, isNextDisabled, handlePaginate,
   } = useSearchHook();
+  const resultsScrollRef = useRef<any>(null);
+
+  const handlePageChange = async (direction: "Prev" | "Next") => {
+    const changed = await handlePaginate(direction);
+    if (changed) { resultsScrollRef.current?.scrollTo({ y: 0, animated: false }); }
+  };
+  const handledInitialSearchRef = useRef(false);
+
+  useEffect(() => {
+    if (!isRecentLoaded || handledInitialSearchRef.current || !params?.initialSearch) { return; }
+    handledInitialSearchRef.current = true;
+    searchFor(params.initialSearch);
+  }, [isRecentLoaded]);
+
   const bottomSheetModalRef = useRef<any>(null);
   const snapPoints = useMemo(() => ['90%'], []);
 
@@ -33,6 +49,7 @@ const SearchItemScreen = () => {
     else { bottomSheetModalRef.current?.dismiss(); }
   }, [showBottomSheetModal]);
   const hasSearchPhrase = !!searchPhrase?.trim();
+  const showPagination = hasSearchPhrase && results.length > 0;
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -54,7 +71,7 @@ const SearchItemScreen = () => {
             <View className="h-[40px] w-[40px]" />
           </View>
 
-          <View className="px-5">
+          <View className="px-5 flex-1">
             {/*==== Search Box ====*/}
             <View className="h-auto w-full mt-5 flex-row items-center justify-between">
               <TextInput
@@ -90,8 +107,9 @@ const SearchItemScreen = () => {
 
             {/*==== Results / Recent searches ====*/}
             <ScrollView
+              ref={ resultsScrollRef }
               showsVerticalScrollIndicator={ false }
-              className="h-auto w-full mt-4"
+              className="flex-1 w-full mt-4"
               keyboardShouldPersistTaps="handled"
             >
               { hasSearchPhrase ? (
@@ -159,6 +177,42 @@ const SearchItemScreen = () => {
               ) }
             </ScrollView>
           </View>
+
+          {/*==== Next and Previous Buttons ====*/}
+          { showPagination && (
+            <View className="h-auto w-full mt-3 px-5 pb-3 flex-row">
+              <PaginationButton
+                  onPress={ () => handlePageChange("Prev") }
+                  disabled={ isPrevDisabled }
+                  className="h-[50px] flex-1 flex-row items-center justify-center rounded-xl bg-lightGreen"
+              >
+                  { paginatingDirection === "Prev" ? (
+                    <ActivityIndicator size="small" color="#112F1E" />
+                  ) : (
+                    <View className="flex-row items-center" style={{ opacity: isPrevDisabled ? 0.4 : 1 }}>
+                      <ArrowLeft size={ 18 } className="text-baseGreen" />
+                      <Text className="ml-2 font-montserratSemiBold text-sm text-baseGreen">Prev</Text>
+                    </View>
+                  ) }
+              </PaginationButton>
+              <View className="w-[10px]" />
+
+              <PaginationButton
+                  onPress={ () => handlePageChange("Next") }
+                  disabled={ isNextDisabled }
+                  className="h-[50px] flex-1 flex-row items-center justify-center rounded-xl bg-lightGreen"
+              >
+                  { paginatingDirection === "Next" ? (
+                    <ActivityIndicator size="small" color="#112F1E" />
+                  ) : (
+                    <View className="flex-row items-center" style={{ opacity: isNextDisabled ? 0.4 : 1 }}>
+                      <Text className="mr-2 font-montserratSemiBold text-sm text-baseGreen">Next</Text>
+                      <ArrowRight size={ 18 } className="text-baseGreen" />
+                    </View>
+                  ) }
+              </PaginationButton>
+            </View>
+          ) }
 
           <DynamicFilterBottomSheetComponent
             bottomSheetModalRef={ bottomSheetModalRef }

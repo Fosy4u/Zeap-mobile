@@ -13,15 +13,10 @@ const useStepThreeHook = () => {
     const { recommendedCurrency } = useSelector((state: RootState) => state.settingsState);
     const dispatch = useDispatch();
 
-    // Default dial code tracks the user's currency setting (NGN → +234,
-    // USD/CAD → +1, GBP → +44). Falls back to Nigeria if currency is unset.
     const currencyDialCode = dialCodeForCurrency(recommendedCurrency?.code);
 
     const { control, handleSubmit, formState: { errors, isValid }, setValue } = useForm<IStepThreeForm>({
         defaultValues: {
-            // Prefill with the auth user's email — they can edit if their
-            // business email differs. Falls back to whatever's already in the
-            // onboarding draft (so reopening the step after Back keeps edits).
             businessEmail: formData.businessEmail || userData?.email || "",
             businessPhoneCode: formData.businessPhoneCode || currencyDialCode,
             businessPhone: formData.businessPhone,
@@ -30,9 +25,6 @@ const useStepThreeHook = () => {
         mode: "onChange",
     });
 
-    // Sync the slice with the currency-derived default the first time we
-    // render — otherwise the orchestrator's picker (which reads slice state)
-    // would still show the stale "+234" until the user explicitly picks one.
     useEffect(() => {
         if (!formData.businessPhoneCode && currencyDialCode) {
             dispatch(setOnboardingFormData({ businessPhoneCode: currencyDialCode }));

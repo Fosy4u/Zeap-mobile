@@ -62,8 +62,6 @@ const StepThreeComponent: React.FC<IProps> = ({
                 </View>
             </View>
 
-            {/* ==== Sizes (for the chosen standard) — searchable multi-select.
-                Selected sizes appear as badges below the field. ==== */}
             { selectedSizeStandard ? (
                 <SearchableDropdownComponent
                     label="Available sizes"

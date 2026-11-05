@@ -137,9 +137,6 @@ const useStepTwoHook = () => {
         const ageRangeData = product.categories?.age?.ageRange!;
         setSelectedAgeRange(ageRangeData);
 
-        // Format type — saved on the product as `accessoryType` (the payload key),
-        // not `type`, so read it back from there or it restores empty and the
-        // re-submit fails with "Accessory type is required".
         const typeData = product.categories?.accessoryType!;
         setSelectedType(typeData);
 

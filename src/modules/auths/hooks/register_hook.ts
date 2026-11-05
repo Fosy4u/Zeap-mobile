@@ -44,9 +44,6 @@ const useRegisterHook = () => {
     const [existingFirstName, setExistingFirstName] = useState("");
     const authInstance = getAuth();
 
-    // Return the user to wherever they were headed when the auth gate
-    // bounced them to sign-up — falling back to the User Home Screen if
-    // there's no stored destination.
     const redirectAfterAuth = () => {
         if (pendingDestination) {
             navigation.reset({
@@ -71,7 +68,6 @@ const useRegisterHook = () => {
         resolver: yupResolver(registerUserSchema)
     });
 
-    // Step one, as on the web: a registered email goes to the password step, a new one to the sign-up details.
     const handleContinueWithEmail = async () => {
         if (!(await trigger("email"))) return;
 
@@ -98,8 +94,6 @@ const useRegisterHook = () => {
         setStep("email");
     };
 
-    // Same flow as the web: the current guest is converted into an email/password account,
-    // then signed in with those credentials so the cart and favourites carry over.
     const onSubmit: SubmitHandler<IRegisterUser> = async (data) => {
         dispatch(setLoadingMessage("Creating account..."));
         dispatch(setIsLoading(true));
@@ -161,15 +155,6 @@ const useRegisterHook = () => {
         return { idToken, accessToken };
     };
 
-    // The backend `/user/guest/create` endpoint always stores `isGuest: true` AND seeds
-    // firstName/lastName as "Customer"/"Guest" placeholders, even when called for a
-    // non-anonymous (Google) Firebase user. So we must prefer the Google profile over
-    // the backend record for name fields, and stamp `isGuest: false` locally.
-    //
-    // Name resolution rules (in priority order):
-    //   1. authUser.displayName  (strip bracketed content, split on whitespace)
-    //   2. email local-part      (e.g. "tman44wiz@gmail.com" → "tman44wiz")
-    //   3. literal "Customer" / "Guest" as last-resort fallback
     const parseGoogleName = (authUser: any): { firstName: string; lastName: string } => {
         const rawDisplayName: string = authUser?.displayName ?? "";
         const cleanedDisplayName = rawDisplayName.replace(/\s*\([^)]*\)\s*/g, " ").trim();
@@ -228,10 +213,8 @@ const useRegisterHook = () => {
         try {
             await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
 
-            // Only clear the cached Google session when there is an active signed-in account.
             await clearGoogleSessionIfNeeded();
 
-            // v13 returns { type: 'success' | 'cancelled', data }; it no longer throws on cancel.
             const signInResponse: any = await GoogleSignin.signIn();
             if (signInResponse?.type === "cancelled") return;
 
@@ -254,9 +237,6 @@ const useRegisterHook = () => {
             await EncryptedStorage.setItem(STORAGE_KEYS.USER_ID, JSON.stringify(uid));
             await storeToken(token);
 
-            // Non-anonymous Firebase users resolve via /userByUid. If the user is brand new
-            // and not yet on the backend, create the record first, then re-fetch so we get
-            // the fully-populated profile.
             let userData;
             try {
                 userData = await getUserById(uid).unwrap();
@@ -271,7 +251,6 @@ const useRegisterHook = () => {
 
             if (!userData) throw new Error("Failed to load user profile.");
 
-            // Merge any pre-existing guest session into the authenticated account
             const guestUID = await EncryptedStorage.getItem(STORAGE_KEYS.GUEST_UID);
             const parsedGuestUID = guestUID ? JSON.parse(guestUID) : null;
 
@@ -280,21 +259,16 @@ const useRegisterHook = () => {
                     const mergedUserData = await mergeUserData({ guestUid: parsedGuestUID }).unwrap();
                     if (mergedUserData) userData = mergedUserData;
                 } catch {
-                    // Merge failure shouldn't block sign-up — proceed with the fetched profile.
                 }
                 await forgetSecureItem(STORAGE_KEYS.GUEST_UID);
             }
 
-            // Always normalize after fetch + merge — the backend writes `isGuest: true`
-            // for records created via /user/guest/create regardless of Firebase auth state.
             userData = normalizeGoogleUserData(userData, authUser);
 
             await EncryptedStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(userData));
             console.log("[GoogleSignUp] USER DATA:", JSON.stringify(userData, null, 2));
             dispatch(setUserData(userData));
 
-            // Either return to the user's intended destination, or fall
-            // back to the User Home Screen.
             redirectAfterAuth();
         } catch (error: any) {
             const code = error?.code;

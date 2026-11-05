@@ -14,11 +14,8 @@ import useOrderHook from '../hooks/order_hook.ts';
 import AppLoader from '../../../general/components/appLoader.tsx';
 
 interface IProps {
-  // Sent as-is to PUT /order/status, e.g. "order confirmed".
   statusValue: string;
-  // Readable name of that status, e.g. "confirmed".
   statusName: string;
-  // Mirrors the action button that opened the dialog, e.g. "Start Processing".
   title?: string;
 };
 

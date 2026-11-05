@@ -75,7 +75,6 @@ const ProductListScreen: React.FC<IProps> = ({ route }) => {
 
   const [productsFetched, setProductsFetched] = useState(false);
 
-  // Load the category/filtered list whenever the category or the user's selected filters change.
   useEffect(() => {
     setProductsFetched(false);
     setReachedEnd(false);
@@ -83,7 +82,6 @@ const ProductListScreen: React.FC<IProps> = ({ route }) => {
       try {
         await handleGetFilteredProducts({ screenTitle: screenTitle || "Products", filters: routeFilters, source, setShowBottomSheetModal });
       } finally {
-        // Settled either way — a failed fetch must still reveal the empty state.
         setProductsFetched(true);
       }
     })();

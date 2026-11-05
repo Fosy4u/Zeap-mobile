@@ -17,10 +17,8 @@ import { RootState } from "../../../../redux/store/store";
 import RootNavigationStackModel from "../../../../routes/model/routes_model";
 
 interface IProps {
-    /* Re-runs the /shop/auth check. Left out, "Try again" is hidden. */
     onRetry?: () => void;
     isRetrying?: boolean;
-    /* Copy overrides, for callers that know more than this modal can infer. */
     title?: string;
     message?: string;
 }
@@ -30,8 +28,6 @@ interface IReasonProps {
     text: string;
 }
 
-/* Emoji marker plus flowing copy, following the vendor welcome screen so the
-   two "what happens next" states read as one family. */
 const Reason: React.FC<IReasonProps> = ({ icon, text }) => (
     <View className="mt-2.5 flex-row items-start">
         <Text className="text-xs leading-5">{ icon }</Text>
@@ -45,8 +41,6 @@ const NoShopPopupModal: React.FC<IProps> = ({ onRetry, isRetrying, title, messag
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const { userData } = useSelector((state: RootState) => state.profileState);
 
-    /* Flagged as a seller but no shop came back, so there WAS one — creating
-       another isn't the fix; talking to an admin is. */
     const wasSeller = !!userData?.isVendor || !!userData?.shopId;
 
     const heading = title ?? (wasSeller ? "We Can't Find Your Shop" : "You don't have a Shop");
@@ -54,8 +48,6 @@ const NoShopPopupModal: React.FC<IProps> = ({ onRetry, isRetrying, title, messag
         ? "Your account is registered as a seller, but we couldn't load any shop details for it. This usually means the shop has been closed or terminated."
         : "We couldn't find any shop associated with your account. To start selling on Zeaper, you need to create a shop.");
 
-    /* Falls back to the marketplace when nothing is behind us on the stack, so
-       "Go back" can never be a dead button. */
     const handleGoBack = () => {
         if (navigation.canGoBack()) {
             navigation.goBack();
@@ -77,8 +69,6 @@ const NoShopPopupModal: React.FC<IProps> = ({ onRetry, isRetrying, title, messag
 
             <View className="h-full w-full absolute inset-0 bg-black opacity-60" />
 
-            {/* h-auto so the card follows its copy — the reasons and actions
-                both vary with the case being explained. */}
             <View className="h-auto w-[330px] max-h-[88%] rounded-3xl bg-white overflow-hidden">
 
                 {/*==== Header ====*/}
@@ -92,8 +82,6 @@ const NoShopPopupModal: React.FC<IProps> = ({ onRetry, isRetrying, title, messag
                     </View>
                 </ImageBackground>
 
-                {/* flexShrink lets the body scroll once the copy outgrows the
-                    card's max height — RN defaults it to 0, which clips. */}
                 <ScrollView
                     showsVerticalScrollIndicator={ false }
                     style={{ flexShrink: 1 }}

@@ -7,8 +7,6 @@ interface Props {
     onConfirm: () => void;
 }
 
-// Confirmation shown before deleting a draft product from the "Products in
-// draft" list. Names the product and makes the permanence explicit.
 const DeleteDraftWarningPopupModal: React.FC<Props> = ({ productTitle, onCancel, onConfirm }) => {
 
     return (

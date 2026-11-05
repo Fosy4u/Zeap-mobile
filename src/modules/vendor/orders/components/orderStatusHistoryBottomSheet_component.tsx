@@ -19,7 +19,6 @@ const OrderStatusHistoryBottomSheetComponent = ({ bottomSheetModalRef, snapPoint
 
     const statusHistories = orderHistory?.statusHistory ?? [];
 
-    // The order's own status covers the window before the history lands.
     const currentStatusName = orderHistory?.currentStatus?.name ?? order?.status?.name;
     const currentStatusIndex = statusHistories.findIndex(
         (item) => item.name === currentStatusName,
@@ -30,7 +29,6 @@ const OrderStatusHistoryBottomSheetComponent = ({ bottomSheetModalRef, snapPoint
             ref={ bottomSheetModalRef }
             index={ 0 }
             snapPoints={ snapPoints }
-            // Fixed header + close button, not draggable — same as the buyer sheet.
             enablePanDownToClose={ false }
             handleComponent={ null }
             onDismiss={ () => setShowBottomSheetModal(false) }

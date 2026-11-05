@@ -268,7 +268,6 @@ const AddAccessoriesScreen = () => {
                 />
             }
 
-            {/* Per-colour image upload modal — opens when a colour is selected. */}
             { showImageUploadModal && stepFourSelectedColor.length > 0 &&
                 <UploadColorImageModal
                     colorName={ stepFourSelectedColor[0].colorName }
@@ -282,10 +281,6 @@ const AddAccessoriesScreen = () => {
                 />
             }
 
-            {/* Steps 1–5 keep the user on the step with an in-button spinner;
-                only the final submit (step 6) uses the full-screen loader. The
-                price-adjustment modal handles its own in-button spinner, so the
-                full-screen loader is suppressed while that modal is open. */}
             { productIsLoading && selectedStep > 5 && !showPriceAdjustmentModal &&
                 <AppLoader loadingAdditionalMessage={ loadingMessage } />
             }

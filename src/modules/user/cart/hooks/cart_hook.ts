@@ -25,13 +25,6 @@ const useCartHook = () => {
     const [getDeliveryDate] = useLazyGetDeliveryDateQuery()
 ;
     // Handle get carts
-    // Uses its own `isCartItemsLoading` flag (not the shared `isLoading`) so the
-    // cart screen's loader is driven by the cart-items fetch alone, while delivery
-    // details fetch silently in the background and don't hold the UI hostage.
-    // `silent` skips the screen-wide loading flag so a refresh triggered by a
-    // per-item action (increment/decrement/remove) updates the list in place
-    // without flashing the full-screen skeleton — those actions show their own
-    // per-button spinner instead.
     const handleGetCarts = async (silent: boolean = false) => {
         try {
             if (!silent) {
@@ -45,10 +38,6 @@ const useCartHook = () => {
                 dispatch(setCart(cartsResponse));
             }
         } catch (error: any) {
-            // The backend returns 404 "Basket not found" when the user has no
-            // active basket (e.g. fresh account, or right after an order is
-            // created and the basket is cleared server-side). Treat that as an
-            // empty cart instead of surfacing a noisy error alert.
             const msg = error?.data?.error || error?.data?.message || error?.message;
             if (msg === "Basket not found") {
                 dispatch(setCart({
@@ -70,10 +59,6 @@ const useCartHook = () => {
         }
     };
 
-    // The three per-item actions below refresh the cart silently (no screen-wide
-    // skeleton). The cart screen drives feedback with its own per-button spinner
-    // (qtyBusy / removingId), so flipping the global loading flag here would only
-    // hide the very button the user tapped.
     const handleIncreamentProductQuantity = async (_id: string) => {
         try {
             await increamentProductQuantity(_id).unwrap();
@@ -101,8 +86,6 @@ const useCartHook = () => {
         }
     };
 
-    // Handle get delivery method — runs silently in parallel with the cart fetch.
-    // No loading flags so the cart screen's loader is driven only by the cart-items fetch.
     const handleGetDeliveryMethod = async () => {
         const requestParams = {
             country: selectedAddress?.country || "Nigeria",
@@ -120,7 +103,6 @@ const useCartHook = () => {
         }
     };
 
-    // Handle get order summary — silent background fetch.
     const handleGetOderSummary = async () => {
         const requestParams = {
             country: selectedAddress?.country || "Nigeria",
@@ -139,7 +121,6 @@ const useCartHook = () => {
     };
 
 
-    // Handle get delivery date — silent background fetch.
     const handleGetDeliveryDate = async () => {
         const requestParams = {
             country: selectedAddress?.country || "Nigeria",
@@ -158,7 +139,6 @@ const useCartHook = () => {
     };
 
     // Get item's delivery period
-    // Add this interface above the useCartHook definition or import it from the correct file
     const getItemDeliveryPeriod = (sku: string, deliveryType: string) => {
         if (!deliveryDates || !Array.isArray(deliveryDates) || deliveryDates.length === 0) {
             return "N/A";

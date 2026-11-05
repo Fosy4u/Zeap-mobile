@@ -1,10 +1,10 @@
 const NON_CANCELLABLE_STATUSES = [
     "processing",
     "quality check",
-    "ready",              // "ready" / "ready for delivery"
+    "ready",
     "out for delivery",
     "dispatched",
-    "delivered",          // word-bounded, so it never matches "out for delivery"
+    "delivered",
     "cancelled",
     "rejected",
 ];
@@ -23,8 +23,6 @@ const isPastCancellationCutoff = (status?: IOrderLifecycleStatus): boolean => {
     );
 };
 
-/* `fallbackWhenUnknown` decides an absent status, which the two callers answer
-   differently — see each one's own comment for why. */
 const canCancelOrderAtStatus = (
     status: IOrderLifecycleStatus | undefined,
     fallbackWhenUnknown: boolean,

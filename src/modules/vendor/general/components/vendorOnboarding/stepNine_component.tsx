@@ -41,8 +41,6 @@ const ReviewCard: React.FC<IReviewCardProps> = ({ title, targetStep, onJumpToSte
 );
 
 const StepNineComponent: React.FC<IProps> = ({ formData, onJumpToStep }) => {
-    // Compact socials — only show entries the user actually filled in to avoid
-    // a wall of em-dashes in the review.
     const filledSocials = ([
         ["Website", formData.website],
         ["TikTok", formData.tiktok],

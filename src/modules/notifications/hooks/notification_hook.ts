@@ -27,8 +27,6 @@ const useNotificationHook = () => {
             // console.log("NOTIFICATIONS::: ", notificationsResponse);
 
             if (notificationsResponse) {
-                /* Filtered on the way in rather than at render, so the list, the
-                   bell badge and "mark all as read" all act on the same set. */
                 dispatch(setNotifications(
                     filterNotificationsForUser(notificationsResponse.notifications, userData),
                 ));
@@ -70,10 +68,7 @@ const useNotificationHook = () => {
         }
     }; 
 
-    /* Optimistic local badge clear; unseen ids persist via markAsSeen so a
-       refetch can't resurrect the badge — only newer notifications count. */
     const handleMarkAllAsRead = async () => {
-        // Collect the ids before the local flip wipes the seen:false flags.
         const unseenIds = notifications
             .filter((notification) => notification?.seen !== true)
             .map((notification) => notification._id)
@@ -85,19 +80,15 @@ const useNotificationHook = () => {
         try {
             await markNotificationAsSeen({ notification_ids: unseenIds }).unwrap();
         } catch (error) {
-            // Silent — a server failure must never un-clear the badge locally.
         }
     };
 
-    /* Marks a tapped notification as seen — optimistic locally, fire-and-forget
-       to the server so it never delays the navigation that follows. */
     const handleMarkNotificationAsSeen = (notification_id: string) => {
         if (!notification_id) return;
         dispatch(markNotificationsSeen([notification_id]));
         markNotificationAsSeen({ notification_ids: [notification_id] })
             .unwrap()
             .catch(() => {
-                // Silent — a server failure must never un-mark the item locally.
             });
     };
 

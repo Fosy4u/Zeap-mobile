@@ -15,10 +15,6 @@ type Unit = "cm" | "inch";
 const COUNTRY_CODES = ["UK", "EU", "AUS", "US/CAN"];
 const MEASUREMENT_COLUMNS = ["Bust", "Waist", "Hips", "Chest", "Foot Length"];
 
-// Map a product to the size-guide tab it belongs under. Shoes are Footwear by
-// product type. Clothing defaults to "Top" (blouse, shirt, t-shirt, dress…)
-// and only flips to "Bottom" when the category/title clearly names a lower
-// garment — matching how the size guide is split (top / bottom / footwear).
 const resolveSizeGuideTab = (product: any): SizeGuideTab => {
     const productType = product?.productType;
     if (productType === "readyMadeShoe" || productType === "bespokeShoe") return "Footwear";
@@ -44,8 +40,6 @@ const SizeGuideBottomSheet: React.FC<ISizeGuideBottomSheetProps> = ({ productOve
     const insets = useSafeAreaInsets();
     const slideAnimation = useRef<Animatable.View>(null);
 
-    // Preselect the gender tab to match the product being viewed. Falls back to
-    // Female when the product has no gender tag (or has multiple/unisex).
     const productGender = product?.categories?.gender?.[0]?.toLowerCase();
     const [gender, setGender] = useState<Gender>(productGender === "male" ? "male" : "female");
     const [selectedCategory, setSelectedCategory] = useState<SizeGuideTab>(() => resolveSizeGuideTab(product));
@@ -56,7 +50,6 @@ const SizeGuideBottomSheet: React.FC<ISizeGuideBottomSheetProps> = ({ productOve
     });
     const [isCountryMenuOpen, setIsCountryMenuOpen] = useState(false);
 
-    // Re-resolve if the sheet is reused for a different product after mount.
     useEffect(() => {
         setSelectedCategory(resolveSizeGuideTab(product));
     }, [product?._id, product?.productType]);
@@ -71,9 +64,6 @@ const SizeGuideBottomSheet: React.FC<ISizeGuideBottomSheetProps> = ({ productOve
     }, [modalHeight]);
 
     const handleCloseSizeGuideBottomSheet = () => {
-        // Dismiss immediately so the dark overlay disappears in sync with the
-        // bottom sheet. Waiting on the slide-out animation kept the overlay
-        // hanging around behind a no-longer-visible sheet.
         if (onClose) { onClose(); return; }
         dispatch(setShowSizedGuideBottomSheet(false));
     };

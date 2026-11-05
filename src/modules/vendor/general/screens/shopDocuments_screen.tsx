@@ -29,13 +29,10 @@ const ShopDocumentsScreen = () => {
     const { userData } = useSelector((state: RootState) => state.profileState);
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
 
-    /* shop.shopId comes from /shop/auth; fall back to userData.shopId in case
-       the shop hasn't hydrated yet. */
     const shopId = shop?.shopId || userData?.shopId || "";
 
     const { data: documents = [], isFetching, isError } = useGetOnboardingDocumentsQuery(shopId, { skip: !shopId });
 
-    // The document whose image is currently previewed in the modal.
     const [previewDoc, setPreviewDoc] = useState<IOnboardingDocumentRequirement | null>(null);
 
     return (
@@ -58,8 +55,6 @@ const ShopDocumentsScreen = () => {
                     <View className="h-[40px] w-[40px]" />
                 </View>
 
-                {/* No shop, so no documents — "none uploaded yet" would
-                    misdescribe why the list is empty. */}
                 { hasNoShop && (
                     <NoShopPopupModal onRetry={ recheckShop } isRetrying={ isCheckingShop } />
                 ) }
@@ -136,8 +131,6 @@ const ShopDocumentsScreen = () => {
                         </Text>
 
                         { previewDoc?.link && /\.pdf(\?|$)/i.test(previewDoc.link) ? (
-                            /* PDFs can't render in FastImage — show a document tile
-                               with a button to open the file in the device viewer. */
                             <View className="items-center">
                                 <DocumentText1 color="#FFFFFF" size={ 56 } variant="Bold" />
                                 <Text className="mt-3 text-sm text-gray-300">PDF document</Text>

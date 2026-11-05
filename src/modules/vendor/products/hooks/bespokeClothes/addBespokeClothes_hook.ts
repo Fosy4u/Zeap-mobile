@@ -14,7 +14,6 @@ const useAddBespokeClothesHook = () => {
     const { userData } = useSelector((state: RootState) => state.profileState );
     const [showWarningModal, setShowWarningModal] = useState(false);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
-    // Draft-delete confirmation state for the "Products in draft" cards.
     const [showDeleteDraftModal, setShowDeleteDraftModal] = useState(false);
     const [draftToDeleteId, setDraftToDeleteId] = useState<string>("");
 
@@ -51,8 +50,6 @@ const useAddBespokeClothesHook = () => {
         }
     };
 
-    // Delete a draft product, then refresh the draft list (the delete endpoint
-    // invalidates Products, so we refetch drafts explicitly here).
     const handleDeleteDraftProduct = async (productID: string) => {
         if (!productID) return;
         try {

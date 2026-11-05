@@ -11,14 +11,11 @@ import { stepThreeAddBespokeShoesSchema } from "../../validations/addProduct_val
 import { Alert } from "react-native";
 import handleError from "../../../../general/hooks/errorHandler_hook";
 
-// Both tabs are always rendered by the component; only the genders chosen in
-// step 2 are enabled.
 const GENDER_TABS = [
     { gender: "male", label: "Male Measurement" },
     { gender: "female", label: "Female Measurement" },
 ];
 
-// Title-cases a space-separated label for display.
 const titleCase = (text: string) =>
     text.split(" ").map((word) => (word ? word[0].toUpperCase() + word.slice(1) : word)).join(" ");
 
@@ -27,25 +24,13 @@ const useStepThreeHook = () => {
     const { bespokeShoesOptions } = useSelector((state: RootState) => state.generalState);
     const [measurementOptions, setMeasurementOptions] = useState<IBodyMeasurementEnum[]>([]);
     const [formattedMeasurements, setFormattedMeasurements] = useState<any[]>([]);
-    // Optional free-text instruction the vendor can add for the shoemaker.
     const [additionalMeasurementNote, setAdditionalMeasurementNote] = useState<string>("");
-    // Measurement guides (with field descriptions + images) keyed by gender —
-    // used purely to enrich the foot-measurement fields with a "Measurement
-    // Guide" preview, exactly like the bespoke-clothes step 3.
     const [measurementGuides, setMeasurementGuides] = useState<Record<string, IBodyMeasurementGuide[]>>({});
-    // Per-field expand state for the guide preview, keyed by `${name}::${field}`.
     const [expandedFields, setExpandedFields] = useState<Record<string, boolean>>({});
-    // True once the guide fetch has completed at least once, so the skeleton can
-    // show from entry rather than flashing an empty state.
     const [hasLoadedGuides, setHasLoadedGuides] = useState(false);
 
-    // Genders chosen in step 2 (lowercased) — drives which tabs are enabled.
     const selectedGenders = (product?.categories?.gender ?? []).map((gender: string) => gender.toLowerCase());
-    // Active tab — defaults to (and stays within) the genders selected in step 2.
     const [activeGender, setActiveGender] = useState<string>(selectedGenders[0] ?? "male");
-    // Local flag for the step-3 measurement fetch — drives the inline skeleton
-    // without touching the shared `productIsLoading` (which is reserved for the
-    // Save & Continue submit, so entering step 3 doesn't spin that button).
     const [isLoadingMeasurements, setIsLoadingMeasurements] = useState(false);
     const dispatch = useDispatch();
 
@@ -53,18 +38,13 @@ const useStepThreeHook = () => {
     const [getBodyMeasurementGuide] = useLazyGetBodyMeasurementGuideQuery();
     const [updateWithBodyMeasurements] = useUpdateWithBodyMeasurementsMutation();
 
-    // Foot-measurement sections for the active gender (the required list shown as
-    // checkboxes). Sourced from the shoe options so only foot measurements show.
     const activeMeasurements: IValue[] = measurementOptions.find((option) => option.gender === activeGender)?.value ?? [];
 
-    // Look up a field's guide entry (description + image) for the active gender,
-    // matching by section name + field — undefined when no guide exists for it.
     const getGuideField = (sectionName: string, field: string): IField | undefined =>
         measurementGuides[activeGender]
             ?.find((guide) => guide.name?.toLowerCase() === sectionName.toLowerCase())
             ?.fields?.find((guideField) => guideField.field?.toLowerCase() === field.toLowerCase());
 
-    // Whether a given (section, field) is currently checked.
     const isFieldChecked = (sectionName: string, field: string) =>
         !!formattedMeasurements?.find((fm) => fm.name === sectionName)?.fields.includes(field);
 
@@ -105,7 +85,6 @@ const useStepThreeHook = () => {
             if (error instanceof yup.ValidationError) {
                 errorMessage = error.message;
             } 
-            // Handle RTK Query API errors (assuming they follow a standard structure)
             else if (error?.status) {
                 errorMessage = error["data"]["error"];
             } 
@@ -122,9 +101,6 @@ const useStepThreeHook = () => {
 
     // Handle get peoduct body measurements
     const handleGetProductMeasurements = async () => {
-        // Guard on a real productId — `product` is a truthy empty object before
-        // step 1 creates it, so checking `product` alone let this fire on a
-        // fresh draft and hit /bodyMeasurement with no id ("required productId").
         if (!product?.productId) return;
 
         setIsLoadingMeasurements(true);
@@ -135,11 +111,7 @@ const useStepThreeHook = () => {
             const responseData = await getProductBodyMeasurements(productId).unwrap();
 
             if (responseData) {
-                // A draft that hasn't saved any foot measurements yet comes back
-                // with no `measurements` key — fall back to [] so the state (and
-                // the component's `.find`) never sees undefined.
                 setFormattedMeasurements(responseData.measurements ?? []);
-                // Prefill the additional instruction if one was saved earlier.
                 setAdditionalMeasurementNote((responseData as any).additionalMeasurementNote ?? "");
             }
         } catch (error) {
@@ -158,9 +130,6 @@ const useStepThreeHook = () => {
         setMeasurementOptions(formattedMeasurementOptions);
     };
 
-    // Fetch the measurement guide (descriptions + images) for each selected
-    // gender and key the result by gender — same source the bespoke-clothes step
-    // 3 uses. Foot fields are matched against these by name in `getGuideField`.
     const handleGetMeasurementGuides = async (genders: string[]) => {
         if (!genders.length) return;
         setIsLoadingMeasurements(true);
@@ -241,17 +210,11 @@ const useStepThreeHook = () => {
             handleFormatMeasurementOptions();
         }
     }, [bespokeShoesOptions]);
-    // Lock onto the first selected gender once step 2's selection arrives (or if
-    // the current tab is no longer among the selected genders).
     useEffect(() => {
         if (selectedGenders.length > 0 && !selectedGenders.includes(activeGender)) {
             setActiveGender(selectedGenders[0]);
         }
     }, [selectedGenders]);
-    // Only fetch once we're actually on step 3 AND the product has been created
-    // (has a productId). The screen mounts every step hook up-front, so without
-    // these guards this fired on step 1 of a brand-new product and hit the
-    // measurements endpoint with no id ("required productId").
     useEffect(() => {
         if (product?.productId && selectedStep === 3) {
             const genders = (product.categories?.gender ?? []).map((gender: string) => gender.toLowerCase());
@@ -266,20 +229,13 @@ const useStepThreeHook = () => {
         measurementOptions,
         handleSelectMeasurementField,
         handleSubmit,
-        // True while the saved measurements / guides are being fetched (or before
-        // the fetch effect fires on entry) — drives the inline skeleton on step 3.
         showMeasurementSkeleton: selectedGenders.length > 0 && (isLoadingMeasurements || !hasLoadedGuides),
 
-        // Gender-tab state: which genders are enabled (per step 2), the list of
-        // tabs to render, and the currently active tab + its setter.
         genderTabs: GENDER_TABS,
         selectedGenders,
         activeGender,
         setActiveGender,
 
-        // Foot-measurement display (same shape as bespoke-clothes step 3): the
-        // active gender's sections, a guide lookup for images/descriptions, the
-        // checked-state helper, and the per-field expand state + toggler.
         activeMeasurements,
         getGuideField,
         isFieldChecked,
@@ -287,7 +243,6 @@ const useStepThreeHook = () => {
         toggleField,
         titleCase,
 
-        // Optional free-text instruction card below the measurements.
         additionalMeasurementNote,
         setAdditionalMeasurementNote,
     };

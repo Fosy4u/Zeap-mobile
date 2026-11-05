@@ -1,12 +1,8 @@
-/* Per-country phone number rules for the delivery-address forms. Keys match
-   src/utils/deliveryCountries.json, with aliases for stored/ISO variants. */
 
 export interface IPhoneRule {
     dialCode: string;
-    // Valid lengths of the national significant number (no dial code, no trunk "0").
     nsnLengths: number[];
     nsnPattern: RegExp;
-    // Leading digit typed locally instead of the dial code ("0" for NG/UK).
     trunkPrefix: string;
     placeholder: string;
     hint: string;
@@ -71,8 +67,6 @@ export const phoneRuleForCountry = (countryKey?: string): IPhoneRule =>
 
 const digitsOf = (raw?: string): string => (raw || "").replace(/\D/g, "");
 
-/* How many digits the field may hold, given whether the user is typing the
-   international, trunk-prefixed, or bare national form. */
 const digitLimit = (digits: string, rule: IPhoneRule): number => {
     const dial = digitsOf(rule.dialCode);
     const maxNsn = Math.max(...rule.nsnLengths);
@@ -86,7 +80,6 @@ const digitLimit = (digits: string, rule: IPhoneRule): number => {
     return maxNsn;
 };
 
-// Strip the dial code / trunk prefix to get the national significant number.
 export const nationalNumberOf = (raw: string | undefined, rule: IPhoneRule): string => {
     const digits = digitsOf(raw);
     const dial = digitsOf(rule.dialCode);
@@ -100,8 +93,6 @@ export const nationalNumberOf = (raw: string | undefined, rule: IPhoneRule): str
     return digits;
 };
 
-/* Keeps only digits (plus a leading "+") and hard-caps the length so the field
-   can never hold more digits than the selected country allows. */
 export const sanitizePhoneInput = (raw: string, countryKey?: string): string => {
     const rule = phoneRuleForCountry(countryKey);
     const hasPlus = (raw || "").trimStart().startsWith("+");
@@ -110,7 +101,6 @@ export const sanitizePhoneInput = (raw: string, countryKey?: string): string => 
     return `${ hasPlus ? "+" : "" }${ digits.slice(0, digitLimit(digits, rule)) }`;
 };
 
-// Longest string the input can hold — a backstop behind sanitizePhoneInput.
 export const maxPhoneLengthForCountry = (countryKey?: string): number => {
     const rule = phoneRuleForCountry(countryKey);
     return digitsOf(rule.dialCode).length + Math.max(...rule.nsnLengths) + 1;

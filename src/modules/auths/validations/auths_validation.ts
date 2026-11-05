@@ -1,6 +1,5 @@
 import * as yup from "yup";
 
-// Mirrors the web sign-up rules.
 const registerUserSchema = yup.object().shape({
     firstName: yup
         .string()

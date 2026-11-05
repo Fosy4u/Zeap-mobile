@@ -19,9 +19,6 @@ const AppBottomBarComponent = ({ state, descriptors, navigation }: { state: any,
 
           const onPress = () => {
             // canPreventDefault: true is required for the emitted event to
-            // expose preventDefault() to listeners (e.g. the Market tab
-            // listener that redirects to the buyer-side home stack). Without
-            // it the listener crashes with "e.preventDefault is not a function".
             const event = navigation.emit({
               type: 'tabPress',
               target: route.key,

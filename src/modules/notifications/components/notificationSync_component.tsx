@@ -6,8 +6,6 @@ import { useLazyGetNotificationsQuery } from '../apis/notification_api';
 import { setNotifications } from '../slices/notifications_slice';
 import { filterNotificationsForUser } from '../utils/notificationRelevance';
 
-/* How often to look for new notifications while the app is in the foreground.
-   Short enough to feel live, long enough not to be a battery/data drain. */
 const POLL_INTERVAL_MS = 60_000;
 
 const NotificationSyncComponent = () => {
@@ -16,11 +14,8 @@ const NotificationSyncComponent = () => {
 
     const [getNotifications] = useLazyGetNotificationsQuery();
 
-    // Guests have no notification feed, so don't poll an endpoint that will 401.
     const isSignedIn = !!userData?.uid && !userData?.isGuest;
 
-    /* Held in a ref so the interval and the AppState listener always call the
-       latest version without needing to be torn down and re-armed. */
     const syncRef = useRef<() => void>(() => {});
 
     syncRef.current = () => {

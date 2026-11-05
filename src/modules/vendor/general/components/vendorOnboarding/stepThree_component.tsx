@@ -11,11 +11,9 @@ interface IProps {
 }
 
 const StepThreeComponent: React.FC<IProps> = ({ control, errors, onOpenPhoneCodePicker }) => {
-    // Selected dial code drives both the input's digit cap and the hint.
     const phoneCode = useWatch({ control, name: "businessPhoneCode" }) || "+234";
     const maxDigits = phoneLengthForCode(phoneCode);
 
-    // Country-aware hint — the dial code is already applied, so drop the leading 0.
     const phoneHint = phoneCode === "+234"
         ? `${ phoneCode } is already added — drop the leading 0 and enter the remaining ${ maxDigits } digits (e.g. 8031234567, not 08031234567).`
         : `${ phoneCode } is already added — enter your ${ maxDigits }-digit number without the country code.`;
@@ -85,7 +83,6 @@ const StepThreeComponent: React.FC<IProps> = ({ control, errors, onOpenPhoneCode
                             control={ control }
                             name="businessPhone"
                             render={ ({ field: { onChange, onBlur, value } }) => (
-                                // Digits only, hard-capped at the country's required length.
                                 <TextInput
                                     placeholder="Enter phone number"
                                     placeholderTextColor="#9ca3af"
@@ -100,7 +97,6 @@ const StepThreeComponent: React.FC<IProps> = ({ control, errors, onOpenPhoneCode
                         />
                     </View>
 
-                    {/* Formatting hint — always visible. */}
                     <Text className="mt-2 text-xs text-gray-500 leading-4">{ phoneHint }</Text>
 
                     { errors.businessPhone && (

@@ -2,20 +2,8 @@ import React from "react";
 import { useWindowDimensions, View } from "react-native";
 import SkeletonBlock from "../../../general/components/skeletonBlock_component";
 
-// Skeleton for the Cart screen body. Mirrors the actual layout:
-//   • 3 basket-item rows (image 80×120 + title + color/size meta + qty stepper
-//     + price + trash)
-//   • Subtotal row
-//   • Checkout + Continue Shopping CTAs
-//   • Similar items horizontal rail (vertical 150×220 cards)
-//
-// Rendered inside the cart screen's ScrollView while the initial cart fetch
-// is in flight, replacing the previous full-screen AppLoader overlay. The
-// screen's header (notification button) stays interactive.
-
 const CartSkeletonLoader = () => {
     const screenWidth = useWindowDimensions().width;
-    // Cart screen uses px-5 (20px each side).
     const contentWidth = screenWidth - 40;
 
     return (

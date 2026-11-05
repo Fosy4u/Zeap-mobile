@@ -10,9 +10,6 @@ import RootNavigationStackModel from '../../../routes/model/routes_model';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../redux/store/store';
 
-// Render a value or "N/A" if it's missing/empty/whitespace. Used for profile fields
-// where the backend may not yet have data — keeps the layout stable and gives the
-// user a clear hint that editing will fill it in.
 const display = (value: any): string => {
     if (value === null || value === undefined) return "N/A";
     const str = String(value).trim();
@@ -26,19 +23,15 @@ const PersonalInformationScreen = () => {
     const { handleGetDeliveryAddresses, handleStartNewAddress, handleViewAddresses } = useAddressHook();
     const [showAllUserInfo, setShowAllUserInfo] = useState(false);
 
-    /* The screen previously read deliveryAddresses without ever fetching them, so
-       arriving here directly showed an empty card. */
     useEffect(() => {
         handleGetDeliveryAddresses();
     }, []);
 
     const hasAddresses = (deliveryAddresses?.length ?? 0) > 0;
-    // Default first, then the rest in the order the API returned them.
     const sortedAddresses = [...(deliveryAddresses ?? [])].sort(
         (a, b) => Number(!!b.isDefault) - Number(!!a.isDefault),
     );
 
-    // Opens the Addresses screen straight into an empty new-address form.
     const handleAddNewAddress = () => {
         handleStartNewAddress();
         navigation.navigate("addressScreen");

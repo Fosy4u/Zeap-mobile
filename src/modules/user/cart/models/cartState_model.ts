@@ -8,7 +8,7 @@ interface ICartState {
     cartTotal:      number;
     deliveryMethod: IDeliveryMethod;
     selectedDeliveryFee: DeliveryFee;
-    orderSummary:   IOrderSummary; // Assuming order summary is an object, you can define a more specific type if needed
+    orderSummary:   IOrderSummary;
     deliveryDates: IDeliveryDate[];
     isLoading:      boolean;
     isCartItemsLoading: boolean;

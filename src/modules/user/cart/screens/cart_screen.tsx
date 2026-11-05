@@ -38,20 +38,11 @@ const CartScreen = () => {
   const dispatch = useDispatch();
   const { formatPrice, currencyRefreshToken } = useDisplayCurrency();
 
-  // Track whether the initial cart fetch has settled at least once. Until it has,
-  // we suppress the empty-cart UI so the user never sees a flash of "empty" before
-  // their real cart loads.
   const [hasInitialCartFetched, setHasInitialCartFetched] = useState(false);
   const [isPullRefreshing, setIsPullRefreshing] = useState(false);
-  // Local flag that drives the loader the instant "Checkout Now" is tapped, so the
-  // user gets immediate feedback instead of waiting through the checkout screen's
-  // (synchronous) mount cost. Reset on every focus return.
+  const [isAwaitingFocusFetch, setIsAwaitingFocusFetch] = useState(true);
   const [isOpeningCheckout, setIsOpeningCheckout] = useState(false);
-  // The basketItem._id currently being removed — drives a per-item spinner on
-  // its bin button so the delete gives immediate feedback.
   const [removingId, setRemovingId] = useState<string | null>(null);
-  // The basketItem._id + direction of an in-flight quantity change — drives a
-  // spinner on the tapped +/- button and disables both for that row.
   const [qtyBusy, setQtyBusy] = useState<{ id: string; type: "inc" | "dec" } | null>(null);
 
   const {
@@ -67,9 +58,6 @@ const CartScreen = () => {
   const { isSaved, toggleSave } = useWishlistToggle();
   const { getColorCode } = useGeneralHook();
 
-  // Fire all data fetches in parallel on focus. Cart items drive the loader;
-  // the rest run silently in the background so the cart UI is unblocked the
-  // moment cart items arrive.
   const fetchAllCartData = useCallback(async () => {
     const cartItemsFetch = handleGetCarts().finally(() => setHasInitialCartFetched(true));
     handleGetDeliveryDate();
@@ -81,22 +69,20 @@ const CartScreen = () => {
 
   useFocusEffect(
     useCallback(() => {
-      // Clear the opening-checkout flag when we return to cart (e.g. user pressed
-      // back from checkout). Without this, the loader would still be on screen.
       setIsOpeningCheckout(false);
-      fetchAllCartData();
+      fetchAllCartData().finally(() => setIsAwaitingFocusFetch(false));
+      return () => setIsAwaitingFocusFetch(true);
     }, [currencyRefreshToken])
   );
 
-  // Show the loader instantly on tap, then yield one animation frame so React
-  // paints the loader *before* the JS thread gets blocked mounting CheckoutScreen
-  // (which sets up two heavy hooks: useAddressHook + useEditAccountDetailsHook).
   const handleOpenCheckout = useCallback(() => {
     setIsOpeningCheckout(true);
     requestAnimationFrame(() => {
       navigation.navigate("checkoutScreen");
     });
   }, [navigation]);
+
+  const showCartSkeleton = (isAwaitingFocusFetch && !isPullRefreshing) || (isCartItemsLoading && !isPullRefreshing) || (!hasInitialCartFetched && (!cart?.basketItems || cart.basketItems.length === 0));
 
   const onPullToRefresh = useCallback(async () => {
     setIsPullRefreshing(true);
@@ -143,7 +129,7 @@ const CartScreen = () => {
             />
           }
         >
-          { (isCartItemsLoading && !isPullRefreshing) || (!hasInitialCartFetched && (!cart?.basketItems || cart.basketItems.length === 0))
+          { showCartSkeleton
           ? (
             <CartSkeletonLoader />
           )
@@ -291,7 +277,7 @@ const CartScreen = () => {
             </View>
           ) }
 
-          { (cart?.basketItems && cart.basketItems.length > 0) && (
+          { !showCartSkeleton && (cart?.basketItems && cart.basketItems.length > 0) && (
             <TouchableOpacity
               onPress={ handleOpenCheckout }
               disabled={ isOpeningCheckout }

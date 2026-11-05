@@ -80,8 +80,6 @@ const useStepTwoHook = () => {
                 },
             };
 
-            // Validate against the bespoke-clothes step-2 schema (design,
-            // occasion, sleeveLength, fastening, fit are optional here).
             const validatedRequestData = await stepTwoAddBespokeClothesSchema.validate(requestData);
 
             const updateResponseData = await updatedProduct(validatedRequestData as any).unwrap();
@@ -89,7 +87,6 @@ const useStepTwoHook = () => {
             if (updateResponseData) {
                 dispatch(setLoadingMessage("Getting product details..."));
 
-                // Refresh the product, then advance to step 3.
                 const updatedProductData = await getProductByProductID(productId).unwrap();
 
                 if (updatedProductData) {
@@ -103,7 +100,6 @@ const useStepTwoHook = () => {
             dispatch(setProductIsLoading(false));
             dispatch(setLoadingMessage(""));
             // Defensive: surface yup (error.errors[0]) or API (error.data.*)
-            // messages without throwing when a shape is absent.
             const message =
                 error?.errors?.[0] ||
                 error?.data?.error ||

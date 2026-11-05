@@ -52,6 +52,7 @@ const SalesScreen = () => {
                     keyExtractor={ (promo, index) => promo.promoId ?? `${ index }` }
                     contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 20, paddingTop: 24, paddingBottom: 40, gap: 16 }}
                     showsVerticalScrollIndicator={ false }
+                    removeClippedSubviews={ false }
                     ListEmptyComponent={ <EmptyListComponent standalone message="No sales running right now." /> }
                     renderItem={ ({ item: promo }) => {
                         const media = promo.largeScreenImageUrl;

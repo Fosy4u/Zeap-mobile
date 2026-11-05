@@ -18,16 +18,12 @@ const titleCase = (value?: string | null) => {
     return value.charAt(0).toUpperCase() + value.slice(1);
 };
 
-/* Flatten a template's measurements (legacy nested or flat shape) into a
-   uniform [{ field, value }] list for the preview. */
 const flattenMeasurements = (template?: IBodyMeasurement): any[] => {
     const raw: any[] = (template?.measurements as any[]) ?? [];
     const isFlat = raw.length > 0 && raw[0]?.field !== undefined && raw[0]?.measurements === undefined;
     return isFlat ? raw : raw.flatMap((group: any) => group?.measurements ?? []);
 };
 
-/* Full-screen saved-measurements list for the profile flow. Product flows keep
-   using measurementScreen, where a template is filled against a product. */
 const SavedMeasurementsScreen = () => {
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
     const dispatch = useDispatch();

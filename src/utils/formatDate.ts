@@ -17,7 +17,6 @@ const formatDate = (dateString: IDateInput, isCompact: boolean = false, dateOnly
         year: 'numeric',
         month: shortMonth ? 'short' : 'long',
         day: 'numeric',
-        // e.g. "23 June 2026" when dateOnly, otherwise the time is appended.
         ...(dateOnly ? {} : { hour: '2-digit', minute: '2-digit', hour12: true }),
     }).format(date);
 };

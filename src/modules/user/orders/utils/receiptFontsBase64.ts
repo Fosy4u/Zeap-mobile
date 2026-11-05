@@ -1,14 +1,3 @@
-// Subset copies of assets/fonts/Montserrat-{Regular,SemiBold}.ttf, embedded into
-// the receipt PDF so amounts can render the naira sign (U+20A6), which the PDF
-// standard fonts' WinAnsi encoding cannot express.
-//
-// Regenerate after a font change with pyftsubset:
-//   pyftsubset assets/fonts/Montserrat-Regular.ttf \
-//     --unicodes="U+0020-007E,U+00A0-00FF,U+20A6,U+20AC,U+20B9,U+2018,U+2019,U+201C,U+201D,U+2013,U+2014,U+2026" \
-//     --layout-features='' --no-hinting --desubroutinize \
-//     --drop-tables+=GSUB,GPOS,GDEF,DSIG,kern --output-file=Montserrat-Regular-subset.ttf
-// then base64-encode the result into the constants below.
-
 export const MONTSERRAT_REGULAR_BASE64 =
     "AAEAAAAMAIAAAwBAT1MvMlH9A+QAADoEAAAAYFNUQVTneMwnAAA+lAAAAEhjbWFwiv6qYAAAOmQAAAHuZ2FzcAAAABAAAD6MAAAA" +
     "CGdseWa2t56nAAAAzAAAM1JoZWFkGD+y+gAANhQAAAA2aGhlYQlEAwAAADngAAAAJGhtdHjnsjVvAAA2TAAAA5Jsb2NhnhqrKQAA" +

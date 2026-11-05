@@ -38,20 +38,14 @@ const ProfileScreen = () => {
 
   const [getAuthShop] = useLazyGetAuthShopQuery();
 
-  /* `isVendor` is the canonical shop-owner flag (defaults to false in the
-     profile slice), so a plain buyer never qualifies for shop-owner items. */
   const isShopOwner = !!userData?.isVendor;
 
-  /* Shop admin (Shop information, Bank details, Identity & shop document) is
-     vendor-mode only — buyer mode stays a pure buyer view even for an owner. */
   const showShopAdmin = isVendorMode && isShopOwner;
 
   useEffect(() => {
     handleGetDeliveryAddresses();
   }, []);
 
-  /* Refresh /shop/auth so Shop Information and Bank Details read live data even
-     if the dashboard wasn't visited — only where those items are reachable. */
   useEffect(() => {
     if (!showShopAdmin) return;
     (async () => {
@@ -59,7 +53,6 @@ const ProfileScreen = () => {
         const authShop = await getAuthShop().unwrap();
         if (authShop) dispatch(setShop(authShop));
       } catch {
-        // Ignore — screens fall back to whatever shop data is already in store.
       }
     })();
   }, [showShopAdmin]);
@@ -70,8 +63,6 @@ const ProfileScreen = () => {
 
         <AppStatusBar backgroundColor={isVendorMode ? "#133522" : "transparent"} barStyle="light-content" />
 
-        {/*==== Header ====
-            Same bar in both modes — only the colours change. */}
         <ModuleAppBarComponent
           title="My Profile"
           variant={ isVendorMode ? "vendor" : "buyer" }
@@ -183,8 +174,6 @@ const ProfileScreen = () => {
                 icon={ <Element3 color="gray" /> }
               />
 
-              {/* My Shop — the way into the vendor side, so it only makes sense
-                  in buyer mode; in vendor mode you are already there. */}
               { isShopOwner && !isVendorMode && (
                 <CardItems
                   handleOnPress={ () => navigation.navigate("vendorHomeScreen", { screen: "Dashboard" }) }
@@ -200,8 +189,6 @@ const ProfileScreen = () => {
                 icon={ <Profile color="gray" /> }
               />
 
-              {/* Shop admin — shop profile, payout bank details and uploaded
-                  identity/shop documents, all sourced from /shop/auth. */}
               { showShopAdmin && (
                 <>
                   {/* Shop information */}
@@ -240,8 +227,6 @@ const ProfileScreen = () => {
                 icon={ <Notification color="gray" /> }
               />
 
-              {/* Orders — in vendor mode this means the requests buyers placed
-                  with the shop, not the orders this user placed as a buyer. */}
               <CardItems
                 handleOnPress={ () => isVendorMode
                   ? navigation.navigate("vendorHomeScreen", { screen: "Orders" })
@@ -251,7 +236,6 @@ const ProfileScreen = () => {
                 icon={ <Receipt21 color="gray" /> }
               />
 
-              {/* Measurements — a buyer's own sizing, irrelevant in vendor mode. */}
               { !isVendorMode && (
                 <CardItems
                   handleOnPress={ () => navigation.navigate("savedMeasurementsScreen") }
@@ -307,7 +291,6 @@ const ProfileScreen = () => {
         </ScrollView>
       </SafeAreaView>
 
-      {/* Full-screen overlay while signing out (logout hook flips `isLoading`). */}
       { isLoading &&
         <AppLoader loadingAdditionalMessage={ loadingMessage } />
       }

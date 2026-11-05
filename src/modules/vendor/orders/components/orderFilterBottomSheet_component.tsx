@@ -18,7 +18,6 @@ import { useDispatch } from 'react-redux';
 import { setShowOrderFilterBottomSheet } from '../../home/slices/vendorHome_slice.tsx';
 import useOrderHook from '../hooks/order_hook.ts';
 
-// Date pickers hand back a Date; the API and the local filter both want yyyy-mm-dd.
 const toIsoDate = (date: Date): string => date.toISOString().split('T')[0];
 
 const OrderFilterBottomSheetComponent = () => {
@@ -30,8 +29,6 @@ const OrderFilterBottomSheetComponent = () => {
 
   const { filters, statusOptions, handleApplyOrderFilters, handleClearOrderFilters } = useOrderHook();
 
-  /* Draft state — the sheet edits a copy and only commits on "Filter Result",
-     seeded from the filters already applied so reopening shows the current set. */
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>(filters.status ?? []);
   const [itemName, setItemName] = useState(filters.itemName ?? "");
   const [orderNumber, setOrderNumber] = useState(filters.orderId ?? "");
@@ -40,8 +37,6 @@ const OrderFilterBottomSheetComponent = () => {
   const [showDate, setShowDate] = useState(!!filters.fromDate || !!filters.toDate);
   const [fromDate, setFromDate] = useState(filters.fromDate ? new Date(filters.fromDate) : new Date());
   const [toDate, setToDate] = useState(filters.toDate ? new Date(filters.toDate) : new Date());
-  /* A date only filters once picked — otherwise today's default would silently
-     narrow the list to a single day. */
   const [isFromDateSet, setIsFromDateSet] = useState(!!filters.fromDate);
   const [isToDateSet, setIsToDateSet] = useState(!!filters.toDate);
   const [isFromDatePickerOpen, setFromDatePickerOpen] = useState(false);

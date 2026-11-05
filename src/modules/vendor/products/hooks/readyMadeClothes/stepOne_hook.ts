@@ -36,9 +36,6 @@ const useStepOneHook = () => {
         dispatch(setProductIsLoading(true));
 
         try {
-            // POST /product/create payload. NOTE the API field is `subtitle`
-            // (lowercase t) — the form/schema field is `subTitle`, so it's
-            // mapped here.
             const createPayload = {
                 title: data.title,
                 subtitle: data.subTitle || "",
@@ -47,9 +44,6 @@ const useStepOneHook = () => {
                 shopId: data.shopId,
             };
 
-            // Create vs. update keys off a real productId — a new product is
-            // seeded as `{}` (truthy), so `!product` would wrongly route it into
-            // the update branch with an empty productId.
             let createProductResponseData: IVendorProductDetails | undefined;
             if (!product?.productId) {
                 dispatch(setLoadingMessage("Adding basic details..."));

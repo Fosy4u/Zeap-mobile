@@ -11,8 +11,6 @@ import useShopGuardHook from '../hooks/shopGuard_hook';
 import NoShopPopupModal from '../modals/noShopPopup_modal';
 
 const ShopInformationScreen = () => {
-    /* Resolves the shop itself rather than trusting what the dashboard left in
-       the store — this screen is reachable straight from Profile. */
     const { shop, isResolvingShop, isCheckingShop, hasNoShop, recheckShop } = useShopGuardHook();
     const navigation = useNavigation<NativeStackNavigationProp<RootNavigationStackModel>>();
 
@@ -36,8 +34,6 @@ const ShopInformationScreen = () => {
                     <View className="h-[40px] w-[40px]" />
                 </View>
 
-                {/* A loader while the first check runs — blank rows would read
-                    as "your shop has no name". */}
                 { isResolvingShop && !hasNoShop && (
                     <View className="flex-1 items-center justify-center">
                         <ActivityIndicator color="#133522" />

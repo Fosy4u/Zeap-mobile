@@ -268,8 +268,6 @@ const AddBespokeClothesScreen = () => {
                 />
             }
 
-            {/* Steps 1–5 keep the user on the step with an in-button spinner;
-                only the final submit (step 6) uses the full-screen loader. */}
             { productIsLoading && selectedStep > 5 && !showPriceAdjustmentModal &&
                 <AppLoader loadingAdditionalMessage={ loadingMessage } />
             }

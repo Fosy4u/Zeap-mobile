@@ -39,7 +39,6 @@ const applyOrderFilters = (
             if (to && placedAt > to) { return false; }
         }
 
-        // The search box matches either the product name or the order number.
         if (phrase) {
             const matchesPhrase =
                 !!order.product?.title?.toLowerCase().includes(phrase) ||
@@ -57,8 +56,6 @@ const useOrderHook = () => {
 
     const [rejectionReason, setRejectionReason] = useState<string>("");
 
-    // Chips for the filter sheet: the known lifecycle plus any status the
-    // fetched orders actually carry.
     const statusOptions = useMemo(() => buildStatusOptions(orders), [orders]);
 
     const [getOrders] = useLazyGetVendorOrdersQuery();
@@ -67,14 +64,11 @@ const useOrderHook = () => {
     const [rejectOrder] = useRejectOrderMutation();
     const [getOrderHistory] = useLazyGetVendorOrderHistoryQuery();
 
-    /* The rows on screen: the fetched orders narrowed by the applied filters and
-       the search box. Search never refetches — it types straight into this. */
     const visibleOrders = useMemo(
         () => applyOrderFilters(orders ?? [], filters, searchPhrase),
         [orders, filters, searchPhrase],
     );
 
-    // Handle get all orders. Pass filters to fetch a filtered page.
     const handleGetOrders = async (filterOverride?: IVendorOrderFilter) => {
         const activeFilters = filterOverride ?? filters;
 
@@ -99,7 +93,6 @@ const useOrderHook = () => {
         };
     };
 
-    // "Filter Result" in the sheet — store the choice, refetch with it, close.
     const handleApplyOrderFilters = async (newFilters: IVendorOrderFilter) => {
         dispatch(setOrderFilters(newFilters));
         dispatch(setShowOrderFilterBottomSheet(false));
@@ -157,8 +150,6 @@ const useOrderHook = () => {
         };
     };
 
-    // Confirm/advance the order status. `statusValue` is the history endpoint's
-    // nextStatus.value (e.g. "order confirmed").
     const handleConfirmOrderStatus = async (statusValue: string) => {
         if (!statusValue || !order?._id) return;
 
@@ -195,13 +186,10 @@ const useOrderHook = () => {
         };
     };
 
-    // Reject the order. Irreversible, and the API requires a reason.
     const handleRejectOrder = async () => {
         const reason = rejectionReason.trim();
         if (!reason || !order?._id) return;
 
-        /* Backstop for a stale screen: the button is hidden past quality check,
-           but never send a rejection the lifecycle no longer allows. */
         if (!canRejectOrderStatus(order?.status)) {
             dispatch(setShowRejectOrderModal(false));
             return;

@@ -45,6 +45,9 @@ const useProductsHook = () => {
     const handleGetProductByProductID = async (productID: string) => {
         dispatch(setLoadingMessage("Fetching product..."));
         dispatch(setIsLoading(true));
+        if (product?.productId !== productID) {
+            dispatch(setReviewAndRating({ averageRating: 0, reviews: [], imageMatch: {} } as any));
+        }
 
         try {
             const productResponse = await getProductByProductID(productID!).unwrap();
@@ -52,6 +55,7 @@ const useProductsHook = () => {
 
             if (productResponse) {
                 dispatch(setProduct(productResponse!));
+                dispatch(setIsLoading(false));
 
                 // Get product promo and reviews
                 dispatch(setLoadingMessage("Fetching product promo and reviews..."));
@@ -71,6 +75,9 @@ const useProductsHook = () => {
             }
         } catch (error: any) {
             handleError(error);
+        } finally {
+            dispatch(setIsLoading(false));
+            dispatch(setLoadingMessage(""));
         }
     };
 
@@ -92,9 +99,6 @@ const useProductsHook = () => {
         setFeaturedImage(activeImage);
     };
 
-    // Returns the first IN-STOCK variation for a colour, falling back to the
-    // colour's first variation when nothing is in stock (so the size row + price
-    // still have something to show, while Add-to-cart stays disabled downstream).
     const pickVariationForColor = (colorName?: string): IVariation | undefined => {
         const colorVariations = product?.variations?.filter((variation) => variation.colorValue === colorName) || [];
         return colorVariations.find((variation) => (variation.quantity ?? 0) > 0) ?? colorVariations[0];
@@ -123,9 +127,6 @@ const useProductsHook = () => {
             }
         })();
 
-        // Preserve the product's OWN colour order (the order they arrive in the
-        // payload) rather than the global colour-enum order. For readyMade /
-        // accessory that's `product.colors`; bespoke uses its availableColors.
         const orderedColorNames = (
             (product?.productType === "readyMadeCloth" || product?.productType === "readyMadeShoe" || product?.productType === "accessory")
                 ? (product?.colors?.map((color) => color.value) ?? [])
@@ -139,9 +140,6 @@ const useProductsHook = () => {
             .map((name) => colorEnumsForType.find((color) => color.name === name))
             .filter((color): color is IColorEnum => !!color);
 
-        // Open on the vendor's featured colour when it still has stock; otherwise
-        // fall back to the first in-stock colour so we never default the screen
-        // onto an out-of-stock selection.
         const defaultColor = product?.colors?.find((color) => color.images?.find((image) => image.isDefault));
         let defaultSelectedColor = defaultColor?.value === "Bespoke"
             ? availableColors[0]
@@ -151,7 +149,6 @@ const useProductsHook = () => {
         }
 
         dispatch(setSelectedColor(defaultSelectedColor!));
-        // Seed an in-stock size + price for the default colour.
         const defaultVariation = pickVariationForColor(defaultSelectedColor?.name);
         if (defaultVariation) {
             dispatch(setSelectedSize(defaultVariation.size!));
@@ -161,9 +158,6 @@ const useProductsHook = () => {
     };
 
     const handleSizeSelection = (size: string) => {
-        // Scope to the selected colour — the same size string can exist under
-        // several colours with different stock, so an unscoped lookup matched the
-        // wrong variation (and surfaced the wrong price / availability).
         const selectedVariation = product?.variations?.find(
             (variation) => variation.colorValue === selectedColor?.name && variation.size === size
         );
@@ -175,8 +169,6 @@ const useProductsHook = () => {
 
     const handleColorSelection = (color: IColorEnum) => {
         dispatch(setSelectedColor(color));
-        // Auto-select this colour's first in-stock size so the size row and price
-        // reflect the newly chosen colour immediately.
         const variation = pickVariationForColor(color.name);
         if (variation) {
             dispatch(setSelectedSize(variation.size!));
@@ -195,11 +187,6 @@ const useProductsHook = () => {
                 throw new Error("Product is not loaded yet. Please wait and try again.");
             }
 
-            // Match the SKU by selected color + size. Sizes from the backend
-            // are strings — both numeric ("38") and alpha ("M", "L", "XL") —
-            // so compare as strings. A prior `Number()` coercion produced
-            // `NaN === NaN` (always false) for alpha sizes, which made the
-            // matched variation come back undefined and threw "select size and colour".
             const matchedVariation = product?.variations?.find((variation) =>
                 variation.colorValue === selectedColor.name &&
                 variation.size === selectedSize
@@ -220,7 +207,6 @@ const useProductsHook = () => {
                     size: Number.isFinite(sizeNumber) ? sizeNumber : (selectedSize as any),
                 };
             } else if (productType === "accessory") {
-                // Accessories have no size; use the first variation's SKU (matches measurement_hook).
                 const sku = matchedVariation?.sku || product?.variations?.[0]?.sku;
                 if (!sku) {
                     throw new Error("This accessory has no available variation.");
@@ -232,7 +218,6 @@ const useProductsHook = () => {
                     size: Number.isFinite(sizeNumber) ? sizeNumber : 0,
                 };
             } else if (productType === "bespokeCloth" || productType === "bespokeShoe") {
-                // Single-color bespoke is signalled by the first variation's sku === "BESPOKE".
                 const isSingleColor = product?.variations?.[0]?.sku === "BESPOKE";
                 if (isSingleColor) {
                     requestData = {
@@ -304,10 +289,6 @@ const useProductsHook = () => {
     }, [product, setFeaturedImage]);
 
     useEffect(() => {
-        // Pick a default size that (a) belongs to the currently-selected color,
-        // and (b) has stock — so the Add-to-Cart flow lands on a real SKU. If
-        // no color is selected yet, fall back to the first in-stock variation,
-        // then to the first size listed.
         const variations = product?.variations ?? [];
         const colorName = selectedColor?.name;
 

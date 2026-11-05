@@ -1,5 +1,3 @@
-// The address dropdown and older saved addresses use short country keys, while
-// checkout/payment endpoints validate the countries' canonical display names.
 const CANONICAL_COUNTRIES: Record<string, string> = {
   nigeria: 'Nigeria',
   ng: 'Nigeria',

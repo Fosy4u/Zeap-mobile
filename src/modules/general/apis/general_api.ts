@@ -18,8 +18,6 @@ const generalAPI = rootAPI.injectEndpoints({
             }
         }),
 
-        // Body measurement guide (per gender). Shared by the buyer measurement
-        // flow and the vendor bespoke step 3 — single source of truth.
         getBodyMeasurementGuide: builder.query<IBodyMeasurementGuide[], string>({
             query: (gender: string) => ({
                 url: bodyMeasurementGuideRoute,

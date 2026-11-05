@@ -11,8 +11,6 @@ interface ICreateReviewPayload {
 
 export default ICreateReviewPayload;
 
-/* Body of PUT /review/update — the review is addressed by `review_id`, and the
-   product still travels with it. */
 interface IUpdateReviewPayload {
     productId: string;
     review_id: string;

@@ -7,6 +7,7 @@ import { setUserData } from "../slices/profileState_slice";
 import { showAppToast } from "../../general/slices/general_slice";
 import handleError from "../../general/hooks/errorHandler_hook";
 import { useUpdateUserProfilePicMutation } from "../apis/profile_api";
+import requestCameraPermission, { alertImagePickerError } from "../../../utils/cameraPermission";
 
 const MAX_FILE_SIZE_KB = 1120;
 
@@ -19,7 +20,7 @@ const useProfilePicUploadHook = () => {
     const handlePickerResponse = (response: ImagePickerResponse) => {
         if (response.didCancel) return;
         if (response.errorCode) {
-            Alert.alert("Unable to open", response.errorMessage || "Please check the app's camera and photo permissions.");
+            alertImagePickerError(response.errorCode, response.errorMessage);
             return;
         }
         const asset = response.assets?.[0];
@@ -33,9 +34,14 @@ const useProfilePicUploadHook = () => {
 
     const pickerOptions = { mediaType: "photo" as const, maxWidth: 1024, maxHeight: 1024, quality: 0.8 as const };
 
+    const handleTakePhoto = async () => {
+        if (!(await requestCameraPermission("Zeaper needs access to your camera to take your profile photo."))) { return; }
+        launchCamera({ ...pickerOptions, saveToPhotos: false }, handlePickerResponse);
+    };
+
     const handleChooseProfilePic = () => {
         Alert.alert("Profile photo", "Choose where to get your photo from", [
-            { text: "Take Photo", onPress: () => launchCamera({ ...pickerOptions, saveToPhotos: false }, handlePickerResponse) },
+            { text: "Take Photo", onPress: handleTakePhoto },
             { text: "Choose from Gallery", onPress: () => launchImageLibrary({ ...pickerOptions, selectionLimit: 1 }, handlePickerResponse) },
             { text: "Cancel", style: "cancel" },
         ]);

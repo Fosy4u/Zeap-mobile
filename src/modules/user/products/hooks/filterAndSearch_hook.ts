@@ -10,10 +10,6 @@ import RootNavigationStackModel from "../../../../routes/model/routes_model";
 import handleError from "../../../general/hooks/errorHandler_hook";
 import buildFilterParams from "../utils/buildFilterParams";
 
-// Map a category screen to its backend filter. Female/Male filter by the
-// dedicated `gender` param (a product's gender lives in categories.gender —
-// filtering by `main` matched nothing and leaked the whole catalogue).
-// Shoes/Accessories are real `main` categories.
 export const categoryFilterFor = (screenTitle: string): Record<string, string> => {
     switch (screenTitle) {
         case "Women":             return { gender: "Female" };
@@ -21,8 +17,6 @@ export const categoryFilterFor = (screenTitle: string): Record<string, string> =
         case "Shoes":             return { main: "Footwear" };
         case "Accessories":       return { main: "Accessories" };
         case "Bags":              return { accessoryType: "Bag" };
-        // Bespoke vs ready-to-wear are distinguished by productType, not a
-        // category/gender. Sent as a CSV the backend filters on.
         case "Bespoke Collection": return { productType: "bespokeCloth,bespokeShoe" };
         case "Ready to Wear":      return { productType: "readyMadeCloth,readyMadeShoe,accessory" };
         default:                   return {};
@@ -96,14 +90,8 @@ const useFilterAndSearchHook = () => {
             (dynamicFilterOptions as any) || [],
         );
 
-    // Normalize a dynamic-filter group name to its API param key — mirrors the
-    // transform in buildFormattedFilters (lowercase first char, strip spaces).
     const toParamKey = (name: string) => (name.charAt(0).toLowerCase() + name.slice(1)).replace(/\s+/g, '');
 
-    // Pre-select the category's filter (e.g. Gender → Male) in the dynamic filter
-    // sheet. Keyed by the REAL backend group name + option value (matched against
-    // the loaded dynamicFilterOptions) so the chip highlights correctly and
-    // buildFormattedFilters still produces the right param. Idempotent per option.
     const preselectCategoryFilters = (screenTitle: string) => {
         const desired = categoryFilterFor(screenTitle);
         if (Object.keys(desired).length === 0) return;
@@ -114,10 +102,6 @@ const useFilterAndSearchHook = () => {
                 const group = (dynamicFilterOptions || []).find((g: any) => toParamKey(g?.name || "") === paramKey);
                 const options: any[] = Array.isArray(group?.options) ? (group!.options as any[]) : [];
                 const matched = options.find((o) => String(o?.value).toLowerCase() === String(paramValue).toLowerCase());
-                // Only seed a chip when it maps to a REAL filter option (e.g.
-                // Gender → Male). Multi-value category filters (e.g. the bespoke /
-                // ready-to-wear productType CSV) won't match a single option — we
-                // skip those here; the list is still filtered via categoryFilterFor.
                 if (group?.name && matched?.value !== undefined) {
                     const groupName = group.name;
                     const optionValue = matched.value as string | number;
@@ -130,7 +114,6 @@ const useFilterAndSearchHook = () => {
         });
     };
 
-    // Total number of individually-selected filter options (drives the badge).
     const selectedFiltersCount = Object.values(selectedFilters).reduce(
         (sum, values) => sum + (Array.isArray(values) ? values.length : 0), 0,
     );
@@ -140,7 +123,6 @@ const useFilterAndSearchHook = () => {
         dispatch(setLoadingMessage(`Getting ${screenTitle.toLowerCase()}...`));
         dispatch(setIsLoading(true));
         dispatch(setAllProducts([]));
-        // Any new filter/category load starts from page 1.
         dispatch(setCurrentPage(1));
         dispatch(setProductsTotalCount(null));
 
@@ -300,8 +282,6 @@ const useFilterAndSearchHook = () => {
     const handleSubmit =  async(screenTitle: string) => {
         dispatch(setLoadingMessage(`Searching for "${searchPhrase.toLowerCase()}"...`));
         dispatch(setIsLoading(true));
-        /* Clear the old results so the skeleton loader shows while the search
-           runs, rather than the previous list. */
         dispatch(setAllProducts([]));
         dispatch(setCurrentPage(1));
         dispatch(setProductsTotalCount(null));
@@ -332,9 +312,7 @@ const useFilterAndSearchHook = () => {
 
     // Handle prev and next pagination
     const handlePrevAndNextPagination = async({screenTitle, direction, filters = {}, source}: {screenTitle: string, direction: string, filters?: Record<string, string>, source?: string}) => {
-        // Already at the first page — nothing before it.
         if (direction === "Prev" && currentPage <= 1) return { pageChanged: false, reachedEnd: false };
-        // The dynamic filter's totalCount tells us how many pages the list has.
         const totalPages = getTotalPages(productsTotalCount);
         if (direction === "Next" && totalPages !== null && currentPage >= totalPages) {
             return { pageChanged: false, reachedEnd: true };
@@ -345,9 +323,6 @@ const useFilterAndSearchHook = () => {
         dispatch(setLoadingMessage(`Fetching ${direction === "Next" ? "next" : "previous"} product page...`));
         dispatch(setIsLoading(true));
 
-        // Carry the SAME filters + category across pages. Previously this sent
-        // only { limit, pageNumber }, which dropped the gender/category filter so
-        // page 2+ returned the entire catalogue.
         const queryParams = {
             ...buildFormattedFilters(),
             ...categoryFilterFor(screenTitle),
@@ -359,15 +334,10 @@ const useFilterAndSearchHook = () => {
         try {
             const productResponse = await getFilteredProducts({queryParams, screenTitle: source ?? screenTitle}).unwrap();
 
-            // End-of-list guard: an empty Next means there's no further page.
-            // Keep the current list/page instead of blanking the screen with a
-            // misleading "no product" empty state.
             if (direction === "Next" && (!productResponse || productResponse.length === 0)) {
                 return { pageChanged: false, reachedEnd: true };
             }
 
-            // Some feeds (e.g. Popular) repeat their last page instead of returning
-            // an empty one, so the same products coming back also means the end.
             const currentIds = (allProducts ?? []).map((product) => product.productId).join("|");
             const nextIds = productResponse.map((product) => product.productId).join("|");
             if (direction === "Next" && currentIds === nextIds) {

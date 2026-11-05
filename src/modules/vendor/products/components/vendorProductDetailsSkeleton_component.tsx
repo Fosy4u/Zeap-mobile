@@ -2,13 +2,8 @@ import React from 'react';
 import { Dimensions, ScrollView, View } from 'react-native';
 import SkeletonBlock from '../../../general/components/skeletonBlock_component';
 
-// Loading placeholder for the Vendor Product Details screen. Mirrors the real
-// layout — status/group pills, title, price + rating row, the large hero image,
-// the thumbnail strip, the tab row and a few description lines — so the screen
-// keeps its shape while /product fetches, instead of a blocking full-screen
-// spinner.
 const VendorProductDetailsSkeletonComponent: React.FC = () => {
-    const contentWidth = Dimensions.get('window').width - 40; // px-5 each side
+    const contentWidth = Dimensions.get('window').width - 40;
 
     return (
         <ScrollView

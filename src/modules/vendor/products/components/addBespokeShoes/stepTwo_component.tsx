@@ -52,8 +52,6 @@ const StepTwoComponent: React.FC<IStepTwoShoeProductProps> = ({ manageState }) =
                 onChangeValues={ setSelectedGender }
             />
 
-            {/* The remaining category fields are revealed only after a gender is
-                selected, to drive a gender-first input flow. */}
             { selectedGender.length > 0 && (
                 <>
                     {/* ==== Style ==== */}
@@ -82,7 +80,6 @@ const StepTwoComponent: React.FC<IStepTwoShoeProductProps> = ({ manageState }) =
                         onSelectValue={ setSelectedAgeGroup }
                     />
 
-                    {/* Age range only applies when the age group is Kids. */}
                     { selectedAgeGroup === "Kids" && (
                         <SearchableDropdownComponent
                             label="Age range"

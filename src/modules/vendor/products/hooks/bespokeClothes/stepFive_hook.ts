@@ -72,8 +72,6 @@ const useStepFiveHook = () => {
         const productId = product?.productId || "";
 
         try {
-            // Plain single colour must carry at least one chosen colour. Multi-
-            // colour is "any colour on request", so it submits with an empty list.
             if (colourType === "Single" && selectedColor.length === 0) {
                 Alert.alert("Error", "Please select at least one colour.");
                 dispatch(setProductIsLoading(false));

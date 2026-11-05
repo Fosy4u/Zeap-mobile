@@ -38,8 +38,6 @@ const SettingsScreen = () => {
                     />
 
                     {/* ==== Notifications Settings ==== */}
-                    {/* Hidden: the notification settings do not persist yet (toggles revert
-                        to their defaults after being turned on). */}
                     {/* <CardItems
                         handleOnPress={ () => navigation.navigate("notificationSettingsScreen") }
                         title="Notification settings"

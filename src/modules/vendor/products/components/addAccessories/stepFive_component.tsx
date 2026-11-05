@@ -51,13 +51,10 @@ const StepFiveComponent: React.FC<IProps> = (props) => {
     const [showSizesDropDown, setShowSizesDropDown] = useState(false);
     const isVariationFormValid = selectedColor.colorName !== "" && selectedSize !== "" && price !== "" && quantity !== "";
 
-    // Prevent re-adding an existing colour+size combination.
     const variations = product?.variations ?? [];
-    // Sizes already used for the colour currently chosen in the form.
     const takenSizesForSelectedColor = variations
         .filter((variation: IVariation) => variation.colorValue === selectedColor.colorName)
         .map((variation: IVariation) => variation.size);
-    // A colour is "full" once every available size already has a variation.
     const isColorFull = (colorName: string) => {
         if (!uploadedSizes.length) return false;
         const takenSizes = variations

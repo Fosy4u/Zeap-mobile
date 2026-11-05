@@ -66,7 +66,6 @@ const VendorOrderDetailsScreen: React.FC<IProps> = ({route}) => {
   useEffect(() => {
     if (from === "Orders Screen" || from === "Notification Screen") {
       handleGetOrderDetails(orderID!);
-      // The history drives the action buttons, so it loads with the details.
       handleGetOrderHistory(orderID!);
     }
     setSelectedImage(null);
@@ -75,8 +74,6 @@ const VendorOrderDetailsScreen: React.FC<IProps> = ({route}) => {
   const nextStatus = orderHistory?.nextStatus;
   const nextStatusValue = nextStatus?.value ?? "";
   const nextStatusName = nextStatus?.name ?? "";
-  /* Button shows whenever a next status exists; locked while the step isn't
-     the seller's (sellerAction false) — e.g. awaiting quality check. */
   const canAdvanceStatus = !!nextStatusValue;
   const advanceIsLocked = nextStatus?.sellerAction === false;
   const isAwaitingConfirmation = nextStatusValue.toLowerCase() === "order confirmed";
@@ -88,7 +85,6 @@ const VendorOrderDetailsScreen: React.FC<IProps> = ({route}) => {
       ? "Start Processing"
       : `Update to ${ FormatWords.capitalizeWords(nextStatusName || nextStatusValue) }`;
 
-  // "N/P" matches the web placeholder for a field the buyer never filled in.
   const deliveryDetails = order?.deliveryDetails;
   const notProvided = "N/P";
   const deliveryRows = [
@@ -199,8 +195,6 @@ const VendorOrderDetailsScreen: React.FC<IProps> = ({route}) => {
               </View>
             </View>
 
-            {/* Buyer instruction — what the buyer asked for at checkout. Shown
-                only when they wrote one, so it can't render an empty card. */}
             { !!order?.bespokeInstruction?.trim() && (
               <View className="mb-4 px-3.5 py-4 border border-gray-200 rounded-xl bg-lightGray">
                 <Text className="font-montserratSemiBold text-lg text-baseGreen">Buyer Instruction</Text>

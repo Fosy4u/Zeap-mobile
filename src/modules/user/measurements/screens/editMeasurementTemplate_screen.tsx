@@ -26,23 +26,13 @@ import handleError from "../../../general/hooks/errorHandler_hook";
 import IBodyMeasurementGuide from "../../../general/models/bodyMeasurementGuide_model";
 import EditMeasurementTemplateSkeletonLoader from "../components/editMeasurementTemplateSkeletonLoader_component";
 
-// Edit a saved measurement template. Only the fields that already exist on
-// the template are shown — the user is editing what they previously saved,
-// not adding new measurements from the catalogue.
 //
-// The bespoke body-measurement guide (/bodyMeasurementGuide/bespoke?gender=…)
-// is still fetched in the background so each input can offer a "Show
-// Measurement Guide" pill with the field's image + description when there's
-// a match. Fields the guide doesn't know about still render as plain
-// editable inputs without the guide affordance.
 //
-// On Save → PUT /bodyMeasurementTemplate/update with
 //   { template_id, templateName, measurements: [{field, value}, ...] }
-// — gender is intentionally not sent (the backend keeps what it already has).
 
 interface ISavedField {
     field: string;
-    value: string; // kept as string for TextInput; coerced on submit
+    value: string;
 }
 
 const EditMeasurementTemplateScreen = () => {
@@ -60,9 +50,6 @@ const EditMeasurementTemplateScreen = () => {
     const templateName = selectedMeasurementTemplate?.templateName ?? "";
     const templateGender = ((selectedMeasurementTemplate as any)?.gender as string | undefined)?.toLowerCase() || "male";
 
-    // Pull a flat saved-fields list from the template. Supports both the new
-    // flat shape ([{field, value}, ...]) and the legacy nested shape
-    // ([{name, measurements: [{field, value}, ...]}, ...]).
     const initialSavedFields = useMemo<ISavedField[]>(() => {
         const raw: any[] = (selectedMeasurementTemplate?.measurements as any[]) ?? [];
         const isFlat = raw.length > 0 && raw[0]?.field !== undefined && raw[0]?.measurements === undefined;
@@ -77,9 +64,7 @@ const EditMeasurementTemplateScreen = () => {
             }));
     }, [selectedMeasurementTemplate]);
 
-    // Lookup table built from the bespoke guide: field-name (lowercased) →
     // { image, description }. Used to enrich each input with the visual guide
-    // when the guide knows about that field.
     const guideByField = useMemo(() => {
         const map = new Map<string, { image?: string; description?: string }>();
         (bodyMeasurementGuides ?? []).forEach((guide: IBodyMeasurementGuide) => {
@@ -101,16 +86,12 @@ const EditMeasurementTemplateScreen = () => {
     const [isSaving, setIsSaving] = useState(false);
     const hasInitializedRef = useRef(false);
 
-    // Fetch the bespoke guide for the template's gender on mount if not
-    // already loaded. The guide is optional — it only enriches the UI with
-    // images/descriptions. Inputs render either way.
     useEffect(() => {
         if (bodyMeasurementGuides.length === 0) {
             handleGetBodyMeasurementGuides(templateGender);
         }
     }, []);
 
-    // Seed the local edit state from the saved template exactly once.
     useEffect(() => {
         if (hasInitializedRef.current) return;
         if (initialSavedFields.length === 0) return;
@@ -165,9 +146,6 @@ const EditMeasurementTemplateScreen = () => {
         }
     };
 
-    // Show the skeleton until the saved fields have been seeded into local
-    // state. The bespoke guide loading on its own doesn't block — inputs
-    // render with or without guide enrichment.
     const showSkeleton = fields.length === 0 && initialSavedFields.length === 0;
 
     return (
@@ -218,7 +196,6 @@ const EditMeasurementTemplateScreen = () => {
                         </Text>
                     </View>
 
-                    {/*==== Saved fields — render each as an editable input ====*/}
                     <View className="mt-5 px-3 py-4 border border-gray-200 rounded-2xl">
                         <Text className="font-montserratSemiBold text-base text-gray-700">Measurements</Text>
 

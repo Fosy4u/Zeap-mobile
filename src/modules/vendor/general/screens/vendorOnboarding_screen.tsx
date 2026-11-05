@@ -93,7 +93,7 @@ const VendorOnboardingScreen = () => {
             getAuthShop()
                 .unwrap()
                 .then((authShop) => dispatch(setShop(authShop)))
-                .catch(() => { /* no-op: CTA still works from userData */ });
+                .catch(() => {});
         }
     }, [isVendorUser, shop?.shopId, userData?.uid, userData?.isGuest]);
 
@@ -103,11 +103,6 @@ const VendorOnboardingScreen = () => {
         });
     };
 
-    // BECOME A VENDOR is gated on auth: shop creation is an authed-only flow,
-    // so a guest (or no-session) user is sent to log in FIRST. We stash the
-    // registration stepper as the pending destination, so login_hook's
-    // redirectAfterAuth drops them straight into onboarding once they sign in.
-    // Logged-in users go straight to the stepper.
     const isGuest = !userData?.uid || !!userData?.isGuest;
     const handleBecomeVendor = () => {
         if (isGuest) {
@@ -118,9 +113,6 @@ const VendorOnboardingScreen = () => {
         navigation.navigate("vendorRegistrationScreen");
     };
 
-    // MY SHOP — shown when the user already has a shop. Routes to the welcome
-    // screen if their shop status is "new" (pending document upload / review),
-    // otherwise drops them on the vendor dashboard.
     const handleMyShop = () => {
         if (isNewShop) {
             navigation.navigate("vendorWelcomeScreen");
@@ -159,8 +151,6 @@ const VendorOnboardingScreen = () => {
                             Join Zeaper and become part of a global fashion marketplace that empowers creators, celebrates diversity, and delivers unmatched value to customers worldwide.
                         </Text>
 
-                        {/* Commission promo pill — kept inset so the wrapped copy
-                            on small phones doesn't kiss the screen edges. */}
                         <View className="mt-6 mx-3 px-4 py-3 flex-row items-center rounded-full bg-white">
                             <Text className="text-base">🎉</Text>
                             <Text className="mx-1.5 text-center text-xs text-gray-800">
@@ -172,7 +162,6 @@ const VendorOnboardingScreen = () => {
                             <Text className="text-base">🎉</Text>
                         </View>
 
-                        {/* CTA */}
                         <TouchableOpacity
                             onPress={ onCtaPress }
                             className="mt-7 px-8 py-3.5 rounded-xl bg-gold"
@@ -192,7 +181,6 @@ const VendorOnboardingScreen = () => {
                             className="w-full rounded-2xl overflow-hidden"
                             style={{ aspectRatio: 16 / 9, backgroundColor: "#0a1a13" }}
                         >
-                            {/* Top-left: title + author */}
                             <View className="px-4 pt-4 flex-row items-center">
                                 <View className="h-7 w-7 items-center justify-center rounded-full bg-pink-600">
                                     <Text className="font-montserratBold text-xs text-white">O</Text>
@@ -203,14 +191,12 @@ const VendorOnboardingScreen = () => {
                                 </View>
                             </View>
 
-                            {/* Center play button */}
                             <View className="absolute inset-0 items-center justify-center">
                                 <View className="h-14 w-14 items-center justify-center rounded-xl bg-red-600">
                                     <PlayCircle size={ 36 } color="#ffffff" variant="Bold" />
                                 </View>
                             </View>
 
-                            {/* Bottom-right "Watch on YouTube" */}
                             <View className="absolute bottom-3 right-4 flex-row items-center">
                                 <Text className="text-[10px] text-white/80">Watch on </Text>
                                 <Text className="font-montserratSemiBold text-[11px] text-white">▶ YouTube</Text>
@@ -274,8 +260,6 @@ const VendorOnboardingScreen = () => {
                             )) }
                         </View>
 
-                        {/* Sticky-feeling secondary CTA — gives users a clear next step
-                            after they've read the full pitch without scrolling back up. */}
                         <TouchableOpacity
                             onPress={ onCtaPress }
                             className="mt-4 h-[55px] flex-row items-center justify-center rounded-xl bg-gold"

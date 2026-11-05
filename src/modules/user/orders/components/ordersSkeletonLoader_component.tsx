@@ -2,18 +2,8 @@ import React from "react";
 import { useWindowDimensions, View } from "react-native";
 import SkeletonBlock from "../../../general/components/skeletonBlock_component";
 
-// Skeleton for the Orders list — mirrors OrderCardComponent's layout:
-//   • left  : 60×60 count box
-//   • right : Order ID label + value, Placed-on label + value
-//   • below : small label + 8px progress bar
-//
-// Rendered in place of the FlatList while the orders fetch is in flight, so
-// the screen's header / search / filter chrome stays interactive and the
-// transition into real cards is layout-stable.
-
 const OrdersSkeletonLoader = () => {
     const screenWidth = useWindowDimensions().width;
-    // Orders list lives inside px-5 (20px each side).
     const cardWidth = screenWidth - 40;
 
     return (

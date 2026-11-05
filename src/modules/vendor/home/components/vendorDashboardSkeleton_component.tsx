@@ -4,7 +4,7 @@ import SkeletonBlock from "../../../general/components/skeletonBlock_component";
 import AppStatusBar from "../../../general/components/appStatusBar";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
-const CONTENT_WIDTH = SCREEN_WIDTH - 40; // matches the dashboard's px-5 inset
+const CONTENT_WIDTH = SCREEN_WIDTH - 40;
 
 interface ISkeletonRowProps {
     width: number;
@@ -26,13 +26,11 @@ const VendorDashboardSkeletonComponent: React.FC = () => {
 
             {/*==== Hero ====*/}
             <View className="w-full px-5 pt-4 pb-5 rounded-b-3xl bg-baseGreen">
-                {/* Shop name + bell */}
                 <View className="flex-row items-center justify-between">
                     <SkeletonBlock width={ 190 } height={ 20 } radius={ 6 } />
                     <SkeletonBlock width={ 44 } height={ 44 } radius={ 12 } />
                 </View>
 
-                {/* Phone + status / service badges */}
                 <View className="mt-4">
                     <SkeletonRow width={ 130 } height={ 12 } />
                     <View className="mt-3 flex-row" style={{ columnGap: 8 }}>
@@ -42,7 +40,6 @@ const VendorDashboardSkeletonComponent: React.FC = () => {
                     </View>
                 </View>
 
-                {/* Paid revenue card */}
                 <View className="mt-5 p-5 py-6 rounded-3xl bg-[#20704329]">
                     <SkeletonBlock width={ 100 } height={ 12 } radius={ 4 } />
                     <View className="mt-2">
